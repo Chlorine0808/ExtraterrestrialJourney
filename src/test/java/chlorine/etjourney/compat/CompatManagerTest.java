@@ -68,7 +68,10 @@ class CompatManagerTest {
         manager.postInit();
 
         assertEquals(Collections.emptyList(), calls);
-        assertEquals(0, manager.active().size());
+        assertEquals(
+            0,
+            manager.active()
+                .size());
     }
 
     @Test
