@@ -1,6 +1,7 @@
 package chlorine.etjourney;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
@@ -42,7 +43,7 @@ class DependencyDirectionTest {
     static List<String> violations(Path sourceRoot) throws IOException {
         Path base = sourceRoot.resolve(ROOT_PACKAGE);
         List<String> found = new ArrayList<>();
-        if (!Files.isDirectory(base)) return found;
+        if (!Files.isDirectory(base)) throw new IllegalStateException("No sources at " + base.toAbsolutePath());
         List<Path> sources;
         try (Stream<Path> files = Files.walk(base)) {
             sources = files.filter(
@@ -81,6 +82,11 @@ class DependencyDirectionTest {
     @Test
     void mainSourcesFollowTheLayerRules() throws IOException {
         assertEquals(Collections.emptyList(), violations(Paths.get("src", "main", "java")));
+    }
+
+    @Test
+    void missingSourceRootFailsInsteadOfPassingSilently(@TempDir Path root) {
+        assertThrows(IllegalStateException.class, () -> violations(root));
     }
 
     @Test
