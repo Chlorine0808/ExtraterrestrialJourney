@@ -36,7 +36,7 @@ class DependencyDirectionTest {
         ALLOWED.put("compat", layers("core", "world", "content", "compat"));
     }
 
-    private static final Pattern REFERENCE = Pattern.compile("chlorine\\.etjourney\\.(\\w+)");
+    private static final Pattern REFERENCE = Pattern.compile("chlorine\\.etjourney\\.(\\w+|\\*)");
     private static final Path ROOT_PACKAGE = Paths.get("chlorine", "etjourney");
 
     static List<String> violations(Path sourceRoot) throws IOException {
@@ -87,6 +87,12 @@ class DependencyDirectionTest {
     void coreImportingContentIsReported(@TempDir Path root) throws IOException {
         write(root, "core/Foo.java", "package chlorine.etjourney.core;\nimport chlorine.etjourney.content.Bar;\n");
         assertEquals(Collections.singletonList("core/Foo.java -> content"), violations(root));
+    }
+
+    @Test
+    void wildcardImportOfTheRootPackageIsReported(@TempDir Path root) throws IOException {
+        write(root, "core/Foo.java", "package chlorine.etjourney.core;\nimport chlorine.etjourney.*;\n");
+        assertEquals(Collections.singletonList("core/Foo.java -> *"), violations(root));
     }
 
     @Test
