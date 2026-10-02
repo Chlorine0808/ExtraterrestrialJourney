@@ -30,7 +30,7 @@ core  <-  world  <-  content  <-  compat
 | init | `ETJNetwork.init` → `ModWorld.init` → `CompatManager.init` |
 | postInit | `CompatManager.postInit`（他の Mod のブロックやバイオームを参照する処理はここで行う） |
 
-`CompatManager` は，最初の段階で `Loader.isModLoaded` を 1 度だけ呼んで連携先を検出する．入っている Mod の `CompatModule` だけに段階を渡す．
+`CompatManager` には，modid と `CompatModule` の生成関数を対で登録する．最初の段階で各 modid を `Loader.isModLoaded` で 1 回ずつ確かめ，入っている Mod の `CompatModule` だけを生成して段階を渡す．入っていない Mod の連携クラスは生成されず，クラスとしても解決されない．
 
 ## 地域の構想
 

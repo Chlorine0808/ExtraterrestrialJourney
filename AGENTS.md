@@ -24,7 +24,7 @@ export GRADLE_USER_HOME="/c/gradle-home"
 - 上の 2 つは `DependencyDirectionTest` が import と完全修飾名の両方で検査する．違反したらコードを直し，テストを緩めない
 - 起動の順序は `proxy/CommonProxy` だけが持つ．`ETJourney` は FML のイベントを proxy に渡すだけにする
 - 地域の中身は `content/<地域>/` に置く（例：`content/sunkensea/`）
-- 連携先 Mod のクラスに触れてよいのは，`compat/<mod>/` の `CompatModule` 実装の内側だけである．新しい連携は `CompatManager.createDefault()` に登録する
+- 連携先 Mod のクラスに触れてよいのは，`compat/<mod>/` の `CompatModule` 実装の内側だけである．新しい連携は `CompatManager.createDefault()` に modid とラムダ（`() -> new XxxCompat()`）の対で登録する．`XxxCompat::new` は使わない
 
 ## 依存の方針
 
