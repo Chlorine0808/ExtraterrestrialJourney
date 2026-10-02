@@ -1,13 +1,12 @@
 # Extraterrestrial Journey
 
-地上・地下・海・Nether・End を巡って探索する，Minecraft 1.7.10 Forge 向けの Mod である（略称 ETJourney）．
+地上・地下・海・Nether・End を巡って探索する，Minecraft 1.7.10 向けの Mod である（略称 ETJourney）．
 
-モチーフは Terraria と Calamity Mod である．砂漠の地下の Sunken Sea，深海の Abyss，Thaumcraft や Netherlicious のバイオームとの連携，End の柱とボスを予定している．現在は基盤だけを実装した段階で，追加コンテンツはまだ無い．構想と層の構成は [docs/architecture.md](docs/architecture.md) にまとめた．
+モチーフは Terraria と Calamity Mod である．砂漠の地下の Sunken Sea，深海の Abyss，Thaumcraft や Netherlicious のバイオームとの連携，End の柱とボスを予定している．
 
 ## 前提 Mod
 
-- 必須：Minecraft Forge 10.13.4.1614（Minecraft 1.7.10）
-- 任意連携：Thaumcraft，Netherlicious．入っているときだけ連携が有効になる
+今のところなし
 
 ## セットアップ
 
@@ -23,10 +22,6 @@ export GRADLE_USER_HOME="/c/gradle-home"
 
 `build/libs/` に出力された jar（`-dev` や `-sources` が付かないもの）を，Minecraft の `mods` フォルダに入れる．開発中は `./gradlew runClient` で開発用クライアントを起動できる．
 
-## 貢献
-
-開発の規約は [AGENTS.md](AGENTS.md) に，設計は [docs/architecture.md](docs/architecture.md) にある．
-
 ## ライセンス
 
-MIT License，Copyright (c) 2026 Chlorine0808．テクスチャはすべて自作である．
+MIT License，Copyright (c) 2026 Chlorine0808．
