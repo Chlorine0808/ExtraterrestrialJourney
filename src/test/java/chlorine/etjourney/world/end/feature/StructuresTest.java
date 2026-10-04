@@ -1,0 +1,121 @@
+package chlorine.etjourney.world.end.feature;
+
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import org.junit.jupiter.api.Test;
+
+/** Each structure forms where its style is, stays inside the world and its footprint, and is solid in its body. */
+class StructuresTest {
+
+    /** Every style everywhere, flat land with ground at Y 70. */
+    private static final StructureProbe LAND = new StructureProbe() {
+
+        @Override
+        public double weight(String style, double x, double z) {
+            return 1;
+        }
+
+        @Override
+        public double land(double x, double z) {
+            return 60;
+        }
+
+        @Override
+        public double ground(double x, double z) {
+            return 70;
+        }
+    };
+
+    private static <T extends Structure> T first(Structure.Kind<T> kind, long seed) {
+        for (int i = 0; i < 400; i++) {
+            T s = kind.inCell(seed, 10 + i % 20, i / 20, LAND);
+            if (s != null) return s;
+        }
+        return null;
+    }
+
+    private static void inside(Structure s, double footprint) {
+        assertTrue(s.maxY() <= 250 && s.minY() >= -1, "height " + s.minY() + ".." + s.maxY());
+        assertTrue(s.footprint <= footprint + 1e-9, "footprint " + s.footprint);
+    }
+
+    @Test
+    void mushroomsHaveASolidStalkAndCap() {
+        Structures.Mushroom m = first(Structures.MUSHROOMS, 301L);
+        assertNotNull(m);
+        inside(m, 46);
+        assertTrue(m.density(m.centreX, m.base + 5, m.centreZ) > 0);
+        assertTrue(m.density(m.centreX + m.cap * 0.7, m.capY - 1, m.centreZ) > 0);
+        assertTrue(m.density(m.centreX + m.cap * 0.7, m.base + 5, m.centreZ) < 0);
+    }
+
+    @Test
+    void ringsAreSolidOnTheirCircleAndHollowInTheMiddle() {
+        Structures.Ring r = first(Structures.RINGS, 302L);
+        assertNotNull(r);
+        inside(r, 280);
+        assertTrue(r.density(r.centreX, r.y, r.centreZ) < 0);
+        double px = r.centreX + r.u[0] * r.radius, py = r.y + r.u[1] * r.radius, pz = r.centreZ + r.u[2] * r.radius;
+        assertTrue(r.density(px, py, pz) > 0);
+    }
+
+    @Test
+    void archesSpanBetweenTwoFeet() {
+        Structures.Arch a = first(Structures.ARCHES, 303L);
+        assertNotNull(a);
+        inside(a, 52);
+        assertTrue(a.maxY() > 70 + 10, "arch top " + a.maxY());
+    }
+
+    @Test
+    void spiralTowersHaveAPillarAndAWindingRamp() {
+        Structures.SpiralTower t = first(Structures.SPIRAL_TOWERS, 304L);
+        assertNotNull(t);
+        inside(t, 24);
+        assertTrue(t.density(t.centreX, (t.base + t.top) / 2, t.centreZ) > 0);
+        assertTrue(t.top - t.base >= 100);
+    }
+
+    @Test
+    void hollowPillarsAreHollow() {
+        Structures.HollowPillar p = first(Structures.HOLLOW_PILLARS, 305L);
+        assertNotNull(p);
+        inside(p, 36);
+        assertTrue(p.density(p.centreX, (p.base + p.top) / 2, p.centreZ) < 0);
+        int solid = 0;
+        for (int a = 0; a < 36; a++) {
+            double angle = Math.toRadians(a * 10);
+            if (p.density(
+                p.centreX + Math.cos(angle) * p.radius,
+                (p.base + p.top) / 2,
+                p.centreZ + Math.sin(angle) * p.radius) > 0) solid++;
+        }
+        assertTrue(solid > 18, "wall mostly solid, " + solid + "/36");
+    }
+
+    @Test
+    void structuresOnlyFormWhereTheirStyleIs() {
+        StructureProbe none = new StructureProbe() {
+
+            @Override
+            public double weight(String style, double x, double z) {
+                return 0;
+            }
+
+            @Override
+            public double land(double x, double z) {
+                return 60;
+            }
+
+            @Override
+            public double ground(double x, double z) {
+                return 70;
+            }
+        };
+        for (int i = 0; i < 100; i++) {
+            assertTrue(Structures.MUSHROOMS.inCell(306L, i, 1, none) == null);
+            assertTrue(Structures.RINGS.inCell(306L, i, 3, none) == null);
+        }
+    }
+}
