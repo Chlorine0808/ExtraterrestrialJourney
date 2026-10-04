@@ -52,6 +52,11 @@ public final class RegionPicker {
         return out;
     }
 
+    /** True when the cell has the style as its base or as one of its overlays. */
+    public boolean contains(long seed, int cx, int cz, Style style) {
+        return base(seed, cx, cz) == style || overlays(seed, cx, cz).contains(style);
+    }
+
     public Style byName(String name) {
         for (Style style : styles) {
             if (style.name.equalsIgnoreCase(name)) return style;

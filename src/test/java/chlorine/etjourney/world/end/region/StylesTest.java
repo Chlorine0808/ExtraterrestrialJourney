@@ -41,4 +41,14 @@ class StylesTest {
             }
         }
     }
+
+    @Test
+    void overlayOnlyStylesAreFoundInSomeRegion() {
+        RegionPicker picker = new RegionPicker(Styles.all());
+        for (Style style : new Style[] { Styles.SPIRES, Styles.WAVES, Styles.WILD_WAVES }) {
+            boolean found = false;
+            for (int i = 0; i < 4000 && !found; i++) found = picker.contains(9L, i % 64, i / 64, style);
+            assertTrue(found, style + " never appears");
+        }
+    }
 }

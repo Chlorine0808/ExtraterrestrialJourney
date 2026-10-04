@@ -111,7 +111,10 @@ public final class EtjCommand extends CommandBase {
         say(player, out.toString());
     }
 
-    /** Nearest region with the base style (style), or with any overlay including the style (mix). */
+    /**
+     * Nearest region holding the style as its base or an overlay (style), or nearest region with any overlay,
+     * optionally including the style (mix). Overlay-only styles such as SPIRES are never a base.
+     */
     private static void styleRegion(EntityPlayerMP player, TerrainSampler sampler, String name, boolean mix) {
         RegionPicker picker = sampler.picker();
         Style target = name == null ? null : picker.byName(name);
@@ -123,8 +126,8 @@ public final class EtjCommand extends CommandBase {
         double[] hit = EndSearch.nearestInCells(RegionMap.REGION, player.posX, player.posZ, (cx, cz) -> {
             Style base = picker.base(seed, cx, cz);
             List<Style> overlays = picker.overlays(seed, cx, cz);
-            boolean match = mix ? !overlays.isEmpty() && (target == null || base == target || overlays.contains(target))
-                : base == target;
+            boolean has = target == null || picker.contains(seed, cx, cz, target);
+            boolean match = mix ? !overlays.isEmpty() && has : has;
             if (!match) return null;
             double[] c = RegionMap.cellCentre(seed, cx, cz);
             return Math.hypot(c[0], c[1]) < 1100 ? null : c;
