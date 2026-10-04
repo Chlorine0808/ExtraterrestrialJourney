@@ -111,7 +111,7 @@ public final class StyleModifiers {
             int count = Math.min(MAX_LAYERS, 2 + (int) (4 * ValueNoise.mask(salt + 32, w[0], w[1], 300)));
             double centre = s.top;
             // Neighbouring tiers take turns through the archetypes, from a phase that drifts between regions.
-            double phase = TIER_ARCHETYPES.length * ValueNoise.mask(salt + 33, s.x, s.z, 600);
+            double phase = tierPhase(salt, s.x, s.z);
             for (int i = 0; i < count; i++) {
                 Tier tier = tier(salt, i, phase, s.x, s.z);
                 centre += tier.step;
@@ -135,21 +135,33 @@ public final class StyleModifiers {
         double step, patch, thick, offset, keel;
     }
 
+    /** Which archetype tier 0 takes, as a number in [0, archetypes); tier i takes the one i places on. */
+    static double tierPhase(long salt, double x, double z) {
+        return TIER_ARCHETYPES.length * ValueNoise.mask(salt + 33, x, z, 600);
+    }
+
     static Tier tier(long salt, int i, double phase, double x, double z) {
         long t = salt + 1000L * (i + 1);
-        double[][] type = TIER_ARCHETYPES[((int) phase + i) % TIER_ARCHETYPES.length];
         double[] wi = Warp.warp(t, x, z, 48, 170);
-        double scale = lerp(type[0], ValueNoise.mask(t + 1, x, z, 520));
-        double coverage = lerp(type[1], ValueNoise.mask(t + 2, x, z, 480));
-        double swell = lerp(type[3], ValueNoise.mask(t + 4, x, z, 540));
         Tier tier = new Tier();
         tier.keel = 1.1 + 1.2 * ValueNoise.mask(t + 5, x, z, 460);
         tier.step = 14 + 24 * ValueNoise.mask(t + 6, wi[0], wi[1], 200);
-        tier.patch = (Fractal.fbm(t + 7, wi[0], wi[1], scale, 3) - coverage) / 0.14;
-        tier.thick = lerp(type[2], ValueNoise.mask(t + 3, x, z, 500))
-            * (0.7 + 0.6 * ValueNoise.mask(t + 8, wi[0], wi[1], scale * 0.8));
-        tier.offset = (Fractal.fbm(t + 9, wi[0], wi[1], 110, 3) - 0.5) * swell;
+        archetype(tier, t, ((int) phase + i) % TIER_ARCHETYPES.length, wi, x, z, 1);
         return tier;
+    }
+
+    /** Adds an archetype's patch, thickness and offset to the tier, at the given share. */
+    private static void archetype(Tier tier, long t, int k, double[] wi, double x, double z, double share) {
+        double[][] type = TIER_ARCHETYPES[k];
+        long u = t + 100L * (k + 1);
+        // One hole scale per tier and archetype: a scale that drifts would squeeze the lattice further from the origin.
+        double scale = lerp(type[0], Hash.hash01(u, 0, 0));
+        double coverage = lerp(type[1], ValueNoise.mask(u + 2, x, z, 480));
+        double swell = lerp(type[3], ValueNoise.mask(u + 4, x, z, 540));
+        tier.patch += share * (Fractal.fbm(u + 7, wi[0], wi[1], scale, 3) - coverage) / 0.14;
+        tier.thick += share * lerp(type[2], ValueNoise.mask(u + 3, x, z, 500))
+            * (0.7 + 0.6 * ValueNoise.mask(u + 8, wi[0], wi[1], scale * 0.8));
+        tier.offset += share * (Fractal.fbm(t + 9, wi[0], wi[1], 110, 3) - 0.5) * swell;
     }
 
     /**
