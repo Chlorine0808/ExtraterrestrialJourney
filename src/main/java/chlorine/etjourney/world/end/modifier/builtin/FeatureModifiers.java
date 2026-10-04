@@ -44,6 +44,8 @@ public final class FeatureModifiers {
             all.add(StructureModifiers.of(kind, order++));
         all.add(StructureModifiers.ringlets());
         all.add(StructureModifiers.voxels(Structures.CROSSES, 861, EndBlock.STONE));
+        all.add(StructureModifiers.voxels(Structures.HANGING_CHAINS, 862, EndBlock.CHAIN));
+        all.add(StructureModifiers.voxels(Structures.SKY_CHAINS, 863, EndBlock.CHAIN));
         return all;
     }
 

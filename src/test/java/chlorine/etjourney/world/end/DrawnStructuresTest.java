@@ -93,4 +93,14 @@ class DrawnStructuresTest {
     void crossesAreDrawn() {
         check(Structures.CROSSES, EndBlock.STONE);
     }
+
+    @Test
+    void hangingChainsAreDrawnInChainBlocks() {
+        check(Structures.HANGING_CHAINS, EndBlock.CHAIN);
+    }
+
+    @Test
+    void skyChainsAreDrawnInChainBlocks() {
+        check(Structures.SKY_CHAINS, EndBlock.CHAIN);
+    }
 }
