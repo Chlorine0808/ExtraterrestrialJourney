@@ -37,6 +37,11 @@ public abstract class Structure implements Shape {
 
     protected abstract double body(double x, double y, double z);
 
+    /** Where the structure stands on the ground, as {x, z} points; none for floating ones. */
+    public double[][] feet() {
+        return new double[][] { { centreX, centreZ } };
+    }
+
     @Override
     public double minX() {
         return centreX - footprint;

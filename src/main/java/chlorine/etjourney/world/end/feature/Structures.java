@@ -237,6 +237,11 @@ public final class Structures {
         }
 
         @Override
+        public double[][] feet() {
+            return new double[0][];
+        }
+
+        @Override
         public double minY() {
             return inner == null ? super.minY() : Math.min(super.minY(), inner.minY());
         }
@@ -261,8 +266,12 @@ public final class Structures {
 
         private final ArcPaths.Segments segments;
 
+        private final double[][] feet;
+
         Arch(double x, double z, double footprint, double[] points, double tube) {
             super(x, z, footprint, low(points) - tube, high(points) + tube);
+            feet = new double[][] { { points[0], points[2] },
+                { points[points.length - 3], points[points.length - 1] } };
             segments = ArcPaths.segmentsNear(
                 Collections.singletonList(new ArcPaths.Path(points, tube)),
                 -1e9,
@@ -270,6 +279,11 @@ public final class Structures {
                 -1e9,
                 1e9,
                 (a, b, c) -> true);
+        }
+
+        @Override
+        public double[][] feet() {
+            return feet;
         }
 
         @Override

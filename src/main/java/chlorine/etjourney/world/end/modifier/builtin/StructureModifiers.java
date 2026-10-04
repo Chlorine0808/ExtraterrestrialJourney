@@ -14,6 +14,15 @@ public final class StructureModifiers {
 
     private StructureModifiers() {}
 
+    /** On a reserved island, or standing on ground that an island's fade has lowered. */
+    static boolean blocked(List<Area> reserved, Structure s) {
+        if (Reservations.touches(reserved, s.centreX, s.centreZ, s.footprint)) return true;
+        for (double[] foot : s.feet()) {
+            if (Reservations.suppression(reserved, foot[0], foot[1]) > 0.1) return true;
+        }
+        return false;
+    }
+
     public static Modifier of(Structure.Kind<? extends Structure> kind, int order) {
         return new Modifier() {
 
@@ -29,7 +38,7 @@ public final class StructureModifiers {
                     // Decided by the structure's own centre chunk, so every chunk it reaches agrees.
                     List<Area> reserved = area.view
                         .reservedAt((int) Math.floor(s.centreX) >> 4, (int) Math.floor(s.centreZ) >> 4);
-                    if (Reservations.touches(reserved, s.centreX, s.centreZ, s.footprint)) continue;
+                    if (blocked(reserved, s)) continue;
                     out.add(s);
                 }
             }
