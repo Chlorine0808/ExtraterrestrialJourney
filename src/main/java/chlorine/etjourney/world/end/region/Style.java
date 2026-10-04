@@ -60,9 +60,9 @@ public final class Style {
         return kind == StyleKind.BASE_LAND || kind == StyleKind.BOTH;
     }
 
+    /** Any style with an overlay chance may be laid over the bases its target accepts, never over itself. */
     public boolean canOverlay(Style base) {
-        boolean overlays = kind == StyleKind.OVERLAY || kind == StyleKind.BOTH;
-        return overlays && overlayChance > 0 && base != this && overlayTarget.test(base);
+        return overlayChance > 0 && base != this && overlayTarget.test(base);
     }
 
     @Override

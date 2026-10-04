@@ -11,7 +11,7 @@ import org.junit.jupiter.api.Test;
 
 class ModifierChainTest {
 
-    private static final ChunkArea AREA = new ChunkArea(1L, 0, 0, Collections.emptyList());
+    private static final ChunkArea AREA = new ChunkArea(1L, 0, 0, Collections.emptyList(), null);
 
     private static Modifier recorder(int order, List<String> log, String name) {
         return new Modifier() {

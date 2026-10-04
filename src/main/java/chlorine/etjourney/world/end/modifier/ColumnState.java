@@ -17,6 +17,10 @@ public final class ColumnState {
     /** clamp(land / FULL_INTERIOR, 0, 1); refreshed by the chain before each modifier. */
     public double interior;
     public double level, top, bottom;
+    /** Hills and mountain rise, kept apart because the underside follows half the hills and a quarter of the rise. */
+    public double hills, rise;
+    /** Scales other modifiers apply to hills and the underside depth (LOWLANDS shrinks both). */
+    public double hillScale = 1, undersideScale = 1;
     /** Positive where a pillar joins the ground to the stacked slabs. */
     public double pillar;
     public final List<Layer> layers = new ArrayList<>();

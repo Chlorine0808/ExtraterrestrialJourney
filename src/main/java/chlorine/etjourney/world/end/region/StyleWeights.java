@@ -11,25 +11,36 @@ import java.util.Map;
 public final class StyleWeights {
 
     private final Map<Style, Double> weights;
+    /** Base weights only; they sum to 1. */
+    private final Map<Style, Double> bases;
 
-    private StyleWeights(Map<Style, Double> weights) {
+    private StyleWeights(Map<Style, Double> weights, Map<Style, Double> bases) {
         this.weights = weights;
+        this.bases = bases;
     }
 
     public static StyleWeights at(RegionPicker picker, long seed, double x, double z) {
-        Map<Style, Double> map = new LinkedHashMap<>();
+        Map<Style, Double> map = new LinkedHashMap<>(), bases = new LinkedHashMap<>();
         for (RegionMap.CellWeight cell : RegionMap.nearCells(seed, x, z)) {
-            map.merge(picker.base(seed, cell.cx, cell.cz), cell.weight, Double::sum);
+            Style base = picker.base(seed, cell.cx, cell.cz);
+            map.merge(base, cell.weight, Double::sum);
+            bases.merge(base, cell.weight, Double::sum);
             for (Style overlay : picker.overlays(seed, cell.cx, cell.cz)) {
                 map.merge(overlay, cell.weight * overlay.overlayStrength, Double::sum);
             }
         }
-        return new StyleWeights(map);
+        return new StyleWeights(map, bases);
     }
 
-    /** For tests and tools: weights given directly. */
+    /** For tests and tools: weights given directly, all treated as bases. */
     public static StyleWeights of(Map<Style, Double> weights) {
-        return new StyleWeights(new LinkedHashMap<>(weights));
+        return new StyleWeights(new LinkedHashMap<>(weights), new LinkedHashMap<>(weights));
+    }
+
+    /** Weight of a style as a base only. */
+    public double baseOf(Style style) {
+        Double w = bases.get(style);
+        return w == null ? 0 : w;
     }
 
     public double of(Style style) {
@@ -63,9 +74,8 @@ public final class StyleWeights {
     /** Lakes go where bases that allow them hold at least half the base weight. */
     public boolean allowsLakes() {
         double allowed = 0;
-        for (Map.Entry<Style, Double> e : weights.entrySet()) {
-            if (e.getKey()
-                .isBase() && e.getKey().lakes) allowed += e.getValue();
+        for (Map.Entry<Style, Double> e : bases.entrySet()) {
+            if (e.getKey().lakes) allowed += e.getValue();
         }
         return allowed >= 0.5;
     }
@@ -79,10 +89,10 @@ public final class StyleWeights {
         return allowed >= 0.8 && denied < 0.2;
     }
 
-    /** Weight of bases without a continent. */
+    /** Base weight of styles without a continent; overlays never remove land. */
     public double voidShare() {
         double sum = 0;
-        for (Map.Entry<Style, Double> e : weights.entrySet()) {
+        for (Map.Entry<Style, Double> e : bases.entrySet()) {
             if (e.getKey().kind == StyleKind.BASE_VOID) sum += e.getValue();
         }
         return sum;
