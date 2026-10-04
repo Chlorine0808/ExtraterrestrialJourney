@@ -86,9 +86,8 @@ public final class ChunkPlan implements TerrainView {
             area.originX() + 24 + ARC_PAD,
             area.originZ() - 8 - ARC_PAD,
             area.originZ() + 24 + ARC_PAD,
-            (x, y, z) -> sampler.arcProbe()
-                .weight(x, z) >= 0.3 && Reservations.suppression(reserved, x, z) == 0
-                && !sampler.nearZoneIsland(x, y, z));
+            sampler.arcGround(),
+            (x, y, z) -> Reservations.suppression(reserved, x, z) == 0);
     }
 
     public ChunkArea area() {

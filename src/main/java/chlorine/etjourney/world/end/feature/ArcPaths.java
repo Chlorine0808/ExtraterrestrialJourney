@@ -47,6 +47,8 @@ public final class ArcPaths {
         final double[] points;
         public final double tube;
         final double minX, maxX, minZ, maxZ;
+        /** Answers of the last shared filter, per segment: 0 unknown, 1 keep, 2 drop. */
+        private volatile Memo memo;
 
         Path(double[] points, double tube) {
             this.points = points;
@@ -67,6 +69,26 @@ public final class ArcPaths {
         /** Start of the path, as {x, y, z}. */
         public double[] start() {
             return new double[] { points[0], points[1], points[2] };
+        }
+
+        private Memo memoFor(SegmentFilter filter) {
+            Memo m = memo;
+            if (m == null || m.filter != filter) {
+                m = new Memo(filter, new byte[points.length / 3 - 1]);
+                memo = m;
+            }
+            return m;
+        }
+    }
+
+    private static final class Memo {
+
+        final SegmentFilter filter;
+        final byte[] answers;
+
+        Memo(SegmentFilter filter, byte[] answers) {
+            this.filter = filter;
+            this.answers = answers;
         }
     }
 
@@ -205,17 +227,33 @@ public final class ArcPaths {
     /** Segments of the paths that come within reach of the horizontal box, skipping those keep rejects. */
     public static Segments segmentsNear(List<Path> paths, double minX, double maxX, double minZ, double maxZ,
         SegmentFilter keep) {
+        return segmentsNear(paths, minX, maxX, minZ, maxZ, null, keep);
+    }
+
+    /**
+     * As above, with a shared test that depends on the segment alone. Its answers are kept on the path for as long as
+     * the same filter instance is passed, so neighbouring chunks do not repeat it.
+     */
+    public static Segments segmentsNear(List<Path> paths, double minX, double maxX, double minZ, double maxZ,
+        SegmentFilter shared, SegmentFilter keep) {
         double[] data = new double[64 * 7];
         int n = 0;
         for (Path path : paths) {
             double[] p = path.points;
+            byte[] answers = shared == null ? null : path.memoFor(shared).answers;
             for (int i = 0; i + 5 < p.length; i += 3) {
                 double lo = Math.min(p[i], p[i + 3]) - path.tube, hi = Math.max(p[i], p[i + 3]) + path.tube;
                 if (hi < minX || lo > maxX) continue;
                 lo = Math.min(p[i + 2], p[i + 5]) - path.tube;
                 hi = Math.max(p[i + 2], p[i + 5]) + path.tube;
                 if (hi < minZ || lo > maxZ) continue;
-                if (!keep.keep((p[i] + p[i + 3]) / 2, (p[i + 1] + p[i + 4]) / 2, (p[i + 2] + p[i + 5]) / 2)) continue;
+                double mx = (p[i] + p[i + 3]) / 2, my = (p[i + 1] + p[i + 4]) / 2, mz = (p[i + 2] + p[i + 5]) / 2;
+                if (answers != null) {
+                    int k = i / 3;
+                    if (answers[k] == 0) answers[k] = shared.keep(mx, my, mz) ? (byte) 1 : (byte) 2;
+                    if (answers[k] == 2) continue;
+                }
+                if (!keep.keep(mx, my, mz)) continue;
                 if ((n + 1) * 7 > data.length) data = Arrays.copyOf(data, data.length * 2);
                 System.arraycopy(p, i, data, n * 7, 6);
                 data[n * 7 + 6] = path.tube;

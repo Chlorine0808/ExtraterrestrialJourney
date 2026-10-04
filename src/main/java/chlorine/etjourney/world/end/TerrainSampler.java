@@ -39,6 +39,8 @@ public final class TerrainSampler {
     private final RegionPicker picker;
     private final ModifierChain chain;
     private final Map<Point, StyleWeights> weightCache = new ConcurrentHashMap<>();
+    private final ArcPaths.SegmentFilter arcGround = (x, y, z) -> arcProbe().weight(x, z) >= 0.3
+        && !nearZoneIsland(x, y, z);
     private final Map<Modifier, Style> owners = new ConcurrentHashMap<>();
 
     public TerrainSampler(long seed, RegionPicker picker) {
@@ -211,6 +213,11 @@ public final class TerrainSampler {
     public double styleWeight(String style, double x, double z) {
         Style s = picker.byName(style);
         return s == null ? 0 : weights(x, z).of(s);
+    }
+
+    /** Arc segments on ARCS ground and clear of zone islands; one instance, so paths can keep its answers. */
+    public ArcPaths.SegmentFilter arcGround() {
+        return arcGround;
     }
 
     public ArcPaths.Probe arcProbe() {

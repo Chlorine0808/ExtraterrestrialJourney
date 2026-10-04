@@ -187,4 +187,26 @@ class PlacementTest {
             }
         }
     }
+
+    @Test
+    void sharedSegmentTestsRunOncePerFilter() {
+        List<ArcPaths.Path> paths = ArcPaths.pathsNear(108L, 7000, 7000, 400, (x, z) -> 1);
+        int[] calls = { 0 };
+        ArcPaths.SegmentFilter shared = (x, y, z) -> {
+            calls[0]++;
+            return y > 100;
+        };
+        ArcPaths.SegmentFilter all = (x, y, z) -> true;
+        ArcPaths.Segments first = ArcPaths.segmentsNear(paths, 6800, 7200, 6800, 7200, shared, all);
+        int firstCalls = calls[0];
+        ArcPaths.Segments again = ArcPaths.segmentsNear(paths, 6800, 7200, 6800, 7200, shared, all);
+        assertTrue(firstCalls > 0);
+        assertEquals(firstCalls, calls[0], "the shared test ran again");
+        assertEquals(first.count, again.count);
+        ArcPaths.Segments plain = ArcPaths.segmentsNear(paths, 6800, 7200, 6800, 7200, (x, y, z) -> y > 100);
+        assertEquals(plain.count, first.count);
+        // Another filter instance gets its own answers.
+        ArcPaths.Segments other = ArcPaths.segmentsNear(paths, 6800, 7200, 6800, 7200, (x, y, z) -> true, all);
+        assertTrue(other.count > first.count);
+    }
 }
