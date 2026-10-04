@@ -39,6 +39,8 @@ public final class ChunkPlan implements TerrainView {
 
     private static final double RANGE = 16;
     private static final double ARC_PAD = 64;
+    /** How far below a segment's midpoint its tube can reach: the thickest tube plus half a segment. */
+    private static final double ARC_REACH = 14;
 
     private final TerrainSampler sampler;
     private final ReservedLookup reservedLookup;
@@ -73,7 +75,8 @@ public final class ChunkPlan implements TerrainView {
             .withoutReserved(ZoneIslands.near(seed, cx, cz, RANGE + ZoneIslands.CELL, sampler.landProbe()), reserved);
         List<Islets.Islet> keptIslets = new ArrayList<>();
         for (Islets.Islet islet : Islets.near(seed, cx, cz, RANGE, sampler.isletProbe())) {
-            if (Reservations.suppression(reserved, islet.x, islet.z) == 0) keptIslets.add(islet);
+            if (Reservations.clear(reserved, islet.x, islet.y - islet.flat - islet.depth, islet.z))
+                keptIslets.add(islet);
         }
         islets = keptIslets;
         schools = Shoals.near(seed, cx, cz, RANGE, sampler.shoalProbe());
@@ -87,7 +90,7 @@ public final class ChunkPlan implements TerrainView {
             area.originZ() - 8 - ARC_PAD,
             area.originZ() + 24 + ARC_PAD,
             sampler.arcGround(),
-            (x, y, z) -> Reservations.suppression(reserved, x, z) == 0);
+            (x, y, z) -> Reservations.clear(reserved, x, y - ARC_REACH, z));
     }
 
     public ChunkArea area() {

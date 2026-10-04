@@ -42,4 +42,12 @@ class ReservationsTest {
         assertFalse(Reservations.touches(ONE, 2000 + 128 * 1.2 + 31, 0, 30));
         assertFalse(Reservations.touches(ONE, 2000 + 128 * 1.2 + 60, 0, 30));
     }
+
+    @Test
+    void theSkyAboveAnIslandIsNotReserved() {
+        assertFalse(Reservations.clear(ONE, 2000, 100, 0));
+        assertFalse(Reservations.clear(ONE, 2000, Reservations.CLEAR_Y - 1, 0));
+        assertTrue(Reservations.clear(ONE, 2000, Reservations.CLEAR_Y, 0));
+        assertTrue(Reservations.clear(ONE, 5000, 20, 0));
+    }
 }
