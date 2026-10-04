@@ -29,6 +29,8 @@ final class McBlocks {
                 return Blocks.quartz_block;
             case STARDUST_FILL:
                 return Blocks.sandstone;
+            case CHAIN:
+                return Blocks.obsidian;
             default:
                 return Blocks.end_stone;
         }
