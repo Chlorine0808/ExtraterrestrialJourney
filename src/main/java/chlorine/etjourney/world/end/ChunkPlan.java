@@ -96,7 +96,8 @@ public final class ChunkPlan implements TerrainView {
 
     /** The column at (x, z), computed once. */
     public ColumnState column(double x, double z) {
-        long key = (Double.doubleToLongBits(x) * 31) ^ Double.doubleToLongBits(z);
+        // Columns sit on whole blocks; key on the block coordinates (mixing the double bits collided).
+        long key = ((long) (int) Math.floor(x) << 32) ^ ((int) Math.floor(z) & 0xFFFFFFFFL);
         ColumnState state = columns.get(key);
         if (state == null) {
             state = new ColumnState(x, z);
