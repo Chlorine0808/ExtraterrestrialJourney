@@ -28,7 +28,7 @@ public final class ArcPaths {
     private static final double BASE_TUBE = 7.5, MIN_TUBE = 6;
     /** Paths turn back once they stray this far from their start, which bounds the search. */
     private static final double MAX_REACH = 420;
-    private static final double MIN_Y = 6, MAX_Y = 122;
+    private static final double MIN_Y = 6, MAX_Y = 250;
     private static final long SALT = 0x8A5CD789635D2DFFL;
 
     private static final CellCache<List<Path>> CELLS = new CellCache<>(32768);
