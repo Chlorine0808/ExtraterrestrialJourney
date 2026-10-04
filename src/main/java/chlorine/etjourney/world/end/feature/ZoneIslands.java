@@ -74,7 +74,9 @@ public final class ZoneIslands {
         if (reserved.isEmpty()) return islands;
         List<Island> kept = new ArrayList<>();
         for (Island island : islands) {
-            if (!Reservations.overlaps(reserved, island.x, island.z, island.radius * 1.2)) kept.add(island);
+            // High enough, it floats over the reserved island instead.
+            if (island.y - island.down >= Reservations.CLEAR_Y
+                || !Reservations.overlaps(reserved, island.x, island.z, island.radius * 1.2)) kept.add(island);
         }
         return kept;
     }
