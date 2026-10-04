@@ -22,6 +22,7 @@ import chlorine.etjourney.world.end.modifier.Modifier;
 import chlorine.etjourney.world.end.modifier.ModifierChain;
 import chlorine.etjourney.world.end.modifier.TerrainView;
 import chlorine.etjourney.world.end.modifier.builtin.CoreModifiers;
+import chlorine.etjourney.world.end.region.RegionMap;
 import chlorine.etjourney.world.end.region.RegionPicker;
 import chlorine.etjourney.world.end.region.Style;
 import chlorine.etjourney.world.end.region.StyleWeights;
@@ -206,6 +207,11 @@ public final class TerrainSampler {
             @Override
             public double ground(double x, double z) {
                 return TerrainSampler.this.land(x, z) > 0 ? bareColumn(x, z, true).top : -1000;
+            }
+
+            @Override
+            public double[] regionCentre(int cx, int cz) {
+                return RegionMap.cellCentre(seed, cx, cz);
             }
         };
     }

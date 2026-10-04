@@ -44,26 +44,50 @@ public final class Structures {
         }
     };
 
-    public static final Structure.Kind<Ring> RINGS = new Structure.Kind<Ring>("RINGS", 640, 280) {
+    /** One ring per RINGS region, on the region's own grid, where the style is strongest near the region centre. */
+    public static final Structure.Kind<Ring> RINGS = new Structure.Kind<Ring>(
+        "RINGS",
+        StructureProbe.REGION_CELL,
+        280) {
 
         @Override
         protected Ring compute(long seed, int cx, int cz, StructureProbe probe) {
             long s = seed ^ 0x2F7C4A9E1B3D5860L;
-            if (Hash.hash01(s, cx, cz) > 0.5) return null;
-            double x = (cx + 0.3 + 0.4 * Hash.hash01(s + 1, cx, cz)) * cell;
-            double z = (cz + 0.3 + 0.4 * Hash.hash01(s + 2, cx, cz)) * cell;
-            if (Math.hypot(x, z) < 1400 || probe.weight(style, x, z) < MIN_WEIGHT) return null;
+            double[] centre = probe.regionCentre(cx, cz);
+            // The region map is warped: look around the centre for where the style holds, staying inside the cell.
+            double x = 0, z = 0, best = -1;
+            for (int i = -1; i <= 1; i++) {
+                for (int j = -1; j <= 1; j++) {
+                    double px = centre[0] + i * 100, pz = centre[1] + j * 100;
+                    double w = probe.weight(style, px, pz);
+                    if (w > best) {
+                        best = w;
+                        x = px;
+                        z = pz;
+                    }
+                }
+            }
+            if (best < MIN_WEIGHT || Math.hypot(x, z) < 1400) return null;
             double radius = 120 + 140 * Hash.hash01(s + 3, cx, cz);
             double tube = 7 + 5 * Hash.hash01(s + 4, cx, cz);
-            double tilt = Math.toRadians(35 * Hash.hash01(s + 5, cx, cz));
+            double tilt = ringTilt(Math.toRadians(35 * Hash.hash01(s + 5, cx, cz)), radius, tube);
             double yaw = Hash.hash01(s + 6, cx, cz) * Math.PI * 2;
-            // Tilt no further than keeps the ring between the void floor and the ceiling.
-            tilt = Math.min(tilt, Math.asin(Math.max(0, ((CEILING - 8) / 2 - tube) / radius)));
+            // Sometimes a second, smaller ring on the same centre at another angle, like a gyroscope.
+            boolean gyro = Hash.hash01(s + 8, cx, cz) < 0.4;
+            double inner = radius * (0.5 + 0.2 * Hash.hash01(s + 9, cx, cz)), innerTube = tube * 0.8;
+            double innerTilt = ringTilt(Math.toRadians(40 + 50 * Hash.hash01(s + 10, cx, cz)), inner, innerTube);
             double reachY = radius * Math.sin(tilt) + tube;
+            if (gyro) reachY = Math.max(reachY, inner * Math.sin(innerTilt) + innerTube);
             double y = Math.max(reachY + 4, Math.min(CEILING - reachY, 60 + 120 * Hash.hash01(s + 7, cx, cz)));
-            return new Ring(x, y, z, radius, tube, tilt, yaw);
+            Ring second = gyro ? new Ring(x, y, z, inner, innerTube, innerTilt, yaw + Math.PI / 2, null) : null;
+            return new Ring(x, y, z, radius, tube, tilt, yaw, second);
         }
     };
+
+    /** Tilt no further than keeps a ring between the void floor and the ceiling. */
+    private static double ringTilt(double tilt, double radius, double tube) {
+        return Math.min(tilt, Math.asin(Math.max(0, Math.min(1, ((CEILING - 8) / 2 - tube) / radius))));
+    }
 
     public static final Structure.Kind<Arch> ARCHES = new Structure.Kind<Arch>("ARCHES", 96, 52) {
 
@@ -196,15 +220,28 @@ public final class Structures {
 
         final double y, radius, tube;
         final double[] n, u, v;
+        /** A second ring on the same centre, or null. */
+        final Ring inner;
 
-        Ring(double x, double y, double z, double radius, double tube, double tilt, double yaw) {
+        Ring(double x, double y, double z, double radius, double tube, double tilt, double yaw, Ring inner) {
             super(x, z, radius + tube, y - radius * Math.sin(tilt) - tube, y + radius * Math.sin(tilt) + tube);
             this.y = y;
             this.radius = radius;
             this.tube = tube;
+            this.inner = inner;
             n = new double[] { Math.sin(tilt) * Math.cos(yaw), Math.cos(tilt), Math.sin(tilt) * Math.sin(yaw) };
             u = normalize(cross(n, Math.abs(n[1]) < 0.9 ? new double[] { 0, 1, 0 } : new double[] { 1, 0, 0 }));
             v = cross(n, u);
+        }
+
+        @Override
+        public double minY() {
+            return inner == null ? super.minY() : Math.min(super.minY(), inner.minY());
+        }
+
+        @Override
+        public double maxY() {
+            return inner == null ? super.maxY() : Math.max(super.maxY(), inner.maxY());
         }
 
         @Override
@@ -213,7 +250,8 @@ public final class Structures {
             double h = px * n[0] + py * n[1] + pz * n[2];
             double a = px * u[0] + py * u[1] + pz * u[2], b = px * v[0] + py * v[1] + pz * v[2];
             double r = Math.hypot(a, b) - radius;
-            return tube - Math.sqrt(h * h + r * r);
+            double d = tube - Math.sqrt(h * h + r * r);
+            return inner == null ? d : Math.max(d, inner.body(x, y, z));
         }
     }
 

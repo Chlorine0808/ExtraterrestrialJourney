@@ -10,4 +10,12 @@ public interface StructureProbe {
 
     /** Ground surface at (x, z), or a very low value over the void. */
     double ground(double x, double z);
+
+    /** Centre of style region cell (cx, cz), whose cells are REGION_CELL wide; plain cell centres by default. */
+    default double[] regionCentre(int cx, int cz) {
+        return new double[] { (cx + 0.5) * REGION_CELL, (cz + 0.5) * REGION_CELL };
+    }
+
+    /** Width of a style region cell; the engine's region map uses the same. */
+    int REGION_CELL = 720;
 }
