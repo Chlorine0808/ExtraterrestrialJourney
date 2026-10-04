@@ -55,6 +55,8 @@ public final class Structures {
             double tube = 7 + 5 * Hash.hash01(s + 4, cx, cz);
             double tilt = Math.toRadians(35 * Hash.hash01(s + 5, cx, cz));
             double yaw = Hash.hash01(s + 6, cx, cz) * Math.PI * 2;
+            // Tilt no further than keeps the ring between the void floor and the ceiling.
+            tilt = Math.min(tilt, Math.asin(Math.max(0, ((CEILING - 8) / 2 - tube) / radius)));
             double reachY = radius * Math.sin(tilt) + tube;
             double y = Math.max(reachY + 4, Math.min(CEILING - reachY, 60 + 120 * Hash.hash01(s + 7, cx, cz)));
             return new Ring(x, y, z, radius, tube, tilt, yaw);

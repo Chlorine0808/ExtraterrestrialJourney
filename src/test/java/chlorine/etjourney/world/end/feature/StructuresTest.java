@@ -151,4 +151,16 @@ class StructuresTest {
             }
         }
     }
+
+    @Test
+    void ringsStayInsideTheWorld() {
+        int seen = 0;
+        for (int i = 0; i < 2000; i++) {
+            Structures.Ring r = Structures.RINGS.inCell(308L, 5 + i % 40, i / 40, LAND);
+            if (r == null) continue;
+            seen++;
+            assertTrue(r.maxY() <= 250 && r.minY() >= 0, "ring " + r.minY() + ".." + r.maxY());
+        }
+        assertTrue(seen > 50);
+    }
 }
