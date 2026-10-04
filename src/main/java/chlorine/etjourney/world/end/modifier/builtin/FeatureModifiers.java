@@ -76,7 +76,7 @@ public final class FeatureModifiers {
                             // Gentle cells are left alone; FACE_STEEP is where roughening starts.
                             if (slope < FACE_STEEP) continue;
                             if (!DensityField.cellCrosses(all, i, j, k, FACE_DEPTH * slope)) continue;
-                            roughenCell(sink, all, terrain, s, i, j, k, base, y0, y1);
+                            roughenCell(view, sink, all, terrain, s, i, j, k, base, y0, y1);
                         }
                     }
                 }
@@ -84,8 +84,8 @@ public final class FeatureModifiers {
         });
     }
 
-    private static void roughenCell(BlockSink sink, double[] all, double[] terrain, long s, int i, int j, int k,
-        int base, int y0, int y1) {
+    private static void roughenCell(TerrainView view, BlockSink sink, double[] all, double[] terrain, long s, int i,
+        int j, int k, int base, int y0, int y1) {
         for (int lx = i * 8; lx < i * 8 + 8; lx++) {
             for (int lz = j * 8; lz < j * 8 + 8; lz++) {
                 int x = sink.originX() + lx, z = sink.originZ() + lz;
@@ -102,11 +102,32 @@ public final class FeatureModifiers {
                         + (ValueNoise.noise3(s + 1, x / 4.0, y, z / 4.0, 3) - 0.5) * 2 * 0.35;
                     n = Math.max(-1, Math.min(1, n * 2));
                     boolean solid = d + n * reach > 0;
+                    if (solid == d > 0 || !surfaceNear(view, all, lx, ly, lz, x, y, z, d > 0)) continue;
                     if (solid && sink.isAir(x, y, z)) sink.set(x, y, z, EndBlock.STONE);
                     else if (!solid && !sink.isAir(x, y, z)) sink.clear(x, y, z);
                 }
             }
         }
+    }
+
+    /**
+     * Whether stepping from a block toward the surface along the gradient reaches it within FACE_DEPTH + 1 blocks.
+     * The gradient alone can overstate how near the surface is where it crosses into the next grid cell.
+     */
+    private static boolean surfaceNear(TerrainView view, double[] f, int lx, int ly, int lz, int x, int y, int z,
+        boolean solid) {
+        double[] g = DensityField.gradient(f, lx, ly, lz);
+        double length = Math.sqrt(g[0] * g[0] + g[1] * g[1] + g[2] * g[2]);
+        if (length == 0) return false;
+        double sign = solid ? -1 : 1;
+        for (int step = 1; step <= FACE_DEPTH + 1; step++) {
+            int px = (int) Math.round(x + sign * g[0] / length * step);
+            int py = (int) Math.round(y + sign * g[1] / length * step);
+            int pz = (int) Math.round(z + sign * g[2] / length * step);
+            if (py < 0 || py > 255) return false;
+            if (view.densityAt(px, py, pz) > 0 != solid) return true;
+        }
+        return false;
     }
 
     /** Zone islands as a 3D shape, and their surface repainted with their zone's blocks. */

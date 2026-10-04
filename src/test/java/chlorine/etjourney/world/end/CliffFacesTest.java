@@ -7,7 +7,9 @@ import java.util.Collections;
 import org.junit.jupiter.api.Test;
 
 import chlorine.etjourney.world.end.modifier.ColumnState;
+import chlorine.etjourney.world.end.modifier.DensityField;
 import chlorine.etjourney.world.end.modifier.EndBlock;
+import chlorine.etjourney.world.end.modifier.builtin.FeatureModifiers;
 import chlorine.etjourney.world.end.region.RegionPicker;
 import chlorine.etjourney.world.end.region.Styles;
 
@@ -93,5 +95,62 @@ class CliffFacesTest {
 
     private static boolean air(MemorySink sink, int x, int y, int z) {
         return sink.get(x, y, z) == null;
+    }
+
+    @Test
+    void facesMoveTheSurfaceOnlyAFewBlocks() {
+        // Every block faces() changes must lie within a few blocks of the surface it started from: no spikes.
+        int chunks = 0, changed = 0;
+        for (int n = 0; n < 20000 && chunks < 60; n++) {
+            int cx = 80 + n % 200 * 5, cz = -1500 + n / 200 * 11;
+            ChunkPlan plan = new ChunkPlan(SAMPLER, cx, cz, (a, b) -> Collections.emptyList());
+            if (plan.column(cx * 16 + 8, cz * 16 + 8).land <= 0) continue;
+            chunks++;
+            for (boolean upper : new boolean[] { false, true }) {
+                int base = upper ? 128 : 0;
+                double[] f = plan.densityField(upper, true);
+                boolean[][][] was = new boolean[16][128][16];
+                MemorySink sink = new MemorySink(cx, cz, base, base + 128);
+                for (int x = 0; x < 16; x++) {
+                    for (int z = 0; z < 16; z++) {
+                        for (int y = 0; y < 128; y++) {
+                            was[x][y][z] = DensityField.at(f, x, y, z) > 0;
+                            if (was[x][y][z]) sink.set(cx * 16 + x, base + y, cz * 16 + z, EndBlock.STONE);
+                        }
+                    }
+                }
+                FeatureModifiers.faces()
+                    .blocks(plan.area(), sink, 1);
+                for (int x = 5; x < 11; x++) {
+                    for (int z = 5; z < 11; z++) {
+                        for (int y = 5; y < 123; y++) {
+                            boolean now = sink.get(cx * 16 + x, base + y, cz * 16 + z) != null;
+                            if (now == was[x][y][z]) continue;
+                            changed++;
+                            // A face moves at most FACE_DEPTH (4) blocks, plus a block for rounding.
+                            assertTrue(
+                                nearSurface(was, x, y, z, 6),
+                                "changed far from the surface at " + x + "," + (base + y) + "," + z);
+                        }
+                    }
+                }
+            }
+        }
+        assertTrue(changed > 0, "faces changed nothing");
+    }
+
+    /** Whether a block of the other kind lies within r blocks. */
+    private static boolean nearSurface(boolean[][][] solid, int x, int y, int z, int r) {
+        for (int dx = -r; dx <= r; dx++) {
+            for (int dy = -r; dy <= r; dy++) {
+                for (int dz = -r; dz <= r; dz++) {
+                    if (dx * dx + dy * dy + dz * dz > r * r) continue;
+                    int px = x + dx, py = y + dy, pz = z + dz;
+                    if (px < 0 || px > 15 || py < 0 || py > 127 || pz < 0 || pz > 15) continue;
+                    if (solid[px][py][pz] != solid[x][y][z]) return true;
+                }
+            }
+        }
+        return false;
     }
 }
