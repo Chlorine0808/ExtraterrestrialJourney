@@ -312,4 +312,71 @@ class StructuresTest {
         }
         assertTrue(seen > 10);
     }
+
+    /** Land with its underside at Y 90. */
+    private static final StructureProbe SLAB = new StructureProbe() {
+
+        @Override
+        public double weight(String style, double x, double z) {
+            return 1;
+        }
+
+        @Override
+        public double land(double x, double z) {
+            return 60;
+        }
+
+        @Override
+        public double ground(double x, double z) {
+            return 120;
+        }
+
+        @Override
+        public double underside(double x, double z) {
+            return 90;
+        }
+    };
+
+    @Test
+    void hangingChainsHangFromTheUndersideWithHollowLinks() {
+        int seen = 0;
+        for (int cx = 20; cx < 80; cx++) {
+            Structures.Chain c = Structures.HANGING_CHAINS.inCell(317L, cx, 4, SLAB);
+            if (c == null) continue;
+            seen++;
+            assertTrue(c.top >= 90 && c.bottom < c.top - 15, "chain " + c.bottom + ".." + c.top);
+            assertTrue(c.footprint <= 12, "footprint " + c.footprint);
+            assertTrue(c.feet().length == 1, "a hanging chain hangs from the land above it");
+            double ca = Math.cos(c.yaw), sa = Math.sin(c.yaw);
+            // First link: in the plane of the yaw axis, hollow in the middle, solid on its wire.
+            double depth0 = c.linkLength() / 2;
+            assertTrue(c.density(c.centreX, c.top - depth0, c.centreZ) < 0, "link not hollow");
+            assertTrue(c.density(c.centreX + ca * c.linkWidth(), c.top - depth0, c.centreZ + sa * c.linkWidth()) > 0);
+            // The next link turns a quarter: solid across the other axis, empty along the first.
+            double depth1 = c.pitch() + c.linkLength() / 2;
+            assertTrue(c.density(c.centreX - sa * c.linkWidth(), c.top - depth1, c.centreZ + ca * c.linkWidth()) > 0);
+            assertTrue(c.density(c.centreX + ca * c.linkWidth(), c.top - depth1, c.centreZ + sa * c.linkWidth()) < 0);
+        }
+        assertTrue(seen > 10, "only " + seen + " chains");
+    }
+
+    @Test
+    void noChainHangsWhereThereIsNoLand() {
+        for (int cx = 20; cx < 80; cx++) assertTrue(Structures.HANGING_CHAINS.inCell(318L, cx, 4, LAND) == null);
+    }
+
+    @Test
+    void skyChainsRunFromTopToBottom() {
+        int seen = 0;
+        for (int cx = 20; cx < 80; cx++) {
+            for (int cz = 0; cz < 10; cz++) {
+                Structures.Chain c = Structures.SKY_CHAINS.inCell(319L, cx, cz, LAND);
+                if (c == null) continue;
+                seen++;
+                assertTrue(c.minY() <= 3 && c.maxY() >= 252 && c.maxY() <= 256, c.minY() + ".." + c.maxY());
+                assertEquals(0, c.feet().length);
+            }
+        }
+        assertTrue(seen > 10, "only " + seen + " sky chains");
+    }
 }

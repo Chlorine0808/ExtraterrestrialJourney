@@ -152,6 +152,42 @@ public final class Structures {
         }
     };
 
+    /** Chains hanging 20-80 blocks from the underside of the land, most with a boulder at the end. */
+    public static final Structure.Kind<Chain> HANGING_CHAINS = new Structure.Kind<Chain>("CHAINS", 40, 12) {
+
+        @Override
+        protected Chain compute(long seed, int cx, int cz, StructureProbe probe) {
+            long s = seed ^ 0x1D5F8A3C7E2B9064L;
+            if (Hash.hash01(s, cx, cz) > 0.45) return null;
+            double x = (cx + 0.2 + 0.6 * Hash.hash01(s + 1, cx, cz)) * cell;
+            double z = (cz + 0.2 + 0.6 * Hash.hash01(s + 2, cx, cz)) * cell;
+            if (probe.weight(style, x, z) < MIN_WEIGHT) return null;
+            double under = probe.underside(x, z);
+            if (under < 40) return null;
+            double scale = 1 + Hash.hash01(s + 3, cx, cz);
+            double length = 20 + 60 * Hash.hash01(s + 4, cx, cz);
+            // Starts inside the slab, clear of the lumps on its underside.
+            double top = under + 8, bottom = Math.max(12, under - length);
+            double weight = Hash.hash01(s + 5, cx, cz) < 0.7 ? 2.5 * scale + 1 : 0;
+            return new Chain(x, z, top, bottom, scale, Hash.hash01(s + 6, cx, cz) * Math.PI, weight, true);
+        }
+    };
+
+    /** Huge chains running from the top of the world to the bottom, through whatever lies between. */
+    public static final Structure.Kind<Chain> SKY_CHAINS = new Structure.Kind<Chain>("CHAINS", 200, 10) {
+
+        @Override
+        protected Chain compute(long seed, int cx, int cz, StructureProbe probe) {
+            long s = seed ^ 0x7B3E9C1A5D2F8046L;
+            if (Hash.hash01(s, cx, cz) > 0.35) return null;
+            double x = (cx + 0.2 + 0.6 * Hash.hash01(s + 1, cx, cz)) * cell;
+            double z = (cz + 0.2 + 0.6 * Hash.hash01(s + 2, cx, cz)) * cell;
+            if (probe.weight(style, x, z) < MIN_WEIGHT) return null;
+            double scale = 2 + Hash.hash01(s + 3, cx, cz);
+            return new Chain(x, z, 253, 2, scale, Hash.hash01(s + 6, cx, cz) * Math.PI, 0, false);
+        }
+    };
+
     /** Tilt no further than keeps a ring between the void floor and the ceiling. */
     private static double ringTilt(double tilt, double radius, double tube) {
         return Math.min(tilt, Math.asin(Math.max(0, Math.min(1, ((CEILING - 8) / 2 - tube) / radius))));
@@ -416,6 +452,75 @@ public final class Structures {
             double qx = Math.abs(x) - bx, qy = Math.abs(y) - by, qz = Math.abs(z) - bz;
             double outside = Math.sqrt(sq(Math.max(qx, 0)) + sq(Math.max(qy, 0)) + sq(Math.max(qz, 0)));
             return outside + Math.min(Math.max(qx, Math.max(qy, qz)), 0);
+        }
+
+        private static double sq(double v) {
+            return v * v;
+        }
+    }
+
+    /**
+     * A vertical chain of links, each a hollow loop in a vertical plane; neighbouring links turn a quarter, as real
+     * chain links do. A boulder may hang from the last one.
+     */
+    public static final class Chain extends Structure {
+
+        final double top, bottom, scale, yaw, weight;
+        private final boolean hanging;
+
+        Chain(double x, double z, double top, double bottom, double scale, double yaw, double weight, boolean hanging) {
+            super(x, z, 1.5 * scale + wire(scale) + Math.max(weight, 0) + 1, bottom - 2 * weight - 1, top + 1);
+            this.top = top;
+            this.bottom = bottom;
+            this.scale = scale;
+            this.yaw = yaw;
+            this.weight = weight;
+            this.hanging = hanging;
+        }
+
+        private static double wire(double scale) {
+            return 0.45 * scale + 0.35;
+        }
+
+        /** Distance from one link's top to the next one's; links overlap by a fifth of their length. */
+        double pitch() {
+            return 4 * scale;
+        }
+
+        double linkLength() {
+            return 5 * scale;
+        }
+
+        /** Half the width of a link, to the middle of its wire. */
+        double linkWidth() {
+            return 1.5 * scale;
+        }
+
+        @Override
+        public double[][] feet() {
+            return hanging ? new double[][] { { centreX, centreZ } } : new double[0][];
+        }
+
+        @Override
+        protected double body(double x, double y, double z) {
+            double px = x - centreX, pz = z - centreZ;
+            double c = Math.cos(yaw), s = Math.sin(yaw);
+            double a = px * c + pz * s, b = -px * s + pz * c;
+            double r = wire(scale), w = linkWidth(), half = linkLength() / 2;
+            double d = Double.NEGATIVE_INFINITY;
+            if (y >= bottom && y <= top) {
+                double depth = top - y;
+                int i = (int) Math.floor(depth / pitch());
+                for (int k = Math.max(0, i - 1); k <= i; k++) {
+                    double v = depth - (k * pitch() + half);
+                    double u = k % 2 == 0 ? a : b, n = k % 2 == 0 ? b : a;
+                    double along = Math.max(Math.abs(v) - (half - w), 0);
+                    double loop = Math.hypot(u, along) - w;
+                    d = Math.max(d, r - Math.hypot(loop, n));
+                }
+            }
+            if (weight > 0) d = Math.max(d, weight - Math.sqrt(px * px + sq(y - (bottom - weight + 1)) + pz * pz));
+            return d;
         }
 
         private static double sq(double v) {

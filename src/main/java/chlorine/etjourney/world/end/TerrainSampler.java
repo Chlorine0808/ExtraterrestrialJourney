@@ -210,6 +210,11 @@ public final class TerrainSampler {
             }
 
             @Override
+            public double underside(double x, double z) {
+                return TerrainSampler.this.land(x, z) > 0 ? bareColumn(x, z, true).bottom : -1000;
+            }
+
+            @Override
             public double[] regionCentre(int cx, int cz) {
                 return RegionMap.cellCentre(seed, cx, cz);
             }
