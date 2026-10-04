@@ -1,5 +1,6 @@
 package chlorine.etjourney.world.end.modifier.builtin;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -8,6 +9,8 @@ import chlorine.etjourney.world.end.feature.Holes;
 import chlorine.etjourney.world.end.feature.Islets;
 import chlorine.etjourney.world.end.feature.Lakes;
 import chlorine.etjourney.world.end.feature.Shoals;
+import chlorine.etjourney.world.end.feature.Structure;
+import chlorine.etjourney.world.end.feature.Structures;
 import chlorine.etjourney.world.end.feature.Zone;
 import chlorine.etjourney.world.end.feature.ZoneIslands;
 import chlorine.etjourney.world.end.modifier.BlockSink;
@@ -27,12 +30,17 @@ public final class FeatureModifiers {
     private FeatureModifiers() {}
 
     /**
-     * Shapes and blocks that every chunk runs. Features that belong to a style (arcs, islets) check the
+     * Shapes and blocks that every chunk runs. Features that belong to a style (arcs, islets, structures) check the
      * style at their own centre: their shapes reach beyond the region, and a chunk whose own weight is zero must
      * still draw the part that crosses it.
      */
     public static List<Modifier> core() {
-        return Arrays.asList(zoneIslands(), holes(), lakeWater(), shoals(), arcs(), islets());
+        List<Modifier> all = new ArrayList<>(
+            Arrays.asList(zoneIslands(), holes(), lakeWater(), shoals(), arcs(), islets()));
+        int order = 850;
+        for (Structure.Kind<? extends Structure> kind : Structures.kinds())
+            all.add(StructureModifiers.of(kind, order++));
+        return all;
     }
 
     /** Zone islands as a 3D shape, and their surface repainted with their zone's blocks. */
