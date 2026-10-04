@@ -123,17 +123,16 @@ public final class EndTerrain {
         if (seed == null) return;
         IChunkProvider generator = ((WorldServer) world).theChunkProviderServer.currentChunkProvider;
         ChunkPlan plan = plan(generator, world, seed, chunk.xPosition, chunk.zPosition);
-        if (!TallPass.needed(plan)) return;
-        boolean hasSky = !world.provider.hasNoSky;
-        boolean[] wrote = { false };
-        TallPass.forEachSolid(TallPass.upperField(plan), (lx, y, lz) -> {
-            if (y > 255) return;
-            int index = y >> 4;
-            if (storage[index] == null) storage[index] = new ExtendedBlockStorage(index << 4, hasSky);
-            storage[index].func_150818_a(lx, y & 15, lz, Blocks.end_stone);
-            wrote[0] = true;
-        });
-        if (wrote[0]) {
+        McStorageSink upper = new McStorageSink(storage, !world.provider.hasNoSky, chunk.xPosition, chunk.zPosition);
+        if (TallPass.needed(plan)) {
+            int ox = chunk.xPosition * 16, oz = chunk.zPosition * 16;
+            TallPass.forEachSolid(
+                TallPass.upperField(plan),
+                (lx, y, lz) -> { if (y <= 255) upper.put(ox + lx, y, oz + lz, Blocks.end_stone, 0); });
+        }
+        // The same block work as in the generator's array, for Y 128-255.
+        plan.blocks(upper);
+        if (upper.wrote()) {
             // generateHeightMap is client-only in 1.7.10; generateSkylightMap also rebuilds the height map.
             chunk.generateSkylightMap();
             chunk.isModified = true;
