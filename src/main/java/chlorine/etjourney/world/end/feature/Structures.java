@@ -55,9 +55,11 @@ public final class Structures {
             long s = seed ^ 0x2F7C4A9E1B3D5860L;
             double[] centre = probe.regionCentre(cx, cz);
             // The region map is warped: look around the centre for where the style holds, staying inside the cell.
-            double x = 0, z = 0, best = -1;
+            // Ties keep the centre, which comes first.
+            double x = centre[0], z = centre[1], best = probe.weight(style, x, z);
             for (int i = -1; i <= 1; i++) {
                 for (int j = -1; j <= 1; j++) {
+                    if (i == 0 && j == 0) continue;
                     double px = centre[0] + i * 100, pz = centre[1] + j * 100;
                     double w = probe.weight(style, px, pz);
                     if (w > best) {

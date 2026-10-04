@@ -190,4 +190,14 @@ class StructuresTest {
         }
         assertTrue(checked > 20);
     }
+
+    @Test
+    void ringsSitAtTheirRegionCentreWhereTheStyleIsEven() {
+        for (int i = 0; i < 40; i++) {
+            Structures.Ring r = Structures.RINGS.inCell(311L, 4 + i, 6, LAND);
+            if (r == null) continue;
+            double[] centre = LAND.regionCentre(4 + i, 6);
+            assertTrue(Math.hypot(r.centreX - centre[0], r.centreZ - centre[1]) < 1e-9, "ring off its region centre");
+        }
+    }
 }
