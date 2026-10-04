@@ -146,7 +146,12 @@ public final class StyleModifiers {
         Tier tier = new Tier();
         tier.keel = 1.1 + 1.2 * ValueNoise.mask(t + 5, x, z, 460);
         tier.step = 14 + 24 * ValueNoise.mask(t + 6, wi[0], wi[1], 200);
-        archetype(tier, t, ((int) phase + i) % TIER_ARCHETYPES.length, wi, x, z, 1);
+        // Pure archetypes, blended into the next one over the last fifth of each phase step.
+        double p = phase + i;
+        int a = (int) Math.floor(p);
+        double blend = ValueNoise.smooth(Math.max(0, (p - a - 0.8) / 0.2));
+        archetype(tier, t, a % TIER_ARCHETYPES.length, wi, x, z, 1 - blend);
+        if (blend > 0) archetype(tier, t, (a + 1) % TIER_ARCHETYPES.length, wi, x, z, blend);
         return tier;
     }
 
