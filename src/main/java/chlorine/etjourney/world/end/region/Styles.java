@@ -113,6 +113,11 @@ public final class Styles {
         .modifiers(StyleModifiers.slotCanyons())
         .build();
 
+    /** Springs in the rim cliffs pour water into the void; placed at populate time, outside the modifier chain. */
+    public static final Style VOID_FALLS = Style.builder("VOID_FALLS", StyleKind.OVERLAY)
+        .overlay(OVERLAY_CHANCE, Style.LAND)
+        .build();
+
     /** Free-standing structures: the style only marks where they form; the shapes come from feature cells. */
     public static final Style MUSHROOMS = structure("MUSHROOMS", Style.ANY);
     public static final Style RINGS = structure("RINGS", Style.ANY);
@@ -138,6 +143,7 @@ public final class Styles {
             MIRRORED,
             SHATTERED,
             SLOT_CANYONS,
+            VOID_FALLS,
             MUSHROOMS,
             RINGS,
             ARCHES,
