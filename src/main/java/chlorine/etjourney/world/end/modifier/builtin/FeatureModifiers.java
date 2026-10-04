@@ -40,6 +40,7 @@ public final class FeatureModifiers {
         int order = 850;
         for (Structure.Kind<? extends Structure> kind : Structures.kinds())
             all.add(StructureModifiers.of(kind, order++));
+        all.add(StructureModifiers.ringlets());
         return all;
     }
 
