@@ -469,7 +469,12 @@ public final class Structures {
         private final boolean hanging;
 
         Chain(double x, double z, double top, double bottom, double scale, double yaw, double weight, boolean hanging) {
-            super(x, z, 1.5 * scale + wire(scale) + Math.max(weight, 0) + 1, bottom - 2 * weight - 1, top + 1);
+            super(
+                x,
+                z,
+                1.5 * scale + wire(scale) + Math.max(weight, 0) + 1,
+                bottom - 2 * weight - 1,
+                top + wire(scale) + 1);
             this.top = top;
             this.bottom = bottom;
             this.scale = scale;
@@ -480,6 +485,10 @@ public final class Structures {
 
         private static double wire(double scale) {
             return 0.45 * scale + 0.35;
+        }
+
+        double wire() {
+            return wire(scale);
         }
 
         /** Distance from one link's top to the next one's; links overlap by a fifth of their length. */
@@ -508,10 +517,11 @@ public final class Structures {
             double a = px * c + pz * s, b = -px * s + pz * c;
             double r = wire(scale), w = linkWidth(), half = linkLength() / 2;
             double d = Double.NEGATIVE_INFINITY;
-            if (y >= bottom && y <= top) {
+            if (y >= bottom && y <= top + r) {
                 double depth = top - y;
                 int i = (int) Math.floor(depth / pitch());
-                for (int k = Math.max(0, i - 1); k <= i; k++) {
+                // A link reaches its wire's thickness above its own start, into the previous link's span.
+                for (int k = Math.max(0, i - 1); k <= i + 1; k++) {
                     double v = depth - (k * pitch() + half);
                     double u = k % 2 == 0 ? a : b, n = k % 2 == 0 ? b : a;
                     double along = Math.max(Math.abs(v) - (half - w), 0);

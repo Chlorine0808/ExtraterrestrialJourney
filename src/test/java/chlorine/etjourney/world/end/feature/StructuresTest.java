@@ -379,4 +379,18 @@ class StructuresTest {
         }
         assertTrue(seen > 10, "only " + seen + " sky chains");
     }
+
+    @Test
+    void chainLinksHaveWholeBends() {
+        int checked = 0;
+        for (int cx = 20; cx < 200; cx++) {
+            Structures.Chain c = Structures.HANGING_CHAINS.inCell(320L, cx, 4, SLAB);
+            if (c == null) continue;
+            checked++;
+            double r = c.wire();
+            // The top of the third link's bend, just above its centre line.
+            assertTrue(c.density(c.centreX, c.top - 2 * c.pitch() + r * 0.5, c.centreZ) > 0, "bend cut flat");
+        }
+        assertTrue(checked > 10);
+    }
 }
