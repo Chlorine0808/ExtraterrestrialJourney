@@ -10,7 +10,8 @@ import chlorine.etjourney.world.end.modifier.builtin.StyleModifiers;
 /** The terrain styles carried over from the spike, as bases and overlays. Core modifiers are not listed here. */
 public final class Styles {
 
-    private static final double OVERLAY_CHANCE = 0.1;
+    /** Chance of each overlay per region; with fifteen overlays most regions still get none or one. */
+    private static final double OVERLAY_CHANCE = 0.06;
 
     public static final Style PLAINS = Style.builder("PLAINS", StyleKind.BASE_LAND)
         .share(3)
@@ -86,8 +87,47 @@ public final class Styles {
         .modifiers(StyleModifiers.wildWaves())
         .build();
 
+    /** Upside-down continents: a flat top with the relief hanging below. */
+    public static final Style INVERTED = Style.builder("INVERTED", StyleKind.BASE_LAND)
+        .share(1)
+        .holes(true)
+        .modifiers(StyleModifiers.inverted())
+        .build();
+    public static final Style MESAS = Style.builder("MESAS", StyleKind.OVERLAY)
+        .overlay(OVERLAY_CHANCE, Style.LAND)
+        .valleys(0.5)
+        .holes(true)
+        .modifiers(StyleModifiers.mesas())
+        .build();
+    public static final Style MIRRORED = Style.builder("MIRRORED", StyleKind.OVERLAY)
+        .overlay(OVERLAY_CHANCE, Style.LAND)
+        .valleys(0.3)
+        .modifiers(StyleModifiers.mirroredLift(), StyleModifiers.mirrored())
+        .build();
+    public static final Style SHATTERED = Style.builder("SHATTERED", StyleKind.OVERLAY)
+        .overlay(OVERLAY_CHANCE, Style.LAND)
+        .mountains(0.5)
+        .valleys(0.3)
+        .modifiers(StyleModifiers.shattered())
+        .build();
+
     private static final List<Style> ALL = Collections.unmodifiableList(
-        Arrays.asList(PLAINS, LOWLANDS, BASIN, RANGES, LAYERED, ISLETS, SHOALS, ARCS, SPIRES, WAVES, WILD_WAVES));
+        Arrays.asList(
+            PLAINS,
+            LOWLANDS,
+            BASIN,
+            RANGES,
+            LAYERED,
+            ISLETS,
+            SHOALS,
+            ARCS,
+            SPIRES,
+            WAVES,
+            WILD_WAVES,
+            INVERTED,
+            MESAS,
+            MIRRORED,
+            SHATTERED));
 
     private Styles() {}
 
