@@ -10,21 +10,17 @@ import chlorine.etjourney.world.end.reserve.Area;
 import chlorine.etjourney.world.end.reserve.Reservations;
 
 /**
- * Shoals: schools of tiny arrowhead platforms all pointing the same way, scattered high over the whole outer End.
- * SHOALS regions and the thinned ring around HEE islands hold three times as many.
+ * Shoals: schools of tiny arrowhead platforms all pointing the same way, like a school of fish to hop across. They
+ * fill SHOALS regions and the thinned ring around HEE islands.
  */
 public final class Shoals {
 
     public static final int CELL = 43;
     private static final double CHANCE = 0.9;
-    /** Share of cells that hold a school outside SHOALS regions and HEE rings. */
-    private static final double COMMON_SHARE = 1.0 / 3;
     /** How far a platform strays along the heading; sideways and vertical spreads are Gaussian. */
-    public static final double EXTENT = 64;
-    private static final double SIDE_SIGMA = 10, VERTICAL_SIGMA = 8;
-    private static final double MIN_Y = 60, MAX_Y = 118;
-    /** Schools float at least this far above the ground below their centre. */
-    private static final double CLEARANCE = 16;
+    public static final double EXTENT = 32;
+    private static final double SIDE_SIGMA = 5, VERTICAL_SIGMA = 4;
+    private static final double MIN_Y = 30, MAX_Y = 110;
     private static final double STEEP_CHANCE = 0.35;
     private static final long SALT = 0x2B992DDFA23249D6L;
     private static final CellCache<School> CELLS = new CellCache<>(16384);
@@ -36,15 +32,14 @@ public final class Shoals {
         /** True inside a SHOALS region. */
         boolean dense(double x, double z);
 
-        /** Ground surface below (x, z), or a very low value over the void. */
-        double surface(double x, double z);
+        List<ZoneIslands.Island> zoneIslandsNear(double x, double z);
     }
 
     public static final class School {
 
         public final double x, z, y, angle, pitch;
         public final int count;
-        /** In a SHOALS region, or one of the common schools found everywhere. */
+        /** True in a SHOALS region; otherwise the school only forms beside an HEE island. */
         public final boolean always;
         final long seed;
 
@@ -80,9 +75,12 @@ public final class Shoals {
         double x = (cx + Hash.hash01(s + 1, cx, cz)) * CELL;
         double z = (cz + Hash.hash01(s + 2, cx, cz)) * CELL;
         if (Math.hypot(x, z) < 1000) return null;
-        boolean always = probe.dense(x, z) || Hash.hash01(s + 9, cx, cz) < COMMON_SHARE;
-        double y = Math.max(MIN_Y + (MAX_Y - MIN_Y) * Hash.hash01(s + 3, cx, cz), probe.surface(x, z) + CLEARANCE);
-        if (y > MAX_Y) return null;
+        // Stay out of zone islands, which share the open void.
+        for (ZoneIslands.Island island : probe.zoneIslandsNear(x, z)) {
+            if (Math.hypot(x - island.x, z - island.z) < island.radius * 1.3 + EXTENT) return null;
+        }
+        boolean always = probe.dense(x, z);
+        double y = MIN_Y + (MAX_Y - MIN_Y) * Hash.hash01(s + 3, cx, cz);
         double angle = Hash.hash01(s + 4, cx, cz) * Math.PI * 2;
         double pitch = 0;
         if (Hash.hash01(s + 6, cx, cz) < STEEP_CHANCE) {
@@ -103,7 +101,7 @@ public final class Shoals {
         if (Reservations.insideFootprint(reserved, school.x, school.z, EXTENT + 4 * SIDE_SIGMA)) return false;
         if (school.always) return true;
         for (Area area : reserved) {
-            if (Math.hypot(school.x - area.x, school.z - area.z) < area.radius * 1.15 + Reservations.FADE + 60) {
+            if (Math.hypot(school.x - area.x, school.z - area.z) < area.radius * 1.15 + Reservations.FADE + 30) {
                 return true;
             }
         }

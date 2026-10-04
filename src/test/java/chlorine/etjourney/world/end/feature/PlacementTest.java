@@ -124,15 +124,15 @@ class PlacementTest {
             }
 
             @Override
-            public double surface(double x, double z) {
-                return -1000;
+            public List<ZoneIslands.Island> zoneIslandsNear(double x, double z) {
+                return Collections.emptyList();
             }
         };
         for (Shoals.School school : Shoals.near(106L, 8000, 8000, 300, probe)) {
             List<Area> onTop = Collections.singletonList(new Area("hee", school.x + 100, school.z, 128));
             assertFalse(Shoals.forms(school, onTop));
             for (int[] b : Shoals.blocks(school)) {
-                assertTrue(Math.hypot(b[0] - school.x, b[2] - school.z) < Shoals.EXTENT + 60);
+                assertTrue(Math.hypot(b[0] - school.x, b[2] - school.z) < Shoals.EXTENT + 30);
             }
         }
     }

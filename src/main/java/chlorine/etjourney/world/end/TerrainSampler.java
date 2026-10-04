@@ -181,8 +181,8 @@ public final class TerrainSampler {
             }
 
             @Override
-            public double surface(double x, double z) {
-                return land(x, z) > 0 ? bareColumn(x, z, true).top : -1000;
+            public List<ZoneIslands.Island> zoneIslandsNear(double x, double z) {
+                return ZoneIslands.near(seed, x, z, ZoneIslands.CELL, landProbe());
             }
         };
     }
