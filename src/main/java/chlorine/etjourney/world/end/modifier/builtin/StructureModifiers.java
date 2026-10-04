@@ -29,7 +29,7 @@ public final class StructureModifiers {
                     // Decided by the structure's own centre chunk, so every chunk it reaches agrees.
                     List<Area> reserved = area.view
                         .reservedAt((int) Math.floor(s.centreX) >> 4, (int) Math.floor(s.centreZ) >> 4);
-                    if (Reservations.overlaps(reserved, s.centreX, s.centreZ, s.footprint)) continue;
+                    if (Reservations.touches(reserved, s.centreX, s.centreZ, s.footprint)) continue;
                     out.add(s);
                 }
             }

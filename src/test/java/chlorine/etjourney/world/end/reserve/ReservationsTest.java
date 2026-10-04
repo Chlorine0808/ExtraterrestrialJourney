@@ -34,4 +34,12 @@ class ReservationsTest {
         assertTrue(Reservations.insideFootprint(ONE, 2000 + 128 * 1.2 - 1, 0, 0));
         assertFalse(Reservations.insideFootprint(ONE, 2000 + 128 * 1.2 + 1, 0, 0));
     }
+
+    @Test
+    void structuresMayStandInTheFadeRingButNotOnTheIsland() {
+        // The island's own blocks stay within 1.2 radii; the warped fade beyond only shapes ETJ coasts.
+        assertTrue(Reservations.touches(ONE, 2000 + 128 * 1.2 + 20, 0, 30));
+        assertFalse(Reservations.touches(ONE, 2000 + 128 * 1.2 + 31, 0, 30));
+        assertFalse(Reservations.touches(ONE, 2000 + 128 * 1.2 + 60, 0, 30));
+    }
 }

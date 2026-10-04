@@ -70,6 +70,17 @@ public final class Reservations {
         return areas;
     }
 
+    /**
+     * True when a footprint (centre, radius) reaches an area's own island, which fills about 1.15 radii. The fade
+     * ring beyond only shapes ETJ coasts, so free-standing structures may stand in it.
+     */
+    public static boolean touches(List<Area> areas, double x, double z, double radius) {
+        for (Area area : areas) {
+            if (Math.hypot(x - area.x, z - area.z) < radius + area.radius * 1.2) return true;
+        }
+        return false;
+    }
+
     /** True when a footprint (centre, radius) touches an area or its fade ring. */
     public static boolean overlaps(List<Area> areas, double x, double z, double radius) {
         for (Area area : areas) {
