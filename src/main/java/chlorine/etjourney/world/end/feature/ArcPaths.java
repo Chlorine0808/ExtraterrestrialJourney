@@ -102,7 +102,27 @@ public final class ArcPaths {
         public boolean isEmpty() {
             return count == 0;
         }
+
+        /** The segments that reach the box, the only ones that can add density inside it. */
+        public Segments within(double minX, double maxX, double minZ, double maxZ) {
+            double[] out = new double[count * 7];
+            int n = 0;
+            for (int k = 0; k < count; k++) {
+                int o = k * 7;
+                double pad = data[o + 6] + REACH;
+                if (Math.max(data[o], data[o + 3]) + pad < minX || Math.min(data[o], data[o + 3]) - pad > maxX)
+                    continue;
+                if (Math.max(data[o + 2], data[o + 5]) + pad < minZ || Math.min(data[o + 2], data[o + 5]) - pad > maxZ)
+                    continue;
+                System.arraycopy(data, o, out, n * 7, 7);
+                n++;
+            }
+            return new Segments(out, n);
+        }
     }
+
+    /** Distance outside a tube beyond which it adds no density. */
+    static final double REACH = 16;
 
     public interface SegmentFilter {
 
@@ -205,9 +225,12 @@ public final class ArcPaths {
         return new Segments(data, n);
     }
 
-    /** Density of the tubes at a point: positive inside one, roughly the distance to its surface. */
+    /**
+     * Density of the tubes at a point: positive inside one, roughly the distance to its surface. Tubes further than
+     * REACH from their surface add nothing, so a chunk only needs the segments near it.
+     */
     public static double density(Segments segments, double x, double y, double z) {
-        double best = -100;
+        double best = Double.NEGATIVE_INFINITY;
         double[] d = segments.data;
         for (int k = 0; k < segments.count; k++) {
             int o = k * 7;
@@ -216,7 +239,8 @@ public final class ArcPaths {
             double t = ((x - ax) * ex + (y - ay) * ey + (z - az) * ez) / (ex * ex + ey * ey + ez * ez + 1e-9);
             t = Math.max(0, Math.min(1, t));
             double qx = ax + ex * t - x, qy = ay + ey * t - y, qz = az + ez * t - z;
-            best = Math.max(best, d[o + 6] - Math.sqrt(qx * qx + qy * qy + qz * qz));
+            double v = d[o + 6] - Math.sqrt(qx * qx + qy * qy + qz * qz);
+            if (v >= -REACH) best = Math.max(best, v);
         }
         return best;
     }

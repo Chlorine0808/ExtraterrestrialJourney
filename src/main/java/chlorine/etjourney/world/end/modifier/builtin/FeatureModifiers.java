@@ -159,7 +159,9 @@ public final class FeatureModifiers {
 
             @Override
             public void shapes(ChunkArea area, List<Shape> out, double weight) {
-                ArcPaths.Segments segments = area.view.arcs();
+                // Kept segments are decided over a padded box; only those near this chunk add density in it.
+                ArcPaths.Segments segments = area.view.arcs()
+                    .within(area.originX() - 8, area.originX() + 24, area.originZ() - 8, area.originZ() + 24);
                 if (segments.isEmpty()) return;
                 out.add(new ChunkShape(area, segments.minY(), segments.maxY()) {
 

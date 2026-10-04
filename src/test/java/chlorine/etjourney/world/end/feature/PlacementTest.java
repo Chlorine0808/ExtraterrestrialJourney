@@ -169,4 +169,22 @@ class PlacementTest {
             assertTrue(ArcPaths.density(all, start[0], start[1], start[2]) >= path.tube - 1e-6);
         }
     }
+
+    @Test
+    void arcSegmentsNearAChunkGiveTheSameDensityThere() {
+        List<ArcPaths.Path> paths = ArcPaths.pathsNear(108L, 7000, 7000, 400, (x, z) -> 1);
+        ArcPaths.Segments all = ArcPaths.segmentsNear(paths, -1e9, 1e9, -1e9, 1e9, (x, y, z) -> true);
+        double[] start = paths.get(0)
+            .start();
+        int ox = (int) start[0] - 8, oz = (int) start[2] - 8;
+        ArcPaths.Segments local = all.within(ox - 8, ox + 24, oz - 8, oz + 24);
+        assertTrue(local.count < all.count, "nothing was left out");
+        for (int x = ox - 8; x <= ox + 24; x += 4) {
+            for (int z = oz - 8; z <= oz + 24; z += 4) {
+                for (int y = 0; y < 256; y += 8) {
+                    assertEquals(ArcPaths.density(all, x, y, z), ArcPaths.density(local, x, y, z), 0);
+                }
+            }
+        }
+    }
 }
