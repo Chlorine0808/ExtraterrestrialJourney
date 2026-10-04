@@ -37,7 +37,7 @@ public final class TerrainSampler {
     private final long seed;
     private final RegionPicker picker;
     private final ModifierChain chain;
-    private final Map<Long, StyleWeights> weightCache = new ConcurrentHashMap<>();
+    private final Map<Point, StyleWeights> weightCache = new ConcurrentHashMap<>();
     private final Map<Modifier, Style> owners = new ConcurrentHashMap<>();
 
     public TerrainSampler(long seed, RegionPicker picker) {
@@ -62,7 +62,8 @@ public final class TerrainSampler {
     }
 
     public StyleWeights weights(double x, double z) {
-        long key = ((long) Math.floor(x) << 32) ^ ((long) Math.floor(z) & 0xFFFFFFFFL);
+        // Exact coordinates: rounding to a block made answers depend on which point in the block asked first.
+        Point key = new Point(x, z);
         StyleWeights w = weightCache.get(key);
         if (w == null) {
             w = StyleWeights.at(picker, seed, x, z);
@@ -145,6 +146,11 @@ public final class TerrainSampler {
             }
 
             @Override
+            public double top(double x, double z) {
+                return bareColumn(x, z, true).top;
+            }
+
+            @Override
             public List<Lakes.Lake> lakesNear(double x, double z, double range) {
                 return Lakes.near(seed, x, z, range, lakes);
             }
@@ -192,6 +198,26 @@ public final class TerrainSampler {
             if (y > island.y - island.down - 12 && y < island.y + island.up + 12) return true;
         }
         return false;
+    }
+
+    private static final class Point {
+
+        private final double x, z;
+
+        Point(double x, double z) {
+            this.x = x;
+            this.z = z;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            return o instanceof Point && ((Point) o).x == x && ((Point) o).z == z;
+        }
+
+        @Override
+        public int hashCode() {
+            return Double.hashCode(x) * 31 + Double.hashCode(z);
+        }
     }
 
     /** View for bare columns: seeds and (optionally) mountains near the point, no other features. */
