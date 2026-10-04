@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
+import chlorine.etjourney.compat.hee.HeeCompat;
 import chlorine.etjourney.compat.netherlicious.NetherliciousCompat;
 import chlorine.etjourney.compat.thaumcraft.ThaumcraftCompat;
 import chlorine.etjourney.core.util.ModLog;
@@ -30,6 +31,7 @@ public final class CompatManager {
         Map<String, Supplier<CompatModule>> factories = new LinkedHashMap<>();
         factories.put("Thaumcraft", () -> new ThaumcraftCompat());
         factories.put("netherlicious", () -> new NetherliciousCompat());
+        factories.put("HardcoreEnderExpansion", () -> new HeeCompat());
         return new CompatManager(factories, Loader::isModLoaded);
     }
 
