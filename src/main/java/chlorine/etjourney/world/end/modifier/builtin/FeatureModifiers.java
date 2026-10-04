@@ -65,16 +65,9 @@ public final class FeatureModifiers {
                 forEachColumn(sink, (x, z) -> {
                     ZoneIslands.Island owner = ZoneIslands.ownerAt(islands, x, z, PAINT_REACH);
                     if (owner == null) return;
-                    Zone zone = ZoneIslands.zoneOf(area.seed, owner);
-                    int depth = -1;
-                    for (int y = sink.maxY() - 1; y >= sink.minY(); y--) {
-                        if (sink.isAir(x, y, z)) {
-                            depth = -1;
-                            continue;
-                        }
-                        depth++;
-                        if (depth < PAINT_DEPTH) sink.set(x, y, z, depth == 0 ? zone.top : zone.fill);
-                    }
+                    // The island may carry on above this sink (the generator's half ends at Y 127).
+                    boolean above = owner.y + owner.up * 1.2 >= sink.maxY();
+                    paintColumn(sink, x, z, ZoneIslands.zoneOf(area.seed, owner), above);
                 });
             }
         };
@@ -165,6 +158,22 @@ public final class FeatureModifiers {
                 });
             }
         };
+    }
+
+    /**
+     * Paints the top PAINT_DEPTH blocks of every solid run in a column. When the column continues above the sink, the
+     * run touching the sink's top is not a surface and is left alone; the other half paints the real top.
+     */
+    static void paintColumn(BlockSink sink, int x, int z, Zone zone, boolean continuesAbove) {
+        int depth = continuesAbove ? PAINT_DEPTH : -1;
+        for (int y = sink.maxY() - 1; y >= sink.minY(); y--) {
+            if (sink.isAir(x, y, z)) {
+                depth = -1;
+                continue;
+            }
+            depth++;
+            if (depth < PAINT_DEPTH) sink.set(x, y, z, depth == 0 ? zone.top : zone.fill);
+        }
     }
 
     interface BlockStep {
