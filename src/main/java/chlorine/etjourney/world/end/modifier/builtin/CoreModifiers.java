@@ -85,7 +85,8 @@ public final class CoreModifiers {
     private static void underside(ChunkArea area, TerrainView view, ColumnState s, double weight) {
         s.bottom = s.level + s.hills * 0.5
             - Underside.depth(area.seed, s.land, s.x, s.z) * s.undersideScale
-            - s.rise * 0.25;
+            - s.rise * 0.25
+            - s.hang;
         double shift = Underside.shift(s.bottom);
         s.bottom += shift;
         s.level += shift;

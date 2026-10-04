@@ -19,6 +19,8 @@ public final class ColumnState {
     public double level, top, bottom;
     /** Hills and mountain rise, kept apart because the underside follows half the hills and a quarter of the rise. */
     public double hills, rise;
+    /** Relief hung below the slab instead of raised above it (INVERTED). */
+    public double hang;
     /** Scales other modifiers apply to hills and the underside depth (LOWLANDS shrinks both). */
     public double hillScale = 1, undersideScale = 1;
     /** Positive where a pillar joins the ground to the stacked slabs. */

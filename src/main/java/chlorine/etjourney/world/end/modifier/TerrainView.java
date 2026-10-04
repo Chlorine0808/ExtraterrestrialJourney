@@ -9,6 +9,7 @@ import chlorine.etjourney.world.end.feature.Islets;
 import chlorine.etjourney.world.end.feature.Lakes;
 import chlorine.etjourney.world.end.feature.Mountains;
 import chlorine.etjourney.world.end.feature.Shoals;
+import chlorine.etjourney.world.end.feature.StructureProbe;
 import chlorine.etjourney.world.end.feature.ZoneIslands;
 import chlorine.etjourney.world.end.reserve.Area;
 
@@ -43,4 +44,10 @@ public interface TerrainView {
     double mountainScale(double x, double z);
 
     double valleyScale(double x, double z);
+
+    /** Weight of the named style at (x, z), base and overlay together. */
+    double weight(String style, double x, double z);
+
+    /** Terrain answers for placing free-standing structures; the same for every chunk. */
+    StructureProbe structures();
 }

@@ -14,6 +14,7 @@ import chlorine.etjourney.world.end.feature.Lakes;
 import chlorine.etjourney.world.end.feature.Land;
 import chlorine.etjourney.world.end.feature.Mountains;
 import chlorine.etjourney.world.end.feature.Shoals;
+import chlorine.etjourney.world.end.feature.StructureProbe;
 import chlorine.etjourney.world.end.feature.ZoneIslands;
 import chlorine.etjourney.world.end.modifier.ChunkArea;
 import chlorine.etjourney.world.end.modifier.ColumnState;
@@ -187,6 +188,31 @@ public final class TerrainSampler {
         };
     }
 
+    public StructureProbe structureProbe() {
+        return new StructureProbe() {
+
+            @Override
+            public double weight(String style, double x, double z) {
+                return styleWeight(style, x, z);
+            }
+
+            @Override
+            public double land(double x, double z) {
+                return TerrainSampler.this.land(x, z);
+            }
+
+            @Override
+            public double ground(double x, double z) {
+                return TerrainSampler.this.land(x, z) > 0 ? bareColumn(x, z, true).top : -1000;
+            }
+        };
+    }
+
+    public double styleWeight(String style, double x, double z) {
+        Style s = picker.byName(style);
+        return s == null ? 0 : weights(x, z).of(s);
+    }
+
     public ArcPaths.Probe arcProbe() {
         return (x, z) -> weights(x, z).of(Styles.ARCS);
     }
@@ -289,6 +315,16 @@ public final class TerrainSampler {
         @Override
         public double valleyScale(double x, double z) {
             return weights(x, z).valleyScale();
+        }
+
+        @Override
+        public double weight(String style, double x, double z) {
+            return styleWeight(style, x, z);
+        }
+
+        @Override
+        public StructureProbe structures() {
+            return structureProbe();
         }
     }
 }

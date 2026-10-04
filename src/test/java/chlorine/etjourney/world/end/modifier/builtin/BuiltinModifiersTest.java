@@ -16,6 +16,7 @@ import chlorine.etjourney.world.end.feature.Islets;
 import chlorine.etjourney.world.end.feature.Lakes;
 import chlorine.etjourney.world.end.feature.Mountains;
 import chlorine.etjourney.world.end.feature.Shoals;
+import chlorine.etjourney.world.end.feature.StructureProbe;
 import chlorine.etjourney.world.end.feature.ZoneIslands;
 import chlorine.etjourney.world.end.modifier.ChunkArea;
 import chlorine.etjourney.world.end.modifier.ColumnState;
@@ -30,7 +31,7 @@ class BuiltinModifiersTest {
     private static final long SEED = 21L;
 
     /** A view with the real continent seeds and nothing else. */
-    private static TerrainView view(double x, double z) {
+    static TerrainView view(double x, double z) {
         List<Continent.Seed> seeds = Continent.seedsNear(SEED, x, z, 64);
         return new TerrainView() {
 
@@ -93,18 +94,28 @@ class BuiltinModifiersTest {
             public double valleyScale(double x, double z) {
                 return 1;
             }
+
+            @Override
+            public double weight(String style, double x, double z) {
+                return 0;
+            }
+
+            @Override
+            public StructureProbe structures() {
+                return null;
+            }
         };
     }
 
     /** First column along z = 0 east of the ring whose continent height is at least 70. */
-    private static double landX() {
+    static double landX() {
         for (int x = 1100; x < 20000; x += 8) {
             if (Continent.rawHeight(Continent.seedsNear(SEED, x, 0, 0), x, 0) > 70) return x;
         }
         throw new AssertionError("no land");
     }
 
-    private static ColumnState run(double x, List<Modifier> extra) {
+    static ColumnState run(double x, List<Modifier> extra) {
         List<Modifier> all = new ArrayList<>(CoreModifiers.all());
         all.addAll(extra);
         ColumnState state = new ColumnState(x, 0);

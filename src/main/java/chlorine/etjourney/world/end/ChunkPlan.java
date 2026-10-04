@@ -12,6 +12,7 @@ import chlorine.etjourney.world.end.feature.Islets;
 import chlorine.etjourney.world.end.feature.Lakes;
 import chlorine.etjourney.world.end.feature.Mountains;
 import chlorine.etjourney.world.end.feature.Shoals;
+import chlorine.etjourney.world.end.feature.StructureProbe;
 import chlorine.etjourney.world.end.feature.ZoneIslands;
 import chlorine.etjourney.world.end.modifier.BlockSink;
 import chlorine.etjourney.world.end.modifier.ChunkArea;
@@ -189,5 +190,15 @@ public final class ChunkPlan implements TerrainView {
     public double valleyScale(double x, double z) {
         return sampler.weights(x, z)
             .valleyScale();
+    }
+
+    @Override
+    public double weight(String style, double x, double z) {
+        return sampler.styleWeight(style, x, z);
+    }
+
+    @Override
+    public StructureProbe structures() {
+        return sampler.structureProbe();
     }
 }
