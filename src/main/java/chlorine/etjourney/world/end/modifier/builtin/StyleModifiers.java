@@ -111,32 +111,45 @@ public final class StyleModifiers {
             int count = Math.min(MAX_LAYERS, 2 + (int) (4 * ValueNoise.mask(salt + 32, w[0], w[1], 300)));
             double centre = s.top;
             // Neighbouring tiers take turns through the archetypes, from a phase that drifts between regions.
-            int phase = (int) (TIER_ARCHETYPES.length * ValueNoise.mask(salt + 33, s.x, s.z, 600));
+            double phase = TIER_ARCHETYPES.length * ValueNoise.mask(salt + 33, s.x, s.z, 600);
             for (int i = 0; i < count; i++) {
-                long t = salt + 1000L * (i + 1);
-                double[][] type = TIER_ARCHETYPES[(i + phase) % TIER_ARCHETYPES.length];
-                double[] wi = Warp.warp(t, s.x, s.z, 48, 170);
-                double scale = lerp(type[0], ValueNoise.mask(t + 1, s.x, s.z, 520));
-                double coverage = lerp(type[1], ValueNoise.mask(t + 2, s.x, s.z, 480));
-                double thick = lerp(type[2], ValueNoise.mask(t + 3, s.x, s.z, 500));
-                double swell = lerp(type[3], ValueNoise.mask(t + 4, s.x, s.z, 540));
-                double keel = 1.1 + 1.2 * ValueNoise.mask(t + 5, s.x, s.z, 460);
-                centre += 14 + 24 * ValueNoise.mask(t + 6, wi[0], wi[1], 200);
-                double patch = (Fractal.fbm(t + 7, wi[0], wi[1], scale, 3) - coverage) / 0.14;
-                if (patch <= 0) continue;
-                double half = thick * (0.7 + 0.6 * ValueNoise.mask(t + 8, wi[0], wi[1], scale * 0.8))
-                    * strength
-                    * Math.min(1, patch);
-                double c = centre + (Fractal.fbm(t + 9, wi[0], wi[1], 110, 3) - 0.5) * swell;
+                Tier tier = tier(salt, i, phase, s.x, s.z);
+                centre += tier.step;
+                if (tier.patch <= 0) continue;
+                double half = tier.thick * strength * Math.min(1, tier.patch);
+                double c = centre + tier.offset;
                 // Near the ceiling a slab thins out instead of ending in a wall.
                 half = Math.min(half, MAX_LAYER_TOP - c);
                 if (half < 1) continue;
-                s.layers.add(new Layer(c + half, c - half * keel));
+                s.layers.add(new Layer(c + half, c - half * tier.keel));
             }
             if (!s.layers.isEmpty()) {
                 s.pillar = Math.max(s.pillar, (ValueNoise.mask(salt + 30, w[0], w[1], 32) - 0.82) * 40 * strength);
             }
         });
+    }
+
+    /** One LAYERED tier at a column: rise from the tier below, patch (positive where present), thickness, offset. */
+    static final class Tier {
+
+        double step, patch, thick, offset, keel;
+    }
+
+    static Tier tier(long salt, int i, double phase, double x, double z) {
+        long t = salt + 1000L * (i + 1);
+        double[][] type = TIER_ARCHETYPES[((int) phase + i) % TIER_ARCHETYPES.length];
+        double[] wi = Warp.warp(t, x, z, 48, 170);
+        double scale = lerp(type[0], ValueNoise.mask(t + 1, x, z, 520));
+        double coverage = lerp(type[1], ValueNoise.mask(t + 2, x, z, 480));
+        double swell = lerp(type[3], ValueNoise.mask(t + 4, x, z, 540));
+        Tier tier = new Tier();
+        tier.keel = 1.1 + 1.2 * ValueNoise.mask(t + 5, x, z, 460);
+        tier.step = 14 + 24 * ValueNoise.mask(t + 6, wi[0], wi[1], 200);
+        tier.patch = (Fractal.fbm(t + 7, wi[0], wi[1], scale, 3) - coverage) / 0.14;
+        tier.thick = lerp(type[2], ValueNoise.mask(t + 3, x, z, 500))
+            * (0.7 + 0.6 * ValueNoise.mask(t + 8, wi[0], wi[1], scale * 0.8));
+        tier.offset = (Fractal.fbm(t + 9, wi[0], wi[1], 110, 3) - 0.5) * swell;
+        return tier;
     }
 
     /**
