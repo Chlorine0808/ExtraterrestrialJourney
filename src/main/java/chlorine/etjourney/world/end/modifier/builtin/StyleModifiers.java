@@ -11,8 +11,8 @@ import chlorine.etjourney.world.end.noise.Warp;
 /** Column modifiers that belong to one style each and apply at that style's weight. */
 public final class StyleModifiers {
 
-    /** Highest top of a stacked slab; keeps them inside the generator's 128 blocks. */
-    private static final double MAX_LAYER_TOP = 122;
+    /** Highest top of a stacked slab; the tall pass writes everything above Y 127. */
+    private static final double MAX_LAYER_TOP = 250;
     private static final int MAX_LAYERS = 5;
 
     private StyleModifiers() {}
@@ -24,11 +24,6 @@ public final class StyleModifiers {
             s.hillScale *= 1 - 0.5 * weight;
             s.undersideScale *= 1 - 0.4 * weight;
         });
-    }
-
-    /** Ground sits lower to leave room for the stack below the generator's ceiling. */
-    public static Modifier layeredLevel() {
-        return CoreModifiers.simple(230, (area, view, s, weight) -> s.level -= 24 * weight);
     }
 
     /** The whole slab bends in broad waves. */

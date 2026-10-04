@@ -43,7 +43,7 @@ public final class Styles {
         .overlay(0.2, Style.named("PLAINS", "LOWLANDS", "BASIN"))
         .mountains(0.4)
         .valleys(0.3)
-        .modifiers(StyleModifiers.layeredLevel(), StyleModifiers.layers())
+        .modifiers(StyleModifiers.layers())
         .build();
     public static final Style ISLETS = Style.builder("ISLETS", StyleKind.BASE_VOID)
         .share(1)

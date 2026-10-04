@@ -132,14 +132,19 @@ class BuiltinModifiersTest {
     }
 
     @Test
-    void layersStackBelowTheCeiling() {
+    void layersStackInsideTheWorldAndAboveTheOldCeiling() {
         int stacked = 0;
-        for (int i = 0; i < 40; i++) {
+        double highest = 0;
+        for (int i = 0; i < 200; i++) {
             ColumnState s = run(landX() + i * 8, Collections.singletonList(StyleModifiers.layers()));
             stacked += s.layers.size();
             assertTrue(s.layers.size() <= 5);
-            for (Layer layer : s.layers) assertTrue(layer.top <= 122 + 1e-9 && layer.bottom < layer.top);
+            for (Layer layer : s.layers) {
+                assertTrue(layer.top <= 250 + 1e-9 && layer.bottom < layer.top);
+                highest = Math.max(highest, layer.top);
+            }
         }
         assertTrue(stacked > 0);
+        assertTrue(highest > 128, "highest layer " + highest);
     }
 }
