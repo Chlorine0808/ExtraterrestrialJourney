@@ -1,5 +1,6 @@
 package chlorine.etjourney.world.end.feature;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -258,5 +259,57 @@ class StructuresTest {
             if (Structures.ARCHES.inCell(314L, cx, 0, band) != null) found++;
         }
         assertTrue(found >= 130, "only " + found + " of 200 cells along the band have an arch");
+    }
+
+    @Test
+    void crossesStandInTheGroundOrFloat() {
+        int stuck = 0, floating = 0;
+        for (int cx = 20; cx < 60; cx++) {
+            for (int cz = 0; cz < 20; cz++) {
+                Structures.Cross c = Structures.CROSSES.inCell(315L, cx, cz, LAND);
+                if (c == null) continue;
+                inside(c, 75);
+                double[] stem = c.point(c.height * 0.5, 0), arm = c.point(c.armAt, c.armHalf * 0.8);
+                assertTrue(c.density(stem[0], stem[1], stem[2]) > 0, "hollow stem");
+                assertTrue(c.density(arm[0], arm[1], arm[2]) > 0, "hollow arm");
+                if (c.feet().length > 0) {
+                    stuck++;
+                    assertTrue(c.point(0, 0)[1] < 70, "a stuck cross does not reach into the ground");
+                } else {
+                    floating++;
+                }
+            }
+        }
+        assertTrue(stuck > 10 && floating > 5, stuck + " stuck, " + floating + " floating");
+    }
+
+    @Test
+    void crossesOverTheVoidFloat() {
+        StructureProbe voidOnly = new StructureProbe() {
+
+            @Override
+            public double weight(String style, double x, double z) {
+                return 1;
+            }
+
+            @Override
+            public double land(double x, double z) {
+                return -50;
+            }
+
+            @Override
+            public double ground(double x, double z) {
+                return -1000;
+            }
+        };
+        int seen = 0;
+        for (int cx = 20; cx < 60; cx++) {
+            Structures.Cross c = Structures.CROSSES.inCell(316L, cx, 3, voidOnly);
+            if (c == null) continue;
+            seen++;
+            assertEquals(0, c.feet().length);
+            inside(c, 75);
+        }
+        assertTrue(seen > 10);
     }
 }

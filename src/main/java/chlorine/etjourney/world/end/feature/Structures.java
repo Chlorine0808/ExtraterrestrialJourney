@@ -114,6 +114,44 @@ public final class Structures {
         }
     };
 
+    /**
+     * Crosses 20-100 blocks tall: over land most are driven into the ground at a lean, like grave markers; the rest
+     * float at any angle. Their beams are drawn block by block, so edges stay sharp.
+     */
+    public static final Structure.Kind<Cross> CROSSES = new Structure.Kind<Cross>("CROSSES", 80, 75) {
+
+        @Override
+        protected Cross compute(long seed, int cx, int cz, StructureProbe probe) {
+            long s = seed ^ 0x6E2B9D4F1A7C3058L;
+            if (Hash.hash01(s, cx, cz) > 0.6) return null;
+            double x = (cx + 0.2 + 0.6 * Hash.hash01(s + 1, cx, cz)) * cell;
+            double z = (cz + 0.2 + 0.6 * Hash.hash01(s + 2, cx, cz)) * cell;
+            if (probe.weight(style, x, z) < MIN_WEIGHT) return null;
+            // More small crosses than large ones.
+            double height = 20 + 80 * Math.pow(Hash.hash01(s + 3, cx, cz), 1.5);
+            double half = Math.max(1.5, height * 0.06);
+            double ground = probe.ground(x, z);
+            boolean grounded = ground > -100 && Hash.hash01(s + 4, cx, cz) < 0.6;
+            double lean = Math.toRadians((grounded ? 25 : 70) * Hash.hash01(s + 5, cx, cz));
+            double yaw = Hash.hash01(s + 6, cx, cz) * Math.PI * 2, twist = Hash.hash01(s + 7, cx, cz) * Math.PI * 2;
+            double[] up = { Math.sin(lean) * Math.cos(yaw), Math.cos(lean), Math.sin(lean) * Math.sin(yaw) };
+            double[] arm = normalize(cross(up, new double[] { Math.cos(twist), 0, Math.sin(twist) }));
+            double[] base;
+            if (grounded) {
+                // A sixth of it buried.
+                base = new double[] { x, ground - height * 0.16, z };
+            } else {
+                double reach = height * 0.6;
+                double low = (ground > -100 ? ground + 6 : VOID_BASE) + reach, high = CEILING - reach;
+                if (low > high) return null;
+                double y = low + Math.min(high - low, 20 + 120 * Hash.hash01(s + 8, cx, cz));
+                base = new double[] { x - up[0] * height / 2, y - up[1] * height / 2, z - up[2] * height / 2 };
+            }
+            Cross c = Cross.of(base, up, arm, height, half, grounded);
+            return c.maxY() > CEILING || c.minY() < 0 ? null : c;
+        }
+    };
+
     /** Tilt no further than keeps a ring between the void floor and the ceiling. */
     private static double ringTilt(double tilt, double radius, double tube) {
         return Math.min(tilt, Math.asin(Math.max(0, Math.min(1, ((CEILING - 8) / 2 - tube) / radius))));
@@ -303,6 +341,85 @@ public final class Structures {
             double r = Math.hypot(a, b) - radius;
             double d = tube - Math.sqrt(h * h + r * r);
             return inner == null ? d : Math.max(d, inner.body(x, y, z));
+        }
+    }
+
+    public static final class Cross extends Structure {
+
+        private final double[] base, up, arm, out;
+        public final double height, half, armAt, armHalf;
+        private final boolean grounded;
+
+        private Cross(double[] base, double[] up, double[] arm, double height, double half, double[] centre,
+            double footprint, double minY, double maxY, boolean grounded) {
+            super(centre[0], centre[1], footprint, minY, maxY);
+            this.base = base;
+            this.up = up;
+            this.arm = arm;
+            this.out = cross(up, arm);
+            this.height = height;
+            this.half = half;
+            this.armAt = height * 0.72;
+            this.armHalf = height * 0.3;
+            this.grounded = grounded;
+        }
+
+        static Cross of(double[] base, double[] up, double[] arm, double height, double half, boolean grounded) {
+            double[] out = cross(up, arm);
+            // A stuck cross is placed by its foot; a floating one by its middle.
+            double[] centre = grounded ? new double[] { base[0], base[2] }
+                : new double[] { base[0] + up[0] * height / 2, base[2] + up[2] * height / 2 };
+            double reach = 0, low = Double.MAX_VALUE, high = -Double.MAX_VALUE;
+            // The corners of both beams bound the cross.
+            double[][] boxes = { { 0, height, half }, { height * 0.72 - half, height * 0.72 + half, height * 0.3 } };
+            for (double[] box : boxes) {
+                for (double u : new double[] { box[0], box[1] }) {
+                    for (double a : new double[] { -box[2], box[2] }) {
+                        for (double n : new double[] { -half, half }) {
+                            double px = base[0] + up[0] * u + arm[0] * a + out[0] * n;
+                            double py = base[1] + up[1] * u + arm[1] * a + out[1] * n;
+                            double pz = base[2] + up[2] * u + arm[2] * a + out[2] * n;
+                            reach = Math.max(reach, Math.hypot(px - centre[0], pz - centre[1]));
+                            low = Math.min(low, py);
+                            high = Math.max(high, py);
+                        }
+                    }
+                }
+            }
+            return new Cross(base, up, arm, height, half, centre, reach + 1, low - 1, high + 1, grounded);
+        }
+
+        /** The point `along` blocks up the stem and `side` blocks along the arm, as {x, y, z}. */
+        public double[] point(double along, double side) {
+            return new double[] { base[0] + up[0] * along + arm[0] * side, base[1] + up[1] * along + arm[1] * side,
+                base[2] + up[2] * along + arm[2] * side };
+        }
+
+        @Override
+        public double[][] feet() {
+            return grounded ? new double[][] { { base[0], base[2] } } : new double[0][];
+        }
+
+        @Override
+        protected double body(double x, double y, double z) {
+            double px = x - base[0], py = y - base[1], pz = z - base[2];
+            double u = px * up[0] + py * up[1] + pz * up[2];
+            double a = px * arm[0] + py * arm[1] + pz * arm[2];
+            double n = px * out[0] + py * out[1] + pz * out[2];
+            double stem = box(a, u - height / 2, n, half, height / 2, half);
+            double bar = box(a, u - armAt, n, armHalf, half, half);
+            return -Math.min(stem, bar);
+        }
+
+        /** Signed distance to an axis-aligned box of the given half sizes: negative inside. */
+        private static double box(double x, double y, double z, double bx, double by, double bz) {
+            double qx = Math.abs(x) - bx, qy = Math.abs(y) - by, qz = Math.abs(z) - bz;
+            double outside = Math.sqrt(sq(Math.max(qx, 0)) + sq(Math.max(qy, 0)) + sq(Math.max(qz, 0)));
+            return outside + Math.min(Math.max(qx, Math.max(qy, qz)), 0);
+        }
+
+        private static double sq(double v) {
+            return v * v;
         }
     }
 
