@@ -132,7 +132,7 @@ class PlacementTest {
             List<Area> onTop = Collections.singletonList(new Area("hee", school.x + 100, school.z, 128));
             assertFalse(Shoals.forms(school, onTop));
             for (int[] b : Shoals.blocks(school)) {
-                assertTrue(Math.hypot(b[0] - school.x, b[2] - school.z) < Shoals.EXTENT + 30);
+                assertTrue(Math.hypot(b[0] - school.x, b[2] - school.z) < Shoals.EXTENT + 60);
             }
         }
     }

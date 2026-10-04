@@ -18,8 +18,8 @@ public final class Shoals {
     public static final int CELL = 43;
     private static final double CHANCE = 0.9;
     /** How far a platform strays along the heading; sideways and vertical spreads are Gaussian. */
-    public static final double EXTENT = 32;
-    private static final double SIDE_SIGMA = 5, VERTICAL_SIGMA = 4;
+    public static final double EXTENT = 64;
+    private static final double SIDE_SIGMA = 10, VERTICAL_SIGMA = 8;
     private static final double MIN_Y = 30, MAX_Y = 110;
     private static final double STEEP_CHANCE = 0.35;
     private static final long SALT = 0x2B992DDFA23249D6L;
