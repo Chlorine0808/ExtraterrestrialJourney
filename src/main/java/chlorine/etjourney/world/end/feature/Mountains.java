@@ -41,7 +41,8 @@ public final class Mountains {
 
     public static List<Mountain> near(long seed, double x, double z, double range) {
         List<Mountain> out = new ArrayList<>();
-        double reach = range + MAX_RADIUS + Continent.warpReach();
+        // Foot land stays above -100 up to 100 / FOOT_SLOPE beyond the radius, measured in the warped frame.
+        double reach = range + MAX_RADIUS + 100 / FOOT_SLOPE + Continent.warpReach() * 1.5;
         int c0x = (int) Math.floor((x - reach) / CELL), c1x = (int) Math.floor((x + reach) / CELL);
         int c0z = (int) Math.floor((z - reach) / CELL), c1z = (int) Math.floor((z + reach) / CELL);
         for (int cx = c0x; cx <= c1x; cx++) {
