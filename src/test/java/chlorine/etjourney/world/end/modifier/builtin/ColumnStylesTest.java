@@ -85,4 +85,29 @@ class ColumnStylesTest {
         }
         assertTrue(hung, "no stalactites hung anywhere");
     }
+
+    @Test
+    void shatteredCracksAreWiderThanTheDensityGrid() {
+        double x0 = BuiltinModifiersTest.landX();
+        int crossings = 0, run = 0;
+        boolean landBefore = false;
+        for (int i = 0; i < 1500; i++) {
+            double x = x0 + i;
+            ColumnState plain = BuiltinModifiersTest.run(x, Collections.emptyList());
+            ColumnState s = BuiltinModifiersTest.run(x, Collections.singletonList(StyleModifiers.shattered()));
+            boolean cracked = plain.land > 0 && s.land <= 0;
+            if (cracked) {
+                run++;
+                continue;
+            }
+            // A crossing between two stretches of land: perpendicular is the narrowest a crack can be crossed.
+            if (run > 0 && landBefore && s.land > 0) {
+                crossings++;
+                assertTrue(run >= 11, "crack only " + run + " blocks wide at " + i);
+            }
+            run = 0;
+            landBefore = s.land > 0;
+        }
+        assertTrue(crossings > 0, "no crack crossed");
+    }
 }

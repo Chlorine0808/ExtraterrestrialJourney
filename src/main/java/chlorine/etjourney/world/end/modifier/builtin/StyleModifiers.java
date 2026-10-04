@@ -18,7 +18,7 @@ public final class StyleModifiers {
     private static final double MAX_LAYER_TOP = 250;
     private static final int MAX_LAYERS = 5;
     /** Shard size of SHATTERED, and the half-width of the cracks between shards. */
-    private static final double SHARD = 56, CRACK = 5;
+    private static final double SHARD = 56, CRACK = 7;
     /** How far MIRRORED lifts its continent: the widest gap plus a typical reflected slab. */
     private static final double MIRROR_LIFT = 80;
     /** How far INVERTED lifts its continent for the relief hanging below. */
@@ -225,9 +225,10 @@ public final class StyleModifiers {
             }
             double offset = (Hash.hash01(salt + 45, bx, bz) - 0.5) * 2 * (10 + 30 * Hash.hash01(salt + 46, bx, bz));
             s.level += offset * weight * s.interior;
-            // Half the distance to the next shard's border; cracks are about 10 blocks wide so the grid keeps them.
+            // Half the distance to the next shard's border. The land drops fully across the crack but its last block,
+            // so a crack is wider than the 8-block density grid and every crossing keeps a grid column in it.
             double edge = (d2 - d1) / 2;
-            if (edge < CRACK) s.land -= (1 - edge / CRACK) * 200 * weight;
+            if (edge < CRACK) s.land -= Math.min(1, CRACK - edge) * 200 * weight;
         });
     }
 
