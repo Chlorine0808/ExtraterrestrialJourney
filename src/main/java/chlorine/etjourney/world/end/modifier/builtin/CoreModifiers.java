@@ -83,13 +83,14 @@ public final class CoreModifiers {
     }
 
     private static void underside(ChunkArea area, TerrainView view, ColumnState s, double weight) {
-        s.bottom = s.level + s.hills * 0.5
+        double body = s.level + s.hills * 0.5
             - Underside.depth(area.seed, s.land, s.x, s.z) * s.undersideScale
-            - s.rise * 0.25
-            - s.hang;
-        double shift = Underside.shift(s.bottom);
-        s.bottom += shift;
+            - s.rise * 0.25;
+        double shift = Underside.shift(body);
+        body += shift;
         s.level += shift;
+        // Relief hangs below the placed slab, only as far as the world floor; it never moves the surface.
+        s.bottom = body - Math.min(s.hang, Math.max(0, body - Underside.MIN_BOTTOM));
     }
 
     /** Ground with valleys cut in and lakes shaped; valleys may cut through, lake beds keep MIN_FLOOR of rock. */

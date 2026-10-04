@@ -21,6 +21,8 @@ public final class StyleModifiers {
     private static final double SHARD = 56, CRACK = 5;
     /** How far MIRRORED lifts its continent: the widest gap plus a typical reflected slab. */
     private static final double MIRROR_LIFT = 80;
+    /** How far INVERTED lifts its continent for the relief hanging below. */
+    private static final double INVERT_LIFT = 70;
 
     private StyleModifiers() {}
 
@@ -170,6 +172,11 @@ public final class StyleModifiers {
             double t = Math.max(0, (ValueNoise.mask(salt + 41, w[0], w[1], 36) - 0.55) / 0.45);
             s.hang += hung * 1.3 + weight * s.interior * (1 - s.suppression) * 70 * t * t;
         });
+    }
+
+    /** Lifts an INVERTED continent to leave room for the relief hanging below it. */
+    public static Modifier invertedLift() {
+        return CoreModifiers.simple(236, (area, view, s, weight) -> s.level += INVERT_LIFT * weight * s.interior);
     }
 
     /** Lifts a MIRRORED continent to leave room for its reflection below. */

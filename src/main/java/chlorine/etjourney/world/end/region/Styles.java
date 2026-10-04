@@ -89,7 +89,7 @@ public final class Styles {
     public static final Style INVERTED = Style.builder("INVERTED", StyleKind.BASE_LAND)
         .share(1)
         .holes(true)
-        .modifiers(StyleModifiers.inverted())
+        .modifiers(StyleModifiers.invertedLift(), StyleModifiers.inverted())
         .build();
     public static final Style MESAS = Style.builder("MESAS", StyleKind.OVERLAY)
         .overlay(OVERLAY_CHANCE, Style.LAND)

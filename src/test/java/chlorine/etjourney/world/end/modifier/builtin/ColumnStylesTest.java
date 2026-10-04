@@ -7,6 +7,7 @@ import java.util.Collections;
 
 import org.junit.jupiter.api.Test;
 
+import chlorine.etjourney.world.end.feature.Underside;
 import chlorine.etjourney.world.end.modifier.ColumnState;
 import chlorine.etjourney.world.end.modifier.Layer;
 
@@ -64,5 +65,24 @@ class ColumnStylesTest {
         }
         assertTrue(cracks > 0, "no cracks");
         assertTrue(shifted > 0, "no shifted shards");
+    }
+
+    @Test
+    void invertedHangsBelowWithoutLiftingTheSurface() {
+        double x0 = BuiltinModifiersTest.landX();
+        boolean hung = false;
+        for (int i = 0; i < 120; i++) {
+            ColumnState lifted = BuiltinModifiersTest
+                .run(x0 + i * 4, Collections.singletonList(StyleModifiers.invertedLift()));
+            ColumnState s = BuiltinModifiersTest
+                .run(x0 + i * 4, Arrays.asList(StyleModifiers.invertedLift(), StyleModifiers.inverted()));
+            // INVERTED only damps hills on top; the hung relief must not come back as a raised surface.
+            assertTrue(
+                Math.abs(s.top - lifted.top) <= Math.abs(lifted.hills) * 0.7 + 1,
+                "at " + i + ": " + s.top + " vs " + lifted.top);
+            assertTrue(s.bottom >= Underside.MIN_BOTTOM - 1e-9);
+            if (s.hang > 1) hung = true;
+        }
+        assertTrue(hung, "no stalactites hung anywhere");
     }
 }
