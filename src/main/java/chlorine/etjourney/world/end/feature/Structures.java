@@ -48,7 +48,8 @@ public final class Structures {
     public static final Structure.Kind<Ring> RINGS = new Structure.Kind<Ring>(
         "RINGS",
         StructureProbe.REGION_CELL,
-        280) {
+        280,
+        true) {
 
         @Override
         protected Ring compute(long seed, int cx, int cz, StructureProbe probe) {
@@ -90,7 +91,7 @@ public final class Structures {
      * Many small, thin rings scattered through RINGS regions at any angle. Their tubes are thinner than the density
      * grid resolves, so the engine draws them block by block instead of as shapes.
      */
-    public static final Structure.Kind<Ring> RINGLETS = new Structure.Kind<Ring>("RINGS", 56, 40) {
+    public static final Structure.Kind<Ring> RINGLETS = new Structure.Kind<Ring>("RINGS", 56, 40, true) {
 
         @Override
         protected Ring compute(long seed, int cx, int cz, StructureProbe probe) {
@@ -150,7 +151,8 @@ public final class Structures {
     public static final Structure.Kind<SpiralTower> SPIRAL_TOWERS = new Structure.Kind<SpiralTower>(
         "SPIRAL_TOWERS",
         160,
-        24) {
+        24,
+        true) {
 
         @Override
         protected SpiralTower compute(long seed, int cx, int cz, StructureProbe probe) {

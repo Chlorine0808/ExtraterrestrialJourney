@@ -77,14 +77,21 @@ public abstract class Structure implements Shape {
 
         public final String style;
         public final int cell;
+        /** Whether it may stand on or pass through reserved islands. */
+        public final boolean overIslands;
         /** Largest footprint of this kind; bounds the cell search. */
         final double maxFootprint;
         private final CellCache<T> cells = new CellCache<>(8192);
 
         protected Kind(String style, int cell, double maxFootprint) {
+            this(style, cell, maxFootprint, false);
+        }
+
+        protected Kind(String style, int cell, double maxFootprint, boolean overIslands) {
             this.style = style;
             this.cell = cell;
             this.maxFootprint = maxFootprint;
+            this.overIslands = overIslands;
         }
 
         /** The structure of a cell, or null; called once per cell and seed. */
