@@ -74,6 +74,11 @@ class PlacementTest {
             }
 
             @Override
+            public double top(double x, double z) {
+                return 60;
+            }
+
+            @Override
             public List<Lakes.Lake> lakesNear(double x, double z, double range) {
                 return Collections.emptyList();
             }

@@ -17,6 +17,7 @@ public final class Holes {
     private static final double MIN_RADIUS = 5, BASE_RADIUS = 15, MAX_WIDEN = 3;
     private static final double MAX_RADIUS = BASE_RADIUS * MAX_WIDEN;
     private static final double MIN_LAND = 40;
+    private static final double MAX_GROUND = 124;
     private static final double WARP = 14;
     /** The funnel's width wanders between half and this multiple of its base width. */
     private static final double MAX_STRETCH = 1.5;
@@ -30,6 +31,9 @@ public final class Holes {
         boolean allowed(double x, double z);
 
         double land(double x, double z);
+
+        /** Ground surface at (x, z). */
+        double top(double x, double z);
 
         List<Lakes.Lake> lakesNear(double x, double z, double range);
     }
@@ -74,6 +78,8 @@ public final class Holes {
         double x = (cx + Hash.hash01(s + 1, cx, cz)) * CELL;
         double z = (cz + Hash.hash01(s + 2, cx, cz)) * CELL;
         if (!probe.allowed(x, z) || probe.land(x, z) < MIN_LAND) return null;
+        // Holes are carved in the generator's Y 0-127; above that the tall pass would seal the shaft.
+        if (probe.top(x, z) >= MAX_GROUND) return null;
         double u = Hash.hash01(s + 3, cx, cz);
         double widen = 1 + (MAX_WIDEN - 1) * Hash.hash01(s + 4, cx, cz);
         double radius = (MIN_RADIUS + (BASE_RADIUS - MIN_RADIUS) * u * u) * widen;
