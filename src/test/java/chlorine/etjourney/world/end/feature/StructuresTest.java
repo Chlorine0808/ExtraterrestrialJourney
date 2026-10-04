@@ -118,4 +118,37 @@ class StructuresTest {
             assertTrue(Structures.RINGS.inCell(306L, i, 3, none) == null);
         }
     }
+
+    /** Flat ground at the given height everywhere, every style everywhere. */
+    private static StructureProbe groundAt(double height) {
+        return new StructureProbe() {
+
+            @Override
+            public double weight(String style, double x, double z) {
+                return 1;
+            }
+
+            @Override
+            public double land(double x, double z) {
+                return 60;
+            }
+
+            @Override
+            public double ground(double x, double z) {
+                return height;
+            }
+        };
+    }
+
+    @Test
+    void structuresOnCeilingHighGroundAreSkippedOrStayInTheWorld() {
+        StructureProbe high = groundAt(250);
+        for (Structure.Kind<? extends Structure> kind : Structures.kinds()) {
+            for (int i = 0; i < 300; i++) {
+                Structure s = kind.inCell(307L, 20 + i % 20, i / 20, high);
+                if (s == null) continue;
+                assertTrue(s.minY() < s.maxY() && s.maxY() <= 250, kind.style + " " + s.minY() + ".." + s.maxY());
+            }
+        }
+    }
 }

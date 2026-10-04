@@ -33,6 +33,7 @@ public final class Structures {
             if (probe.weight(style, x, z) < MIN_WEIGHT) return null;
             double base = base(probe, x, z, Hash.hash01(s + 3, cx, cz));
             double capY = Math.min(CEILING - 14, base + 30 + 80 * Hash.hash01(s + 4, cx, cz));
+            if (capY - base < 20) return null;
             double stalk = 5 + 3 * Hash.hash01(s + 5, cx, cz);
             double cap = 18 + 27 * Hash.hash01(s + 6, cx, cz);
             double thickness = 5 + 3 * Hash.hash01(s + 7, cx, cz);
@@ -104,6 +105,7 @@ public final class Structures {
             double base = base(probe, x, z, Hash.hash01(s + 3, cx, cz));
             double ribbon = 4;
             double top = Math.min(CEILING - ribbon, base + 150 + 90 * Hash.hash01(s + 4, cx, cz));
+            if (top - base < 60) return null;
             double pillar = 6 + 4 * Hash.hash01(s + 5, cx, cz);
             double helix = pillar + 7;
             double pitch = 22 + 8 * Hash.hash01(s + 6, cx, cz);
@@ -136,6 +138,7 @@ public final class Structures {
             if (probe.weight(style, x, z) < MIN_WEIGHT) return null;
             double base = base(probe, x, z, Hash.hash01(s + 3, cx, cz));
             double top = Math.min(CEILING, base + 80 + 120 * Hash.hash01(s + 4, cx, cz));
+            if (top - base < 40) return null;
             double radius = 12 + 13 * Hash.hash01(s + 5, cx, cz);
             double wall = 8 + 2 * Hash.hash01(s + 6, cx, cz);
             return new HollowPillar(x, z, base, top, radius, wall, s ^ ((long) cx << 20) ^ cz);
