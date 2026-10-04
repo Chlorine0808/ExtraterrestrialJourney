@@ -15,10 +15,12 @@ import chlorine.etjourney.world.end.feature.Zone;
 import chlorine.etjourney.world.end.feature.ZoneIslands;
 import chlorine.etjourney.world.end.modifier.BlockSink;
 import chlorine.etjourney.world.end.modifier.ChunkArea;
+import chlorine.etjourney.world.end.modifier.DensityField;
 import chlorine.etjourney.world.end.modifier.EndBlock;
 import chlorine.etjourney.world.end.modifier.Modifier;
 import chlorine.etjourney.world.end.modifier.Shape;
 import chlorine.etjourney.world.end.modifier.TerrainView;
+import chlorine.etjourney.world.end.noise.ValueNoise;
 
 /** Shape and block modifiers built from the chunk's features. */
 public final class FeatureModifiers {
@@ -36,12 +38,72 @@ public final class FeatureModifiers {
      */
     public static List<Modifier> core() {
         List<Modifier> all = new ArrayList<>(
-            Arrays.asList(zoneIslands(), holes(), lakeWater(), shoals(), arcs(), islets()));
+            Arrays.asList(faces(), zoneIslands(), holes(), lakeWater(), shoals(), arcs(), islets()));
         int order = 850;
         for (Structure.Kind<? extends Structure> kind : Structures.kinds())
             all.add(StructureModifiers.of(kind, order++));
         all.add(StructureModifiers.ringlets());
         return all;
+    }
+
+    /** How far a steep face moves in or out, in blocks. */
+    private static final double FACE_DEPTH = 4;
+    /** Sideways density change per block at which roughening starts. */
+    private static final double FACE_STEEP = 0.8;
+    private static final long FACE_SALT = 0x2C9B5E7A1F3D8046L;
+
+    /**
+     * Roughens steep faces block by block. The density grid is 8 blocks wide, so inside a cell a cliff is a smooth
+     * blend of its corners; this pushes the face in and out with lumps and flat ledges, more the steeper it is. Every
+     * value comes from the shared grid nodes, so chunks and the two halves of a column agree. Where a 3D shape
+     * decides the block, it is left alone.
+     */
+    public static Modifier faces() {
+        return blockModifier(790, (area, view, sink) -> {
+            long s = area.seed ^ FACE_SALT;
+            // Each half of the world has its own grid; a sink may cover either or both.
+            for (int half = 0; half < 2; half++) {
+                int base = half * 128, y0 = Math.max(sink.minY(), base), y1 = Math.min(sink.maxY(), base + 128);
+                if (y0 >= y1) continue;
+                double[] all = view.densityField(half == 1, true), terrain = view.densityField(half == 1, false);
+                for (int i = 0; i < 2; i++) {
+                    for (int j = 0; j < 2; j++) {
+                        for (int k = (y0 - base) >> 2; k <= (y1 - 1 - base) >> 2; k++) {
+                            double slope = DensityField.cellSlope(all, i, j, k);
+                            // Gentle cells are left alone; FACE_STEEP is where roughening starts.
+                            if (slope < FACE_STEEP) continue;
+                            if (!DensityField.cellCrosses(all, i, j, k, FACE_DEPTH * slope)) continue;
+                            roughenCell(sink, all, terrain, s, i, j, k, base, y0, y1);
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    private static void roughenCell(BlockSink sink, double[] all, double[] terrain, long s, int i, int j, int k,
+        int base, int y0, int y1) {
+        for (int lx = i * 8; lx < i * 8 + 8; lx++) {
+            for (int lz = j * 8; lz < j * 8 + 8; lz++) {
+                int x = sink.originX() + lx, z = sink.originZ() + lz;
+                for (int ly = k * 4; ly < k * 4 + 4; ly++) {
+                    int y = base + ly;
+                    if (y < y0 || y >= y1) continue;
+                    double d = DensityField.at(all, lx, ly, lz);
+                    if (all != terrain && d > DensityField.at(terrain, lx, ly, lz) + 0.5) continue;
+                    double g = DensityField.sideways(terrain, lx, ly, lz);
+                    double steep = ValueNoise.smooth(Math.max(0, Math.min(1, (g - FACE_STEEP) / 1.4)));
+                    double reach = FACE_DEPTH * g * steep;
+                    if (reach <= 0 || Math.abs(d) >= reach) continue;
+                    double n = (ValueNoise.noise3(s, x, y, z, 5) - 0.5) * 2 * 0.65
+                        + (ValueNoise.noise3(s + 1, x / 4.0, y, z / 4.0, 3) - 0.5) * 2 * 0.35;
+                    n = Math.max(-1, Math.min(1, n * 2));
+                    boolean solid = d + n * reach > 0;
+                    if (solid && sink.isAir(x, y, z)) sink.set(x, y, z, EndBlock.STONE);
+                    else if (!solid && !sink.isAir(x, y, z)) sink.clear(x, y, z);
+                }
+            }
+        }
     }
 
     /** Zone islands as a 3D shape, and their surface repainted with their zone's blocks. */
