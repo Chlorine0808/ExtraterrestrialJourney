@@ -17,6 +17,8 @@ public final class Reservations {
     public static final double FADE = 96;
     /** The outline's radius wanders by this share either way, so the cut is not a circle. */
     public static final double WOBBLE = 0.15;
+    /** Plain fade just outside an island's footprint. */
+    private static final double FOOTPRINT_FADE = 40;
     /** Chunk radius covering every feature that can reach a chunk plus an HEE island's span. */
     public static final int SEARCH_CHUNKS = 28;
     private static final int REGION_SHIFT = 3;
@@ -91,7 +93,16 @@ public final class Reservations {
     public static double suppression(List<Area> areas, double x, double z) {
         double best = 0;
         for (Area area : areas) {
-            if (Math.hypot(x - area.x, z - area.z) >= area.radius * (1 + WOBBLE) + FADE + 30) continue;
+            double real = Math.hypot(x - area.x, z - area.z);
+            // The island itself fills a square reaching about 1.15 radii: a plain fade from 1.2 radii keeps land
+            // out of it whatever the warp does, and the warped fade shapes the coast beyond.
+            double footprint = area.radius * 1.2;
+            if (real <= footprint) return 1;
+            if (real < footprint + FOOTPRINT_FADE) {
+                double t = (real - footprint) / FOOTPRINT_FADE;
+                best = Math.max(best, 1 - t * t * (3 - 2 * t));
+            }
+            if (real >= area.radius * (1 + WOBBLE) + FADE + 30) continue;
             long s = Double.doubleToLongBits(area.x) * 31 + Double.doubleToLongBits(area.z);
             double[] w = Warp.warp(s, x, z, 30, 90);
             double d = Math.hypot(w[0] - area.x, w[1] - area.z);
