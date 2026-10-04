@@ -1,5 +1,6 @@
 package chlorine.etjourney.compat.hee;
 
+import java.lang.ref.WeakReference;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -28,6 +29,8 @@ final class HeeIslandReservations implements ReservationProvider {
     private Object islandGen;
     private Method canSpawn;
     private boolean broken;
+    /** The End world the binding belongs to; a new world (another save) rebinds and drops the cache. */
+    private WeakReference<World> boundWorld = new WeakReference<>(null);
 
     @Override
     public List<Area> near(Object generator, Object world, int chunkX, int chunkZ, int chunkRadius) {
@@ -46,7 +49,9 @@ final class HeeIslandReservations implements ReservationProvider {
     }
 
     private synchronized boolean bind(Object generator, World end) {
-        if (islandGen != null) return true;
+        if (islandGen != null && boundWorld.get() == end) return true;
+        islandGen = null;
+        cache.clear();
         try {
             Object provider = generator != null && generator.getClass()
                 .getName()
@@ -66,6 +71,7 @@ final class HeeIslandReservations implements ReservationProvider {
             if (worldField.get(structure) == null) worldField.set(structure, end);
             canSpawn = findMethod(structure.getClass(), "canSpawnStructureAtCoords", "func_75047_a");
             islandGen = structure;
+            boundWorld = new WeakReference<>(end);
             ModLog.LOG.info("Reserving room for HEE islands in the End terrain");
             return true;
         } catch (ReflectiveOperationException | RuntimeException e) {
