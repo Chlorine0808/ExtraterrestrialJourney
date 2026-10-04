@@ -26,9 +26,13 @@ public final class FeatureModifiers {
 
     private FeatureModifiers() {}
 
-    /** Shapes and blocks that every region runs: zone islands, holes, lake water and shoals. */
+    /**
+     * Shapes and blocks that every chunk runs. Features that belong to a style (arcs, islets) check the
+     * style at their own centre: their shapes reach beyond the region, and a chunk whose own weight is zero must
+     * still draw the part that crosses it.
+     */
     public static List<Modifier> core() {
-        return Arrays.asList(zoneIslands(), holes(), lakeWater(), shoals());
+        return Arrays.asList(zoneIslands(), holes(), lakeWater(), shoals(), arcs(), islets());
     }
 
     /** Zone islands as a 3D shape, and their surface repainted with their zone's blocks. */

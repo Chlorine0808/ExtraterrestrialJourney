@@ -4,7 +4,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-import chlorine.etjourney.world.end.modifier.builtin.FeatureModifiers;
 import chlorine.etjourney.world.end.modifier.builtin.StyleModifiers;
 
 /** The terrain styles carried over from the spike, as bases and overlays. Core modifiers are not listed here. */
@@ -50,7 +49,6 @@ public final class Styles {
         .share(1)
         .mountains(0)
         .valleys(0)
-        .modifiers(FeatureModifiers.islets())
         .build();
     /** Shoals spread over the whole End; a SHOALS base removes the continent and makes them dense. */
     public static final Style SHOALS = Style.builder("SHOALS", StyleKind.BASE_VOID)
@@ -63,7 +61,6 @@ public final class Styles {
         .overlay(OVERLAY_CHANCE, Style.ANY)
         .mountains(0)
         .valleys(0)
-        .modifiers(FeatureModifiers.arcs())
         .build();
     public static final Style SPIRES = Style.builder("SPIRES", StyleKind.OVERLAY)
         .overlay(OVERLAY_CHANCE, Style.LAND)
