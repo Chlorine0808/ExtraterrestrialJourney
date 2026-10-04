@@ -119,20 +119,28 @@ public final class Structures {
         return Math.min(tilt, Math.asin(Math.max(0, Math.min(1, ((CEILING - 8) / 2 - tube) / radius))));
     }
 
-    public static final Structure.Kind<Arch> ARCHES = new Structure.Kind<Arch>("ARCHES", 96, 52) {
+    public static final Structure.Kind<Arch> ARCHES = new Structure.Kind<Arch>("ARCHES", 64, 52) {
 
         @Override
         protected Arch compute(long seed, int cx, int cz, StructureProbe probe) {
             long s = seed ^ 0x5D1E8B3F7A2C9046L;
-            if (Hash.hash01(s, cx, cz) > 0.7) return null;
+            if (Hash.hash01(s, cx, cz) > 0.85) return null;
             double length = 40 + 50 * Hash.hash01(s + 1, cx, cz);
-            double angle = Hash.hash01(s + 2, cx, cz) * Math.PI * 2;
-            double mx = (cx + 0.5) * cell, mz = (cz + 0.5) * cell;
+            double mx = (cx + 0.2 + 0.6 * Hash.hash01(s + 5, cx, cz)) * cell;
+            double mz = (cz + 0.2 + 0.6 * Hash.hash01(s + 6, cx, cz)) * cell;
             if (probe.weight(style, mx, mz) < MIN_WEIGHT) return null;
-            double ax = mx - Math.cos(angle) * length / 2, az = mz - Math.sin(angle) * length / 2;
-            double bx = mx + Math.cos(angle) * length / 2, bz = mz + Math.sin(angle) * length / 2;
-            // Both feet stand on land.
-            if (probe.land(ax, az) < 10 || probe.land(bx, bz) < 10) return null;
+            // Both feet stand on land: try a few headings before giving up.
+            double ax = 0, az = 0, bx = 0, bz = 0;
+            boolean standing = false;
+            for (int attempt = 0; attempt < 3 && !standing; attempt++) {
+                double angle = Hash.hash01(s + 2 + 10L * attempt, cx, cz) * Math.PI * 2;
+                ax = mx - Math.cos(angle) * length / 2;
+                az = mz - Math.sin(angle) * length / 2;
+                bx = mx + Math.cos(angle) * length / 2;
+                bz = mz + Math.sin(angle) * length / 2;
+                standing = probe.land(ax, az) >= 10 && probe.land(bx, bz) >= 10;
+            }
+            if (!standing) return null;
             double ya = probe.ground(ax, az) - 2, yb = probe.ground(bx, bz) - 2;
             double height = 15 + 25 * Hash.hash01(s + 3, cx, cz);
             double tube = 4.5 + 2.5 * Hash.hash01(s + 4, cx, cz);

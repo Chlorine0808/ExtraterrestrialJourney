@@ -3,6 +3,9 @@ package chlorine.etjourney.world.end.feature;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import org.junit.jupiter.api.Test;
 
 /** Each structure forms where its style is, stays inside the world and its footprint, and is solid in its body. */
@@ -215,5 +218,45 @@ class StructuresTest {
             }
         }
         assertTrue(found > 120, "only " + found + " ringlets in 400 cells");
+    }
+
+    @Test
+    void archesAreDense() {
+        // At least about one arch per 90 x 90 blocks of ARCHES land.
+        Set<String> seen = new HashSet<>();
+        for (int x = 20000; x < 22000; x += 100) {
+            for (int z = 0; z < 2000; z += 100) {
+                for (Structures.Arch a : Structures.ARCHES.near(313L, x, z, 50, LAND))
+                    seen.add(a.centreX + "," + a.centreZ);
+            }
+        }
+        assertTrue(seen.size() >= 480, "only " + seen.size() + " arches in 2000 x 2000 blocks");
+    }
+
+    @Test
+    void archesTryOtherAnglesToFindGround() {
+        // Land only in a band 70 blocks wide along x: an arch must lie along the band to stand on it.
+        StructureProbe band = new StructureProbe() {
+
+            @Override
+            public double weight(String style, double x, double z) {
+                return 1;
+            }
+
+            @Override
+            public double land(double x, double z) {
+                return Math.abs(z - 35) < 35 ? 60 : -50;
+            }
+
+            @Override
+            public double ground(double x, double z) {
+                return land(x, z) > 0 ? 70 : -1000;
+            }
+        };
+        int found = 0;
+        for (int cx = 300; cx < 500; cx++) {
+            if (Structures.ARCHES.inCell(314L, cx, 0, band) != null) found++;
+        }
+        assertTrue(found >= 130, "only " + found + " of 200 cells along the band have an arch");
     }
 }
