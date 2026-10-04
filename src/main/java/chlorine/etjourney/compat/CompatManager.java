@@ -10,6 +10,7 @@ import java.util.function.Supplier;
 
 import chlorine.etjourney.compat.hee.HeeCompat;
 import chlorine.etjourney.compat.netherlicious.NetherliciousCompat;
+import chlorine.etjourney.compat.novacraft.NovaCraftCompat;
 import chlorine.etjourney.compat.thaumcraft.ThaumcraftCompat;
 import chlorine.etjourney.core.util.ModLog;
 import cpw.mods.fml.common.Loader;
@@ -32,6 +33,7 @@ public final class CompatManager {
         factories.put("Thaumcraft", () -> new ThaumcraftCompat());
         factories.put("netherlicious", () -> new NetherliciousCompat());
         factories.put("HardcoreEnderExpansion", () -> new HeeCompat());
+        factories.put("nova_craft", () -> new NovaCraftCompat());
         return new CompatManager(factories, Loader::isModLoaded);
     }
 
