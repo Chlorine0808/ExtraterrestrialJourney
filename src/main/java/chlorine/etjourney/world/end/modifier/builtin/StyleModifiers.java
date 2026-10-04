@@ -1,7 +1,9 @@
 package chlorine.etjourney.world.end.modifier.builtin;
 
+import chlorine.etjourney.world.end.feature.Canyons;
 import chlorine.etjourney.world.end.feature.Continent;
 import chlorine.etjourney.world.end.feature.Relief;
+import chlorine.etjourney.world.end.modifier.ColumnState;
 import chlorine.etjourney.world.end.modifier.Layer;
 import chlorine.etjourney.world.end.modifier.Modifier;
 import chlorine.etjourney.world.end.noise.Fractal;
@@ -9,7 +11,7 @@ import chlorine.etjourney.world.end.noise.Hash;
 import chlorine.etjourney.world.end.noise.ValueNoise;
 import chlorine.etjourney.world.end.noise.Warp;
 
-/** Column modifiers that belong to one style each and apply at that style's weight. */
+/** Modifiers that belong to one style each and apply at that style's weight. */
 public final class StyleModifiers {
 
     /** Highest top of a stacked slab; the tall pass writes everything above Y 127. */
@@ -110,6 +112,31 @@ public final class StyleModifiers {
             }
             if (!s.layers.isEmpty()) {
                 s.pillar = Math.max(s.pillar, (ValueNoise.mask(salt + 30, w[0], w[1], 32) - 0.82) * 40 * strength);
+            }
+        });
+    }
+
+    /**
+     * Slot canyons cut into the land, to an absolute floor below the column top so both halves of a tall column cut
+     * the same blocks. The style fades the depth in at its borders.
+     */
+    public static Modifier slotCanyons() {
+        return FeatureModifiers.blockModifier(812, (area, view, sink) -> {
+            for (int x = sink.originX(); x < sink.originX() + 16; x++) {
+                for (int z = sink.originZ(); z < sink.originZ() + 16; z++) {
+                    double depth = Canyons.depth(area.seed, x, z);
+                    if (depth <= 0) continue;
+                    double fade = Math.min(1, (view.weight("SLOT_CANYONS", x, z) - 0.3) / 0.4);
+                    if (fade <= 0) continue;
+                    ColumnState c = view.column(x, z);
+                    if (c.land <= 0) continue;
+                    int floor = (int) Math.ceil(Math.max(c.top - depth * fade, c.bottom + 6));
+                    // Above the column top for the density noise and anything the surface modifiers raised.
+                    int ceiling = (int) c.top + 16;
+                    for (int y = Math.max(floor, sink.minY()); y <= Math.min(ceiling, sink.maxY() - 1); y++) {
+                        sink.clear(x, y, z);
+                    }
+                }
             }
         });
     }

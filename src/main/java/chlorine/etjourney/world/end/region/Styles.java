@@ -108,6 +108,10 @@ public final class Styles {
         .valleys(0.3)
         .modifiers(StyleModifiers.shattered())
         .build();
+    public static final Style SLOT_CANYONS = Style.builder("SLOT_CANYONS", StyleKind.OVERLAY)
+        .overlay(OVERLAY_CHANCE, Style.LAND)
+        .modifiers(StyleModifiers.slotCanyons())
+        .build();
 
     /** Free-standing structures: the style only marks where they form; the shapes come from feature cells. */
     public static final Style MUSHROOMS = structure("MUSHROOMS", Style.ANY);
@@ -133,6 +137,7 @@ public final class Styles {
             MESAS,
             MIRRORED,
             SHATTERED,
+            SLOT_CANYONS,
             MUSHROOMS,
             RINGS,
             ARCHES,
