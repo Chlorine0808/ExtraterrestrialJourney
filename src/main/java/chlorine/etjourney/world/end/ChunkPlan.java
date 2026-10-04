@@ -17,6 +17,7 @@ import chlorine.etjourney.world.end.feature.ZoneIslands;
 import chlorine.etjourney.world.end.modifier.BlockSink;
 import chlorine.etjourney.world.end.modifier.ChunkArea;
 import chlorine.etjourney.world.end.modifier.ColumnState;
+import chlorine.etjourney.world.end.modifier.DensityField;
 import chlorine.etjourney.world.end.modifier.Modifier;
 import chlorine.etjourney.world.end.modifier.ModifierChain;
 import chlorine.etjourney.world.end.modifier.Shape;
@@ -56,6 +57,8 @@ public final class ChunkPlan implements TerrainView {
     private final ArcPaths.Segments arcs;
     private final Map<Long, ColumnState> columns = new ConcurrentHashMap<>();
     private volatile List<Shape> shapes;
+    /** Grid nodes outside the chunk, read by densityAt(), keyed by their block position. */
+    private final Map<Long, Double> outerNodes = new ConcurrentHashMap<>();
     /** Density grids by half and shapes, built on first use. */
     private final double[][] fields = new double[4][];
 
@@ -126,6 +129,36 @@ public final class ChunkPlan implements TerrainView {
             fields[slot] = field;
         }
         return field;
+    }
+
+    @Override
+    public double densityAt(int x, int y, int z) {
+        int lx = x - area.originX(), lz = z - area.originZ();
+        if (lx >= 0 && lx < 16 && lz >= 0 && lz < 16) {
+            boolean upper = y >= 128;
+            return DensityField.at(densityField(upper, true), lx, y - (upper ? 128 : 0), lz);
+        }
+        int x0 = Math.floorDiv(x, 8) * 8, y0 = Math.floorDiv(y, 4) * 4, z0 = Math.floorDiv(z, 8) * 8;
+        double tx = (x - x0) / 8.0, ty = (y - y0) / 4.0, tz = (z - z0) / 8.0;
+        double a = lerp(outerNode(x0, y0, z0), outerNode(x0, y0 + 4, z0), ty);
+        double b = lerp(outerNode(x0, y0, z0 + 8), outerNode(x0, y0 + 4, z0 + 8), ty);
+        double c = lerp(outerNode(x0 + 8, y0, z0), outerNode(x0 + 8, y0 + 4, z0), ty);
+        double d = lerp(outerNode(x0 + 8, y0, z0 + 8), outerNode(x0 + 8, y0 + 4, z0 + 8), ty);
+        double near = a + (c - a) * tx, far = b + (d - b) * tx;
+        return near + (far - near) * tz;
+    }
+
+    private double outerNode(int x, int y, int z) {
+        long key = ((long) (x >> 3) << 40) ^ ((long) (y >> 2) << 20) ^ ((z >> 3) & 0xFFFFFL);
+        Double cached = outerNodes.get(key);
+        if (cached != null) return cached;
+        double value = DensityBuilder.node(this, x, y, z);
+        outerNodes.put(key, value);
+        return value;
+    }
+
+    private static double lerp(double a, double b, double t) {
+        return a + (b - a) * t;
     }
 
     public List<Shape> shapes() {

@@ -71,4 +71,24 @@ class ChunkPlanTest {
         }
         assertTrue(placed > 0, "no blocks placed in any sampled chunk");
     }
+
+    @Test
+    void densityJustOutsideAChunkMatchesTheNeighbour() {
+        Random r = new Random(7);
+        for (int n = 0; n < 20; n++) {
+            int cx = 80 + r.nextInt(400), cz = -200 + r.nextInt(400);
+            ChunkPlan here = plan(cx, cz), east = plan(cx + 1, cz);
+            for (int z = cz * 16; z < cz * 16 + 16; z += 3) {
+                for (int y = 0; y < 256; y += 5) {
+                    for (int x = (cx + 1) * 16; x < (cx + 1) * 16 + 6; x++) {
+                        assertEquals(
+                            east.densityAt(x, y, z),
+                            here.densityAt(x, y, z),
+                            1e-6,
+                            "at " + x + "," + y + "," + z);
+                    }
+                }
+            }
+        }
+    }
 }

@@ -41,6 +41,13 @@ public final class DensityBuilder {
         }
     }
 
+    /** The value of the grid node at (x, y, z), as fill() computes it; nodes are shared by every chunk. */
+    static double node(ChunkPlan plan, double x, double y, double z) {
+        double d = density(plan.area().seed ^ SALT, plan.column(x, z), x, y, z);
+        for (Shape shape : plan.shapes()) d = Math.max(d, shape.density(x, y, z));
+        return d;
+    }
+
     /** Positive inside the slab (the column's surface on top, a lumpy underside below), its layers and pillars. */
     static double density(long s, ColumnState c, double x, double y, double z) {
         if (c.land <= 0) return Math.max(-20, c.land / 4 - 2);

@@ -354,5 +354,10 @@ public final class TerrainSampler {
         public double[] densityField(boolean upper, boolean withShapes) {
             throw new UnsupportedOperationException("bare columns have no density grid");
         }
+
+        @Override
+        public double densityAt(int x, int y, int z) {
+            throw new UnsupportedOperationException("bare columns have no density grid");
+        }
     }
 }

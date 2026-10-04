@@ -114,6 +114,11 @@ class BuiltinModifiersTest {
             public double[] densityField(boolean upper, boolean withShapes) {
                 return null;
             }
+
+            @Override
+            public double densityAt(int x, int y, int z) {
+                return 0;
+            }
         };
     }
 

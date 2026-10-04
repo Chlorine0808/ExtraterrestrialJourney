@@ -57,6 +57,12 @@ public interface TerrainView {
      */
     double[] densityField(boolean upper, boolean withShapes);
 
+    /**
+     * The density the vanilla generator interpolates at block (x, y, z), also just outside the chunk, where it is
+     * built from the neighbouring cell's nodes; only for block passes.
+     */
+    double densityAt(int x, int y, int z);
+
     /** Terrain answers for placing free-standing structures; the same for every chunk. */
     StructureProbe structures();
 }
