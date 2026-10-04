@@ -1,5 +1,6 @@
 package chlorine.etjourney.world.end.modifier.builtin;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -12,6 +13,7 @@ import org.junit.jupiter.api.Test;
 import chlorine.etjourney.world.end.feature.Structure;
 import chlorine.etjourney.world.end.feature.StructureProbe;
 import chlorine.etjourney.world.end.feature.Structures;
+import chlorine.etjourney.world.end.modifier.Shape;
 import chlorine.etjourney.world.end.reserve.Area;
 import chlorine.etjourney.world.end.reserve.Reservations;
 
@@ -59,5 +61,19 @@ class StructureBlockingTest {
         for (int i = 0; ring == null && i < 40; i++) ring = Structures.RINGS.inCell(402L, 4 + i, 3, LAND);
         assertNotNull(ring);
         assertFalse(StructureModifiers.blocked(islandBeside(ring), ring));
+    }
+
+    @Test
+    void ringsAreCutAroundAnIslandRatherThanDropped() {
+        Structures.Ring ring = null;
+        for (int i = 0; ring == null && i < 40; i++) ring = Structures.RINGS.inCell(403L, 4 + i, 3, LAND);
+        assertNotNull(ring);
+        // An island sitting on the tube at the ring's east side.
+        double[] east = ring.pointOnRing(0), west = ring.pointOnRing(Math.PI);
+        List<Area> island = Collections.singletonList(new Area("hee", east[0], east[2], 128));
+        Shape placed = StructureModifiers.placed(island, ring);
+        assertNotNull(placed, "the ring was dropped");
+        assertTrue(placed.density(east[0], east[1], east[2]) < 0, "the tube still runs through the island");
+        assertEquals(ring.density(west[0], west[1], west[2]), placed.density(west[0], west[1], west[2]), 1e-9);
     }
 }

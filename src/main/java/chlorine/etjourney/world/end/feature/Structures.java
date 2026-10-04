@@ -268,6 +268,13 @@ public final class Structures {
             return new double[0][];
         }
 
+        /** The point on the ring's centre line at an angle, as {x, y, z}. */
+        public double[] pointOnRing(double angle) {
+            double c = Math.cos(angle) * radius, s = Math.sin(angle) * radius;
+            return new double[] { centreX + c * u[0] + s * v[0], y + c * u[1] + s * v[1],
+                centreZ + c * u[2] + s * v[2] };
+        }
+
         @Override
         public double minY() {
             return inner == null ? super.minY() : Math.min(super.minY(), inner.minY());
