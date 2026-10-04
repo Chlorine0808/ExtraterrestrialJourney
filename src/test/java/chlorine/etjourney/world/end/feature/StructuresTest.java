@@ -373,7 +373,10 @@ class StructuresTest {
                 Structures.Chain c = Structures.SKY_CHAINS.inCell(319L, cx, cz, LAND);
                 if (c == null) continue;
                 seen++;
-                assertTrue(c.minY() <= 3 && c.maxY() >= 252 && c.maxY() <= 256, c.minY() + ".." + c.maxY());
+                // It ends with a whole link, at most one link above Y 2.
+                assertTrue(
+                    c.bottom <= 2 + c.pitch() + c.wire() && c.top >= 252 && c.maxY() <= 256,
+                    c.minY() + ".." + c.maxY());
                 assertEquals(0, c.feet().length);
             }
         }
@@ -381,7 +384,7 @@ class StructuresTest {
     }
 
     @Test
-    void chainLinksHaveWholeBends() {
+    void chainLinksHaveWholeBendsAndEnds() {
         int checked = 0;
         for (int cx = 20; cx < 200; cx++) {
             Structures.Chain c = Structures.HANGING_CHAINS.inCell(320L, cx, 4, SLAB);
@@ -390,6 +393,10 @@ class StructuresTest {
             double r = c.wire();
             // The top of the third link's bend, just above its centre line.
             assertTrue(c.density(c.centreX, c.top - 2 * c.pitch() + r * 0.5, c.centreZ) > 0, "bend cut flat");
+            if (c.weight == 0) {
+                // A chain without a boulder ends in a closed link: its last bend is whole.
+                assertTrue(c.density(c.centreX, c.bottom + r * 0.5, c.centreZ) > 0, "last link cut open");
+            }
         }
         assertTrue(checked > 10);
     }

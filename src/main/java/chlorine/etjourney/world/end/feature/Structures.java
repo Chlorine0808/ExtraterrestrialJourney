@@ -473,10 +473,10 @@ public final class Structures {
                 x,
                 z,
                 1.5 * scale + wire(scale) + Math.max(weight, 0) + 1,
-                bottom - 2 * weight - 1,
+                whole(top, bottom, scale) - 2 * weight - 1,
                 top + wire(scale) + 1);
             this.top = top;
-            this.bottom = bottom;
+            this.bottom = whole(top, bottom, scale);
             this.scale = scale;
             this.yaw = yaw;
             this.weight = weight;
@@ -485,6 +485,12 @@ public final class Structures {
 
         private static double wire(double scale) {
             return 0.45 * scale + 0.35;
+        }
+
+        /** The lowest point at or above `wanted` where the chain ends with a whole link. */
+        private static double whole(double top, double wanted, double scale) {
+            int links = Math.max(1, (int) Math.floor((top - wanted - 5 * scale - wire(scale)) / (4 * scale)) + 1);
+            return top - ((links - 1) * 4 * scale + 5 * scale) - wire(scale);
         }
 
         double wire() {
