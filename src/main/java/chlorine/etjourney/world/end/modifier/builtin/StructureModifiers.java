@@ -18,21 +18,29 @@ public final class StructureModifiers {
 
     /** Small rings drawn block by block, so tubes thinner than the density grid stay whole. */
     public static Modifier ringlets() {
-        return FeatureModifiers.blockModifier(860, (area, view, sink) -> {
+        return voxels(Structures.RINGLETS, 860, EndBlock.STONE);
+    }
+
+    /**
+     * A kind drawn block by block in the block pass instead of as a density shape, for parts thinner than the
+     * density grid resolves. A block is placed where the structure's density at its centre is not negative.
+     */
+    public static Modifier voxels(Structure.Kind<? extends Structure> kind, int order, EndBlock block) {
+        return FeatureModifiers.blockModifier(order, (area, view, sink) -> {
             int ox = sink.originX(), oz = sink.originZ();
-            for (Structures.Ring r : Structures.RINGLETS.near(area.seed, ox + 8, oz + 8, 12, view.structures())) {
+            for (Structure s : kind.near(area.seed, ox + 8, oz + 8, 12, view.structures())) {
                 List<Area> reserved = view
-                    .reservedAt((int) Math.floor(r.centreX) >> 4, (int) Math.floor(r.centreZ) >> 4);
-                Shape placed = placed(reserved, r, Structures.RINGLETS);
+                    .reservedAt((int) Math.floor(s.centreX) >> 4, (int) Math.floor(s.centreZ) >> 4);
+                Shape placed = placed(reserved, s, kind);
                 if (placed == null) continue;
-                int x0 = Math.max(ox, (int) Math.floor(r.minX())), x1 = Math.min(ox + 15, (int) Math.ceil(r.maxX()));
-                int z0 = Math.max(oz, (int) Math.floor(r.minZ())), z1 = Math.min(oz + 15, (int) Math.ceil(r.maxZ()));
-                int y0 = Math.max(sink.minY(), (int) Math.floor(r.minY()));
-                int y1 = Math.min(sink.maxY() - 1, (int) Math.ceil(r.maxY()));
+                int x0 = Math.max(ox, (int) Math.floor(s.minX())), x1 = Math.min(ox + 15, (int) Math.ceil(s.maxX()));
+                int z0 = Math.max(oz, (int) Math.floor(s.minZ())), z1 = Math.min(oz + 15, (int) Math.ceil(s.maxZ()));
+                int y0 = Math.max(sink.minY(), (int) Math.floor(s.minY()));
+                int y1 = Math.min(sink.maxY() - 1, (int) Math.ceil(s.maxY()));
                 for (int x = x0; x <= x1; x++) {
                     for (int z = z0; z <= z1; z++) {
                         for (int y = y0; y <= y1; y++) {
-                            if (placed.density(x + 0.5, y + 0.5, z + 0.5) >= 0) sink.place(x, y, z, EndBlock.STONE);
+                            if (placed.density(x + 0.5, y + 0.5, z + 0.5) >= 0) sink.place(x, y, z, block);
                         }
                     }
                 }
