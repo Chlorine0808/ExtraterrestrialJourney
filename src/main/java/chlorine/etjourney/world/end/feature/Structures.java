@@ -183,7 +183,8 @@ public final class Structures {
         @Override
         protected double body(double x, double y, double z) {
             double d = Math.hypot(x - centreX, z - centreZ);
-            double stem = Math.min(stalk - d, Math.min(capY - y, y - base));
+            // The stalk runs up into the cap's underside, which is highest on the axis.
+            double stem = Math.min(stalk - d, Math.min(capY + dome - thickness + 1 - y, y - base));
             double t = Math.min(1, d / cap);
             double surface = capY + dome * (1 - t * t);
             double hat = Math.min(cap - d, Math.min(surface - y, y - (surface - thickness)));

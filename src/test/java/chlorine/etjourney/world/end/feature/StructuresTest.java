@@ -175,4 +175,19 @@ class StructuresTest {
             }
         }
     }
+
+    @Test
+    void mushroomCapsSitOnTheirStalks() {
+        int checked = 0;
+        for (int i = 0; i < 400; i++) {
+            Structures.Mushroom m = Structures.MUSHROOMS.inCell(310L, 20 + i % 20, i / 20, LAND);
+            if (m == null) continue;
+            checked++;
+            double top = m.capY + m.dome;
+            for (double y = m.base + 1; y < top - 1; y += 0.5) {
+                assertTrue(m.density(m.centreX, y, m.centreZ) > 0, "gap at " + (y - m.base) + " above the base");
+            }
+        }
+        assertTrue(checked > 20);
+    }
 }
