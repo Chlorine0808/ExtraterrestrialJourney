@@ -14,6 +14,7 @@ import chlorine.etjourney.world.end.feature.Lakes;
 import chlorine.etjourney.world.end.feature.Land;
 import chlorine.etjourney.world.end.feature.Mountains;
 import chlorine.etjourney.world.end.feature.Shoals;
+import chlorine.etjourney.world.end.feature.StructureProbe;
 import chlorine.etjourney.world.end.feature.ZoneIslands;
 import chlorine.etjourney.world.end.modifier.ChunkArea;
 import chlorine.etjourney.world.end.modifier.ColumnState;
@@ -21,6 +22,7 @@ import chlorine.etjourney.world.end.modifier.Modifier;
 import chlorine.etjourney.world.end.modifier.ModifierChain;
 import chlorine.etjourney.world.end.modifier.TerrainView;
 import chlorine.etjourney.world.end.modifier.builtin.CoreModifiers;
+import chlorine.etjourney.world.end.region.RegionMap;
 import chlorine.etjourney.world.end.region.RegionPicker;
 import chlorine.etjourney.world.end.region.Style;
 import chlorine.etjourney.world.end.region.StyleWeights;
@@ -38,6 +40,8 @@ public final class TerrainSampler {
     private final RegionPicker picker;
     private final ModifierChain chain;
     private final Map<Point, StyleWeights> weightCache = new ConcurrentHashMap<>();
+    private final ArcPaths.SegmentFilter arcGround = (x, y, z) -> arcProbe().weight(x, z) >= 0.3
+        && !nearZoneIsland(x, y, z);
     private final Map<Modifier, Style> owners = new ConcurrentHashMap<>();
 
     public TerrainSampler(long seed, RegionPicker picker) {
@@ -187,6 +191,46 @@ public final class TerrainSampler {
         };
     }
 
+    public StructureProbe structureProbe() {
+        return new StructureProbe() {
+
+            @Override
+            public double weight(String style, double x, double z) {
+                return styleWeight(style, x, z);
+            }
+
+            @Override
+            public double land(double x, double z) {
+                return TerrainSampler.this.land(x, z);
+            }
+
+            @Override
+            public double ground(double x, double z) {
+                return TerrainSampler.this.land(x, z) > 0 ? bareColumn(x, z, true).top : -1000;
+            }
+
+            @Override
+            public double underside(double x, double z) {
+                return TerrainSampler.this.land(x, z) > 0 ? bareColumn(x, z, true).bottom : -1000;
+            }
+
+            @Override
+            public double[] regionCentre(int cx, int cz) {
+                return RegionMap.cellCentre(seed, cx, cz);
+            }
+        };
+    }
+
+    public double styleWeight(String style, double x, double z) {
+        Style s = picker.byName(style);
+        return s == null ? 0 : weights(x, z).of(s);
+    }
+
+    /** Arc segments on ARCS ground and clear of zone islands; one instance, so paths can keep its answers. */
+    public ArcPaths.SegmentFilter arcGround() {
+        return arcGround;
+    }
+
     public ArcPaths.Probe arcProbe() {
         return (x, z) -> weights(x, z).of(Styles.ARCS);
     }
@@ -289,6 +333,31 @@ public final class TerrainSampler {
         @Override
         public double valleyScale(double x, double z) {
             return weights(x, z).valleyScale();
+        }
+
+        @Override
+        public double weight(String style, double x, double z) {
+            return styleWeight(style, x, z);
+        }
+
+        @Override
+        public StructureProbe structures() {
+            return structureProbe();
+        }
+
+        @Override
+        public ColumnState column(double x, double z) {
+            return bareColumn(x, z, true);
+        }
+
+        @Override
+        public double[] densityField(boolean upper, boolean withShapes) {
+            throw new UnsupportedOperationException("bare columns have no density grid");
+        }
+
+        @Override
+        public double densityAt(int x, int y, int z) {
+            throw new UnsupportedOperationException("bare columns have no density grid");
         }
     }
 }

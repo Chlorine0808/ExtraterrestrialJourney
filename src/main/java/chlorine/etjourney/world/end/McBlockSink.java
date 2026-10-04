@@ -37,7 +37,12 @@ final class McBlockSink implements BlockSink {
     }
 
     @Override
-    public int height() {
+    public int minY() {
+        return 0;
+    }
+
+    @Override
+    public int maxY() {
         return HEIGHT;
     }
 
@@ -55,42 +60,8 @@ final class McBlockSink implements BlockSink {
     @Override
     public void set(int x, int y, int z, EndBlock block) {
         int i = index(x, y, z);
-        Block b;
-        int m = 0;
-        switch (block) {
-            case WATER:
-                b = Blocks.water;
-                break;
-            case SOLAR_TOP:
-                b = Blocks.netherrack;
-                break;
-            case SOLAR_FILL:
-                b = Blocks.stained_hardened_clay;
-                m = 1;
-                break;
-            case VORTEX_TOP:
-                b = Blocks.packed_ice;
-                break;
-            case VORTEX_FILL:
-                b = Blocks.snow;
-                break;
-            case NEBULA_TOP:
-                b = Blocks.mycelium;
-                break;
-            case NEBULA_FILL:
-                b = Blocks.stained_hardened_clay;
-                m = 10;
-                break;
-            case STARDUST_TOP:
-                b = Blocks.quartz_block;
-                break;
-            case STARDUST_FILL:
-                b = Blocks.sandstone;
-                break;
-            default:
-                b = Blocks.end_stone;
-                break;
-        }
+        Block b = McBlocks.block(block);
+        int m = McBlocks.meta(block);
         // Without a metadata array, coloured clay falls back to plain hardened clay.
         if (m != 0 && meta == null) b = Blocks.hardened_clay;
         blocks[i] = b;

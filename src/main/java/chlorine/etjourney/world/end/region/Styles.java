@@ -3,14 +3,15 @@ package chlorine.etjourney.world.end.region;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.function.Predicate;
 
-import chlorine.etjourney.world.end.modifier.builtin.FeatureModifiers;
 import chlorine.etjourney.world.end.modifier.builtin.StyleModifiers;
 
 /** The terrain styles carried over from the spike, as bases and overlays. Core modifiers are not listed here. */
 public final class Styles {
 
-    private static final double OVERLAY_CHANCE = 0.1;
+    /** Chance of each overlay per region; with fifteen overlays most regions still get none or one. */
+    private static final double OVERLAY_CHANCE = 0.06;
 
     public static final Style PLAINS = Style.builder("PLAINS", StyleKind.BASE_LAND)
         .share(3)
@@ -43,13 +44,12 @@ public final class Styles {
         .overlay(0.2, Style.named("PLAINS", "LOWLANDS", "BASIN"))
         .mountains(0.4)
         .valleys(0.3)
-        .modifiers(StyleModifiers.layeredLevel(), StyleModifiers.layers())
+        .modifiers(StyleModifiers.layers())
         .build();
     public static final Style ISLETS = Style.builder("ISLETS", StyleKind.BASE_VOID)
         .share(1)
         .mountains(0)
         .valleys(0)
-        .modifiers(FeatureModifiers.islets())
         .build();
     /** Shoals spread over the whole End; a SHOALS base removes the continent and makes them dense. */
     public static final Style SHOALS = Style.builder("SHOALS", StyleKind.BASE_VOID)
@@ -62,7 +62,6 @@ public final class Styles {
         .overlay(OVERLAY_CHANCE, Style.ANY)
         .mountains(0)
         .valleys(0)
-        .modifiers(FeatureModifiers.arcs())
         .build();
     public static final Style SPIRES = Style.builder("SPIRES", StyleKind.OVERLAY)
         .overlay(OVERLAY_CHANCE, Style.LAND)
@@ -86,10 +85,83 @@ public final class Styles {
         .modifiers(StyleModifiers.wildWaves())
         .build();
 
+    /** Upside-down continents: a flat top with the relief hanging below. */
+    public static final Style INVERTED = Style.builder("INVERTED", StyleKind.BASE_LAND)
+        .share(1)
+        .holes(true)
+        .modifiers(StyleModifiers.invertedLift(), StyleModifiers.inverted())
+        .build();
+    public static final Style MESAS = Style.builder("MESAS", StyleKind.OVERLAY)
+        .overlay(OVERLAY_CHANCE, Style.LAND)
+        .valleys(0.5)
+        .holes(true)
+        .modifiers(StyleModifiers.mesas())
+        .build();
+    public static final Style MIRRORED = Style.builder("MIRRORED", StyleKind.OVERLAY)
+        .overlay(OVERLAY_CHANCE, Style.LAND)
+        .valleys(0.3)
+        .modifiers(StyleModifiers.mirroredLift(), StyleModifiers.mirrored())
+        .build();
+    public static final Style SHATTERED = Style.builder("SHATTERED", StyleKind.OVERLAY)
+        .overlay(OVERLAY_CHANCE, Style.LAND)
+        .mountains(0.5)
+        .valleys(0.3)
+        .modifiers(StyleModifiers.shattered())
+        .build();
+    public static final Style SLOT_CANYONS = Style.builder("SLOT_CANYONS", StyleKind.OVERLAY)
+        .overlay(OVERLAY_CHANCE, Style.LAND)
+        .modifiers(StyleModifiers.slotCanyons())
+        .build();
+
+    /** Springs in the rim cliffs pour water into the void; placed at populate time, outside the modifier chain. */
+    public static final Style VOID_FALLS = Style.builder("VOID_FALLS", StyleKind.OVERLAY)
+        .overlay(OVERLAY_CHANCE, Style.LAND)
+        .build();
+
+    /** Free-standing structures: the style only marks where they form; the shapes come from feature cells. */
+    public static final Style MUSHROOMS = structure("MUSHROOMS", Style.ANY);
+    public static final Style RINGS = structure("RINGS", Style.ANY);
+    public static final Style ARCHES = structure("ARCHES", Style.LAND);
+    public static final Style SPIRAL_TOWERS = structure("SPIRAL_TOWERS", Style.ANY);
+    public static final Style HOLLOW_PILLARS = structure("HOLLOW_PILLARS", Style.ANY);
+    public static final Style CROSSES = structure("CROSSES", Style.ANY);
+    public static final Style CHAINS = structure("CHAINS", Style.ANY);
+
     private static final List<Style> ALL = Collections.unmodifiableList(
-        Arrays.asList(PLAINS, LOWLANDS, BASIN, RANGES, LAYERED, ISLETS, SHOALS, ARCS, SPIRES, WAVES, WILD_WAVES));
+        Arrays.asList(
+            PLAINS,
+            LOWLANDS,
+            BASIN,
+            RANGES,
+            LAYERED,
+            ISLETS,
+            SHOALS,
+            ARCS,
+            SPIRES,
+            WAVES,
+            WILD_WAVES,
+            INVERTED,
+            MESAS,
+            MIRRORED,
+            SHATTERED,
+            SLOT_CANYONS,
+            VOID_FALLS,
+            MUSHROOMS,
+            RINGS,
+            ARCHES,
+            SPIRAL_TOWERS,
+            HOLLOW_PILLARS,
+            CROSSES,
+            CHAINS));
 
     private Styles() {}
+
+    private static Style structure(String name, Predicate<Style> target) {
+        return Style.builder(name, StyleKind.OVERLAY)
+            .overlay(OVERLAY_CHANCE, target)
+            .holes(true)
+            .build();
+    }
 
     public static List<Style> all() {
         return ALL;

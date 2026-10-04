@@ -21,7 +21,7 @@ public final class ZoneIslands {
     private static final double MIN_RADIUS = 48, MAX_RADIUS = 96;
     /** Minimum void gap between two islands, so islands of different zones never merge. */
     private static final double GAP = 8;
-    private static final double MIN_Y = 28, MAX_Y = 112;
+    private static final double MIN_Y = 28, MAX_Y = 200;
     /** Islands avoid land within this multiple of their radius. */
     private static final double LAND_REACH = 1.3;
     private static final long SALT = 0x2545F4914F6CDD1DL;
@@ -74,7 +74,9 @@ public final class ZoneIslands {
         if (reserved.isEmpty()) return islands;
         List<Island> kept = new ArrayList<>();
         for (Island island : islands) {
-            if (!Reservations.overlaps(reserved, island.x, island.z, island.radius * 1.2)) kept.add(island);
+            // High enough, it floats over the reserved island instead.
+            if (island.y - island.down >= Reservations.CLEAR_Y
+                || !Reservations.overlaps(reserved, island.x, island.z, island.radius * 1.2)) kept.add(island);
         }
         return kept;
     }
@@ -104,8 +106,8 @@ public final class ZoneIslands {
         double iz = cz * CELL + 48 + Hash.hash01(s + 2, cx, cz) * (CELL - 96);
         if (Math.hypot(ix, iz) < MIN_DISTANCE) return null;
         double radius = MIN_RADIUS + Hash.hash01(s + 3, cx, cz) * (MAX_RADIUS - MIN_RADIUS);
-        // The top surface (y + 0.18 r * 1.2 edge) must stay below the generator's 128-block ceiling.
-        double maxY = Math.min(MAX_Y, 124 - radius * 0.18 * 1.2);
+        // The top surface (y + 0.18 r * 1.2 edge) must stay below the world's ceiling.
+        double maxY = Math.min(MAX_Y, 250 - radius * 0.18 * 1.2);
         double iy = MIN_Y + Hash.hash01(s + 4, cx, cz) * (maxY - MIN_Y);
         return new Island(ix, iy, iz, radius);
     }

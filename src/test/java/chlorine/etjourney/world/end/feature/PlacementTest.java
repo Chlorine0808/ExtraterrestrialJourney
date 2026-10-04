@@ -11,6 +11,7 @@ import java.util.List;
 import org.junit.jupiter.api.Test;
 
 import chlorine.etjourney.world.end.reserve.Area;
+import chlorine.etjourney.world.end.reserve.Reservations;
 
 /** Placement rules of the cell features, checked with simple stand-in terrain probes. */
 class PlacementTest {
@@ -108,14 +109,14 @@ class PlacementTest {
             ZoneIslands.Island island = ZoneIslands.inCell(105L, cx, 7, noLand);
             if (island == null) continue;
             found++;
-            assertTrue(island.y + island.up * 1.2 < 128);
+            assertTrue(island.y + island.up * 1.2 < 256);
             assertEquals(ZoneIslands.zoneOf(105L, island), ZoneIslands.zoneOf(105L, island));
         }
         assertTrue(found > 0);
     }
 
     @Test
-    void shoalsNeverFormInsideAReservedIsland() {
+    void shoalsKeepOffReservedIslandsBelowTheReservedHeight() {
         Shoals.Probe probe = new Shoals.Probe() {
 
             @Override
@@ -130,7 +131,10 @@ class PlacementTest {
         };
         for (Shoals.School school : Shoals.near(106L, 8000, 8000, 300, probe)) {
             List<Area> onTop = Collections.singletonList(new Area("hee", school.x + 100, school.z, 128));
-            assertFalse(Shoals.forms(school, onTop));
+            if (Shoals.forms(school, onTop)) {
+                // Only a school high enough to float over the island may form there.
+                for (int[] b : Shoals.blocks(school)) assertTrue(b[1] >= Reservations.CLEAR_Y, "platform at Y " + b[1]);
+            }
             for (int[] b : Shoals.blocks(school)) {
                 assertTrue(Math.hypot(b[0] - school.x, b[2] - school.z) < Shoals.EXTENT + 60);
             }
@@ -165,8 +169,48 @@ class PlacementTest {
         ArcPaths.Segments all = ArcPaths.segmentsNear(paths, -1e9, 1e9, -1e9, 1e9, (x, y, z) -> true);
         for (ArcPaths.Path path : paths) {
             double[] start = path.start();
-            assertTrue(start[1] >= 6 && start[1] <= 122);
+            assertTrue(start[1] >= 6 && start[1] <= 250);
             assertTrue(ArcPaths.density(all, start[0], start[1], start[2]) >= path.tube - 1e-6);
         }
+    }
+
+    @Test
+    void arcSegmentsNearAChunkGiveTheSameDensityThere() {
+        List<ArcPaths.Path> paths = ArcPaths.pathsNear(108L, 7000, 7000, 400, (x, z) -> 1);
+        ArcPaths.Segments all = ArcPaths.segmentsNear(paths, -1e9, 1e9, -1e9, 1e9, (x, y, z) -> true);
+        double[] start = paths.get(0)
+            .start();
+        int ox = (int) start[0] - 8, oz = (int) start[2] - 8;
+        ArcPaths.Segments local = all.within(ox - 8, ox + 24, oz - 8, oz + 24);
+        assertTrue(local.count < all.count, "nothing was left out");
+        for (int x = ox - 8; x <= ox + 24; x += 4) {
+            for (int z = oz - 8; z <= oz + 24; z += 4) {
+                for (int y = 0; y < 256; y += 8) {
+                    assertEquals(ArcPaths.density(all, x, y, z), ArcPaths.density(local, x, y, z), 0);
+                }
+            }
+        }
+    }
+
+    @Test
+    void sharedSegmentTestsRunOncePerFilter() {
+        List<ArcPaths.Path> paths = ArcPaths.pathsNear(108L, 7000, 7000, 400, (x, z) -> 1);
+        int[] calls = { 0 };
+        ArcPaths.SegmentFilter shared = (x, y, z) -> {
+            calls[0]++;
+            return y > 100;
+        };
+        ArcPaths.SegmentFilter all = (x, y, z) -> true;
+        ArcPaths.Segments first = ArcPaths.segmentsNear(paths, 6800, 7200, 6800, 7200, shared, all);
+        int firstCalls = calls[0];
+        ArcPaths.Segments again = ArcPaths.segmentsNear(paths, 6800, 7200, 6800, 7200, shared, all);
+        assertTrue(firstCalls > 0);
+        assertEquals(firstCalls, calls[0], "the shared test ran again");
+        assertEquals(first.count, again.count);
+        ArcPaths.Segments plain = ArcPaths.segmentsNear(paths, 6800, 7200, 6800, 7200, (x, y, z) -> y > 100);
+        assertEquals(plain.count, first.count);
+        // Another filter instance gets its own answers.
+        ArcPaths.Segments other = ArcPaths.segmentsNear(paths, 6800, 7200, 6800, 7200, (x, y, z) -> true, all);
+        assertTrue(other.count > first.count);
     }
 }

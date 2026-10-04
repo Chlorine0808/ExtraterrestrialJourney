@@ -9,6 +9,7 @@ import chlorine.etjourney.world.end.feature.Islets;
 import chlorine.etjourney.world.end.feature.Lakes;
 import chlorine.etjourney.world.end.feature.Mountains;
 import chlorine.etjourney.world.end.feature.Shoals;
+import chlorine.etjourney.world.end.feature.StructureProbe;
 import chlorine.etjourney.world.end.feature.ZoneIslands;
 import chlorine.etjourney.world.end.reserve.Area;
 
@@ -43,4 +44,25 @@ public interface TerrainView {
     double mountainScale(double x, double z);
 
     double valleyScale(double x, double z);
+
+    /** Weight of the named style at (x, z), base and overlay together. */
+    double weight(String style, double x, double z);
+
+    /** The final column state at (x, z); only for block passes, after every column modifier has run. */
+    ColumnState column(double x, double z);
+
+    /**
+     * The chunk's density grid (see DensityField) for Y 0-127, or Y 128-255 when upper, with or without the 3D
+     * shapes; only for block passes.
+     */
+    double[] densityField(boolean upper, boolean withShapes);
+
+    /**
+     * The density the vanilla generator interpolates at block (x, y, z), also just outside the chunk, where it is
+     * built from the neighbouring cell's nodes; only for block passes.
+     */
+    double densityAt(int x, int y, int z);
+
+    /** Terrain answers for placing free-standing structures; the same for every chunk. */
+    StructureProbe structures();
 }

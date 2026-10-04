@@ -16,6 +16,7 @@ import chlorine.etjourney.world.end.feature.Islets;
 import chlorine.etjourney.world.end.feature.Lakes;
 import chlorine.etjourney.world.end.feature.Mountains;
 import chlorine.etjourney.world.end.feature.Shoals;
+import chlorine.etjourney.world.end.feature.StructureProbe;
 import chlorine.etjourney.world.end.feature.ZoneIslands;
 import chlorine.etjourney.world.end.modifier.ChunkArea;
 import chlorine.etjourney.world.end.modifier.ColumnState;
@@ -30,7 +31,7 @@ class BuiltinModifiersTest {
     private static final long SEED = 21L;
 
     /** A view with the real continent seeds and nothing else. */
-    private static TerrainView view(double x, double z) {
+    static TerrainView view(double x, double z) {
         List<Continent.Seed> seeds = Continent.seedsNear(SEED, x, z, 64);
         return new TerrainView() {
 
@@ -93,18 +94,43 @@ class BuiltinModifiersTest {
             public double valleyScale(double x, double z) {
                 return 1;
             }
+
+            @Override
+            public double weight(String style, double x, double z) {
+                return 0;
+            }
+
+            @Override
+            public StructureProbe structures() {
+                return null;
+            }
+
+            @Override
+            public ColumnState column(double x, double z) {
+                return null;
+            }
+
+            @Override
+            public double[] densityField(boolean upper, boolean withShapes) {
+                return null;
+            }
+
+            @Override
+            public double densityAt(int x, int y, int z) {
+                return 0;
+            }
         };
     }
 
     /** First column along z = 0 east of the ring whose continent height is at least 70. */
-    private static double landX() {
+    static double landX() {
         for (int x = 1100; x < 20000; x += 8) {
             if (Continent.rawHeight(Continent.seedsNear(SEED, x, 0, 0), x, 0) > 70) return x;
         }
         throw new AssertionError("no land");
     }
 
-    private static ColumnState run(double x, List<Modifier> extra) {
+    static ColumnState run(double x, List<Modifier> extra) {
         List<Modifier> all = new ArrayList<>(CoreModifiers.all());
         all.addAll(extra);
         ColumnState state = new ColumnState(x, 0);
@@ -132,14 +158,40 @@ class BuiltinModifiersTest {
     }
 
     @Test
-    void layersStackBelowTheCeiling() {
+    void layersStackInsideTheWorldAndAboveTheOldCeiling() {
         int stacked = 0;
-        for (int i = 0; i < 40; i++) {
+        double highest = 0;
+        for (int i = 0; i < 200; i++) {
             ColumnState s = run(landX() + i * 8, Collections.singletonList(StyleModifiers.layers()));
             stacked += s.layers.size();
             assertTrue(s.layers.size() <= 5);
-            for (Layer layer : s.layers) assertTrue(layer.top <= 122 + 1e-9 && layer.bottom < layer.top);
+            for (Layer layer : s.layers) {
+                assertTrue(layer.top <= 250 + 1e-9 && layer.bottom < layer.top);
+                highest = Math.max(highest, layer.top);
+            }
         }
         assertTrue(stacked > 0);
+        assertTrue(highest > 128, "highest layer " + highest);
+    }
+
+    @Test
+    void layerTiersDifferInThickness() {
+        // Each tier has its own character, so slabs stacked in one column are not all the same thickness.
+        double spread = 0;
+        int columns = 0;
+        for (int i = 0; i < 2000; i++) {
+            ColumnState s = run(landX() + i * 3, Collections.singletonList(StyleModifiers.layers()));
+            if (s.layers.size() < 2 || s.interior < 1) continue;
+            double thin = Double.MAX_VALUE, thick = 0;
+            for (Layer layer : s.layers) {
+                thin = Math.min(thin, layer.top - layer.bottom);
+                thick = Math.max(thick, layer.top - layer.bottom);
+            }
+            spread += thick / thin;
+            columns++;
+        }
+        assertTrue(columns > 50, "only " + columns + " columns with two tiers");
+        // Tiers drawn from one shared distribution average about 1.7.
+        assertTrue(spread / columns > 2.3, "tiers are alike, thickest/thinnest " + spread / columns);
     }
 }

@@ -41,8 +41,10 @@ dependencies {
     devOnlyNonPublishable("com.github.GTNewHorizons:Draconic-Evolution:1.5.33-GTNH:dev")
     devOnlyNonPublishable(rfg.deobf("curse.maven:novacraft-705131:7753716"))
     devOnlyNonPublishable(rfg.deobf("curse.maven:biomes-o-plenty-220318:2499612"))
-    // Biome Decoration Fix (alreadydecoratingfix): stops "Already decorating!!" cascades, e.g. with HEE.
     devOnlyNonPublishable(rfg.deobf("curse.maven:biome-decoration-fix-533258:3479308"))
+
+    runtimeOnlyNonPublishable(rfg.deobf("maven.modrinth:carbon-config:WfL4zVO9"))
+    runtimeOnlyNonPublishable(rfg.deobf("maven.modrinth:salutation:MGHtgMX3"))
 
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.10.2'
     testImplementation 'org.junit.jupiter:junit-jupiter-params:5.10.2'

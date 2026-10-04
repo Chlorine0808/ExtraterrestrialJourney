@@ -12,10 +12,12 @@ import chlorine.etjourney.world.end.feature.Islets;
 import chlorine.etjourney.world.end.feature.Lakes;
 import chlorine.etjourney.world.end.feature.Mountains;
 import chlorine.etjourney.world.end.feature.Shoals;
+import chlorine.etjourney.world.end.feature.StructureProbe;
 import chlorine.etjourney.world.end.feature.ZoneIslands;
 import chlorine.etjourney.world.end.modifier.BlockSink;
 import chlorine.etjourney.world.end.modifier.ChunkArea;
 import chlorine.etjourney.world.end.modifier.ColumnState;
+import chlorine.etjourney.world.end.modifier.DensityField;
 import chlorine.etjourney.world.end.modifier.Modifier;
 import chlorine.etjourney.world.end.modifier.ModifierChain;
 import chlorine.etjourney.world.end.modifier.Shape;
@@ -38,6 +40,8 @@ public final class ChunkPlan implements TerrainView {
 
     private static final double RANGE = 16;
     private static final double ARC_PAD = 64;
+    /** How far below a segment's midpoint its tube can reach: the thickest tube plus half a segment. */
+    private static final double ARC_REACH = 14;
 
     private final TerrainSampler sampler;
     private final ReservedLookup reservedLookup;
@@ -53,6 +57,10 @@ public final class ChunkPlan implements TerrainView {
     private final ArcPaths.Segments arcs;
     private final Map<Long, ColumnState> columns = new ConcurrentHashMap<>();
     private volatile List<Shape> shapes;
+    /** Grid nodes outside the chunk, read by densityAt(), keyed by their block position. */
+    private final Map<Long, Double> outerNodes = new ConcurrentHashMap<>();
+    /** Density grids by half and shapes, built on first use. */
+    private final double[][] fields = new double[4][];
 
     public ChunkPlan(TerrainSampler sampler, int chunkX, int chunkZ, ReservedLookup reservedLookup) {
         this.sampler = sampler;
@@ -72,7 +80,8 @@ public final class ChunkPlan implements TerrainView {
             .withoutReserved(ZoneIslands.near(seed, cx, cz, RANGE + ZoneIslands.CELL, sampler.landProbe()), reserved);
         List<Islets.Islet> keptIslets = new ArrayList<>();
         for (Islets.Islet islet : Islets.near(seed, cx, cz, RANGE, sampler.isletProbe())) {
-            if (Reservations.suppression(reserved, islet.x, islet.z) == 0) keptIslets.add(islet);
+            if (Reservations.clear(reserved, islet.x, islet.y - islet.flat - islet.depth, islet.z))
+                keptIslets.add(islet);
         }
         islets = keptIslets;
         schools = Shoals.near(seed, cx, cz, RANGE, sampler.shoalProbe());
@@ -85,9 +94,8 @@ public final class ChunkPlan implements TerrainView {
             area.originX() + 24 + ARC_PAD,
             area.originZ() - 8 - ARC_PAD,
             area.originZ() + 24 + ARC_PAD,
-            (x, y, z) -> sampler.arcProbe()
-                .weight(x, z) >= 0.3 && Reservations.suppression(reserved, x, z) == 0
-                && !sampler.nearZoneIsland(x, y, z));
+            sampler.arcGround(),
+            (x, y, z) -> Reservations.clear(reserved, x, y - ARC_REACH, z));
     }
 
     public ChunkArea area() {
@@ -95,6 +103,7 @@ public final class ChunkPlan implements TerrainView {
     }
 
     /** The column at (x, z), computed once. */
+    @Override
     public ColumnState column(double x, double z) {
         // Columns sit on whole blocks; key on the block coordinates (mixing the double bits collided).
         long key = ((long) (int) Math.floor(x) << 32) ^ ((int) Math.floor(z) & 0xFFFFFFFFL);
@@ -106,6 +115,50 @@ public final class ChunkPlan implements TerrainView {
             columns.put(key, state);
         }
         return state;
+    }
+
+    @Override
+    public double[] densityField(boolean upper, boolean withShapes) {
+        // Without shapes both grids are the same.
+        if (withShapes && shapes().isEmpty()) withShapes = false;
+        int slot = (upper ? 2 : 0) + (withShapes ? 1 : 0);
+        double[] field = fields[slot];
+        if (field == null) {
+            field = new double[DensityBuilder.SIZE_X * DensityBuilder.SIZE_Y * DensityBuilder.SIZE_Z];
+            DensityBuilder.fill(this, field, area.chunkX * 2, area.chunkZ * 2, upper ? 32 : 0, withShapes);
+            fields[slot] = field;
+        }
+        return field;
+    }
+
+    @Override
+    public double densityAt(int x, int y, int z) {
+        int lx = x - area.originX(), lz = z - area.originZ();
+        if (lx >= 0 && lx < 16 && lz >= 0 && lz < 16) {
+            boolean upper = y >= 128;
+            return DensityField.at(densityField(upper, true), lx, y - (upper ? 128 : 0), lz);
+        }
+        int x0 = Math.floorDiv(x, 8) * 8, y0 = Math.floorDiv(y, 4) * 4, z0 = Math.floorDiv(z, 8) * 8;
+        double tx = (x - x0) / 8.0, ty = (y - y0) / 4.0, tz = (z - z0) / 8.0;
+        double a = lerp(outerNode(x0, y0, z0), outerNode(x0, y0 + 4, z0), ty);
+        double b = lerp(outerNode(x0, y0, z0 + 8), outerNode(x0, y0 + 4, z0 + 8), ty);
+        double c = lerp(outerNode(x0 + 8, y0, z0), outerNode(x0 + 8, y0 + 4, z0), ty);
+        double d = lerp(outerNode(x0 + 8, y0, z0 + 8), outerNode(x0 + 8, y0 + 4, z0 + 8), ty);
+        double near = a + (c - a) * tx, far = b + (d - b) * tx;
+        return near + (far - near) * tz;
+    }
+
+    private double outerNode(int x, int y, int z) {
+        long key = ((long) (x >> 3) << 40) ^ ((long) (y >> 2) << 20) ^ ((z >> 3) & 0xFFFFFL);
+        Double cached = outerNodes.get(key);
+        if (cached != null) return cached;
+        double value = DensityBuilder.node(this, x, y, z);
+        outerNodes.put(key, value);
+        return value;
+    }
+
+    private static double lerp(double a, double b, double t) {
+        return a + (b - a) * t;
     }
 
     public List<Shape> shapes() {
@@ -189,5 +242,15 @@ public final class ChunkPlan implements TerrainView {
     public double valleyScale(double x, double z) {
         return sampler.weights(x, z)
             .valleyScale();
+    }
+
+    @Override
+    public double weight(String style, double x, double z) {
+        return sampler.styleWeight(style, x, z);
+    }
+
+    @Override
+    public StructureProbe structures() {
+        return sampler.structureProbe();
     }
 }

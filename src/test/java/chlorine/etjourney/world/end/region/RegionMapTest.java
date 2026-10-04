@@ -10,6 +10,8 @@ import java.util.Random;
 
 import org.junit.jupiter.api.Test;
 
+import chlorine.etjourney.world.end.feature.StructureProbe;
+
 class RegionMapTest {
 
     private static Map<Long, Double> asMap(List<RegionMap.CellWeight> cells) {
@@ -42,5 +44,10 @@ class RegionMapTest {
                 assertTrue(Math.abs(a.get(key) - other) < 0.05, "jump at " + x + "," + z);
             }
         }
+    }
+
+    @Test
+    void structuresUseTheSameRegionCells() {
+        assertEquals(RegionMap.REGION, StructureProbe.REGION_CELL);
     }
 }

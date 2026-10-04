@@ -11,5 +11,7 @@ public enum EndBlock {
     NEBULA_TOP,
     NEBULA_FILL,
     STARDUST_TOP,
-    STARDUST_FILL
+    STARDUST_FILL,
+    /** Links of hanging and sky chains. */
+    CHAIN
 }

@@ -1,5 +1,12 @@
 package chlorine.etjourney.world.end;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import chlorine.etjourney.world.end.modifier.ColumnState;
+import chlorine.etjourney.world.end.modifier.Layer;
+import chlorine.etjourney.world.end.modifier.Shape;
+
 /**
  * Terrain above the generator's Y 127: the same density function on a grid for Y 128-256, interpolated exactly as
  * the generator interpolates its own, so the surface carries on across Y 128 without a step or vertical streaks.
@@ -23,19 +30,26 @@ public final class TallPass {
             .originX(),
             oz = plan.area()
                 .originZ();
+        List<ColumnState> columns = new ArrayList<>();
         for (int i = 0; i <= 2; i++) {
-            for (int j = 0; j <= 2; j++) {
-                if (plan.column(ox + i * 8, oz + j * 8).top >= REACH) return true;
-            }
+            for (int j = 0; j <= 2; j++) columns.add(plan.column(ox + i * 8, oz + j * 8));
         }
+        return needed(columns, plan.shapes());
+    }
+
+    /** True when a column's surface or slab, or a shape, reaches the cell below the generator's ceiling. */
+    public static boolean needed(List<ColumnState> columns, List<Shape> shapes) {
+        for (ColumnState column : columns) {
+            if (column.top >= REACH) return true;
+            for (Layer layer : column.layers) if (layer.top >= REACH) return true;
+        }
+        for (Shape shape : shapes) if (shape.maxY() >= REACH) return true;
         return false;
     }
 
     /** The density grid for Y 128-256 (node k at Y 128 + 4k). */
     public static double[] upperField(ChunkPlan plan) {
-        double[] field = new double[DensityBuilder.SIZE_X * DensityBuilder.SIZE_Y * DensityBuilder.SIZE_Z];
-        DensityBuilder.fill(plan, field, plan.area().chunkX * 2, plan.area().chunkZ * 2, 32);
-        return field;
+        return plan.densityField(true, true);
     }
 
     /** Trilinear interpolation over 8x4x8-block cells, as the vanilla End generator does, for Y 128-255. */

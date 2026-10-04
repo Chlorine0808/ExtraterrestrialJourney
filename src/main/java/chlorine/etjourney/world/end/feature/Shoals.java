@@ -20,7 +20,7 @@ public final class Shoals {
     /** How far a platform strays along the heading; sideways and vertical spreads are Gaussian. */
     public static final double EXTENT = 64;
     private static final double SIDE_SIGMA = 10, VERTICAL_SIGMA = 8;
-    private static final double MIN_Y = 30, MAX_Y = 110;
+    private static final double MIN_Y = 30, MAX_Y = 200;
     private static final double STEEP_CHANCE = 0.35;
     private static final long SALT = 0x2B992DDFA23249D6L;
     private static final CellCache<School> CELLS = new CellCache<>(16384);
@@ -98,7 +98,9 @@ public final class Shoals {
      * chunk it spans agrees.
      */
     public static boolean forms(School school, List<Area> reserved) {
-        if (Reservations.insideFootprint(reserved, school.x, school.z, EXTENT + 4 * SIDE_SIGMA)) return false;
+        // Above the reserved height a school may float over the island; below it, it keeps off the island.
+        boolean high = school.y - 4 * VERTICAL_SIGMA >= Reservations.CLEAR_Y && lowest(school) >= Reservations.CLEAR_Y;
+        if (!high && Reservations.insideFootprint(reserved, school.x, school.z, EXTENT + 4 * SIDE_SIGMA)) return false;
         if (school.always) return true;
         for (Area area : reserved) {
             if (Math.hypot(school.x - area.x, school.z - area.z) < area.radius * 1.15 + Reservations.FADE + 30) {
@@ -106,6 +108,12 @@ public final class Shoals {
             }
         }
         return false;
+    }
+
+    private static int lowest(School school) {
+        int low = Integer.MAX_VALUE;
+        for (int[] b : blocks(school)) low = Math.min(low, b[1]);
+        return low;
     }
 
     /**

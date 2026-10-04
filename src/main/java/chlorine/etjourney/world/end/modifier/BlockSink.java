@@ -7,8 +7,10 @@ public interface BlockSink {
 
     int originZ();
 
-    /** Height of the writable column (128 for the generator's array). */
-    int height();
+    /** Writable heights are minY to maxY - 1: 0-127 for the generator's array, 128-255 for the tall pass. */
+    int minY();
+
+    int maxY();
 
     boolean isAir(int x, int y, int z);
 

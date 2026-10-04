@@ -70,6 +70,17 @@ public final class Reservations {
         return areas;
     }
 
+    /**
+     * True when a footprint (centre, radius) reaches an area's own island, which fills about 1.15 radii. The fade
+     * ring beyond only shapes ETJ coasts, so free-standing structures may stand in it.
+     */
+    public static boolean touches(List<Area> areas, double x, double z, double radius) {
+        for (Area area : areas) {
+            if (Math.hypot(x - area.x, z - area.z) < radius + area.radius * 1.2) return true;
+        }
+        return false;
+    }
+
     /** True when a footprint (centre, radius) touches an area or its fade ring. */
     public static boolean overlaps(List<Area> areas, double x, double z, double radius) {
         for (Area area : areas) {
@@ -79,6 +90,14 @@ public final class Reservations {
     }
 
     /** True inside an area's island footprint plus margin (an HEE island's square reaches about 1.15 radii). */
+    /** HEE islands were measured up to Y 134; at and above this height nothing is reserved. */
+    public static final double CLEAR_Y = 150;
+
+    /** Whether something whose lowest point is lowestY may stand at (x, z) among the areas. */
+    public static boolean clear(List<Area> areas, double x, double lowestY, double z) {
+        return lowestY >= CLEAR_Y || suppression(areas, x, z) == 0;
+    }
+
     public static boolean insideFootprint(List<Area> areas, double x, double z, double margin) {
         for (Area area : areas) {
             if (Math.hypot(x - area.x, z - area.z) < area.radius * 1.2 + margin) return true;

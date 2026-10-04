@@ -15,12 +15,13 @@ class TallPassTest {
 
     private static final TerrainSampler SAMPLER = new TerrainSampler(31L, new RegionPicker(Styles.all()));
 
-    /** First chunk along a row whose terrain reaches above the generator's ceiling. */
+    /** First chunk along a row whose ground reaches well above the generator's ceiling. */
     private static ChunkPlan tallChunk() {
         for (int cx = 70; cx < 1500; cx++) {
             for (int cz = -40; cz <= 40; cz += 20) {
                 ChunkPlan plan = new ChunkPlan(SAMPLER, cx, cz, (x, z) -> Collections.emptyList());
-                if (TallPass.needed(plan)) return plan;
+                // Ground above the old ceiling, not just a shape whose range reaches it.
+                if (TallPass.needed(plan) && plan.column(cx * 16 + 8, cz * 16 + 8).top > 140) return plan;
             }
         }
         throw new AssertionError("no tall chunk found");

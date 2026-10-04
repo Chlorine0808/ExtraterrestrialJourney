@@ -28,7 +28,7 @@ public final class ArcPaths {
     private static final double BASE_TUBE = 7.5, MIN_TUBE = 6;
     /** Paths turn back once they stray this far from their start, which bounds the search. */
     private static final double MAX_REACH = 420;
-    private static final double MIN_Y = 6, MAX_Y = 122;
+    private static final double MIN_Y = 6, MAX_Y = 250;
     private static final long SALT = 0x8A5CD789635D2DFFL;
 
     private static final CellCache<List<Path>> CELLS = new CellCache<>(32768);
@@ -47,6 +47,8 @@ public final class ArcPaths {
         final double[] points;
         public final double tube;
         final double minX, maxX, minZ, maxZ;
+        /** Answers of the last shared filter, per segment: 0 unknown, 1 keep, 2 drop. */
+        private volatile Memo memo;
 
         Path(double[] points, double tube) {
             this.points = points;
@@ -68,6 +70,26 @@ public final class ArcPaths {
         public double[] start() {
             return new double[] { points[0], points[1], points[2] };
         }
+
+        private Memo memoFor(SegmentFilter filter) {
+            Memo m = memo;
+            if (m == null || m.filter != filter) {
+                m = new Memo(filter, new byte[points.length / 3 - 1]);
+                memo = m;
+            }
+            return m;
+        }
+    }
+
+    private static final class Memo {
+
+        final SegmentFilter filter;
+        final byte[] answers;
+
+        Memo(SegmentFilter filter, byte[] answers) {
+            this.filter = filter;
+            this.answers = answers;
+        }
     }
 
     /** Segments near a chunk, flattened: ax, ay, az, bx, by, bz, tube per segment. */
@@ -81,10 +103,48 @@ public final class ArcPaths {
             this.count = count;
         }
 
+        /** Lowest point a tube reaches, or 0 when there are no segments. */
+        public double minY() {
+            double low = Double.MAX_VALUE;
+            for (int k = 0; k < count; k++) {
+                low = Math.min(low, Math.min(data[k * 7 + 1], data[k * 7 + 4]) - data[k * 7 + 6]);
+            }
+            return count == 0 ? 0 : low;
+        }
+
+        /** Highest point a tube reaches, or 0 when there are no segments. */
+        public double maxY() {
+            double high = -Double.MAX_VALUE;
+            for (int k = 0; k < count; k++) {
+                high = Math.max(high, Math.max(data[k * 7 + 1], data[k * 7 + 4]) + data[k * 7 + 6]);
+            }
+            return count == 0 ? 0 : high;
+        }
+
         public boolean isEmpty() {
             return count == 0;
         }
+
+        /** The segments that reach the box, the only ones that can add density inside it. */
+        public Segments within(double minX, double maxX, double minZ, double maxZ) {
+            double[] out = new double[count * 7];
+            int n = 0;
+            for (int k = 0; k < count; k++) {
+                int o = k * 7;
+                double pad = data[o + 6] + REACH;
+                if (Math.max(data[o], data[o + 3]) + pad < minX || Math.min(data[o], data[o + 3]) - pad > maxX)
+                    continue;
+                if (Math.max(data[o + 2], data[o + 5]) + pad < minZ || Math.min(data[o + 2], data[o + 5]) - pad > maxZ)
+                    continue;
+                System.arraycopy(data, o, out, n * 7, 7);
+                n++;
+            }
+            return new Segments(out, n);
+        }
     }
+
+    /** Distance outside a tube beyond which it adds no density. */
+    static final double REACH = 16;
 
     public interface SegmentFilter {
 
@@ -167,17 +227,33 @@ public final class ArcPaths {
     /** Segments of the paths that come within reach of the horizontal box, skipping those keep rejects. */
     public static Segments segmentsNear(List<Path> paths, double minX, double maxX, double minZ, double maxZ,
         SegmentFilter keep) {
+        return segmentsNear(paths, minX, maxX, minZ, maxZ, null, keep);
+    }
+
+    /**
+     * As above, with a shared test that depends on the segment alone. Its answers are kept on the path for as long as
+     * the same filter instance is passed, so neighbouring chunks do not repeat it.
+     */
+    public static Segments segmentsNear(List<Path> paths, double minX, double maxX, double minZ, double maxZ,
+        SegmentFilter shared, SegmentFilter keep) {
         double[] data = new double[64 * 7];
         int n = 0;
         for (Path path : paths) {
             double[] p = path.points;
+            byte[] answers = shared == null ? null : path.memoFor(shared).answers;
             for (int i = 0; i + 5 < p.length; i += 3) {
                 double lo = Math.min(p[i], p[i + 3]) - path.tube, hi = Math.max(p[i], p[i + 3]) + path.tube;
                 if (hi < minX || lo > maxX) continue;
                 lo = Math.min(p[i + 2], p[i + 5]) - path.tube;
                 hi = Math.max(p[i + 2], p[i + 5]) + path.tube;
                 if (hi < minZ || lo > maxZ) continue;
-                if (!keep.keep((p[i] + p[i + 3]) / 2, (p[i + 1] + p[i + 4]) / 2, (p[i + 2] + p[i + 5]) / 2)) continue;
+                double mx = (p[i] + p[i + 3]) / 2, my = (p[i + 1] + p[i + 4]) / 2, mz = (p[i + 2] + p[i + 5]) / 2;
+                if (answers != null) {
+                    int k = i / 3;
+                    if (answers[k] == 0) answers[k] = shared.keep(mx, my, mz) ? (byte) 1 : (byte) 2;
+                    if (answers[k] == 2) continue;
+                }
+                if (!keep.keep(mx, my, mz)) continue;
                 if ((n + 1) * 7 > data.length) data = Arrays.copyOf(data, data.length * 2);
                 System.arraycopy(p, i, data, n * 7, 6);
                 data[n * 7 + 6] = path.tube;
@@ -187,9 +263,12 @@ public final class ArcPaths {
         return new Segments(data, n);
     }
 
-    /** Density of the tubes at a point: positive inside one, roughly the distance to its surface. */
+    /**
+     * Density of the tubes at a point: positive inside one, roughly the distance to its surface. Tubes further than
+     * REACH from their surface add nothing, so a chunk only needs the segments near it.
+     */
     public static double density(Segments segments, double x, double y, double z) {
-        double best = -100;
+        double best = Double.NEGATIVE_INFINITY;
         double[] d = segments.data;
         for (int k = 0; k < segments.count; k++) {
             int o = k * 7;
@@ -198,7 +277,8 @@ public final class ArcPaths {
             double t = ((x - ax) * ex + (y - ay) * ey + (z - az) * ez) / (ex * ex + ey * ey + ez * ez + 1e-9);
             t = Math.max(0, Math.min(1, t));
             double qx = ax + ex * t - x, qy = ay + ey * t - y, qz = az + ez * t - z;
-            best = Math.max(best, d[o + 6] - Math.sqrt(qx * qx + qy * qy + qz * qz));
+            double v = d[o + 6] - Math.sqrt(qx * qx + qy * qy + qz * qz);
+            if (v >= -REACH) best = Math.max(best, v);
         }
         return best;
     }
