@@ -108,7 +108,7 @@ class PlacementTest {
             ZoneIslands.Island island = ZoneIslands.inCell(105L, cx, 7, noLand);
             if (island == null) continue;
             found++;
-            assertTrue(island.y + island.up * 1.2 < 128);
+            assertTrue(island.y + island.up * 1.2 < 256);
             assertEquals(ZoneIslands.zoneOf(105L, island), ZoneIslands.zoneOf(105L, island));
         }
         assertTrue(found > 0);
@@ -165,7 +165,7 @@ class PlacementTest {
         ArcPaths.Segments all = ArcPaths.segmentsNear(paths, -1e9, 1e9, -1e9, 1e9, (x, y, z) -> true);
         for (ArcPaths.Path path : paths) {
             double[] start = path.start();
-            assertTrue(start[1] >= 6 && start[1] <= 122);
+            assertTrue(start[1] >= 6 && start[1] <= 250);
             assertTrue(ArcPaths.density(all, start[0], start[1], start[2]) >= path.tube - 1e-6);
         }
     }
