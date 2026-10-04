@@ -124,6 +124,7 @@ public final class Styles {
     public static final Style ARCHES = structure("ARCHES", Style.LAND);
     public static final Style SPIRAL_TOWERS = structure("SPIRAL_TOWERS", Style.ANY);
     public static final Style HOLLOW_PILLARS = structure("HOLLOW_PILLARS", Style.ANY);
+    public static final Style CROSSES = structure("CROSSES", Style.ANY);
 
     private static final List<Style> ALL = Collections.unmodifiableList(
         Arrays.asList(
@@ -148,7 +149,8 @@ public final class Styles {
             RINGS,
             ARCHES,
             SPIRAL_TOWERS,
-            HOLLOW_PILLARS));
+            HOLLOW_PILLARS,
+            CROSSES));
 
     private Styles() {}
 

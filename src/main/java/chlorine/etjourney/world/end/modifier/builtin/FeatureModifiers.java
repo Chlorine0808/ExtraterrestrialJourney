@@ -43,6 +43,7 @@ public final class FeatureModifiers {
         for (Structure.Kind<? extends Structure> kind : Structures.kinds())
             all.add(StructureModifiers.of(kind, order++));
         all.add(StructureModifiers.ringlets());
+        all.add(StructureModifiers.voxels(Structures.CROSSES, 861, EndBlock.STONE));
         return all;
     }
 
