@@ -3,6 +3,7 @@ package chlorine.etjourney.world.end.region;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.function.Predicate;
 
 import chlorine.etjourney.world.end.modifier.builtin.StyleModifiers;
 
@@ -108,6 +109,13 @@ public final class Styles {
         .modifiers(StyleModifiers.shattered())
         .build();
 
+    /** Free-standing structures: the style only marks where they form; the shapes come from feature cells. */
+    public static final Style MUSHROOMS = structure("MUSHROOMS", Style.ANY);
+    public static final Style RINGS = structure("RINGS", Style.ANY);
+    public static final Style ARCHES = structure("ARCHES", Style.LAND);
+    public static final Style SPIRAL_TOWERS = structure("SPIRAL_TOWERS", Style.ANY);
+    public static final Style HOLLOW_PILLARS = structure("HOLLOW_PILLARS", Style.ANY);
+
     private static final List<Style> ALL = Collections.unmodifiableList(
         Arrays.asList(
             PLAINS,
@@ -124,9 +132,21 @@ public final class Styles {
             INVERTED,
             MESAS,
             MIRRORED,
-            SHATTERED));
+            SHATTERED,
+            MUSHROOMS,
+            RINGS,
+            ARCHES,
+            SPIRAL_TOWERS,
+            HOLLOW_PILLARS));
 
     private Styles() {}
+
+    private static Style structure(String name, Predicate<Style> target) {
+        return Style.builder(name, StyleKind.OVERLAY)
+            .overlay(OVERLAY_CHANCE, target)
+            .holes(true)
+            .build();
+    }
 
     public static List<Style> all() {
         return ALL;
