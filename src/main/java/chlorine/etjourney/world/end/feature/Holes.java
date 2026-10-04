@@ -57,11 +57,15 @@ public final class Holes {
         int c0z = (int) Math.floor((z - reach) / CELL), c1z = (int) Math.floor((z + reach) / CELL);
         for (int cx = c0x; cx <= c1x; cx++) {
             for (int cz = c0z; cz <= c1z; cz++) {
-                Hole hole = CELLS.get(seed, cx, cz, (s, i, j) -> compute(s, i, j, probe));
+                Hole hole = inCell(seed, cx, cz, probe);
                 if (hole != null) out.add(hole);
             }
         }
         return out;
+    }
+
+    public static Hole inCell(long seed, int cx, int cz, Probe probe) {
+        return CELLS.get(seed, cx, cz, (s, i, j) -> compute(s, i, j, probe));
     }
 
     private static Hole compute(long seed, int cx, int cz, Probe probe) {

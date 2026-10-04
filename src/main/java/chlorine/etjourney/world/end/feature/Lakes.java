@@ -71,11 +71,15 @@ public final class Lakes {
         int c0z = (int) Math.floor((z - reach) / CELL), c1z = (int) Math.floor((z + reach) / CELL);
         for (int cx = c0x; cx <= c1x; cx++) {
             for (int cz = c0z; cz <= c1z; cz++) {
-                Lake lake = CELLS.get(seed, cx, cz, (s, i, j) -> compute(s, i, j, probe));
+                Lake lake = inCell(seed, cx, cz, probe);
                 if (lake != null) out.add(lake);
             }
         }
         return out;
+    }
+
+    public static Lake inCell(long seed, int cx, int cz, Probe probe) {
+        return CELLS.get(seed, cx, cz, (s, i, j) -> compute(s, i, j, probe));
     }
 
     private static Lake compute(long seed, int cx, int cz, Probe probe) {
