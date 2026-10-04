@@ -8,7 +8,13 @@ import cpw.mods.fml.common.event.FMLInitializationEvent;
 import cpw.mods.fml.common.event.FMLPostInitializationEvent;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 
-@Mod(modid = ModInfo.MODID, name = ModInfo.NAME, version = Tags.VERSION, acceptedMinecraftVersions = "[1.7.10]")
+// After HEE and NovaCraft, so their End generators and decorators exist when compat modules hook them.
+@Mod(
+    modid = ModInfo.MODID,
+    name = ModInfo.NAME,
+    version = Tags.VERSION,
+    acceptedMinecraftVersions = "[1.7.10]",
+    dependencies = "after:HardcoreEnderExpansion;after:nova_craft")
 public class ETJourney {
 
     @SidedProxy(
