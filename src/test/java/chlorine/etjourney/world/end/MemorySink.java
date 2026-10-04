@@ -3,21 +3,36 @@ package chlorine.etjourney.world.end;
 import chlorine.etjourney.world.end.modifier.BlockSink;
 import chlorine.etjourney.world.end.modifier.EndBlock;
 
-/** A 16x16xheight chunk column array in memory, for block pass tests. */
+/** A 16x16 column array in memory covering Y minY to maxY - 1, for block pass tests. */
 final class MemorySink implements BlockSink {
 
-    private final int originX, originZ, height;
+    private final int originX, originZ, minY, maxY;
     private final EndBlock[] blocks;
+    private boolean outOfRange;
 
     MemorySink(int chunkX, int chunkZ, int height) {
+        this(chunkX, chunkZ, 0, height);
+    }
+
+    MemorySink(int chunkX, int chunkZ, int minY, int maxY) {
         this.originX = chunkX * 16;
         this.originZ = chunkZ * 16;
-        this.height = height;
-        this.blocks = new EndBlock[16 * 16 * height];
+        this.minY = minY;
+        this.maxY = maxY;
+        this.blocks = new EndBlock[16 * 16 * (maxY - minY)];
     }
 
     private int index(int x, int y, int z) {
-        return ((x - originX) * 16 + (z - originZ)) * height + y;
+        if (y < minY || y >= maxY || x < originX || x >= originX + 16 || z < originZ || z >= originZ + 16) {
+            outOfRange = true;
+            throw new IllegalArgumentException("outside the sink: " + x + "," + y + "," + z);
+        }
+        return ((x - originX) * 16 + (z - originZ)) * (maxY - minY) + y - minY;
+    }
+
+    /** True when no modifier ever touched a position outside the sink. */
+    boolean placedOnlyWithinRange() {
+        return !outOfRange;
     }
 
     EndBlock get(int x, int y, int z) {
@@ -35,8 +50,13 @@ final class MemorySink implements BlockSink {
     }
 
     @Override
-    public int height() {
-        return height;
+    public int minY() {
+        return minY;
+    }
+
+    @Override
+    public int maxY() {
+        return maxY;
     }
 
     @Override

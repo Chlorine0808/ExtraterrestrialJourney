@@ -44,7 +44,12 @@ public final class FeatureModifiers {
             public void shapes(ChunkArea area, List<Shape> out, double weight) {
                 List<ZoneIslands.Island> islands = area.view.zoneIslands();
                 if (islands.isEmpty()) return;
-                out.add(new ChunkShape(area) {
+                double low = Double.MAX_VALUE, high = -Double.MAX_VALUE;
+                for (ZoneIslands.Island island : islands) {
+                    low = Math.min(low, island.y - island.down);
+                    high = Math.max(high, island.y + island.up * 1.2);
+                }
+                out.add(new ChunkShape(area, low - 4, high + 4) {
 
                     @Override
                     public double density(double x, double y, double z) {
@@ -62,7 +67,7 @@ public final class FeatureModifiers {
                     if (owner == null) return;
                     Zone zone = ZoneIslands.zoneOf(area.seed, owner);
                     int depth = -1;
-                    for (int y = sink.height() - 1; y >= 0; y--) {
+                    for (int y = sink.maxY() - 1; y >= sink.minY(); y--) {
                         if (sink.isAir(x, y, z)) {
                             depth = -1;
                             continue;
@@ -83,13 +88,13 @@ public final class FeatureModifiers {
             forEachColumn(sink, (x, z) -> {
                 double cut = Holes.cutFraction(area.seed, holes, x, z);
                 if (cut <= 0) return;
-                int top = sink.height() - 1;
-                while (top >= 0 && sink.isAir(x, top, z)) top--;
-                if (top < 0) return;
-                int bottom = 0;
+                int top = sink.maxY() - 1;
+                while (top >= sink.minY() && sink.isAir(x, top, z)) top--;
+                if (top < sink.minY()) return;
+                int bottom = sink.minY();
                 while (sink.isAir(x, bottom, z)) bottom++;
-                int remove = cut >= 1 ? top + 1 : (int) Math.round((top - bottom + 1) * cut);
-                for (int y = top; y > top - remove && y >= 0; y--) sink.clear(x, y, z);
+                int remove = cut >= 1 ? top - sink.minY() + 1 : (int) Math.round((top - bottom + 1) * cut);
+                for (int y = top; y > top - remove && y >= sink.minY(); y--) sink.clear(x, y, z);
             });
         });
     }
@@ -101,10 +106,10 @@ public final class FeatureModifiers {
             if (lakes.isEmpty()) return;
             forEachColumn(sink, (x, z) -> {
                 Lakes.Lake lake = Lakes.floodAt(lakes, x, z);
-                if (lake == null || lake.waterLevel >= sink.height()) return;
+                if (lake == null || lake.waterLevel < sink.minY() || lake.waterLevel >= sink.maxY()) return;
                 int ground = lake.waterLevel;
-                while (ground >= 0 && sink.isAir(x, ground, z)) ground--;
-                if (ground < 0) return;
+                while (ground >= sink.minY() && sink.isAir(x, ground, z)) ground--;
+                if (ground < sink.minY()) return;
                 for (int y = ground + 1; y <= lake.waterLevel; y++) sink.place(x, y, z, EndBlock.WATER);
             });
         });
@@ -117,7 +122,7 @@ public final class FeatureModifiers {
                 forEachColumn(sink, (x, z) -> {
                     int[] span = Islets.span(islet, Math.hypot(x + 0.5 - islet.x, z + 0.5 - islet.z));
                     if (span == null) return;
-                    for (int y = Math.max(0, span[0]); y <= Math.min(sink.height() - 1, span[1]); y++) {
+                    for (int y = Math.max(sink.minY(), span[0]); y <= Math.min(sink.maxY() - 1, span[1]); y++) {
                         sink.place(x, y, z, EndBlock.STONE);
                     }
                 });
@@ -151,7 +156,7 @@ public final class FeatureModifiers {
             public void shapes(ChunkArea area, List<Shape> out, double weight) {
                 ArcPaths.Segments segments = area.view.arcs();
                 if (segments.isEmpty()) return;
-                out.add(new ChunkShape(area) {
+                out.add(new ChunkShape(area, segments.minY(), segments.maxY()) {
 
                     @Override
                     public double density(double x, double y, double z) {
@@ -197,17 +202,30 @@ public final class FeatureModifiers {
         return x >= sink.originX() && x < sink.originX() + 16
             && z >= sink.originZ()
             && z < sink.originZ() + 16
-            && y >= 0
-            && y < sink.height();
+            && y >= sink.minY()
+            && y < sink.maxY();
     }
 
-    /** A shape bounded by the chunk it was built for, padded by one density cell. */
+    /** A shape bounded by the chunk it was built for, padded by one density cell, between two heights. */
     private abstract static class ChunkShape implements Shape {
 
         private final ChunkArea area;
+        private final double minY, maxY;
 
-        ChunkShape(ChunkArea area) {
+        ChunkShape(ChunkArea area, double minY, double maxY) {
             this.area = area;
+            this.minY = minY;
+            this.maxY = maxY;
+        }
+
+        @Override
+        public double minY() {
+            return minY;
+        }
+
+        @Override
+        public double maxY() {
+            return maxY;
         }
 
         @Override
