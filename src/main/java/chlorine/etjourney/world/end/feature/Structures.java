@@ -86,6 +86,33 @@ public final class Structures {
         }
     };
 
+    /**
+     * Many small, thin rings scattered through RINGS regions at any angle. Their tubes are thinner than the density
+     * grid resolves, so the engine draws them block by block instead of as shapes.
+     */
+    public static final Structure.Kind<Ring> RINGLETS = new Structure.Kind<Ring>("RINGS", 56, 40) {
+
+        @Override
+        protected Ring compute(long seed, int cx, int cz, StructureProbe probe) {
+            long s = seed ^ 0x4B1E7D2A9C3F6058L;
+            if (Hash.hash01(s, cx, cz) > 0.55) return null;
+            double x = (cx + 0.15 + 0.7 * Hash.hash01(s + 1, cx, cz)) * cell;
+            double z = (cz + 0.15 + 0.7 * Hash.hash01(s + 2, cx, cz)) * cell;
+            if (probe.weight(style, x, z) < MIN_WEIGHT) return null;
+            double radius = 8 + 22 * Hash.hash01(s + 3, cx, cz);
+            double tube = 1.5 + 2 * Hash.hash01(s + 4, cx, cz);
+            double tilt = ringTilt(Math.toRadians(90 * Hash.hash01(s + 5, cx, cz)), radius, tube);
+            double yaw = Hash.hash01(s + 6, cx, cz) * Math.PI * 2;
+            double reachY = radius * Math.sin(tilt) + tube;
+            // Float clear of the ground, mostly in the lower half of the open air.
+            double ground = probe.ground(x, z);
+            double low = (ground > -100 ? ground + 6 : VOID_BASE) + reachY, high = CEILING - reachY;
+            if (low > high) return null;
+            double y = low + Math.min(high - low, 20 + 120 * Hash.hash01(s + 7, cx, cz));
+            return new Ring(x, y, z, radius, tube, tilt, yaw, null);
+        }
+    };
+
     /** Tilt no further than keeps a ring between the void floor and the ceiling. */
     private static double ringTilt(double tilt, double radius, double tube) {
         return Math.min(tilt, Math.asin(Math.max(0, Math.min(1, ((CEILING - 8) / 2 - tube) / radius))));

@@ -200,4 +200,20 @@ class StructuresTest {
             assertTrue(Math.hypot(r.centreX - centre[0], r.centreZ - centre[1]) < 1e-9, "ring off its region centre");
         }
     }
+
+    @Test
+    void ringletsAreManySmallAndInsideTheWorld() {
+        int found = 0;
+        for (int cx = 20; cx < 40; cx++) {
+            for (int cz = 0; cz < 20; cz++) {
+                Structures.Ring r = Structures.RINGLETS.inCell(312L, cx, cz, LAND);
+                if (r == null) continue;
+                found++;
+                assertTrue(r.minY() >= 0 && r.maxY() <= 250, "ringlet " + r.minY() + ".." + r.maxY());
+                assertTrue(r.footprint <= 40, "footprint " + r.footprint);
+                assertTrue(r.tube < 4, "tube " + r.tube);
+            }
+        }
+        assertTrue(found > 120, "only " + found + " ringlets in 400 cells");
+    }
 }
