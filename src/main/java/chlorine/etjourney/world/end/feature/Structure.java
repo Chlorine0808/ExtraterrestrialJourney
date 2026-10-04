@@ -86,7 +86,12 @@ public abstract class Structure implements Shape {
         protected abstract T compute(long seed, int cx, int cz, StructureProbe probe);
 
         public T inCell(long seed, int cx, int cz, StructureProbe probe) {
-            return cells.get(seed, cx, cz, (s, i, j) -> compute(s, i, j, probe));
+            return cells.get(seed, cx, cz, (s, i, j) -> {
+                T structure = compute(s, i, j, probe);
+                return structure == null || Math.hypot(structure.centreX, structure.centreZ) < Structures.MIN_RADIUS
+                    ? null
+                    : structure;
+            });
         }
 
         /** Structures whose footprint reaches within range of (x, z). */

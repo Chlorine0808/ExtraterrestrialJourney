@@ -17,6 +17,8 @@ public final class Structures {
     private static final double MIN_WEIGHT = 0.5;
     /** Highest block any structure reaches. */
     private static final double CEILING = 248;
+    /** No structure forms closer to the origin, clear of the vanilla central area. */
+    public static final double MIN_RADIUS = 1000;
     /** Base height over the void, where there is no ground to stand on. */
     private static final double VOID_BASE = 20;
 

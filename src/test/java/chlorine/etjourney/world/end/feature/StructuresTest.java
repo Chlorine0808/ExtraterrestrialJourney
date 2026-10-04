@@ -163,4 +163,16 @@ class StructuresTest {
         }
         assertTrue(seen > 50);
     }
+
+    @Test
+    void nothingFormsNearTheCentralIsland() {
+        for (Structure.Kind<? extends Structure> kind : Structures.kinds()) {
+            for (int cx = -12; cx <= 12; cx++) {
+                for (int cz = -12; cz <= 12; cz++) {
+                    Structure s = kind.inCell(309L, cx, cz, LAND);
+                    if (s != null) assertTrue(Math.hypot(s.centreX, s.centreZ) >= Structures.MIN_RADIUS, kind.style);
+                }
+            }
+        }
+    }
 }
