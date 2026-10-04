@@ -166,8 +166,9 @@ public final class Structures {
             if (under < 40) return null;
             double scale = 1 + Hash.hash01(s + 3, cx, cz);
             double length = 20 + 60 * Hash.hash01(s + 4, cx, cz);
-            // Starts inside the slab, clear of the lumps on its underside.
-            double top = under + 8, bottom = Math.max(12, under - length);
+            // Starts inside the slab, clear of the lumps on its underside but below the ground.
+            double top = Math.min(under + 8, probe.ground(x, z) - 2), bottom = Math.max(12, under - length);
+            if (top < under + 1) return null;
             double weight = Hash.hash01(s + 5, cx, cz) < 0.7 ? 2.5 * scale + 1 : 0;
             return new Chain(x, z, top, bottom, scale, Hash.hash01(s + 6, cx, cz) * Math.PI, weight, true);
         }

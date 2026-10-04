@@ -400,4 +400,34 @@ class StructuresTest {
         }
         assertTrue(checked > 10);
     }
+
+    @Test
+    void hangingChainsStayUnderThinLand() {
+        StructureProbe thin = new StructureProbe() {
+
+            @Override
+            public double weight(String style, double x, double z) {
+                return 1;
+            }
+
+            @Override
+            public double land(double x, double z) {
+                return 5;
+            }
+
+            @Override
+            public double ground(double x, double z) {
+                return 93;
+            }
+
+            @Override
+            public double underside(double x, double z) {
+                return 90;
+            }
+        };
+        for (int cx = 20; cx < 120; cx++) {
+            Structures.Chain c = Structures.HANGING_CHAINS.inCell(321L, cx, 4, thin);
+            if (c != null) assertTrue(c.top + c.wire() < 93, "chain pokes out at " + (c.top + c.wire()));
+        }
+    }
 }
