@@ -12,7 +12,7 @@ public final class Islets {
     public static final int CELL = 28;
     private static final double CHANCE = 0.45;
     private static final double MIN_RADIUS = 3, MAX_RADIUS = 9;
-    private static final double MIN_Y = 24, MAX_Y = 110;
+    private static final double MIN_Y = 24, MAX_Y = 200;
     /** An islet only forms where its style holds at least this weight. */
     private static final double MIN_WEIGHT = 0.6;
     private static final long SALT = 0xA54FF53A5F1D36F1L;
