@@ -11,6 +11,7 @@ import java.util.List;
 import org.junit.jupiter.api.Test;
 
 import chlorine.etjourney.world.end.reserve.Area;
+import chlorine.etjourney.world.end.reserve.Reservations;
 
 /** Placement rules of the cell features, checked with simple stand-in terrain probes. */
 class PlacementTest {
@@ -115,7 +116,7 @@ class PlacementTest {
     }
 
     @Test
-    void shoalsNeverFormInsideAReservedIsland() {
+    void shoalsKeepOffReservedIslandsBelowTheReservedHeight() {
         Shoals.Probe probe = new Shoals.Probe() {
 
             @Override
@@ -130,7 +131,10 @@ class PlacementTest {
         };
         for (Shoals.School school : Shoals.near(106L, 8000, 8000, 300, probe)) {
             List<Area> onTop = Collections.singletonList(new Area("hee", school.x + 100, school.z, 128));
-            assertFalse(Shoals.forms(school, onTop));
+            if (Shoals.forms(school, onTop)) {
+                // Only a school high enough to float over the island may form there.
+                for (int[] b : Shoals.blocks(school)) assertTrue(b[1] >= Reservations.CLEAR_Y, "platform at Y " + b[1]);
+            }
             for (int[] b : Shoals.blocks(school)) {
                 assertTrue(Math.hypot(b[0] - school.x, b[2] - school.z) < Shoals.EXTENT + 60);
             }
