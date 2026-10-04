@@ -104,6 +104,11 @@ class BuiltinModifiersTest {
             public StructureProbe structures() {
                 return null;
             }
+
+            @Override
+            public ColumnState column(double x, double z) {
+                return null;
+            }
         };
     }
 

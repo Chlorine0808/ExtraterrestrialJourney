@@ -326,5 +326,10 @@ public final class TerrainSampler {
         public StructureProbe structures() {
             return structureProbe();
         }
+
+        @Override
+        public ColumnState column(double x, double z) {
+            return bareColumn(x, z, true);
+        }
     }
 }

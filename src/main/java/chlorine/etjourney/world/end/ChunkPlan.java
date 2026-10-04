@@ -96,6 +96,7 @@ public final class ChunkPlan implements TerrainView {
     }
 
     /** The column at (x, z), computed once. */
+    @Override
     public ColumnState column(double x, double z) {
         // Columns sit on whole blocks; key on the block coordinates (mixing the double bits collided).
         long key = ((long) (int) Math.floor(x) << 32) ^ ((int) Math.floor(z) & 0xFFFFFFFFL);

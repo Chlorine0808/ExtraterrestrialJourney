@@ -48,6 +48,9 @@ public interface TerrainView {
     /** Weight of the named style at (x, z), base and overlay together. */
     double weight(String style, double x, double z);
 
+    /** The final column state at (x, z); only for block passes, after every column modifier has run. */
+    ColumnState column(double x, double z);
+
     /** Terrain answers for placing free-standing structures; the same for every chunk. */
     StructureProbe structures();
 }
