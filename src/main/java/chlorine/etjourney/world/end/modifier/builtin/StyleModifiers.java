@@ -24,7 +24,18 @@ public final class StyleModifiers {
     /** How far INVERTED lifts its continent for the relief hanging below. */
     private static final double INVERT_LIFT = 70;
 
+    /**
+     * LAYERED tier archetypes as {low, high} ranges of hole scale, coverage threshold, half thickness and swell:
+     * broad thin sheets, chunky slabs, and scattered fragments.
+     */
+    private static final double[][][] TIER_ARCHETYPES = { { { 120, 180 }, { 0.36, 0.48 }, { 1.5, 3 }, { 10, 30 } },
+        { { 60, 110 }, { 0.48, 0.60 }, { 6, 10 }, { 4, 14 } }, { { 30, 50 }, { 0.58, 0.68 }, { 3, 5 }, { 8, 24 } } };
+
     private StyleModifiers() {}
+
+    private static double lerp(double[] range, double t) {
+        return range[0] + (range[1] - range[0]) * t;
+    }
 
     /** Land sits 28 blocks lower, with half the hills and a thinner slab. */
     public static Modifier lowlands() {
@@ -88,8 +99,8 @@ public final class StyleModifiers {
     }
 
     /**
-     * Stacked slabs above the ground: 2 to 5 depending on the place, each a random 12-34 blocks above the one below,
-     * present in patches whose coverage and thickness drift; pillars join the ground to the stack.
+     * Stacked slabs above the continent. Each tier has its own warp and character (hole size, coverage, thickness,
+     * undulation, keel), drifting over about 500 blocks, so the tiers of one column do not repeat each other.
      */
     public static Modifier layers() {
         return CoreModifiers.simple(700, (area, view, s, weight) -> {
@@ -99,18 +110,28 @@ public final class StyleModifiers {
             double[] w = Continent.warped(area.seed, s.x, s.z);
             int count = Math.min(MAX_LAYERS, 2 + (int) (4 * ValueNoise.mask(salt + 32, w[0], w[1], 300)));
             double centre = s.top;
+            // Neighbouring tiers take turns through the archetypes, from a phase that drifts between regions.
+            int phase = (int) (TIER_ARCHETYPES.length * ValueNoise.mask(salt + 33, s.x, s.z, 600));
             for (int i = 0; i < count; i++) {
-                centre += 12 + 22 * ValueNoise.mask(salt + 70 + i, w[0], w[1], 140);
-                double coverage = 0.32 + 0.22 * ValueNoise.mask(salt + 80 + i, w[0], w[1], 220);
-                double patch = (Fractal.fbm(salt + 60 + i, w[0], w[1], 90, 3) - coverage) / 0.14;
+                long t = salt + 1000L * (i + 1);
+                double[][] type = TIER_ARCHETYPES[(i + phase) % TIER_ARCHETYPES.length];
+                double[] wi = Warp.warp(t, s.x, s.z, 48, 170);
+                double scale = lerp(type[0], ValueNoise.mask(t + 1, s.x, s.z, 520));
+                double coverage = lerp(type[1], ValueNoise.mask(t + 2, s.x, s.z, 480));
+                double thick = lerp(type[2], ValueNoise.mask(t + 3, s.x, s.z, 500));
+                double swell = lerp(type[3], ValueNoise.mask(t + 4, s.x, s.z, 540));
+                double keel = 1.1 + 1.2 * ValueNoise.mask(t + 5, s.x, s.z, 460);
+                centre += 14 + 24 * ValueNoise.mask(t + 6, wi[0], wi[1], 200);
+                double patch = (Fractal.fbm(t + 7, wi[0], wi[1], scale, 3) - coverage) / 0.14;
                 if (patch <= 0) continue;
-                double half = (2.5 + 2.5 * ValueNoise.mask(salt + 90 + i, w[0], w[1], 100)) * strength
+                double half = thick * (0.7 + 0.6 * ValueNoise.mask(t + 8, wi[0], wi[1], scale * 0.8))
+                    * strength
                     * Math.min(1, patch);
-                double c = centre + (Fractal.fbm(salt + 100 + i, w[0], w[1], 50, 2) - 0.5) * 10;
+                double c = centre + (Fractal.fbm(t + 9, wi[0], wi[1], 110, 3) - 0.5) * swell;
                 // Near the ceiling a slab thins out instead of ending in a wall.
                 half = Math.min(half, MAX_LAYER_TOP - c);
                 if (half < 1) continue;
-                s.layers.add(new Layer(c + half, c - half * 1.6));
+                s.layers.add(new Layer(c + half, c - half * keel));
             }
             if (!s.layers.isEmpty()) {
                 s.pillar = Math.max(s.pillar, (ValueNoise.mask(salt + 30, w[0], w[1], 32) - 0.82) * 40 * strength);

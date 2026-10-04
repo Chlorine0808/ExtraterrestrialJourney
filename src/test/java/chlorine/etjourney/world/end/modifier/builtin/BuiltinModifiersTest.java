@@ -163,4 +163,25 @@ class BuiltinModifiersTest {
         assertTrue(stacked > 0);
         assertTrue(highest > 128, "highest layer " + highest);
     }
+
+    @Test
+    void layerTiersDifferInThickness() {
+        // Each tier has its own character, so slabs stacked in one column are not all the same thickness.
+        double spread = 0;
+        int columns = 0;
+        for (int i = 0; i < 2000; i++) {
+            ColumnState s = run(landX() + i * 3, Collections.singletonList(StyleModifiers.layers()));
+            if (s.layers.size() < 2 || s.interior < 1) continue;
+            double thin = Double.MAX_VALUE, thick = 0;
+            for (Layer layer : s.layers) {
+                thin = Math.min(thin, layer.top - layer.bottom);
+                thick = Math.max(thick, layer.top - layer.bottom);
+            }
+            spread += thick / thin;
+            columns++;
+        }
+        assertTrue(columns > 50, "only " + columns + " columns with two tiers");
+        // Tiers drawn from one shared distribution average about 1.7.
+        assertTrue(spread / columns > 2.3, "tiers are alike, thickest/thinnest " + spread / columns);
+    }
 }
