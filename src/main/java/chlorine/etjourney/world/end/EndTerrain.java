@@ -1,5 +1,7 @@
 package chlorine.etjourney.world.end;
 
+import java.util.concurrent.atomic.AtomicLong;
+
 import net.minecraft.init.Blocks;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
@@ -30,6 +32,7 @@ public final class EndTerrain {
 
     private static final PlanCache PLANS = new PlanCache();
     private static volatile TerrainSampler sampler;
+    private static final AtomicLong DENSITY_NANOS = new AtomicLong(), DENSITY_FIELDS = new AtomicLong();
 
     public static void register() {
         MinecraftForge.EVENT_BUS.register(new EndTerrain());
@@ -63,6 +66,12 @@ public final class EndTerrain {
         return (cx, cz) -> Reservations.forChunk(generator, end, seed, cx, cz);
     }
 
+    /** Average microseconds per density field (plan included) since start, and how many fields were built. */
+    public static long[] densityStats() {
+        long fields = DENSITY_FIELDS.get();
+        return new long[] { fields == 0 ? 0 : DENSITY_NANOS.get() / fields / 1000, fields };
+    }
+
     private static boolean outside(int chunkX, int chunkZ) {
         return Math.hypot(chunkX * 16 + 8, chunkZ * 16 + 8) >= TERRAIN_START;
     }
@@ -80,8 +89,11 @@ public final class EndTerrain {
             && event.noisefield.length == DensityBuilder.SIZE_X * DensityBuilder.SIZE_Y * DensityBuilder.SIZE_Z
                 ? event.noisefield
                 : new double[DensityBuilder.SIZE_X * DensityBuilder.SIZE_Y * DensityBuilder.SIZE_Z];
+        long start = System.nanoTime();
         ChunkPlan plan = plan(event.chunkProvider, DimensionManager.getWorld(END), seed, chunkX, chunkZ);
         DensityBuilder.fill(plan, field, event.posX, event.posZ, 0);
+        DENSITY_NANOS.addAndGet(System.nanoTime() - start);
+        DENSITY_FIELDS.incrementAndGet();
         event.noisefield = field;
         event.setResult(Event.Result.DENY);
     }
