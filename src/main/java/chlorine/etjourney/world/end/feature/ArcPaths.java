@@ -81,6 +81,24 @@ public final class ArcPaths {
             this.count = count;
         }
 
+        /** Lowest point a tube reaches, or 0 when there are no segments. */
+        public double minY() {
+            double low = Double.MAX_VALUE;
+            for (int k = 0; k < count; k++) {
+                low = Math.min(low, Math.min(data[k * 7 + 1], data[k * 7 + 4]) - data[k * 7 + 6]);
+            }
+            return count == 0 ? 0 : low;
+        }
+
+        /** Highest point a tube reaches, or 0 when there are no segments. */
+        public double maxY() {
+            double high = -Double.MAX_VALUE;
+            for (int k = 0; k < count; k++) {
+                high = Math.max(high, Math.max(data[k * 7 + 1], data[k * 7 + 4]) + data[k * 7 + 6]);
+            }
+            return count == 0 ? 0 : high;
+        }
+
         public boolean isEmpty() {
             return count == 0;
         }
