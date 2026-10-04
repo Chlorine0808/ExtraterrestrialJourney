@@ -109,6 +109,11 @@ class BuiltinModifiersTest {
             public ColumnState column(double x, double z) {
                 return null;
             }
+
+            @Override
+            public double[] densityField(boolean upper, boolean withShapes) {
+                return null;
+            }
         };
     }
 

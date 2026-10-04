@@ -51,6 +51,12 @@ public interface TerrainView {
     /** The final column state at (x, z); only for block passes, after every column modifier has run. */
     ColumnState column(double x, double z);
 
+    /**
+     * The chunk's density grid (see DensityField) for Y 0-127, or Y 128-255 when upper, with or without the 3D
+     * shapes; only for block passes.
+     */
+    double[] densityField(boolean upper, boolean withShapes);
+
     /** Terrain answers for placing free-standing structures; the same for every chunk. */
     StructureProbe structures();
 }

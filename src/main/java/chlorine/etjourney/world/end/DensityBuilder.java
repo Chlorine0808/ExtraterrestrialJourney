@@ -1,5 +1,6 @@
 package chlorine.etjourney.world.end;
 
+import java.util.Collections;
 import java.util.List;
 
 import chlorine.etjourney.world.end.modifier.ColumnState;
@@ -20,8 +21,12 @@ public final class DensityBuilder {
 
     /** posX and posZ are in 8-block units, as the vanilla generator passes them (chunk coordinate times 2). */
     public static void fill(ChunkPlan plan, double[] field, int posX, int posZ, int yOffsetCells) {
+        fill(plan, field, posX, posZ, yOffsetCells, true);
+    }
+
+    static void fill(ChunkPlan plan, double[] field, int posX, int posZ, int yOffsetCells, boolean withShapes) {
         long s = plan.area().seed ^ SALT;
-        List<Shape> shapes = plan.shapes();
+        List<Shape> shapes = withShapes ? plan.shapes() : Collections.<Shape>emptyList();
         for (int i = 0; i < SIZE_X; i++) {
             for (int j = 0; j < SIZE_Z; j++) {
                 double x = posX * 8.0 + i * 8, z = posZ * 8.0 + j * 8;

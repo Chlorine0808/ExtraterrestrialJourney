@@ -49,9 +49,7 @@ public final class TallPass {
 
     /** The density grid for Y 128-256 (node k at Y 128 + 4k). */
     public static double[] upperField(ChunkPlan plan) {
-        double[] field = new double[DensityBuilder.SIZE_X * DensityBuilder.SIZE_Y * DensityBuilder.SIZE_Z];
-        DensityBuilder.fill(plan, field, plan.area().chunkX * 2, plan.area().chunkZ * 2, 32);
-        return field;
+        return plan.densityField(true, true);
     }
 
     /** Trilinear interpolation over 8x4x8-block cells, as the vanilla End generator does, for Y 128-255. */

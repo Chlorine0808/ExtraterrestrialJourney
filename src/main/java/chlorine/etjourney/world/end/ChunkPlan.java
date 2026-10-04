@@ -56,6 +56,8 @@ public final class ChunkPlan implements TerrainView {
     private final ArcPaths.Segments arcs;
     private final Map<Long, ColumnState> columns = new ConcurrentHashMap<>();
     private volatile List<Shape> shapes;
+    /** Density grids by half and shapes, built on first use. */
+    private final double[][] fields = new double[4][];
 
     public ChunkPlan(TerrainSampler sampler, int chunkX, int chunkZ, ReservedLookup reservedLookup) {
         this.sampler = sampler;
@@ -110,6 +112,20 @@ public final class ChunkPlan implements TerrainView {
             columns.put(key, state);
         }
         return state;
+    }
+
+    @Override
+    public double[] densityField(boolean upper, boolean withShapes) {
+        // Without shapes both grids are the same.
+        if (withShapes && shapes().isEmpty()) withShapes = false;
+        int slot = (upper ? 2 : 0) + (withShapes ? 1 : 0);
+        double[] field = fields[slot];
+        if (field == null) {
+            field = new double[DensityBuilder.SIZE_X * DensityBuilder.SIZE_Y * DensityBuilder.SIZE_Z];
+            DensityBuilder.fill(this, field, area.chunkX * 2, area.chunkZ * 2, upper ? 32 : 0, withShapes);
+            fields[slot] = field;
+        }
+        return field;
     }
 
     public List<Shape> shapes() {

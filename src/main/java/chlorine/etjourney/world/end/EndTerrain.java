@@ -91,7 +91,8 @@ public final class EndTerrain {
                 : new double[DensityBuilder.SIZE_X * DensityBuilder.SIZE_Y * DensityBuilder.SIZE_Z];
         long start = System.nanoTime();
         ChunkPlan plan = plan(event.chunkProvider, DimensionManager.getWorld(END), seed, chunkX, chunkZ);
-        DensityBuilder.fill(plan, field, event.posX, event.posZ, 0);
+        // The plan keeps the grid: the block pass reads it again to roughen steep faces.
+        System.arraycopy(plan.densityField(false, true), 0, field, 0, field.length);
         DENSITY_NANOS.addAndGet(System.nanoTime() - start);
         DENSITY_FIELDS.incrementAndGet();
         event.noisefield = field;

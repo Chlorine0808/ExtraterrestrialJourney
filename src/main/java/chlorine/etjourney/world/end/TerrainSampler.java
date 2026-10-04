@@ -344,5 +344,10 @@ public final class TerrainSampler {
         public ColumnState column(double x, double z) {
             return bareColumn(x, z, true);
         }
+
+        @Override
+        public double[] densityField(boolean upper, boolean withShapes) {
+            throw new UnsupportedOperationException("bare columns have no density grid");
+        }
     }
 }
