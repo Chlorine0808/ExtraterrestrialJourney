@@ -4,8 +4,12 @@ package chlorine.etjourney.world.end.modifier;
 public enum EndBlock {
     STONE,
     WATER,
-    ZONE_SOLAR,
-    ZONE_VORTEX,
-    ZONE_NEBULA,
-    ZONE_STARDUST
+    SOLAR_TOP,
+    SOLAR_FILL,
+    VORTEX_TOP,
+    VORTEX_FILL,
+    NEBULA_TOP,
+    NEBULA_FILL,
+    STARDUST_TOP,
+    STARDUST_FILL
 }
