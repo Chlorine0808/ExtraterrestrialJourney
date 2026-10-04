@@ -1,0 +1,228 @@
+package chlorine.etjourney.world.end.feature;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Random;
+
+import chlorine.etjourney.world.end.noise.CellCache;
+import chlorine.etjourney.world.end.noise.Hash;
+
+/**
+ * The ARCS style: thick tubes along winding 3D paths, so walking them feels like climbing the branches of a
+ * giant tree. Each path turns steadily about an axis (an arc or loop when calm) and is jostled by a wiggle, so calm
+ * paths read as circles and restless ones as tangled vines. Paths are polylines of STEP-block segments.
+ */
+public final class ArcPaths {
+
+    public static final int CELL = 80;
+    private static final int STEP = 4;
+    /** Paths per cell: 0.8 on average, times a per-cell factor of 1 to 4. */
+    private static final double BASE_COUNT = 0.8, MAX_COUNT_FACTOR = 4;
+    /** Path length: 120 blocks times 0.5 to 8 (log-uniform, so short and long are equally common). */
+    private static final double BASE_LENGTH = 120, MIN_LENGTH_FACTOR = 0.5, MAX_LENGTH_FACTOR = 8;
+    /** Wiggle: 0.5 to 10 times the base jostle (log-uniform). */
+    private static final double MIN_WIGGLE = 0.5, MAX_WIGGLE = 10;
+    /** Tube radius: 7.5 times 0.8 to 1.5, never under 6 so the 8-block density grid resolves vertical runs. */
+    private static final double BASE_TUBE = 7.5, MIN_TUBE = 6;
+    /** Paths turn back once they stray this far from their start, which bounds the search. */
+    private static final double MAX_REACH = 420;
+    private static final double MIN_Y = 6, MAX_Y = 122;
+    private static final long SALT = 0x8A5CD789635D2DFFL;
+
+    private static final CellCache<List<Path>> CELLS = new CellCache<>(32768);
+
+    private ArcPaths() {}
+
+    /** Weight of the ARCS style at a point, supplied by the engine. */
+    public interface Probe {
+
+        double weight(double x, double z);
+    }
+
+    /** One path: its points (x, y, z triples) and tube radius, with a horizontal bounding box. */
+    public static final class Path {
+
+        final double[] points;
+        public final double tube;
+        final double minX, maxX, minZ, maxZ;
+
+        Path(double[] points, double tube) {
+            this.points = points;
+            this.tube = tube;
+            double x0 = Double.MAX_VALUE, x1 = -Double.MAX_VALUE, z0 = Double.MAX_VALUE, z1 = -Double.MAX_VALUE;
+            for (int i = 0; i < points.length; i += 3) {
+                x0 = Math.min(x0, points[i]);
+                x1 = Math.max(x1, points[i]);
+                z0 = Math.min(z0, points[i + 2]);
+                z1 = Math.max(z1, points[i + 2]);
+            }
+            minX = x0 - tube;
+            maxX = x1 + tube;
+            minZ = z0 - tube;
+            maxZ = z1 + tube;
+        }
+
+        /** Start of the path, as {x, y, z}. */
+        public double[] start() {
+            return new double[] { points[0], points[1], points[2] };
+        }
+    }
+
+    /** Segments near a chunk, flattened: ax, ay, az, bx, by, bz, tube per segment. */
+    public static final class Segments {
+
+        final double[] data;
+        final int count;
+
+        Segments(double[] data, int count) {
+            this.data = data;
+            this.count = count;
+        }
+
+        public boolean isEmpty() {
+            return count == 0;
+        }
+    }
+
+    public interface SegmentFilter {
+
+        boolean keep(double x, double y, double z);
+    }
+
+    /** Paths whose bounding box comes within range of (x, z). */
+    public static List<Path> pathsNear(long seed, double x, double z, double range, Probe probe) {
+        List<Path> out = new ArrayList<>();
+        double reach = range + MAX_REACH + BASE_TUBE * 1.5;
+        int c0x = (int) Math.floor((x - reach) / CELL), c1x = (int) Math.floor((x + reach) / CELL);
+        int c0z = (int) Math.floor((z - reach) / CELL), c1z = (int) Math.floor((z + reach) / CELL);
+        for (int cx = c0x; cx <= c1x; cx++) {
+            for (int cz = c0z; cz <= c1z; cz++) {
+                for (Path path : pathsInCell(seed, cx, cz, probe)) {
+                    if (path.maxX >= x - range && path.minX <= x + range
+                        && path.maxZ >= z - range
+                        && path.minZ <= z + range) out.add(path);
+                }
+            }
+        }
+        return out;
+    }
+
+    public static List<Path> pathsInCell(long seed, int cx, int cz, Probe probe) {
+        List<Path> paths = CELLS.get(seed, cx, cz, (sd, i, j) -> computePaths(sd, i, j, probe));
+        return paths == null ? Collections.emptyList() : paths;
+    }
+
+    private static List<Path> computePaths(long seed, int cx, int cz, Probe probe) {
+        long s = seed ^ SALT;
+        double x = (cx + 0.5) * CELL, z = (cz + 0.5) * CELL;
+        if (Math.hypot(x, z) < 1000 || probe.weight(x, z) < 0.5) return Collections.emptyList();
+        double factor = 1 + (MAX_COUNT_FACTOR - 1) * Hash.hash01(s, cx, cz);
+        int count = (int) Math.floor(BASE_COUNT * factor + Hash.hash01(s + 1, cx, cz));
+        List<Path> out = new ArrayList<>();
+        Random r = new Random(s ^ ((long) cx * 0x9E3779B97F4A7C15L) ^ ((long) cz * 0xC2B2AE3D27D4EB4FL));
+        for (int i = 0; i < count; i++) {
+            out.add(walk(r, (cx + r.nextDouble()) * CELL, (cz + r.nextDouble()) * CELL));
+        }
+        return out;
+    }
+
+    /** Walks one path from (x, z): a steady turn about a drifting axis, jostled by the wiggle. */
+    private static Path walk(Random r, double x, double z) {
+        double length = BASE_LENGTH * MIN_LENGTH_FACTOR
+            * Math.pow(MAX_LENGTH_FACTOR / MIN_LENGTH_FACTOR, r.nextDouble());
+        double wiggle = MIN_WIGGLE * Math.pow(MAX_WIGGLE / MIN_WIGGLE, r.nextDouble());
+        double tube = Math.max(MIN_TUBE, BASE_TUBE * (0.8 + 0.7 * r.nextDouble()));
+        double turnRadius = 20 + 50 * r.nextDouble();
+        double turn = STEP / turnRadius * (r.nextBoolean() ? 1 : -1);
+        double y = MIN_Y + tube + (MAX_Y - MIN_Y - 2 * tube) * r.nextDouble();
+        double[] dir = normalize(new double[] { r.nextGaussian(), r.nextGaussian() * 0.8, r.nextGaussian() });
+        double[] axis = normalize(new double[] { r.nextGaussian(), r.nextGaussian() * 1.5, r.nextGaussian() });
+        int steps = Math.max(2, (int) (length / STEP));
+        double[] points = new double[(steps + 1) * 3];
+        double px = x, py = y, pz = z;
+        points[0] = px;
+        points[1] = py;
+        points[2] = pz;
+        for (int i = 1; i <= steps; i++) {
+            dir = rotate(dir, axis, turn);
+            axis = normalize(add(axis, gaussian(r, 0.02 * wiggle)));
+            dir = normalize(add(dir, gaussian(r, 0.03 * wiggle)));
+            // Bounce off the floor and ceiling, and head home once too far out.
+            if (py < MIN_Y + tube + 4 && dir[1] < 0 || py > MAX_Y - tube - 4 && dir[1] > 0) dir[1] = -dir[1];
+            if (Math.hypot(px - x, pz - z) > MAX_REACH - 40) {
+                dir = normalize(add(dir, new double[] { (x - px) * 0.01, 0, (z - pz) * 0.01 }));
+            }
+            px += dir[0] * STEP;
+            py = Math.max(MIN_Y + tube, Math.min(MAX_Y - tube, py + dir[1] * STEP));
+            pz += dir[2] * STEP;
+            points[i * 3] = px;
+            points[i * 3 + 1] = py;
+            points[i * 3 + 2] = pz;
+        }
+        return new Path(points, tube);
+    }
+
+    /** Segments of the paths that come within reach of the horizontal box, skipping those keep rejects. */
+    public static Segments segmentsNear(List<Path> paths, double minX, double maxX, double minZ, double maxZ,
+        SegmentFilter keep) {
+        double[] data = new double[64 * 7];
+        int n = 0;
+        for (Path path : paths) {
+            double[] p = path.points;
+            for (int i = 0; i + 5 < p.length; i += 3) {
+                double lo = Math.min(p[i], p[i + 3]) - path.tube, hi = Math.max(p[i], p[i + 3]) + path.tube;
+                if (hi < minX || lo > maxX) continue;
+                lo = Math.min(p[i + 2], p[i + 5]) - path.tube;
+                hi = Math.max(p[i + 2], p[i + 5]) + path.tube;
+                if (hi < minZ || lo > maxZ) continue;
+                if (!keep.keep((p[i] + p[i + 3]) / 2, (p[i + 1] + p[i + 4]) / 2, (p[i + 2] + p[i + 5]) / 2)) continue;
+                if ((n + 1) * 7 > data.length) data = Arrays.copyOf(data, data.length * 2);
+                System.arraycopy(p, i, data, n * 7, 6);
+                data[n * 7 + 6] = path.tube;
+                n++;
+            }
+        }
+        return new Segments(data, n);
+    }
+
+    /** Density of the tubes at a point: positive inside one, roughly the distance to its surface. */
+    public static double density(Segments segments, double x, double y, double z) {
+        double best = -100;
+        double[] d = segments.data;
+        for (int k = 0; k < segments.count; k++) {
+            int o = k * 7;
+            double ax = d[o], ay = d[o + 1], az = d[o + 2];
+            double ex = d[o + 3] - ax, ey = d[o + 4] - ay, ez = d[o + 5] - az;
+            double t = ((x - ax) * ex + (y - ay) * ey + (z - az) * ez) / (ex * ex + ey * ey + ez * ez + 1e-9);
+            t = Math.max(0, Math.min(1, t));
+            double qx = ax + ex * t - x, qy = ay + ey * t - y, qz = az + ez * t - z;
+            best = Math.max(best, d[o + 6] - Math.sqrt(qx * qx + qy * qy + qz * qz));
+        }
+        return best;
+    }
+
+    /** Rodrigues' rotation of v about the unit axis k. */
+    private static double[] rotate(double[] v, double[] k, double angle) {
+        double c = Math.cos(angle), s = Math.sin(angle);
+        double dot = v[0] * k[0] + v[1] * k[1] + v[2] * k[2];
+        double[] cross = { k[1] * v[2] - k[2] * v[1], k[2] * v[0] - k[0] * v[2], k[0] * v[1] - k[1] * v[0] };
+        return new double[] { v[0] * c + cross[0] * s + k[0] * dot * (1 - c),
+            v[1] * c + cross[1] * s + k[1] * dot * (1 - c), v[2] * c + cross[2] * s + k[2] * dot * (1 - c) };
+    }
+
+    private static double[] gaussian(Random r, double sigma) {
+        return new double[] { r.nextGaussian() * sigma, r.nextGaussian() * sigma, r.nextGaussian() * sigma };
+    }
+
+    private static double[] add(double[] a, double[] b) {
+        return new double[] { a[0] + b[0], a[1] + b[1], a[2] + b[2] };
+    }
+
+    private static double[] normalize(double[] a) {
+        double l = Math.sqrt(a[0] * a[0] + a[1] * a[1] + a[2] * a[2]);
+        if (l < 1e-9) return new double[] { 1, 0, 0 };
+        return new double[] { a[0] / l, a[1] / l, a[2] / l };
+    }
+}
