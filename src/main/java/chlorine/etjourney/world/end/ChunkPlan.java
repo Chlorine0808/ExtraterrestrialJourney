@@ -85,8 +85,9 @@ public final class ChunkPlan implements TerrainView {
         }
         islets = keptIslets;
         schools = Shoals.near(seed, cx, cz, RANGE, sampler.shoalProbe());
-        // Arc paths wander out of their region: keep the stretches still on ARCS ground, clear of reservations and
-        // zone islands. Each test uses the segment alone, so neighbouring chunks agree; the box is padded so a tube
+        // Arc paths wander out of their region: narrow them as the ARCS weight falls and keep the stretches clear of
+        // reservations and zone islands. Each test uses the segment alone, so neighbouring chunks agree; the box is
+        // padded so a tube
         // left out by one chunk is too far from every shared node to move the surface.
         arcs = ArcPaths.segmentsNear(
             ArcPaths.pathsNear(seed, cx, cz, RANGE + ARC_PAD, sampler.arcProbe()),

@@ -270,12 +270,45 @@ class PlacementTest {
     }
 
     @Test
+    void arcTubesNarrowTowardsTheBorder() {
+        List<ArcPaths.Path> paths = ArcPaths.pathsNear(108L, 7000, 7000, 400, (x, z) -> 1);
+        // ARCS weight rises from 0 at x 6700 to 1 at x 7300.
+        ArcPaths.SegmentWeight ramp = (x, y, z) -> Math.max(0, Math.min(1, (x - 6700) / 600));
+        int narrowed = 0;
+        for (ArcPaths.Path path : paths) {
+            ArcPaths.Segments segments = ArcPaths
+                .segmentsNear(Collections.singletonList(path), -1e9, 1e9, -1e9, 1e9, ramp, (x, y, z) -> true);
+            for (int k = 0; k < segments.count; k++) {
+                int o = k * 7;
+                double[] d = segments.data;
+                double w = ramp.weight((d[o] + d[o + 3]) / 2, 0, 0);
+                double tube = d[o + 6];
+                assertTrue(w > path.cutoff, "kept at weight " + w + " under cutoff " + path.cutoff);
+                assertTrue(tube >= ArcPaths.END_TUBE - 1e-9 && tube <= path.tube + 1e-9, "tube " + tube);
+                if (w >= path.cutoff + ArcPaths.TAPER) assertEquals(path.tube, tube, 1e-9);
+                if (tube < path.tube - 1) narrowed++;
+            }
+        }
+        assertTrue(narrowed > 0, "no tube narrowed");
+    }
+
+    @Test
+    void arcPathsEndAtTheirOwnWeights() {
+        double low = 1, high = 0;
+        for (ArcPaths.Path path : ArcPaths.pathsNear(108L, 7000, 7000, 400, (x, z) -> 1)) {
+            low = Math.min(low, path.cutoff);
+            high = Math.max(high, path.cutoff);
+        }
+        assertTrue(low >= 0.02 && high <= 0.35 && high - low > 0.15, low + ".." + high);
+    }
+
+    @Test
     void sharedSegmentTestsRunOncePerFilter() {
         List<ArcPaths.Path> paths = ArcPaths.pathsNear(108L, 7000, 7000, 400, (x, z) -> 1);
         int[] calls = { 0 };
-        ArcPaths.SegmentFilter shared = (x, y, z) -> {
+        ArcPaths.SegmentWeight shared = (x, y, z) -> {
             calls[0]++;
-            return y > 100;
+            return y > 100 ? 1 : 0;
         };
         ArcPaths.SegmentFilter all = (x, y, z) -> true;
         ArcPaths.Segments first = ArcPaths.segmentsNear(paths, 6800, 7200, 6800, 7200, shared, all);
@@ -287,7 +320,7 @@ class PlacementTest {
         ArcPaths.Segments plain = ArcPaths.segmentsNear(paths, 6800, 7200, 6800, 7200, (x, y, z) -> y > 100);
         assertEquals(plain.count, first.count);
         // Another filter instance gets its own answers.
-        ArcPaths.Segments other = ArcPaths.segmentsNear(paths, 6800, 7200, 6800, 7200, (x, y, z) -> true, all);
+        ArcPaths.Segments other = ArcPaths.segmentsNear(paths, 6800, 7200, 6800, 7200, (x, y, z) -> 1, all);
         assertTrue(other.count > first.count);
     }
 }
