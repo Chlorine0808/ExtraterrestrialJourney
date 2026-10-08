@@ -29,8 +29,8 @@ public final class Shoals {
 
     public interface Probe {
 
-        /** True inside a SHOALS region. */
-        boolean dense(double x, double z);
+        /** Base weight of the SHOALS style. */
+        double weight(double x, double z);
 
         List<ZoneIslands.Island> zoneIslandsNear(double x, double z);
     }
@@ -39,7 +39,10 @@ public final class Shoals {
 
         public final double x, z, y, angle, pitch;
         public final int count;
-        /** True in a SHOALS region; otherwise the school only forms beside an HEE island. */
+        /**
+         * True in a SHOALS region, thinning out across its border; otherwise the school only forms beside an HEE
+         * island.
+         */
         public final boolean always;
         final long seed;
 
@@ -79,7 +82,7 @@ public final class Shoals {
         for (ZoneIslands.Island island : probe.zoneIslandsNear(x, z)) {
             if (Math.hypot(x - island.x, z - island.z) < island.radius * 1.3 + EXTENT) return null;
         }
-        boolean always = probe.dense(x, z);
+        boolean always = Fade.forms(probe.weight(x, z), Hash.hash01(s + 9, cx, cz));
         double y = MIN_Y + (MAX_Y - MIN_Y) * Hash.hash01(s + 3, cx, cz);
         double angle = Hash.hash01(s + 4, cx, cz) * Math.PI * 2;
         double pitch = 0;

@@ -180,8 +180,8 @@ public final class TerrainSampler {
         return new Shoals.Probe() {
 
             @Override
-            public boolean dense(double x, double z) {
-                return weights(x, z).baseOf(Styles.SHOALS) >= 0.5;
+            public double weight(double x, double z) {
+                return weights(x, z).baseOf(Styles.SHOALS);
             }
 
             @Override

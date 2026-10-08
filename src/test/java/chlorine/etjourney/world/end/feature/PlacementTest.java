@@ -120,8 +120,8 @@ class PlacementTest {
         Shoals.Probe probe = new Shoals.Probe() {
 
             @Override
-            public boolean dense(double x, double z) {
-                return true;
+            public double weight(double x, double z) {
+                return 1;
             }
 
             @Override
@@ -160,6 +160,31 @@ class PlacementTest {
         int[] centre = Islets.span(islet, 0), edge = Islets.span(islet, islet.radius * 0.9);
         assertTrue(centre[1] - centre[0] > edge[1] - edge[0]);
         assertNull(Islets.span(islet, islet.radius));
+    }
+
+    @Test
+    void shoalsThinOutAcrossTheBorder() {
+        int full = alwaysSchools(113L, 1), half = alwaysSchools(114L, 0.35);
+        assertEquals(0, alwaysSchools(115L, 0.05));
+        assertTrue(half > full / 5 && half < full * 4 / 5, half + " of " + full);
+    }
+
+    private static int alwaysSchools(long seed, double weight) {
+        Shoals.Probe probe = new Shoals.Probe() {
+
+            @Override
+            public double weight(double x, double z) {
+                return weight;
+            }
+
+            @Override
+            public List<ZoneIslands.Island> zoneIslandsNear(double x, double z) {
+                return Collections.emptyList();
+            }
+        };
+        int n = 0;
+        for (Shoals.School school : Shoals.near(seed, 9000, 9000, 800, probe)) if (school.always) n++;
+        return n;
     }
 
     private static Islets.Probe isletWeight(double weight) {
