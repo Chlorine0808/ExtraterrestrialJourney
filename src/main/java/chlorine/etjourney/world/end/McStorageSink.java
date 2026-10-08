@@ -62,7 +62,7 @@ final class McStorageSink implements BlockSink {
 
     @Override
     public void set(int x, int y, int z, EndBlock block) {
-        put(x, y, z, McBlocks.block(block), McBlocks.meta(block));
+        put(x, y, z, EndPalette.block(block), EndPalette.meta(block));
     }
 
     @Override

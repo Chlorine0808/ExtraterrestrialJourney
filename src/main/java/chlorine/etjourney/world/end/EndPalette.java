@@ -4,13 +4,33 @@ import net.minecraft.block.Block;
 import net.minecraft.init.Blocks;
 
 import chlorine.etjourney.world.end.modifier.EndBlock;
+import chlorine.etjourney.world.end.modifier.KindTable;
 
-/** The real block and metadata for each EndBlock kind. */
-final class McBlocks {
+/** The real block and metadata for each EndBlock kind; content binds its own blocks over the vanilla stand-ins. */
+public final class EndPalette {
 
-    private McBlocks() {}
+    private static final KindTable<Block> BLOCKS = new KindTable<>();
+    private static final KindTable<Integer> META = new KindTable<>();
+
+    private EndPalette() {}
+
+    /** Call during preInit only; generation reads the palette without locking. */
+    public static void bind(EndBlock kind, Block block, int meta) {
+        BLOCKS.bind(kind, block);
+        META.bind(kind, meta);
+    }
 
     static Block block(EndBlock kind) {
+        Block bound = BLOCKS.get(kind);
+        return bound != null ? bound : standIn(kind);
+    }
+
+    static int meta(EndBlock kind) {
+        Integer bound = META.get(kind);
+        return bound != null ? bound : standInMeta(kind);
+    }
+
+    private static Block standIn(EndBlock kind) {
         switch (kind) {
             case WATER:
                 return Blocks.water;
@@ -36,7 +56,7 @@ final class McBlocks {
         }
     }
 
-    static int meta(EndBlock kind) {
+    private static int standInMeta(EndBlock kind) {
         switch (kind) {
             case SOLAR_FILL:
                 return 1;
