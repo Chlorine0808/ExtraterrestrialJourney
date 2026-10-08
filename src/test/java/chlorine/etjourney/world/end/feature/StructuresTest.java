@@ -31,6 +31,43 @@ class StructuresTest {
         }
     };
 
+    /** Structures of every kind but RINGS (one per region) over a block of cells, at a fixed weight. */
+    private static int count(long seed, double weight) {
+        StructureProbe probe = new StructureProbe() {
+
+            @Override
+            public double weight(String style, double x, double z) {
+                return weight;
+            }
+
+            @Override
+            public double land(double x, double z) {
+                return 60;
+            }
+
+            @Override
+            public double ground(double x, double z) {
+                return 70;
+            }
+        };
+        int n = 0;
+        for (Structure.Kind<? extends Structure> kind : Structures.kinds()) {
+            if (kind == Structures.RINGS) continue;
+            for (int cx = 100; cx < 130; cx++) {
+                for (int cz = 100; cz < 130; cz++) if (kind.inCell(seed, cx, cz, probe) != null) n++;
+            }
+        }
+        return n;
+    }
+
+    @Test
+    void structuresThinOutAcrossTheBorder() {
+        // Distinct seeds: the cell cache keys on the seed, not the probe.
+        int full = count(310L, 1), half = count(311L, 0.35);
+        assertEquals(0, count(312L, 0.05));
+        assertTrue(half > full / 5 && half < full * 4 / 5, half + " of " + full);
+    }
+
     private static <T extends Structure> T first(Structure.Kind<T> kind, long seed) {
         for (int i = 0; i < 400; i++) {
             T s = kind.inCell(seed, 10 + i % 20, i / 20, LAND);

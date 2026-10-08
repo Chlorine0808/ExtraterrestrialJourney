@@ -13,7 +13,7 @@ import chlorine.etjourney.world.end.noise.ValueNoise;
  */
 public final class Structures {
 
-    /** A structure only forms where its style holds at least this weight at its centre. */
+    /** A ring only forms where its style holds at least this weight at its centre. */
     private static final double MIN_WEIGHT = 0.5;
     /** Highest block any structure reaches. */
     private static final double CEILING = 248;
@@ -24,6 +24,11 @@ public final class Structures {
 
     private Structures() {}
 
+    /** Whether the structure of a cell forms at its style's weight there, thinning out across the border. */
+    private static boolean forms(long s, int cx, int cz, double weight) {
+        return Fade.forms(weight, Hash.hash01(s + 99, cx, cz));
+    }
+
     public static final Structure.Kind<Mushroom> MUSHROOMS = new Structure.Kind<Mushroom>("MUSHROOMS", 72, 46) {
 
         @Override
@@ -32,7 +37,7 @@ public final class Structures {
             if (Hash.hash01(s, cx, cz) > 0.6) return null;
             double x = (cx + 0.2 + 0.6 * Hash.hash01(s + 1, cx, cz)) * cell;
             double z = (cz + 0.2 + 0.6 * Hash.hash01(s + 2, cx, cz)) * cell;
-            if (probe.weight(style, x, z) < MIN_WEIGHT) return null;
+            if (!forms(s, cx, cz, probe.weight(style, x, z))) return null;
             double base = base(probe, x, z, Hash.hash01(s + 3, cx, cz));
             double capY = Math.min(CEILING - 14, base + 30 + 80 * Hash.hash01(s + 4, cx, cz));
             if (capY - base < 20) return null;
@@ -99,7 +104,7 @@ public final class Structures {
             if (Hash.hash01(s, cx, cz) > 0.55) return null;
             double x = (cx + 0.15 + 0.7 * Hash.hash01(s + 1, cx, cz)) * cell;
             double z = (cz + 0.15 + 0.7 * Hash.hash01(s + 2, cx, cz)) * cell;
-            if (probe.weight(style, x, z) < MIN_WEIGHT) return null;
+            if (!forms(s, cx, cz, probe.weight(style, x, z))) return null;
             double radius = 8 + 22 * Hash.hash01(s + 3, cx, cz);
             double tube = 1.5 + 2 * Hash.hash01(s + 4, cx, cz);
             double tilt = ringTilt(Math.toRadians(90 * Hash.hash01(s + 5, cx, cz)), radius, tube);
@@ -126,7 +131,7 @@ public final class Structures {
             if (Hash.hash01(s, cx, cz) > 0.6) return null;
             double x = (cx + 0.2 + 0.6 * Hash.hash01(s + 1, cx, cz)) * cell;
             double z = (cz + 0.2 + 0.6 * Hash.hash01(s + 2, cx, cz)) * cell;
-            if (probe.weight(style, x, z) < MIN_WEIGHT) return null;
+            if (!forms(s, cx, cz, probe.weight(style, x, z))) return null;
             // More small crosses than large ones.
             double height = 20 + 80 * Math.pow(Hash.hash01(s + 3, cx, cz), 1.5);
             double half = Math.max(1.5, height * 0.06);
@@ -161,7 +166,7 @@ public final class Structures {
             if (Hash.hash01(s, cx, cz) > 0.45) return null;
             double x = (cx + 0.2 + 0.6 * Hash.hash01(s + 1, cx, cz)) * cell;
             double z = (cz + 0.2 + 0.6 * Hash.hash01(s + 2, cx, cz)) * cell;
-            if (probe.weight(style, x, z) < MIN_WEIGHT) return null;
+            if (!forms(s, cx, cz, probe.weight(style, x, z))) return null;
             double under = probe.underside(x, z);
             if (under < 40) return null;
             double scale = 1 + Hash.hash01(s + 3, cx, cz);
@@ -183,7 +188,7 @@ public final class Structures {
             if (Hash.hash01(s, cx, cz) > 0.35) return null;
             double x = (cx + 0.2 + 0.6 * Hash.hash01(s + 1, cx, cz)) * cell;
             double z = (cz + 0.2 + 0.6 * Hash.hash01(s + 2, cx, cz)) * cell;
-            if (probe.weight(style, x, z) < MIN_WEIGHT) return null;
+            if (!forms(s, cx, cz, probe.weight(style, x, z))) return null;
             double scale = 2 + Hash.hash01(s + 3, cx, cz);
             return new Chain(x, z, 253, 2, scale, Hash.hash01(s + 6, cx, cz) * Math.PI, 0, false);
         }
@@ -203,7 +208,7 @@ public final class Structures {
             double length = 40 + 50 * Hash.hash01(s + 1, cx, cz);
             double mx = (cx + 0.2 + 0.6 * Hash.hash01(s + 5, cx, cz)) * cell;
             double mz = (cz + 0.2 + 0.6 * Hash.hash01(s + 6, cx, cz)) * cell;
-            if (probe.weight(style, mx, mz) < MIN_WEIGHT) return null;
+            if (!forms(s, cx, cz, probe.weight(style, mx, mz))) return null;
             // Both feet stand on land: try a few headings before giving up.
             double ax = 0, az = 0, bx = 0, bz = 0;
             boolean standing = false;
@@ -243,7 +248,7 @@ public final class Structures {
             if (Hash.hash01(s, cx, cz) > 0.5) return null;
             double x = (cx + 0.2 + 0.6 * Hash.hash01(s + 1, cx, cz)) * cell;
             double z = (cz + 0.2 + 0.6 * Hash.hash01(s + 2, cx, cz)) * cell;
-            if (probe.weight(style, x, z) < MIN_WEIGHT) return null;
+            if (!forms(s, cx, cz, probe.weight(style, x, z))) return null;
             double base = base(probe, x, z, Hash.hash01(s + 3, cx, cz));
             double ribbon = 4;
             double top = Math.min(CEILING - ribbon, base + 150 + 90 * Hash.hash01(s + 4, cx, cz));
@@ -277,7 +282,7 @@ public final class Structures {
             if (Hash.hash01(s, cx, cz) > 0.5) return null;
             double x = (cx + 0.25 + 0.5 * Hash.hash01(s + 1, cx, cz)) * cell;
             double z = (cz + 0.25 + 0.5 * Hash.hash01(s + 2, cx, cz)) * cell;
-            if (probe.weight(style, x, z) < MIN_WEIGHT) return null;
+            if (!forms(s, cx, cz, probe.weight(style, x, z))) return null;
             double base = base(probe, x, z, Hash.hash01(s + 3, cx, cz));
             double top = Math.min(CEILING, base + 80 + 120 * Hash.hash01(s + 4, cx, cz));
             if (top - base < 40) return null;
