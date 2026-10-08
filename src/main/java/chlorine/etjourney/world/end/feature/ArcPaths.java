@@ -177,7 +177,8 @@ public final class ArcPaths {
     private static List<Path> computePaths(long seed, int cx, int cz, Probe probe) {
         long s = seed ^ SALT;
         double x = (cx + 0.5) * CELL, z = (cz + 0.5) * CELL;
-        if (Math.hypot(x, z) < 1000 || probe.weight(x, z) < 0.5) return Collections.emptyList();
+        if (Math.hypot(x, z) < 1000 || !Fade.forms(probe.weight(x, z), Hash.hash01(s + 2, cx, cz)))
+            return Collections.emptyList();
         double factor = 1 + (MAX_COUNT_FACTOR - 1) * Hash.hash01(s, cx, cz);
         int count = (int) Math.floor(BASE_COUNT * factor + Hash.hash01(s + 1, cx, cz));
         List<Path> out = new ArrayList<>();

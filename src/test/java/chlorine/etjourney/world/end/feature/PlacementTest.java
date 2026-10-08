@@ -222,6 +222,23 @@ class PlacementTest {
         return sum / islets.size();
     }
 
+    private static int arcPaths(long seed, double weight) {
+        int n = 0;
+        for (int cx = 30; cx < 60; cx++) {
+            for (int cz = 30; cz < 60; cz++) n += ArcPaths.pathsInCell(seed, cx, cz, (x, z) -> weight)
+                .size();
+        }
+        return n;
+    }
+
+    @Test
+    void arcPathsStartLessOftenAcrossTheBorder() {
+        // Distinct seeds: the cell cache keys on the seed, not the probe.
+        int full = arcPaths(120L, 1), half = arcPaths(121L, 0.35);
+        assertEquals(0, arcPaths(122L, 0.05));
+        assertTrue(half > full / 5 && half < full * 4 / 5, half + " of " + full);
+    }
+
     @Test
     void arcPointsStayInTheWorldAndTubesAreSolidOnTheirPath() {
         List<ArcPaths.Path> paths = ArcPaths.pathsNear(108L, 7000, 7000, 400, (x, z) -> 1);
