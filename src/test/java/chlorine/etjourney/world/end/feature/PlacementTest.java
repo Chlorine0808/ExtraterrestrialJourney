@@ -162,6 +162,41 @@ class PlacementTest {
         assertNull(Islets.span(islet, islet.radius));
     }
 
+    private static Islets.Probe isletWeight(double weight) {
+        return new Islets.Probe() {
+
+            @Override
+            public double weight(double x, double z) {
+                return weight;
+            }
+
+            @Override
+            public List<ZoneIslands.Island> zoneIslandsNear(double x, double z) {
+                return Collections.emptyList();
+            }
+        };
+    }
+
+    @Test
+    void isletsThinOutAndShrinkAcrossTheBorder() {
+        // Distinct seeds: the cell cache keys on the seed, not the probe.
+        List<Islets.Islet> full = Islets.near(110L, 9000, 9000, 600, isletWeight(1));
+        List<Islets.Islet> half = Islets.near(111L, 9000, 9000, 600, isletWeight(0.35));
+        assertTrue(
+            Islets.near(112L, 9000, 9000, 600, isletWeight(0.05))
+                .isEmpty());
+        assertTrue(
+            half.size() > full.size() / 5 && half.size() < full.size() * 4 / 5,
+            half.size() + " of " + full.size());
+        assertTrue(meanRadius(half) < meanRadius(full));
+    }
+
+    private static double meanRadius(List<Islets.Islet> islets) {
+        double sum = 0;
+        for (Islets.Islet islet : islets) sum += islet.radius;
+        return sum / islets.size();
+    }
+
     @Test
     void arcPointsStayInTheWorldAndTubesAreSolidOnTheirPath() {
         List<ArcPaths.Path> paths = ArcPaths.pathsNear(108L, 7000, 7000, 400, (x, z) -> 1);
