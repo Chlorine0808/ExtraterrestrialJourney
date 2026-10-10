@@ -181,6 +181,10 @@ public final class EndProbe {
         for (BiosphereSource.Kind kind : new BiosphereSource.Kind[] { BiosphereSource.Kind.SURFACE,
             BiosphereSource.Kind.NETHER }) {
             WorldServer w = SampleWorlds.world(kind);
+            if (w == null) {
+                ModLog.LOG.info("[probe] {} sample world could not be loaded", kind);
+                continue;
+            }
             ModLog.LOG.info(
                 "[probe] {} sample world keeps {} chunks, {} entities, {} tile entities",
                 kind,
