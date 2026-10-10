@@ -137,4 +137,44 @@ class BiosphereTest {
             }
         }
     }
+
+    @Test
+    void theWindowsCountedAreExactlyTheWindowsTouched() {
+        Biosphere b = first(probe(1, 70));
+        assertNotNull(b);
+        int c0x = (int) Math.floor(b.minX() / 16) - 3, c1x = (int) Math.floor(b.maxX() / 16) + 3;
+        int c0z = (int) Math.floor(b.minZ() / 16) - 3, c1z = (int) Math.floor(b.maxZ() / 16) + 3;
+        int touched = 0;
+        for (int i = c0x; i <= c1x; i++) {
+            for (int j = c0z; j <= c1z; j++) if (b.touchesWindow(i, j)) touched++;
+        }
+        assertEquals(touched, b.windowCount());
+    }
+
+    @Test
+    void everyBlockInsideLiesInATouchedWindow() {
+        Biosphere b = first(probe(1, 70));
+        assertNotNull(b);
+        for (int x = (int) Math.floor(b.minX()); x <= (int) Math.ceil(b.maxX()); x++) {
+            for (int z = (int) Math.floor(b.minZ()); z <= (int) Math.ceil(b.maxZ()); z++) {
+                if (b.part(x, (int) Math.floor(b.y), z) == Biosphere.Part.OUTSIDE) continue;
+                int cx = Math.floorDiv(x - 8, 16), cz = Math.floorDiv(z - 8, 16);
+                assertTrue(b.touchesWindow(cx, cz), "column " + x + "," + z + " in an untouched window");
+            }
+        }
+    }
+
+    @Test
+    void twoBallsHaveDifferentKeys() {
+        StructureProbe probe = probe(1, -1000);
+        List<Long> keys = new ArrayList<>();
+        for (int cx = 20; cx < 40; cx++) {
+            for (int cz = 20; cz < 40; cz++) {
+                Biosphere b = Biosphere.KIND.inCell(DENSE_SEED, cx, cz, probe);
+                if (b == null) continue;
+                assertTrue(!keys.contains(b.key()), "key repeats");
+                keys.add(b.key());
+            }
+        }
+    }
 }

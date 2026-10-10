@@ -73,6 +73,26 @@ public final class Biosphere extends Structure {
         return d > radius - 1 ? Part.GLASS : Part.INSIDE;
     }
 
+    /** Whether the populate window of chunk (chunkX, chunkZ), 16 x 16 from 8 blocks into it, meets the ball. */
+    public boolean touchesWindow(int chunkX, int chunkZ) {
+        int wx = chunkX * 16 + 8, wz = chunkZ * 16 + 8;
+        return wx <= maxX() && wx + 15 >= minX() && wz <= maxZ() && wz + 15 >= minZ();
+    }
+
+    /** How many populate windows meet the ball. */
+    public int windowCount() {
+        return windows(minX(), maxX()) * windows(minZ(), maxZ());
+    }
+
+    private static int windows(double low, double high) {
+        return (int) Math.floor((high - 8) / 16) - (int) Math.ceil((low - 23) / 16) + 1;
+    }
+
+    /** Identifies the ball by its centre block. */
+    public long key() {
+        return ((long) Math.floor(centreX) << 32) ^ ((long) Math.floor(centreZ) & 0xFFFFFFFFL);
+    }
+
     private static double sq(double v) {
         return v * v;
     }
