@@ -9,7 +9,8 @@ import chlorine.etjourney.world.end.noise.ValueNoise;
 
 /**
  * The free-standing structures of the newer styles: mushroom plateaus, rings, natural arches, spiral towers and
- * hollow pillars. Every part is at least 8 blocks thick so the 8-block density grid keeps it.
+ * hollow pillars. Parts drawn as density shapes are at least 8 blocks thick so the 8-block density grid keeps them;
+ * mushrooms are drawn block by block.
  */
 public final class Structures {
 
@@ -294,12 +295,7 @@ public final class Structures {
 
     public static List<Structure.Kind<? extends Structure>> kinds() {
         return Collections.unmodifiableList(
-            Arrays.<Structure.Kind<? extends Structure>>asList(
-                MUSHROOMS,
-                RINGS,
-                ARCHES,
-                SPIRAL_TOWERS,
-                HOLLOW_PILLARS));
+            Arrays.<Structure.Kind<? extends Structure>>asList(RINGS, ARCHES, SPIRAL_TOWERS, HOLLOW_PILLARS));
     }
 
     /** Ground to stand on (slightly sunk in), or a random low height over the void. */

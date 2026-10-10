@@ -59,6 +59,8 @@ public final class FeatureModifiers {
         all.add(StructureModifiers.of(Mammatus.KIND, 856));
         all.add(StructureModifiers.of(Anvil.KIND, 857));
         all.add(StructureModifiers.of(RollCloud.KIND, 858));
+        // Mushrooms block by block, so their round caps are not cut into the 8-block grid's polygons.
+        all.add(StructureModifiers.voxels(Structures.MUSHROOMS, 859, EndBlock.STONE));
         all.add(StructureModifiers.ringlets());
         all.add(StructureModifiers.voxels(Structures.CROSSES, 861, EndBlock.STONE));
         all.add(StructureModifiers.voxels(Structures.HANGING_CHAINS, 862, EndBlock.CHAIN));
