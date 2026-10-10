@@ -15,6 +15,7 @@ import chlorine.etjourney.world.end.feature.Lakes;
 import chlorine.etjourney.world.end.feature.Shoals;
 import chlorine.etjourney.world.end.feature.Structure;
 import chlorine.etjourney.world.end.feature.Structures;
+import chlorine.etjourney.world.end.feature.Tool;
 import chlorine.etjourney.world.end.feature.Zone;
 import chlorine.etjourney.world.end.feature.ZoneIslands;
 import chlorine.etjourney.world.end.feature.cloud.Anvil;
@@ -72,6 +73,7 @@ public final class FeatureModifiers {
         all.add(StructureModifiers.voxels(Paper.KIND, 868, EndBlock.STONE));
         all.add(StructureModifiers.voxels(Enoki.KIND, 869, EndBlock.STONE));
         all.add(StructureModifiers.voxels(Column.KIND, 870, EndBlock.STONE));
+        all.add(StructureModifiers.voxels(Tool.KIND, 872, EndBlock.STONE));
         all.add(StructureModifiers.biospheres());
         return all;
     }

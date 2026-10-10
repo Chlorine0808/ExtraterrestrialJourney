@@ -23,7 +23,7 @@ public final class Structures {
     /** Share of each stone kind that comes out worn. */
     static final double WORN = 0.35;
     /** Base height over the void, where there is no ground to stand on. */
-    private static final double VOID_BASE = 20;
+    static final double VOID_BASE = 20;
 
     private Structures() {}
 
