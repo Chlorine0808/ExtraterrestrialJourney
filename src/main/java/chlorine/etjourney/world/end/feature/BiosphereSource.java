@@ -35,6 +35,11 @@ public final class BiosphereSource {
         return Hash.hash01(s + 1, cx, cz) < CAVE_SHARE ? Kind.CAVE : Kind.SURFACE;
     }
 
+    /** The kinds to try for a ball, its own first: the overworld and the Nether stand in for each other. */
+    public static Kind[] order(Kind kind) {
+        return new Kind[] { kind, kind == Kind.NETHER ? Kind.SURFACE : Kind.NETHER };
+    }
+
     /** The point, {x, z}, the ball's terrain is cut around; surface balls mostly try until one is not water. */
     public static int[] point(long seed, Biosphere b, Kind kind, Water water) {
         long s = seed ^ SALT;

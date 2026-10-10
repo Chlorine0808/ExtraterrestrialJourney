@@ -72,4 +72,18 @@ class BiosphereSourceTest {
             assertTrue(Math.abs(p[0]) <= BiosphereSource.SPREAD / 8 && Math.abs(p[1]) <= BiosphereSource.SPREAD / 8);
         }
     }
+
+    /** A ball whose own world cannot be generated is cut from the other one rather than left empty. */
+    @Test
+    void eachKindFallsBackToTheOtherWorld() {
+        assertArrayEquals(
+            new BiosphereSource.Kind[] { BiosphereSource.Kind.NETHER, BiosphereSource.Kind.SURFACE },
+            BiosphereSource.order(BiosphereSource.Kind.NETHER));
+        assertArrayEquals(
+            new BiosphereSource.Kind[] { BiosphereSource.Kind.SURFACE, BiosphereSource.Kind.NETHER },
+            BiosphereSource.order(BiosphereSource.Kind.SURFACE));
+        assertArrayEquals(
+            new BiosphereSource.Kind[] { BiosphereSource.Kind.CAVE, BiosphereSource.Kind.NETHER },
+            BiosphereSource.order(BiosphereSource.Kind.CAVE));
+    }
 }
