@@ -158,14 +158,8 @@ public final class Styles {
         .build();
     public static final Style VIRGA = structure("VIRGA", Style.LAND);
 
-    /** Curling wave crests on subdued land, as a base or over other land. */
-    public static final Style BILLOWS = Style.builder("BILLOWS", StyleKind.BOTH)
-        .share(1)
-        .overlay(OVERLAY_CHANCE, Style.LAND)
-        .mountains(0.3)
-        .valleys(0.3)
-        .holes(true)
-        .build();
+    /** Curling wave crests floating over any base. */
+    public static final Style BILLOWS = structure("BILLOWS", Style.ANY);
 
     /** Glass balls over the void, each holding a floor of one biome. */
     public static final Style BIOSPHERES = Style.builder("BIOSPHERES", StyleKind.BASE_VOID)

@@ -89,11 +89,11 @@ class CloudStylesTest {
     }
 
     @Test
-    void billowsAreALandBaseThatAlsoOverlaysLand() {
-        assertEquals(StyleKind.BOTH, Styles.BILLOWS.kind);
-        assertEquals(1, Styles.BILLOWS.share);
+    void billowsOverlayAnythingAndAreNoBase() {
+        assertEquals(StyleKind.OVERLAY, Styles.BILLOWS.kind);
+        assertEquals(0, Styles.BILLOWS.share);
         assertTrue(Styles.BILLOWS.canOverlay(Styles.PLAINS));
-        assertFalse(Styles.BILLOWS.canOverlay(Styles.ISLETS));
+        assertTrue(Styles.BILLOWS.canOverlay(Styles.ISLETS));
         assertTrue(
             Styles.all()
                 .contains(Styles.BILLOWS));
