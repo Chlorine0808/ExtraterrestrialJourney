@@ -70,6 +70,7 @@ public final class FeatureModifiers {
         all.add(StructureModifiers.voxels(Virga.KIND, 866, EndBlock.STONE));
         all.add(StructureModifiers.voxels(Billow.KIND, 867, EndBlock.STONE));
         all.add(StructureModifiers.voxels(Paper.KIND, 868, EndBlock.STONE));
+        all.add(StructureModifiers.biospheres());
         return all;
     }
 

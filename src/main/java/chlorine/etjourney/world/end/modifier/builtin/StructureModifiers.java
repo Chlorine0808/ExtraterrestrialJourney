@@ -2,8 +2,10 @@ package chlorine.etjourney.world.end.modifier.builtin;
 
 import java.util.List;
 
+import chlorine.etjourney.world.end.feature.Biosphere;
 import chlorine.etjourney.world.end.feature.Structure;
 import chlorine.etjourney.world.end.feature.Structures;
+import chlorine.etjourney.world.end.modifier.BiomePart;
 import chlorine.etjourney.world.end.modifier.ChunkArea;
 import chlorine.etjourney.world.end.modifier.EndBlock;
 import chlorine.etjourney.world.end.modifier.Modifier;
@@ -41,6 +43,50 @@ public final class StructureModifiers {
                     for (int z = z0; z <= z1; z++) {
                         for (int y = y0; y <= y1; y++) {
                             if (placed.density(x + 0.5, y + 0.5, z + 0.5) >= 0) sink.place(x, y, z, block);
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    /**
+     * Glass balls drawn block by block over whatever else is there: the shell is glass, the air inside is cleared,
+     * and the floor takes the blocks of the ball's biome.
+     */
+    public static Modifier biospheres() {
+        return FeatureModifiers.blockModifier(890, (area, view, sink) -> {
+            int ox = sink.originX(), oz = sink.originZ();
+            for (Biosphere b : Biosphere.KIND.near(area.seed, ox + 8, oz + 8, 12, view.structures())) {
+                List<Area> reserved = view
+                    .reservedAt((int) Math.floor(b.centreX) >> 4, (int) Math.floor(b.centreZ) >> 4);
+                if (placed(reserved, b, Biosphere.KIND) == null) continue;
+                int x0 = Math.max(ox, (int) Math.floor(b.minX())), x1 = Math.min(ox + 15, (int) Math.ceil(b.maxX()));
+                int z0 = Math.max(oz, (int) Math.floor(b.minZ())), z1 = Math.min(oz + 15, (int) Math.ceil(b.maxZ()));
+                int y0 = Math.max(sink.minY(), (int) Math.floor(b.minY()));
+                int y1 = Math.min(sink.maxY() - 1, (int) Math.ceil(b.maxY()));
+                for (int x = x0; x <= x1; x++) {
+                    for (int z = z0; z <= z1; z++) {
+                        for (int y = y0; y <= y1; y++) {
+                            switch (b.part(x, y, z)) {
+                                case GLASS:
+                                    sink.set(x, y, z, EndBlock.GLASS);
+                                    break;
+                                case AIR:
+                                    sink.clear(x, y, z);
+                                    break;
+                                case TOP:
+                                    sink.setBiome(x, y, z, BiomePart.TOP, b.pick);
+                                    break;
+                                case FILLER:
+                                    sink.setBiome(x, y, z, BiomePart.FILLER, b.pick);
+                                    break;
+                                case DEEP:
+                                    sink.setBiome(x, y, z, BiomePart.DEEP, b.pick);
+                                    break;
+                                default:
+                                    break;
+                            }
                         }
                     }
                 }
