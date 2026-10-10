@@ -10,13 +10,23 @@ import chlorine.etjourney.world.end.noise.Warp;
 public final class Canyons {
 
     public static final double MIN_DEPTH = 30, MAX_DEPTH = 60;
+    /** How many times deeper a chasm cuts than a slot. */
+    public static final double CHASM_SCALE = 3;
     private static final double[] SCALES = { 70, 43 };
 
     private Canyons() {}
 
     /** How deep the canyon cuts at (x, z), or 0 outside every slot. */
     public static double depth(long seed, double x, double z) {
-        long s = seed ^ 0x3F7A1C9E5B2D8064L;
+        return slot(seed ^ 0x3F7A1C9E5B2D8064L, x, z);
+    }
+
+    /** How deep a chasm cuts at (x, z): three times a slot, on a pattern of its own, or 0 outside every chasm. */
+    public static double chasmDepth(long seed, double x, double z) {
+        return CHASM_SCALE * slot(seed ^ 0x6D2B8F4A1E7C3059L, x, z);
+    }
+
+    private static double slot(long s, double x, double z) {
         double[] w = Warp.warp(s, x, z, 24, 90);
         double half = 1.5 + 1.5 * ValueNoise.mask(s + 1, x, z, 150);
         double best = Double.MAX_VALUE;

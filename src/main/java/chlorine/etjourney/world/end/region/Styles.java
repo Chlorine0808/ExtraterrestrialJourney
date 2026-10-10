@@ -113,6 +113,11 @@ public final class Styles {
         .overlay(OVERLAY_CHANCE, Style.LAND)
         .modifiers(StyleModifiers.slotCanyons())
         .build();
+    /** Slot canyons three times as deep that keep no floor, opening onto the void. */
+    public static final Style CHASMS = Style.builder("CHASMS", StyleKind.OVERLAY)
+        .overlay(OVERLAY_CHANCE, Style.LAND)
+        .modifiers(StyleModifiers.chasms())
+        .build();
 
     /** Springs in the rim cliffs pour water into the void; placed at populate time, outside the modifier chain. */
     public static final Style VOID_FALLS = Style.builder("VOID_FALLS", StyleKind.OVERLAY)
@@ -206,7 +211,8 @@ public final class Styles {
             LENTICULARS,
             MACKEREL,
             VIRGA,
-            BILLOWS));
+            BILLOWS,
+            CHASMS));
 
     private Styles() {}
 

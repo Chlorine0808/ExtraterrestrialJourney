@@ -169,24 +169,41 @@ public final class StyleModifiers {
         tier.offset += share * (Fractal.fbm(t + 9, wi[0], wi[1], 110, 3) - 0.5) * swell;
     }
 
-    /**
-     * Slot canyons cut into the land, to an absolute floor below the column top so both halves of a tall column cut
-     * the same blocks. The style fades the depth in at its borders.
-     */
+    /** Depth a canyon style cuts at a column, or 0 outside its cuts. */
+    interface CanyonDepth {
+
+        double at(long seed, double x, double z);
+    }
+
+    /** Slot canyons: narrow cuts 30-60 deep that keep a six-block floor. */
     public static Modifier slotCanyons() {
-        return FeatureModifiers.blockModifier(812, (area, view, sink) -> {
+        return canyons(812, "SLOT_CANYONS", Canyons::depth, 6);
+    }
+
+    /** Chasms: slots three times as deep that keep no floor, so they open onto the void. */
+    public static Modifier chasms() {
+        return canyons(813, "CHASMS", Canyons::chasmDepth, Double.NEGATIVE_INFINITY);
+    }
+
+    /**
+     * Cuts a canyon style into the land, to an absolute floor below the column top so both halves of a tall column
+     * cut the same blocks, keeping floor blocks of rock above the column bottom. The style fades the depth in at its
+     * borders.
+     */
+    static Modifier canyons(int order, String style, CanyonDepth canyon, double floor) {
+        return FeatureModifiers.blockModifier(order, (area, view, sink) -> {
             for (int x = sink.originX(); x < sink.originX() + 16; x++) {
                 for (int z = sink.originZ(); z < sink.originZ() + 16; z++) {
-                    double depth = Canyons.depth(area.seed, x, z);
+                    double depth = canyon.at(area.seed, x, z);
                     if (depth <= 0) continue;
-                    double fade = Math.min(1, (view.weight("SLOT_CANYONS", x, z) - 0.3) / 0.4);
+                    double fade = Math.min(1, (view.weight(style, x, z) - 0.3) / 0.4);
                     if (fade <= 0) continue;
                     ColumnState c = view.column(x, z);
                     if (c.land <= 0) continue;
-                    int floor = (int) Math.ceil(Math.max(c.top - depth * fade, c.bottom + 6));
+                    int lowest = (int) Math.ceil(Math.max(c.top - depth * fade, c.bottom + floor));
                     // Above the column top for the density noise and anything the surface modifiers raised.
                     int ceiling = (int) c.top + 16;
-                    for (int y = Math.max(floor, sink.minY()); y <= Math.min(ceiling, sink.maxY() - 1); y++) {
+                    for (int y = Math.max(lowest, sink.minY()); y <= Math.min(ceiling, sink.maxY() - 1); y++) {
                         sink.clear(x, y, z);
                     }
                 }

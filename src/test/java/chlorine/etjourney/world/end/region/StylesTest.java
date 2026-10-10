@@ -11,7 +11,7 @@ class StylesTest {
     @Test
     void elevenStylesWithTheSpecsOverlayTable() {
         assertEquals(
-            35,
+            36,
             Styles.all()
                 .size());
         assertTrue(Styles.SPIRES.canOverlay(Styles.PLAINS));
@@ -62,5 +62,12 @@ class StylesTest {
         }
         double mean = overlays / (double) cells;
         assertTrue(mean >= 0.6 && mean <= 1.0, "mean overlays per region " + mean);
+    }
+
+    @Test
+    void chasmsOverlayLandOnly() {
+        assertEquals(StyleKind.OVERLAY, Styles.CHASMS.kind);
+        assertTrue(Styles.CHASMS.canOverlay(Styles.PLAINS));
+        assertFalse(Styles.CHASMS.canOverlay(Styles.ISLETS));
     }
 }
