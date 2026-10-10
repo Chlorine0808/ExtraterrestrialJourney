@@ -21,7 +21,6 @@ class CloudKindsTest {
         Cumulus.KIND,
         Mammatus.KIND,
         Anvil.KIND,
-        RollCloud.KIND,
         Lenticular.KIND,
         Mackerel.KIND,
         Virga.KIND,

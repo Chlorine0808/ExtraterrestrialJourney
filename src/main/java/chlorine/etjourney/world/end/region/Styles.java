@@ -148,7 +148,6 @@ public final class Styles {
 
     public static final Style MAMMATUS = structure("MAMMATUS", Style.LAND);
     public static final Style ANVILS = structure("ANVILS", Style.ANY);
-    public static final Style ROLL_CLOUDS = structure("ROLL_CLOUDS", Style.ANY);
     public static final Style LENTICULARS = structure("LENTICULARS", Style.ANY);
 
     /** Small puffs in a loose grid over the void, on one waving sheet. */
@@ -206,7 +205,6 @@ public final class Styles {
             CUMULUS,
             MAMMATUS,
             ANVILS,
-            ROLL_CLOUDS,
             LENTICULARS,
             MACKEREL,
             VIRGA,

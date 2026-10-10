@@ -14,7 +14,6 @@ import chlorine.etjourney.world.end.feature.cloud.Lenticular;
 import chlorine.etjourney.world.end.feature.cloud.Mackerel;
 import chlorine.etjourney.world.end.feature.cloud.Mammatus;
 import chlorine.etjourney.world.end.feature.cloud.Paper;
-import chlorine.etjourney.world.end.feature.cloud.RollCloud;
 import chlorine.etjourney.world.end.feature.cloud.Virga;
 
 /** No cloud is wider than its kind declares, or a chunk's cell search would miss it near the edge of its reach. */
@@ -24,7 +23,6 @@ class CloudFootprintsTest {
         Cumulus.KIND,
         Mammatus.KIND,
         Anvil.KIND,
-        RollCloud.KIND,
         Lenticular.KIND,
         Mackerel.KIND,
         Virga.KIND,
