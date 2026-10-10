@@ -9,6 +9,9 @@ import net.minecraft.command.CommandBase;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.util.ChatComponentText;
+import net.minecraft.util.MovingObjectPosition;
+import net.minecraft.util.Vec3;
+import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
 import net.minecraft.world.chunk.IChunkProvider;
 
@@ -40,7 +43,7 @@ public final class EtjCommand extends CommandBase {
 
     @Override
     public String getCommandUsage(ICommandSender sender) {
-        return "/etj end <here|styles|style <name>|style <name> pure|mix [a] [b] [c]|mountain [minTopY]|lake|hole|valley|zone <name>|heeisland|destitute>";
+        return "/etj end <here|styles|look [range]|style <name>|style <name> pure|mix [a] [b] [c]|mountain [minTopY]|lake|hole|valley|zone <name>|heeisland|destitute>";
     }
 
     @Override
@@ -63,6 +66,10 @@ public final class EtjCommand extends CommandBase {
             return;
         }
         EntityPlayerMP player = getCommandSenderAsPlayer(sender);
+        if (args[1].equals("look")) {
+            look(player, args.length > 2 ? parseIntBounded(sender, args[2], 1, 1024) : 256);
+            return;
+        }
         if (player.dimension != END) {
             player.travelToDimension(END);
             say(player, "Moved to the End; run the command again");
@@ -190,6 +197,24 @@ public final class EtjCommand extends CommandBase {
         }
         int cx = (int) Math.floor(hit[0] / RegionMap.REGION), cz = (int) Math.floor(hit[1] / RegionMap.REGION);
         teleport(player, hit[0], 140, hit[1], picker.base(seed, cx, cz) + " " + picker.overlays(seed, cx, cz));
+    }
+
+    /** Moves the player onto the block they look at, up to range blocks away. */
+    private static void look(EntityPlayerMP player, int range) {
+        double[] d = EtjArgs.lookDirection(player.rotationYaw, player.rotationPitch);
+        Vec3 eye = Vec3.createVectorHelper(player.posX, player.posY + player.getEyeHeight(), player.posZ);
+        Vec3 end = eye.addVector(d[0] * range, d[1] * range, d[2] * range);
+        World world = player.worldObj;
+        MovingObjectPosition hit = world.rayTraceBlocks(eye, end);
+        if (hit == null || hit.typeOfHit != MovingObjectPosition.MovingObjectType.BLOCK) {
+            say(player, "Nothing within " + range + " blocks");
+            return;
+        }
+        // Stand on the first two free blocks above the hit, so a wall hit still lands on top.
+        int y = hit.blockY + 1;
+        while (y < 255
+            && !(world.isAirBlock(hit.blockX, y, hit.blockZ) && world.isAirBlock(hit.blockX, y + 1, hit.blockZ))) y++;
+        teleport(player, hit.blockX + 0.5, y, hit.blockZ + 0.5, "look");
     }
 
     private static void mountain(EntityPlayerMP player, TerrainSampler sampler, int minTop) {

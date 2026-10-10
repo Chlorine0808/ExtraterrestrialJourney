@@ -75,4 +75,10 @@ final class EtjArgs {
         String base = style.hasLand() ? "base with land" : "base without land";
         return overLand || overVoid ? base + ", or overlay" : base;
     }
+
+    /** Unit vector of a view at yaw and pitch in degrees, as Minecraft measures them (yaw 0 faces +Z). */
+    static double[] lookDirection(double yaw, double pitch) {
+        double y = Math.toRadians(yaw), p = Math.toRadians(pitch);
+        return new double[] { -Math.sin(y) * Math.cos(p), -Math.sin(p), Math.cos(y) * Math.cos(p) };
+    }
 }

@@ -1,5 +1,6 @@
 package chlorine.etjourney.world.end.debug;
 
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -72,5 +73,13 @@ class EtjArgsTest {
         assertTrue(lines.contains("LAYERED: base with land, or overlay"), lines.toString());
         assertTrue(lines.contains("ARCS: base without land, or overlay"), lines.toString());
         assertTrue(lines.contains("CUMULUS: overlay on anything"), lines.toString());
+    }
+
+    @Test
+    void lookDirectionFollowsMinecraftAngles() {
+        // Yaw 0 faces south (+Z), yaw 90 west (-X); pitch 90 looks straight down.
+        assertArrayEquals(new double[] { 0, 0, 1 }, EtjArgs.lookDirection(0, 0), 1e-9);
+        assertArrayEquals(new double[] { -1, 0, 0 }, EtjArgs.lookDirection(90, 0), 1e-9);
+        assertArrayEquals(new double[] { 0, -1, 0 }, EtjArgs.lookDirection(0, 90), 1e-9);
     }
 }
