@@ -31,16 +31,6 @@ class CloudStylesTest {
     }
 
     @Test
-    void cloudSeaIsALandBaseOnly() {
-        assertEquals(StyleKind.BASE_LAND, Styles.CLOUD_SEA.kind);
-        assertEquals(1, Styles.CLOUD_SEA.share);
-        assertFalse(Styles.CLOUD_SEA.canOverlay(Styles.PLAINS));
-        assertTrue(
-            Styles.all()
-                .contains(Styles.CLOUD_SEA));
-    }
-
-    @Test
     void cumulusOverlaysAnything() {
         assertEquals(StyleKind.OVERLAY, Styles.CUMULUS.kind);
         assertTrue(Styles.CUMULUS.canOverlay(Styles.ISLETS));

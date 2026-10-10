@@ -146,12 +146,6 @@ public final class Styles {
         .modifiers(CloudModifiers.cirrus())
         .build();
 
-    /** Sunken land under a level sheet of cloud, with only the ridges standing through. */
-    public static final Style CLOUD_SEA = Style.builder("CLOUD_SEA", StyleKind.BASE_LAND)
-        .share(1)
-        .mountains(0.4)
-        .modifiers(CloudModifiers.cloudSeaFloor(), StyleModifiers.ranges(), CloudModifiers.cloudSea())
-        .build();
     public static final Style MAMMATUS = structure("MAMMATUS", Style.LAND);
     public static final Style ANVILS = structure("ANVILS", Style.ANY);
     public static final Style ROLL_CLOUDS = structure("ROLL_CLOUDS", Style.ANY);
@@ -202,7 +196,6 @@ public final class Styles {
             CHAINS,
             STRATUS,
             CIRRUS,
-            CLOUD_SEA,
             CUMULUS,
             MAMMATUS,
             ANVILS,

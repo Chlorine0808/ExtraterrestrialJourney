@@ -12,7 +12,6 @@ import java.util.List;
 import org.junit.jupiter.api.Test;
 
 import chlorine.etjourney.world.end.feature.cloud.Cirrus;
-import chlorine.etjourney.world.end.feature.cloud.CloudSea;
 import chlorine.etjourney.world.end.modifier.EndBlock;
 import chlorine.etjourney.world.end.modifier.Layer;
 import chlorine.etjourney.world.end.modifier.builtin.CloudModifiers;
@@ -103,13 +102,16 @@ class CloudSheetsTest {
 
     @Test
     void sheetsGiveWayToReservedAreas() {
-        int[] c = chunkOf("CLOUD_SEA");
-        assertNotNull(c);
-        Area island = new Area("hee", c[0] * 16 + 8, c[1] * 16 + 8, 400);
-        MemorySink sink = draw(c, 0, 256, (a, b) -> Collections.singletonList(island));
-        int[] n = filledOf("CLOUD_SEA", CloudSea::sheets, sink, c);
-        assertTrue(n[0] > 0, "no sheet to give way");
-        assertTrue(n[1] * 100 <= n[0], n[1] + " of " + n[0] + " sheet blocks inside a reserved area");
+        // Streaks can miss a whole chunk, so look on until one holds them.
+        for (int[] c : chunksOf("CIRRUS", 30)) {
+            if (filledOf("CIRRUS", Cirrus::sheets, draw(c, 0, 256, NONE), c)[0] == 0) continue;
+            Area island = new Area("hee", c[0] * 16 + 8, c[1] * 16 + 8, 400);
+            MemorySink sink = draw(c, 0, 256, (a, b) -> Collections.singletonList(island));
+            int[] n = filledOf("CIRRUS", Cirrus::sheets, sink, c);
+            assertTrue(n[1] * 100 <= n[0], n[1] + " of " + n[0] + " sheet blocks inside a reserved area");
+            return;
+        }
+        fail("no CIRRUS chunk holds a sheet");
     }
 
     @Test
@@ -122,13 +124,4 @@ class CloudSheetsTest {
         assertHalvesAgree("CIRRUS");
     }
 
-    @Test
-    void cloudSeaSheetsAreDrawn() {
-        assertDrawn("CLOUD_SEA", CloudSea::sheets);
-    }
-
-    @Test
-    void bothHalvesDrawTheSameCloudSea() {
-        assertHalvesAgree("CLOUD_SEA");
-    }
 }

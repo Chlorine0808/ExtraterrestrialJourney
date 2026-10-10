@@ -11,7 +11,7 @@ class StylesTest {
     @Test
     void elevenStylesWithTheSpecsOverlayTable() {
         assertEquals(
-            36,
+            35,
             Styles.all()
                 .size());
         assertTrue(Styles.SPIRES.canOverlay(Styles.PLAINS));
@@ -69,5 +69,10 @@ class StylesTest {
         assertEquals(StyleKind.OVERLAY, Styles.CHASMS.kind);
         assertTrue(Styles.CHASMS.canOverlay(Styles.PLAINS));
         assertFalse(Styles.CHASMS.canOverlay(Styles.ISLETS));
+    }
+
+    @Test
+    void theCloudSeaIsGone() {
+        for (Style style : Styles.all()) assertFalse(style.name.equals("CLOUD_SEA"));
     }
 }
