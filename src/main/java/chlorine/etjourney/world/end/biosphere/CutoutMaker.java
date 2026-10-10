@@ -75,14 +75,16 @@ final class CutoutMaker {
                 for (int z = (int) Math.floor(b.minZ()); z <= (int) Math.ceil(b.maxZ()); z++) {
                     int sx = p[0] + x - cx, sz = p[1] + z - cz;
                     Bedrock.Column column = column(w, sx, sz);
+                    Bedrock.Rock rock = null;
                     for (int y = y0; y <= y1; y++) {
                         if (b.part(x, y, z) != Biosphere.Part.INSIDE) continue;
                         int sy = y + dy;
-                        if (sy < 0 || sy > 255) continue;
-                        Block block = w.getBlock(sx, sy, sz);
-                        if (block == Blocks.bedrock) {
-                            // Bedrock gives way to the rock beside it, or to air.
-                            sy = Bedrock.standIn(column, sy, height);
+                        Block block = sy >= 0 && sy < height ? w.getBlock(sx, sy, sz) : null;
+                        if (block == null || block == Blocks.bedrock) {
+                            // Bedrock, or past the floor or a ceiling: the column's outermost rock, so the ball is
+                            // not hollow there; open sky stays air.
+                            if (rock == null) rock = Bedrock.rock(column, height);
+                            sy = Bedrock.source(column, rock, sy, height, w.provider.hasNoSky);
                             if (sy < 0) continue;
                             block = w.getBlock(sx, sy, sz);
                         }
@@ -130,12 +132,11 @@ final class CutoutMaker {
 
             @Override
             public boolean bedrock(int y) {
-                return y >= 0 && y <= 255 && w.getBlock(x, y, z) == Blocks.bedrock;
+                return w.getBlock(x, y, z) == Blocks.bedrock;
             }
 
             @Override
             public boolean solid(int y) {
-                if (y < 0 || y > 255) return false;
                 Block block = w.getBlock(x, y, z);
                 return block != Blocks.bedrock && block.getMaterial()
                     .isSolid();

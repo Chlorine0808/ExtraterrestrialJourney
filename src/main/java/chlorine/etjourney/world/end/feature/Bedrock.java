@@ -1,6 +1,9 @@
 package chlorine.etjourney.world.end.feature;
 
-/** Picks what a cut-out holds in place of a sample's bedrock: the nearest rock beside it in the same column. */
+/**
+ * Picks what a cut-out holds where its sample has bedrock or no world at all: the outermost rock of the column,
+ * so a ball reaching past the floor or a ceiling is not hollow there.
+ */
 public final class Bedrock {
 
     /** One column of the sample. */
@@ -12,21 +15,34 @@ public final class Bedrock {
         boolean solid(int y);
     }
 
-    /** How far along the column the rock may lie. */
-    private static final int REACH = 8;
+    /** The lowest and highest rock of a column, or -1 where it has none. */
+    public static final class Rock {
+
+        final int lowest, highest;
+
+        Rock(int lowest, int highest) {
+            this.lowest = lowest;
+            this.highest = highest;
+        }
+    }
 
     private Bedrock() {}
 
+    /** Finds the outermost rock of a column of a world height blocks high, once per column. */
+    public static Rock rock(Column column, int height) {
+        int lowest = -1, highest = -1;
+        for (int y = 0; y < height && lowest < 0; y++) if (column.solid(y)) lowest = y;
+        for (int y = height - 1; y >= 0 && highest < 0; y--) if (column.solid(y)) highest = y;
+        return new Rock(lowest, highest);
+    }
+
     /**
-     * The height whose block stands in for the one at y: y itself unless it is bedrock, else the nearest rock
-     * within reach toward the middle of a world height blocks high, or -1 for air.
+     * The height whose block the cut-out takes for the sample's y: y itself inside the world unless it is bedrock;
+     * else, below the middle, the lowest rock; above it, the highest rock under a ceiling or air (-1) under sky.
      */
-    public static int standIn(Column column, int y, int height) {
-        if (!column.bedrock(y)) return y;
-        int step = y < height / 2 ? 1 : -1;
-        for (int k = 1; k <= REACH; k++) {
-            if (column.solid(y + step * k)) return y + step * k;
-        }
-        return -1;
+    public static int source(Column column, Rock rock, int y, int height, boolean ceiling) {
+        if (y >= 0 && y < height && !column.bedrock(y)) return y;
+        if (y < height / 2) return rock.lowest;
+        return ceiling ? rock.highest : -1;
     }
 }
