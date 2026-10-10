@@ -4,7 +4,7 @@ import chlorine.etjourney.world.end.feature.Structure;
 import chlorine.etjourney.world.end.feature.StructureProbe;
 import chlorine.etjourney.world.end.noise.Hash;
 
-/** BILLOWS: a sheet curling 1.5 turns over its eye, pushed sideways along the wind; drawn block by block. */
+/** BILLOWS: a floating sheet curling 1.5 turns over its eye, lying along its wind; drawn block by block. */
 public final class Billow extends Structure {
 
     /** Points of the curl's cross-section. */
@@ -20,14 +20,14 @@ public final class Billow extends Structure {
             double x = Clouds.place(cx, cell, 0.25, Hash.hash01(s + 1, cx, cz));
             double z = Clouds.place(cz, cell, 0.25, Hash.hash01(s + 2, cx, cz));
             if (!Clouds.forms(s, cx, cz, probe.weight(style, x, z))) return null;
-            if (probe.land(x, z) < 10) return null;
             double radius = 12 + 12 * Hash.hash01(s + 3, cx, cz);
             double length = 60 + 60 * Hash.hash01(s + 4, cx, cz);
             double sheet = 1.5 + Hash.hash01(s + 5, cx, cz);
-            // One wind for the whole End, so neighbouring waves face nearly the same way.
-            double wind = Hash.hash01(s, 0, 0) * Math.PI * 2 + (Hash.hash01(s + 6, cx, cz) - 0.5) * 0.6;
-            double eye = probe.ground(x, z) - 2 + radius;
-            if (eye + radius + sheet + 1 > Clouds.CEILING) return null;
+            double wind = Hash.hash01(s + 6, cx, cz) * Math.PI * 2;
+            double reach = radius + sheet + 1;
+            double eye = Clouds
+                .between(Clouds.floor(probe, x, z) + reach, Clouds.CEILING - reach, Hash.hash01(s + 7, cx, cz));
+            if (Double.isNaN(eye)) return null;
             return new Billow(x, z, eye, radius, length, sheet, wind);
         }
     };
@@ -56,6 +56,11 @@ public final class Billow extends Structure {
     public double[] at(double along, double p, double q) {
         double c = Math.cos(wind), s = Math.sin(wind);
         return new double[] { centreX + along * c - p * s, eye + q, centreZ + along * s + p * c };
+    }
+
+    @Override
+    public double[][] feet() {
+        return new double[0][];
     }
 
     @Override
