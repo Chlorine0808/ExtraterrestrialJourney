@@ -503,4 +503,17 @@ class StructuresTest {
         double share = curled / (double) all;
         assertTrue(share > 0.15 && share < 0.45, "curled share " + share);
     }
+
+    @Test
+    void someHollowPillarsAreShort() {
+        int c0 = (int) Math.ceil(Structures.MIN_RADIUS / Structures.HOLLOW_PILLARS.cell) + 1, all = 0, low = 0;
+        for (int i = 0; i < 1600; i++) {
+            Structures.HollowPillar p = Structures.HOLLOW_PILLARS.inCell(861L, c0 + i % 40, c0 + i / 40, LAND);
+            if (p == null) continue;
+            all++;
+            if (p.top - p.base < 60) low++;
+        }
+        double share = low / (double) all;
+        assertTrue(share > 0.15 && share < 0.45, "short share " + share);
+    }
 }

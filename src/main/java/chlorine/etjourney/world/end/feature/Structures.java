@@ -21,7 +21,7 @@ public final class Structures {
     /** No structure forms closer to the origin, clear of the vanilla central area. */
     public static final double MIN_RADIUS = 1000;
     /** Share of each stone kind that comes out worn. */
-    private static final double WORN = 0.35;
+    static final double WORN = 0.35;
     /** Base height over the void, where there is no ground to stand on. */
     private static final double VOID_BASE = 20;
 
@@ -289,8 +289,11 @@ public final class Structures {
             double z = (cz + 0.25 + 0.5 * Hash.hash01(s + 2, cx, cz)) * cell;
             if (!forms(s, cx, cz, probe.weight(style, x, z))) return null;
             double base = base(probe, x, z, Hash.hash01(s + 3, cx, cz));
-            double top = Math.min(CEILING, base + 80 + 120 * Hash.hash01(s + 4, cx, cz));
-            if (top - base < 40) return null;
+            // A third stand only 25-50 tall, like the stump of a broken tower.
+            boolean low = Hash.hash01(s + 7, cx, cz) < 0.3;
+            double rise = low ? 25 + 25 * Hash.hash01(s + 4, cx, cz) : 80 + 120 * Hash.hash01(s + 4, cx, cz);
+            double top = Math.min(CEILING, base + rise);
+            if (top - base < (low ? 20 : 40)) return null;
             double radius = 12 + 13 * Hash.hash01(s + 5, cx, cz);
             double wall = 8 + 2 * Hash.hash01(s + 6, cx, cz);
             return new HollowPillar(x, z, base, top, radius, wall, s ^ ((long) cx << 20) ^ cz);
