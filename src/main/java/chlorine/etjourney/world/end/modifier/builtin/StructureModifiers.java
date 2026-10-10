@@ -10,6 +10,7 @@ import chlorine.etjourney.world.end.modifier.ChunkArea;
 import chlorine.etjourney.world.end.modifier.EndBlock;
 import chlorine.etjourney.world.end.modifier.Modifier;
 import chlorine.etjourney.world.end.modifier.Shape;
+import chlorine.etjourney.world.end.modifier.TerrainView;
 import chlorine.etjourney.world.end.reserve.Area;
 import chlorine.etjourney.world.end.reserve.Reservations;
 
@@ -58,9 +59,7 @@ public final class StructureModifiers {
         return FeatureModifiers.blockModifier(890, (area, view, sink) -> {
             int ox = sink.originX(), oz = sink.originZ();
             for (Biosphere b : Biosphere.KIND.near(area.seed, ox + 8, oz + 8, 12, view.structures())) {
-                List<Area> reserved = view
-                    .reservedAt((int) Math.floor(b.centreX) >> 4, (int) Math.floor(b.centreZ) >> 4);
-                if (placed(reserved, b, Biosphere.KIND) == null) continue;
+                if (!stands(view, b, Biosphere.KIND)) continue;
                 int x0 = Math.max(ox, (int) Math.floor(b.minX())), x1 = Math.min(ox + 15, (int) Math.ceil(b.maxX()));
                 int z0 = Math.max(oz, (int) Math.floor(b.minZ())), z1 = Math.min(oz + 15, (int) Math.ceil(b.maxZ()));
                 int y0 = Math.max(sink.minY(), (int) Math.floor(b.minY()));
@@ -92,6 +91,12 @@ public final class StructureModifiers {
                 }
             }
         });
+    }
+
+    /** Whether a structure forms, rather than giving way to a reserved island; decided at its centre chunk. */
+    public static boolean stands(TerrainView view, Structure s, Structure.Kind<?> kind) {
+        List<Area> reserved = view.reservedAt((int) Math.floor(s.centreX) >> 4, (int) Math.floor(s.centreZ) >> 4);
+        return placed(reserved, s, kind) != null;
     }
 
     /** The structure as placed, or null when it must give way to a reserved island. */
