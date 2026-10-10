@@ -2,6 +2,8 @@ package chlorine.etjourney.world.end.feature;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.junit.jupiter.api.Test;
@@ -33,5 +35,21 @@ class CutoutTest {
         Cutout cut = new Cutout(BALL);
         for (int i = 1; i < BALL.windowCount(); i++) assertFalse(cut.windowDone());
         assertTrue(cut.windowDone());
+    }
+
+    @Test
+    void theCacheDropsTheOldestBeyondItsCapacity() {
+        CutoutCache cache = new CutoutCache(2);
+        Cutout a = new Cutout(BALL), b = new Cutout(BALL), c = new Cutout(BALL);
+        cache.put(1, a);
+        cache.put(2, b);
+        assertSame(a, cache.get(1));
+        cache.put(3, c);
+        // 1 was used after 2, so 2 is the oldest.
+        assertNull(cache.get(2));
+        assertSame(a, cache.get(1));
+        assertSame(c, cache.get(3));
+        cache.remove(1);
+        assertEquals(1, cache.size());
     }
 }
