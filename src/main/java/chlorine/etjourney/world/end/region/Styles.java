@@ -149,6 +149,7 @@ public final class Styles {
         .modifiers(CloudModifiers.cloudSeaFloor(), StyleModifiers.ranges(), CloudModifiers.cloudSea())
         .build();
     public static final Style MAMMATUS = structure("MAMMATUS", Style.LAND);
+    public static final Style ANVILS = structure("ANVILS", Style.ANY);
 
     private static final List<Style> ALL = Collections.unmodifiableList(
         Arrays.asList(
@@ -180,7 +181,8 @@ public final class Styles {
             CIRRUS,
             CLOUD_SEA,
             CUMULUS,
-            MAMMATUS));
+            MAMMATUS,
+            ANVILS));
 
     private Styles() {}
 

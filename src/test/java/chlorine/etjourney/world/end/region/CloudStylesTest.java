@@ -59,4 +59,13 @@ class CloudStylesTest {
             Styles.all()
                 .contains(Styles.MAMMATUS));
     }
+
+    @Test
+    void anvilsOverlayAnything() {
+        assertEquals(StyleKind.OVERLAY, Styles.ANVILS.kind);
+        assertTrue(Styles.ANVILS.canOverlay(Styles.ISLETS));
+        assertTrue(
+            Styles.all()
+                .contains(Styles.ANVILS));
+    }
 }
