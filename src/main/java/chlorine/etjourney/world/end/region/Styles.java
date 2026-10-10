@@ -151,6 +151,7 @@ public final class Styles {
     public static final Style MAMMATUS = structure("MAMMATUS", Style.LAND);
     public static final Style ANVILS = structure("ANVILS", Style.ANY);
     public static final Style ROLL_CLOUDS = structure("ROLL_CLOUDS", Style.ANY);
+    public static final Style LENTICULARS = structure("LENTICULARS", Style.ANY);
 
     private static final List<Style> ALL = Collections.unmodifiableList(
         Arrays.asList(
@@ -184,7 +185,8 @@ public final class Styles {
             CUMULUS,
             MAMMATUS,
             ANVILS,
-            ROLL_CLOUDS));
+            ROLL_CLOUDS,
+            LENTICULARS));
 
     private Styles() {}
 

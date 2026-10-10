@@ -77,4 +77,13 @@ class CloudStylesTest {
             Styles.all()
                 .contains(Styles.ROLL_CLOUDS));
     }
+
+    @Test
+    void lenticularsOverlayAnything() {
+        assertEquals(StyleKind.OVERLAY, Styles.LENTICULARS.kind);
+        assertTrue(Styles.LENTICULARS.canOverlay(Styles.ISLETS));
+        assertTrue(
+            Styles.all()
+                .contains(Styles.LENTICULARS));
+    }
 }
