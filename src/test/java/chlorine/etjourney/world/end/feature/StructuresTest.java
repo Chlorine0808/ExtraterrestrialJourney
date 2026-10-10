@@ -68,10 +68,11 @@ class StructuresTest {
         assertTrue(half > full / 5 && half < full * 4 / 5, half + " of " + full);
     }
 
+    /** The first whole structure, so shape checks are not thrown by wear. */
     private static <T extends Structure> T first(Structure.Kind<T> kind, long seed) {
         for (int i = 0; i < 400; i++) {
             T s = kind.inCell(seed, 10 + i % 20, i / 20, LAND);
-            if (s != null) return s;
+            if (s != null && s.wear() == 0) return s;
         }
         return null;
     }
@@ -226,7 +227,7 @@ class StructuresTest {
             checked++;
             double top = m.capY + m.dome;
             for (double y = m.base + 1; y < top - 1; y += 0.5) {
-                assertTrue(m.density(m.centreX, y, m.centreZ) > 0, "gap at " + (y - m.base) + " above the base");
+                assertTrue(m.body(m.centreX, y, m.centreZ) > 0, "gap at " + (y - m.base) + " above the base");
             }
         }
         assertTrue(checked > 20);
@@ -307,8 +308,8 @@ class StructuresTest {
                 if (c == null) continue;
                 inside(c, 75);
                 double[] stem = c.point(c.height * 0.5, 0), arm = c.point(c.armAt, c.armHalf * 0.8);
-                assertTrue(c.density(stem[0], stem[1], stem[2]) > 0, "hollow stem");
-                assertTrue(c.density(arm[0], arm[1], arm[2]) > 0, "hollow arm");
+                assertTrue(c.body(stem[0], stem[1], stem[2]) > 0, "hollow stem");
+                assertTrue(c.body(arm[0], arm[1], arm[2]) > 0, "hollow arm");
                 if (c.feet().length > 0) {
                     stuck++;
                     assertTrue(c.point(0, 0)[1] < 70, "a stuck cross does not reach into the ground");

@@ -20,6 +20,8 @@ public final class Structures {
     private static final double CEILING = 248;
     /** No structure forms closer to the origin, clear of the vanilla central area. */
     public static final double MIN_RADIUS = 1000;
+    /** Share of each stone kind that comes out worn. */
+    private static final double WORN = 0.35;
     /** Base height over the void, where there is no ground to stand on. */
     private static final double VOID_BASE = 20;
 
@@ -48,7 +50,7 @@ public final class Structures {
             double dome = 4 + 6 * Hash.hash01(s + 8, cx, cz);
             return new Mushroom(x, z, base, capY, stalk, cap, thickness, dome);
         }
-    };
+    }.worn(WORN, 6);
 
     /** One ring per RINGS region, on the region's own grid, where the style is strongest near the region centre. */
     public static final Structure.Kind<Ring> RINGS = new Structure.Kind<Ring>(
@@ -91,7 +93,7 @@ public final class Structures {
             Ring second = gyro ? new Ring(x, y, z, inner, innerTube, innerTilt, yaw + Math.PI / 2, null) : null;
             return new Ring(x, y, z, radius, tube, tilt, yaw, second);
         }
-    };
+    }.worn(WORN, 12);
 
     /**
      * Many small, thin rings scattered through RINGS regions at any angle. Their tubes are thinner than the density
@@ -118,7 +120,7 @@ public final class Structures {
             double y = low + Math.min(high - low, 20 + 120 * Hash.hash01(s + 7, cx, cz));
             return new Ring(x, y, z, radius, tube, tilt, yaw, null);
         }
-    };
+    }.worn(WORN, 6);
 
     /**
      * Crosses 20-100 blocks tall: over land most are driven into the ground at a lean, like grave markers; the rest
@@ -156,7 +158,7 @@ public final class Structures {
             Cross c = Cross.of(base, up, arm, height, half, grounded);
             return c.maxY() > CEILING || c.minY() < 0 ? null : c;
         }
-    };
+    }.worn(WORN, 6);
 
     /** Chains hanging 20-80 blocks from the underside of the land, most with a boulder at the end. */
     public static final Structure.Kind<Chain> HANGING_CHAINS = new Structure.Kind<Chain>("CHAINS", 40, 12) {
@@ -235,7 +237,7 @@ public final class Structures {
             }
             return new Arch(mx, mz, length / 2 + tube, points, tube);
         }
-    };
+    }.worn(WORN, 12);
 
     public static final Structure.Kind<SpiralTower> SPIRAL_TOWERS = new Structure.Kind<SpiralTower>(
         "SPIRAL_TOWERS",
@@ -270,7 +272,7 @@ public final class Structures {
             }
             return new SpiralTower(x, z, base, top, pillar, helix + ribbon, points, ribbon);
         }
-    };
+    }.worn(WORN, 12);
 
     public static final Structure.Kind<HollowPillar> HOLLOW_PILLARS = new Structure.Kind<HollowPillar>(
         "HOLLOW_PILLARS",
@@ -291,7 +293,7 @@ public final class Structures {
             double wall = 8 + 2 * Hash.hash01(s + 6, cx, cz);
             return new HollowPillar(x, z, base, top, radius, wall, s ^ ((long) cx << 20) ^ cz);
         }
-    };
+    }.worn(WORN, 12);
 
     public static List<Structure.Kind<? extends Structure>> kinds() {
         return Collections.unmodifiableList(
