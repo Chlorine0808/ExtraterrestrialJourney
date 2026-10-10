@@ -21,6 +21,8 @@ public final class ArcPaths {
     private static final int STEP = 4;
     /** Paths per cell: 0.8 on average, times a per-cell factor of 1 to 4. */
     private static final double BASE_COUNT = 0.8, MAX_COUNT_FACTOR = 4;
+    /** Share of the paths ARCS draws where it is laid over another base rather than standing as the base. */
+    private static final double OVERLAY_COUNT = 1 / 3.0;
     /** Path length: 120 blocks times 0.5 to 8 (log-uniform, so short and long are equally common). */
     private static final double BASE_LENGTH = 120, MIN_LENGTH_FACTOR = 0.5, MAX_LENGTH_FACTOR = 8;
     /** Wiggle: 0.5 to 10 times the base jostle (log-uniform). */
@@ -47,6 +49,11 @@ public final class ArcPaths {
     public interface Probe {
 
         double weight(double x, double z);
+
+        /** The part of the weight that comes from ARCS as the base rather than as an overlay. */
+        default double baseWeight(double x, double z) {
+            return weight(x, z);
+        }
     }
 
     /** One path: its points (x, y, z triples), tube radius and cutoff, with a horizontal bounding box. */
@@ -211,6 +218,9 @@ public final class ArcPaths {
         if (Math.hypot(x, z) < 1000 || !Fade.forms(probe.weight(x, z), Hash.hash01(s + 2, cx, cz)))
             return Collections.emptyList();
         double factor = 1 + (MAX_COUNT_FACTOR - 1) * Hash.hash01(s, cx, cz);
+        // Laid over another base, ARCS only accents it, so it draws fewer paths.
+        double weight = probe.weight(x, z), base = Math.min(1, probe.baseWeight(x, z) / weight);
+        factor *= base + (1 - base) * OVERLAY_COUNT;
         int count = (int) Math.floor(BASE_COUNT * factor + Hash.hash01(s + 1, cx, cz));
         List<Path> out = new ArrayList<>();
         Random r = new Random(s ^ ((long) cx * 0x9E3779B97F4A7C15L) ^ ((long) cz * 0xC2B2AE3D27D4EB4FL));

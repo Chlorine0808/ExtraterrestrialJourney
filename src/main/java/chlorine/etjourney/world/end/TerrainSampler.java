@@ -231,7 +231,18 @@ public final class TerrainSampler {
     }
 
     public ArcPaths.Probe arcProbe() {
-        return (x, z) -> weights(x, z).of(Styles.ARCS);
+        return new ArcPaths.Probe() {
+
+            @Override
+            public double weight(double x, double z) {
+                return weights(x, z).of(Styles.ARCS);
+            }
+
+            @Override
+            public double baseWeight(double x, double z) {
+                return weights(x, z).baseOf(Styles.ARCS);
+            }
+        };
     }
 
     /** True when (x, y, z) lies within or just around a zone island. */
