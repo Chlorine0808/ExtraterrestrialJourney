@@ -88,4 +88,9 @@ final class EtjArgs {
         double y = Math.max(MIN_Y, Math.min(MAX_Y, eye[1] + dir[1] * range));
         return new double[] { eye[0] + dir[0] * range, y, eye[2] + dir[2] * range };
     }
+
+    /** What /etj end here says about a biosphere: its biome, the biome ID and the class that tells its mod. */
+    static String biosphereLine(String biome, int id, String className) {
+        return "Biosphere: " + biome + " (ID " + id + ", " + className + ")";
+    }
 }

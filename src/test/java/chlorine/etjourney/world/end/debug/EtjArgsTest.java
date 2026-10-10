@@ -96,4 +96,11 @@ class EtjArgsTest {
         assertEquals(270, EtjArgs.lookTarget(new double[] { 0, 100, 0 }, new double[] { 0, 1, 0 }, 1024)[1], 1e-9);
         assertEquals(0, EtjArgs.lookTarget(new double[] { 0, 100, 0 }, new double[] { 0, -1, 0 }, 1024)[1], 1e-9);
     }
+
+    @Test
+    void aBiosphereLineNamesTheBiomeItsIdAndClass() {
+        assertEquals(
+            "Biosphere: Crimson Forest (ID 176, DelirusCrux.Netherlicious.Biomes.CrimsonForest)",
+            EtjArgs.biosphereLine("Crimson Forest", 176, "DelirusCrux.Netherlicious.Biomes.CrimsonForest"));
+    }
 }
