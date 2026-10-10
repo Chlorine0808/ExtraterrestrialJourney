@@ -51,4 +51,16 @@ class StylesTest {
             assertTrue(found, style + " never appears");
         }
     }
+
+    @Test
+    void aboutOneOverlayPerRegion() {
+        RegionPicker picker = new RegionPicker(Styles.all());
+        int overlays = 0, cells = 4000;
+        for (int i = 0; i < cells; i++) {
+            overlays += picker.overlays(5L, i % 64, i / 64)
+                .size();
+        }
+        double mean = overlays / (double) cells;
+        assertTrue(mean >= 0.6 && mean <= 1.0, "mean overlays per region " + mean);
+    }
 }

@@ -11,8 +11,8 @@ import chlorine.etjourney.world.end.modifier.builtin.StyleModifiers;
 /** The terrain styles carried over from the spike, as bases and overlays. Core modifiers are not listed here. */
 public final class Styles {
 
-    /** Chance of each overlay per region; with fifteen overlays most regions still get none or one. */
-    private static final double OVERLAY_CHANCE = 0.06;
+    /** Chance of each overlay per region; with about 25 overlays a region gets one on average. */
+    private static final double OVERLAY_CHANCE = 0.04;
 
     public static final Style PLAINS = Style.builder("PLAINS", StyleKind.BASE_LAND)
         .share(3)
