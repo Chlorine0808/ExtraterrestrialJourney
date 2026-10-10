@@ -32,4 +32,10 @@ class VirgaTest {
     void noStreakWithoutAnUnderside() {
         assertEquals(0, Probes.count(Virga.KIND, 562L, Probes.VOID));
     }
+
+    @Test
+    void noStreakThroughThinLand() {
+        // A slab two blocks thick: anything hung from its underside would show above the ground.
+        assertEquals(0, Probes.count(Virga.KIND, 563L, Probes.of(1, 60, 52, 50)));
+    }
 }

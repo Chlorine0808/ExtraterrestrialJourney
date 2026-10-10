@@ -18,6 +18,8 @@ public final class Virga extends Structure {
             if (!Clouds.forms(s, cx, cz, probe.weight(style, x, z))) return null;
             double under = probe.underside(x, z);
             if (under < 40) return null;
+            // The streaks start two blocks into the slab; thinner land would show them above the ground.
+            if (probe.ground(x, z) - under < 4) return null;
             int count = 6 + (int) (9.999 * Hash.hash01(s + 3, cx, cz));
             double spread = 3 + 3 * Hash.hash01(s + 4, cx, cz);
             // Streaks as {block x, block z, length}.

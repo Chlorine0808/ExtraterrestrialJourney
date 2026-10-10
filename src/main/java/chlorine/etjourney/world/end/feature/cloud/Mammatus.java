@@ -22,6 +22,8 @@ public final class Mammatus extends Structure {
             double under = probe.underside(x, z);
             if (under < MIN_UNDERSIDE) return null;
             double r = 6 + 4 * Hash.hash01(s + 3, cx, cz);
+            // The pouch rises 0.6 r into the slab; thinner land would show it above the ground.
+            if (probe.ground(x, z) - under < 0.6 * r + 2) return null;
             // Sunk into the slab, so no gap opens between the pouch and the land.
             return new Mammatus(x, under - 0.4 * r, z, r);
         }

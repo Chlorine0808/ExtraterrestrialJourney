@@ -24,4 +24,10 @@ class MammatusTest {
         assertEquals(0, Probes.count(Mammatus.KIND, 512L, Probes.VOID));
         assertEquals(0, Probes.count(Mammatus.KIND, 513L, Probes.of(1, 60, 70, 30)));
     }
+
+    @Test
+    void noPouchThroughThinLand() {
+        // A slab two blocks thick: anything hung from its underside would show above the ground.
+        assertEquals(0, Probes.count(Mammatus.KIND, 514L, Probes.of(1, 60, 52, 50)));
+    }
 }
