@@ -62,7 +62,10 @@ public final class Billow extends Structure {
     protected double body(double x, double y, double z) {
         double dx = x - centreX, dz = z - centreZ, c = Math.cos(wind), s = Math.sin(wind);
         if (Math.abs(dx * c + dz * s) > length / 2) return -1;
-        double p = -dx * s + dz * c, q = y - eye, best = Double.POSITIVE_INFINITY;
+        double p = -dx * s + dz * c, q = y - eye;
+        // The curl stays within its radius of the eye, so anything farther is clear of the sheet.
+        if (Math.abs(p) > radius + sheet || Math.abs(q) > radius + sheet) return -1;
+        double best = Double.POSITIVE_INFINITY;
         for (int k = 0; k < CURL; k++) {
             double ax = curl[k * 2], ay = curl[k * 2 + 1], ex = curl[k * 2 + 2] - ax, ey = curl[k * 2 + 3] - ay;
             double f = Math.max(0, Math.min(1, ((p - ax) * ex + (q - ay) * ey) / (ex * ex + ey * ey)));
