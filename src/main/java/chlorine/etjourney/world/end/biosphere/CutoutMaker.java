@@ -6,12 +6,14 @@ import java.util.List;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.entity.Entity;
+import net.minecraft.init.Blocks;
 import net.minecraft.world.ChunkCoordIntPair;
 import net.minecraft.world.WorldServer;
 import net.minecraft.world.chunk.Chunk;
 
 import chlorine.etjourney.core.config.ETJConfig;
 import chlorine.etjourney.core.util.ModLog;
+import chlorine.etjourney.world.end.feature.Bedrock;
 import chlorine.etjourney.world.end.feature.Biosphere;
 import chlorine.etjourney.world.end.feature.BiosphereSource;
 import chlorine.etjourney.world.end.feature.Cutout;
@@ -27,10 +29,27 @@ final class CutoutMaker {
 
     private CutoutMaker() {}
 
+    /**
+     * The cut-out of a ball, from its own kind of world or else the other one; null when neither could make it,
+     * so the ball is left out rather than left empty.
+     */
     static Cutout make(long seed, Biosphere b) {
+        for (BiosphereSource.Kind kind : BiosphereSource.order(BiosphereSource.kind(seed, b))) {
+            WorldServer w = SampleWorlds.world(kind);
+            if (w == null) continue;
+            try {
+                return cut(seed, b, kind, w);
+            } catch (RuntimeException | LinkageError e) {
+                // Another mod's generator failing in the sample dimension; try the other world.
+                ModLog.LOG
+                    .warn("Biosphere at {},{} could not be cut from {}", (int) b.centreX, (int) b.centreZ, kind, e);
+            }
+        }
+        return null;
+    }
+
+    private static Cutout cut(long seed, Biosphere b, BiosphereSource.Kind kind, WorldServer w) {
         long start = System.nanoTime();
-        BiosphereSource.Kind kind = BiosphereSource.kind(seed, b);
-        WorldServer w = SampleWorlds.world(kind);
         int[] p = BiosphereSource.point(seed, b, kind, (x, z) -> SampleWorlds.isWater(w, x, z));
         try {
             // A chunk is decorated by its own populate and its west and north neighbours'; each populate needs
@@ -43,15 +62,24 @@ final class CutoutMaker {
             }
             int cx = (int) Math.floor(b.centreX), cz = (int) Math.floor(b.centreZ);
             int dy = ground(w, kind, p, b) - b.floorTop(cx, cz);
+            int height = w.getActualHeight();
             Cutout cut = new Cutout(b);
             int y0 = Math.max(0, (int) Math.floor(b.minY())), y1 = Math.min(255, (int) Math.ceil(b.maxY()));
             for (int x = (int) Math.floor(b.minX()); x <= (int) Math.ceil(b.maxX()); x++) {
                 for (int z = (int) Math.floor(b.minZ()); z <= (int) Math.ceil(b.maxZ()); z++) {
+                    int sx = p[0] + x - cx, sz = p[1] + z - cz;
+                    Bedrock.Column column = column(w, sx, sz);
                     for (int y = y0; y <= y1; y++) {
                         if (b.part(x, y, z) != Biosphere.Part.INSIDE) continue;
-                        int sx = p[0] + x - cx, sy = y + dy, sz = p[1] + z - cz;
+                        int sy = y + dy;
                         if (sy < 0 || sy > 255) continue;
                         Block block = w.getBlock(sx, sy, sz);
+                        if (block == Blocks.bedrock) {
+                            // Bedrock gives way to the rock beside it, or to air.
+                            sy = Bedrock.standIn(column, sy, height);
+                            if (sy < 0) continue;
+                            block = w.getBlock(sx, sy, sz);
+                        }
                         cut.set(x, y, z, Block.getIdFromBlock(block) << 4 | w.getBlockMetadata(sx, sy, sz));
                     }
                 }
@@ -68,6 +96,25 @@ final class CutoutMaker {
         } finally {
             discard(w);
         }
+    }
+
+    /** Column (x, z) of the sample, for finding what stands in for its bedrock. */
+    private static Bedrock.Column column(WorldServer w, int x, int z) {
+        return new Bedrock.Column() {
+
+            @Override
+            public boolean bedrock(int y) {
+                return y >= 0 && y <= 255 && w.getBlock(x, y, z) == Blocks.bedrock;
+            }
+
+            @Override
+            public boolean solid(int y) {
+                if (y < 0 || y > 255) return false;
+                Block block = w.getBlock(x, y, z);
+                return block != Blocks.bedrock && block.getMaterial()
+                    .isSolid();
+            }
+        };
     }
 
     /** The floor height of the sample, which the ball's floor level is aligned to. */
@@ -100,6 +147,8 @@ final class CutoutMaker {
      * levelSaving stops unloading altogether in 1.7.10.
      */
     private static void discard(WorldServer w) {
+        // Someone who reached the sample dimension keeps its chunks; they unload the usual way after.
+        if (!w.playerEntities.isEmpty()) return;
         List<Chunk> chunks = new ArrayList<>(w.theChunkProviderServer.loadedChunks);
         for (Chunk chunk : chunks) {
             // An idle world stops updating its entities, which is where unloaded ones leave its lists; take the

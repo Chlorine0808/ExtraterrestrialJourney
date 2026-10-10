@@ -3,6 +3,7 @@ package chlorine.etjourney.world.end.biosphere;
 import java.util.Random;
 
 import net.minecraft.block.Block;
+import net.minecraft.init.Blocks;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.IChunkProvider;
 
@@ -51,15 +52,17 @@ public final class BiosphereTransplant implements IWorldGenerator {
             if (plan == null) plan = EndTerrain.plan(generator, world, seed, chunkX, chunkZ);
             // A ball that gives way to a reserved island has no shell; leave it out as the block pass does.
             if (!StructureModifiers.stands(plan, b, Biosphere.KIND)) continue;
-            if (cache.failed(b.key())) continue;
+            if (cache.failed(b.key())) {
+                erase(world, b, ox, oz);
+                continue;
+            }
             Cutout cut = cache.get(b.key());
             if (cut == null) {
-                try {
-                    cut = CutoutMaker.make(seed, b);
-                } catch (RuntimeException e) {
-                    // Another mod's generator failing in the sample dimension leaves this ball empty, once.
-                    ModLog.LOG.warn("Biosphere at {},{} could not be filled", (int) b.centreX, (int) b.centreZ, e);
+                cut = CutoutMaker.make(seed, b);
+                if (cut == null) {
+                    // Neither world could make it: take the shell away rather than leave an empty ball.
                     cache.fail(b.key());
+                    erase(world, b, ox, oz);
                     continue;
                 }
                 cache.put(b.key(), cut);
@@ -71,13 +74,45 @@ public final class BiosphereTransplant implements IWorldGenerator {
 
     private static void copy(World world, Biosphere b, Cutout cut, int ox, int oz) {
         int y0 = Math.max(0, (int) Math.floor(b.minY())), y1 = Math.min(255, (int) Math.ceil(b.maxY()));
+        int failed = 0;
+        RuntimeException first = null;
         for (int x = ox; x < ox + 16; x++) {
             for (int z = oz; z < oz + 16; z++) {
                 for (int y = y0; y <= y1; y++) {
                     if (b.part(x, y, z) != Biosphere.Part.INSIDE) continue;
                     int packed = cut.get(x, y, z);
-                    if (packed == 0) continue;
-                    world.setBlock(x, y, z, Block.getBlockById(packed >> 4), packed & 15, 2);
+                    try {
+                        if (packed == 0) {
+                            // Liquid flowing in from a window copied earlier, where the sample has air.
+                            if (!world.isAirBlock(x, y, z)) world.setBlock(x, y, z, Blocks.air, 0, 2);
+                            continue;
+                        }
+                        Block block = Block.getBlockById(packed >> 4);
+                        if (block != null) world.setBlock(x, y, z, block, packed & 15, 2);
+                    } catch (RuntimeException e) {
+                        // A mod's block failing as it is placed costs that block, not the End.
+                        if (first == null) first = e;
+                        failed++;
+                    }
+                }
+            }
+        }
+        if (first != null) ModLog.LOG.warn(
+            "{} blocks of the biosphere at {},{} could not be placed",
+            failed,
+            (int) b.centreX,
+            (int) b.centreZ,
+            first);
+    }
+
+    /** Takes the shell of a ball that could not be filled out of the window. */
+    private static void erase(World world, Biosphere b, int ox, int oz) {
+        int y0 = Math.max(0, (int) Math.floor(b.minY())), y1 = Math.min(255, (int) Math.ceil(b.maxY()));
+        for (int x = ox; x < ox + 16; x++) {
+            for (int z = oz; z < oz + 16; z++) {
+                for (int y = y0; y <= y1; y++) {
+                    if (b.part(x, y, z) == Biosphere.Part.GLASS && !world.isAirBlock(x, y, z))
+                        world.setBlock(x, y, z, Blocks.air, 0, 2);
                 }
             }
         }
