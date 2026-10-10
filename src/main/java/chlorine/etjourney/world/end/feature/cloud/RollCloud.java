@@ -12,8 +12,13 @@ public final class RollCloud extends Structure {
     private static final double WALL = 8;
     /** Sideways and vertical sway of the axis. */
     private static final double SWAY = 12, LIFT = 6;
+    /** Widest a roll cloud reaches from its centre: half the longest length, the sway, the widest radius and lumps. */
+    public static final double MAX_FOOTPRINT = 221;
 
-    public static final Structure.Kind<RollCloud> KIND = new Structure.Kind<RollCloud>("ROLL_CLOUDS", 320, 220) {
+    public static final Structure.Kind<RollCloud> KIND = new Structure.Kind<RollCloud>(
+        "ROLL_CLOUDS",
+        320,
+        MAX_FOOTPRINT) {
 
         @Override
         protected RollCloud compute(long seed, int cx, int cz, StructureProbe probe) {

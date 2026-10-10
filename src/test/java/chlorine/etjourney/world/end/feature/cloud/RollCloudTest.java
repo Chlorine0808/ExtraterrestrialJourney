@@ -39,4 +39,10 @@ class RollCloudTest {
         }
         assertTrue(hollow > 0 && hollow < all, hollow + " of " + all);
     }
+
+    @Test
+    void theLongestWidestRollStaysWithinTheDeclaredFootprint() {
+        RollCloud r = new RollCloud(0, 0, 100, new double[6], 380, 16, false, 0);
+        assertTrue(r.footprint <= RollCloud.MAX_FOOTPRINT, "footprint " + r.footprint);
+    }
 }
