@@ -78,7 +78,7 @@ public final class Holes {
         double x = (cx + Hash.hash01(s + 1, cx, cz)) * CELL;
         double z = (cz + Hash.hash01(s + 2, cx, cz)) * CELL;
         if (!probe.allowed(x, z) || probe.land(x, z) < MIN_LAND) return null;
-        // Holes are carved in the generator's Y 0-127; above that the tall pass would seal the shaft.
+        // Only holes whose centre lies on ground below Y 124; their funnels may still climb higher.
         if (probe.top(x, z) >= MAX_GROUND) return null;
         double u = Hash.hash01(s + 3, cx, cz);
         double widen = 1 + (MAX_WIDEN - 1) * Hash.hash01(s + 4, cx, cz);

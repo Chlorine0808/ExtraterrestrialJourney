@@ -197,7 +197,10 @@ public final class FeatureModifiers {
         };
     }
 
-    /** Sinkholes: remove a share of each column's rock from the top, all of it inside the shaft. */
+    /**
+     * Sinkholes: remove a share of each column's rock from the top, all of it inside the shaft. The rock is measured
+     * on the density across the whole height, so both halves of a column cut down to the same floor.
+     */
     public static Modifier holes() {
         return blockModifier(810, (area, view, sink) -> {
             List<Holes.Hole> holes = view.holes();
@@ -205,13 +208,15 @@ public final class FeatureModifiers {
             forEachColumn(sink, (x, z) -> {
                 double cut = Holes.cutFraction(area.seed, holes, x, z);
                 if (cut <= 0) return;
-                int top = sink.maxY() - 1;
-                while (top >= sink.minY() && sink.isAir(x, top, z)) top--;
-                if (top < sink.minY()) return;
-                int bottom = sink.minY();
-                while (sink.isAir(x, bottom, z)) bottom++;
-                int remove = cut >= 1 ? top - sink.minY() + 1 : (int) Math.round((top - bottom + 1) * cut);
-                for (int y = top; y > top - remove && y >= sink.minY(); y--) sink.clear(x, y, z);
+                int top = 255;
+                while (top >= 0 && view.densityAt(x, top, z) <= 0) top--;
+                if (top < 0) return;
+                int bottom = 0;
+                while (view.densityAt(x, bottom, z) <= 0) bottom++;
+                int floor = cut >= 1 ? 0 : top + 1 - (int) Math.round((top - bottom + 1) * cut);
+                // Up to the rock's top plus what faces() may have pushed out above it.
+                int ceiling = Math.min(sink.maxY() - 1, top + (int) FACE_DEPTH + 2);
+                for (int y = Math.max(floor, sink.minY()); y <= ceiling; y++) sink.clear(x, y, z);
             });
         });
     }
