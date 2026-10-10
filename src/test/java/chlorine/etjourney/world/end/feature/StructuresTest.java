@@ -471,12 +471,36 @@ class StructuresTest {
 
     @Test
     void mushroomCapsHaveARoundedRim() {
-        Structures.Mushroom m = first(Structures.MUSHROOMS, 305L);
+        Structures.Mushroom m = null;
+        for (int i = 0; m == null && i < 400; i++) {
+            Structures.Mushroom s = Structures.MUSHROOMS.inCell(305L, 10 + i % 20, i / 20, LAND);
+            if (s != null && s.wear() == 0 && s.curl == 0) m = s;
+        }
         assertNotNull(m);
         double x = m.centreX + m.cap - 0.5, top = m.capY;
         // The rim's middle reaches out to the full radius, but its upper and lower corners are rounded away.
         assertTrue(m.density(x, top - m.thickness / 2, m.centreZ) > 0, "rim middle");
         assertTrue(m.density(x, top - 0.5, m.centreZ) < 0, "upper corner");
         assertTrue(m.density(x, top - m.thickness + 0.5, m.centreZ) < 0, "lower corner");
+    }
+
+    @Test
+    void someMushroomCapsCurlUnderLikeShiitake() {
+        int all = 0, curled = 0;
+        for (int i = 0; i < 1600; i++) {
+            Structures.Mushroom m = Structures.MUSHROOMS.inCell(322L, 20 + i % 40, i / 40, LAND);
+            if (m == null) continue;
+            all++;
+            if (m.curl == 0) continue;
+            curled++;
+            double x = m.centreX + m.eyeD, z = m.centreZ;
+            assertTrue(m.body(x, m.eyeY, z) < 0, "the curl is open at its eye");
+            assertTrue(m.body(x + m.curl, m.eyeY, z) > 0, "outer rim");
+            assertTrue(m.body(x, m.eyeY - m.curl, z) > 0, "rolled under");
+            assertTrue(m.body(m.centreX + m.footprint + 0.5, m.eyeY, z) < 0, "inside the footprint");
+            assertTrue(m.minY() <= m.eyeY - m.curl - m.thickness / 2, "box holds the curl");
+        }
+        double share = curled / (double) all;
+        assertTrue(share > 0.15 && share < 0.45, "curled share " + share);
     }
 }

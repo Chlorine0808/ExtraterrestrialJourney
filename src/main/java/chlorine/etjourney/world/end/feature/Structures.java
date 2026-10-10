@@ -32,7 +32,7 @@ public final class Structures {
         return Fade.forms(weight, Hash.hash01(s + 99, cx, cz));
     }
 
-    public static final Structure.Kind<Mushroom> MUSHROOMS = new Structure.Kind<Mushroom>("MUSHROOMS", 72, 46) {
+    public static final Structure.Kind<Mushroom> MUSHROOMS = new Structure.Kind<Mushroom>("MUSHROOMS", 72, 50) {
 
         @Override
         protected Mushroom compute(long seed, int cx, int cz, StructureProbe probe) {
@@ -48,7 +48,9 @@ public final class Structures {
             double cap = 18 + 27 * Hash.hash01(s + 6, cx, cz);
             double thickness = 5 + 3 * Hash.hash01(s + 7, cx, cz);
             double dome = 4 + 6 * Hash.hash01(s + 8, cx, cz);
-            return new Mushroom(x, z, base, capY, stalk, cap, thickness, dome);
+            // Some rims roll under like a shiitake's.
+            double curl = Hash.hash01(s + 9, cx, cz) < 0.3 ? thickness / 2 + 2 + 3 * Hash.hash01(s + 10, cx, cz) : 0;
+            return new Mushroom(x, z, base, capY, stalk, cap, thickness, dome, curl);
         }
     }.worn(WORN, 6);
 
@@ -308,17 +310,40 @@ public final class Structures {
 
     public static final class Mushroom extends Structure {
 
-        final double base, capY, stalk, cap, thickness, dome;
+        /** How far round the curl rolls, from the top of the rim outwards and under. */
+        private static final double CURL_SWEEP = Math.toRadians(210);
 
-        Mushroom(double x, double z, double base, double capY, double stalk, double cap, double thickness,
-            double dome) {
-            super(x, z, cap + 1, base - 1, capY + dome + 1);
+        final double base, capY, stalk, cap, thickness, dome;
+        /** Radius of the rolled rim, 0 for a plain one; the roll turns about (eyeD, eyeY). */
+        final double curl, eyeD, eyeY;
+
+        Mushroom(double x, double z, double base, double capY, double stalk, double cap, double thickness, double dome,
+            double curl) {
+            super(
+                x,
+                z,
+                cap + thickness / 2 + 1,
+                Math.min(base, eyeY(capY, dome, cap, thickness, curl) - curl - thickness / 2) - 1,
+                capY + dome + 1);
             this.base = base;
             this.capY = capY;
             this.stalk = stalk;
             this.cap = cap;
             this.thickness = thickness;
             this.dome = dome;
+            this.curl = curl;
+            this.eyeD = cap - curl;
+            this.eyeY = eyeY(capY, dome, cap, thickness, curl);
+        }
+
+        private static double surface(double capY, double dome, double cap, double d) {
+            double t = Math.min(1, d / cap);
+            return capY + dome * (1 - t * t);
+        }
+
+        /** The curl's centre lies one curl radius below the middle of the cap where the roll begins. */
+        private static double eyeY(double capY, double dome, double cap, double thickness, double curl) {
+            return surface(capY, dome, cap, cap - curl) - thickness / 2 - curl;
         }
 
         @Override
@@ -326,13 +351,26 @@ public final class Structures {
             double d = Math.hypot(x - centreX, z - centreZ);
             // The stalk runs up into the cap's underside, which is highest on the axis.
             double stem = Math.min(stalk - d, Math.min(capY + dome - thickness + 1 - y, y - base));
-            double t = Math.min(1, d / cap);
-            double surface = capY + dome * (1 - t * t);
+            double surface = surface(capY, dome, cap, d);
+            double slab = Math.min(surface - y, y - (surface - thickness));
+            double half = thickness / 2;
+            if (curl > 0) return Math.max(stem, Math.max(Math.min(slab, eyeD - d), half - rollDistance(d, y)));
             // A slab of the cap's thickness whose rim is rounded to a half circle.
-            double half = thickness / 2, inner = cap - half;
-            double hat = d <= inner ? Math.min(surface - y, y - (surface - thickness))
-                : half - Math.hypot(d - inner, y - (surface - half));
+            double inner = cap - half;
+            double hat = d <= inner ? slab : half - Math.hypot(d - inner, y - (surface - half));
             return Math.max(stem, hat);
+        }
+
+        /** Distance in the (d, y) plane to the middle line of the rolled rim. */
+        private double rollDistance(double d, double y) {
+            double pd = d - eyeD, py = y - eyeY;
+            // Clockwise from straight up, the way the rim rolls.
+            double turned = Math.PI / 2 - Math.atan2(py, pd);
+            turned = ((turned % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI);
+            if (turned <= CURL_SWEEP) return Math.abs(Math.hypot(pd, py) - curl);
+            double endAngle = Math.PI / 2 - CURL_SWEEP;
+            double toEnd = Math.hypot(pd - curl * Math.cos(endAngle), py - curl * Math.sin(endAngle));
+            return Math.min(toEnd, Math.hypot(pd, py - curl));
         }
     }
 
