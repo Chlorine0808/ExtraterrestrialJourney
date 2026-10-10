@@ -135,6 +135,12 @@ public final class Styles {
         .modifiers(CloudModifiers.stratus())
         .build();
 
+    /** High thin streaks along the wind of their region, over any base. */
+    public static final Style CIRRUS = Style.builder("CIRRUS", StyleKind.OVERLAY)
+        .overlay(OVERLAY_CHANCE, Style.ANY)
+        .modifiers(CloudModifiers.cirrus())
+        .build();
+
     private static final List<Style> ALL = Collections.unmodifiableList(
         Arrays.asList(
             PLAINS,
@@ -161,7 +167,8 @@ public final class Styles {
             HOLLOW_PILLARS,
             CROSSES,
             CHAINS,
-            STRATUS));
+            STRATUS,
+            CIRRUS));
 
     private Styles() {}
 

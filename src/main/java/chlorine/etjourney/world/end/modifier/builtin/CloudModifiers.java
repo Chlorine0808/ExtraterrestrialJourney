@@ -3,6 +3,7 @@ package chlorine.etjourney.world.end.modifier.builtin;
 import java.util.ArrayList;
 import java.util.List;
 
+import chlorine.etjourney.world.end.feature.cloud.Cirrus;
 import chlorine.etjourney.world.end.feature.cloud.Stratus;
 import chlorine.etjourney.world.end.modifier.ColumnState;
 import chlorine.etjourney.world.end.modifier.EndBlock;
@@ -22,6 +23,10 @@ public final class CloudModifiers {
 
     public static Modifier stratus() {
         return sheets(870, "STRATUS", Stratus::sheets);
+    }
+
+    public static Modifier cirrus() {
+        return sheets(871, "CIRRUS", Cirrus::sheets);
     }
 
     /**

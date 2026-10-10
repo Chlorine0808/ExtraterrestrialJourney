@@ -3,6 +3,7 @@ package chlorine.etjourney.world.end;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -10,6 +11,7 @@ import java.util.List;
 
 import org.junit.jupiter.api.Test;
 
+import chlorine.etjourney.world.end.feature.cloud.Cirrus;
 import chlorine.etjourney.world.end.feature.cloud.Stratus;
 import chlorine.etjourney.world.end.modifier.ColumnState;
 import chlorine.etjourney.world.end.modifier.EndBlock;
@@ -26,15 +28,21 @@ class CloudSheetsTest {
     private static final TerrainSampler SAMPLER = new TerrainSampler(SEED, new RegionPicker(Styles.all()));
     private static final ChunkPlan.ReservedLookup NONE = (a, b) -> Collections.emptyList();
 
-    /** A chunk whose centre holds the style at 0.75 or more; an overlay peaks at 0.8. */
-    static int[] chunkOf(String style) {
-        for (int i = 0; i < 300; i++) {
-            for (int j = 0; j < 300; j++) {
+    /** Chunks whose centre holds the style at 0.75 or more, up to limit of them; an overlay peaks at 0.8. */
+    static List<int[]> chunksOf(String style, int limit) {
+        List<int[]> out = new ArrayList<>();
+        for (int i = 0; i < 300 && out.size() < limit; i++) {
+            for (int j = 0; j < 300 && out.size() < limit; j++) {
                 int cx = 100 + i * 3, cz = -450 + j * 3;
-                if (SAMPLER.styleWeight(style, cx * 16 + 8, cz * 16 + 8) >= 0.75) return new int[] { cx, cz };
+                if (SAMPLER.styleWeight(style, cx * 16 + 8, cz * 16 + 8) >= 0.75) out.add(new int[] { cx, cz });
             }
         }
-        return null;
+        return out;
+    }
+
+    static int[] chunkOf(String style) {
+        List<int[]> chunks = chunksOf(style, 1);
+        return chunks.isEmpty() ? null : chunks.get(0);
     }
 
     static MemorySink draw(int[] c, int minY, int maxY, ChunkPlan.ReservedLookup reserved) {
@@ -65,14 +73,18 @@ class CloudSheetsTest {
         return new int[] { expected, filled };
     }
 
+    /** The first chunks of the style that hold any of its sheets are filled wherever the sheets are. */
     static void assertDrawn(String style, CloudModifiers.SheetSource source) {
-        int[] c = chunkOf(style);
-        assertNotNull(c, "no " + style + " chunk found");
-        MemorySink sink = draw(c, 0, 256, NONE);
-        assertTrue(sink.placedOnlyWithinRange());
-        int[] n = filledOf(style, source, sink, c);
-        assertTrue(n[0] > 0, style + " has no sheet in its chunk");
-        assertEquals(n[0], n[1], "holes in the " + style + " sheets");
+        // Streaky styles can miss a whole chunk, so look on until one holds a sheet.
+        for (int[] c : chunksOf(style, 30)) {
+            MemorySink sink = draw(c, 0, 256, NONE);
+            assertTrue(sink.placedOnlyWithinRange());
+            int[] n = filledOf(style, source, sink, c);
+            if (n[0] == 0) continue;
+            assertEquals(n[0], n[1], "holes in the " + style + " sheets");
+            return;
+        }
+        fail("no " + style + " chunk holds a sheet");
     }
 
     static void assertHalvesAgree(String style) {
@@ -107,5 +119,15 @@ class CloudSheetsTest {
         MemorySink sink = draw(c, 0, 256, (a, b) -> Collections.singletonList(island));
         int[] n = filledOf("STRATUS", Stratus::sheets, sink, c);
         assertTrue(n[1] * 100 <= n[0], n[1] + " of " + n[0] + " sheet blocks inside a reserved area");
+    }
+
+    @Test
+    void cirrusSheetsAreDrawn() {
+        assertDrawn("CIRRUS", Cirrus::sheets);
+    }
+
+    @Test
+    void bothHalvesDrawTheSameCirrus() {
+        assertHalvesAgree("CIRRUS");
     }
 }

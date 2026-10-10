@@ -19,4 +19,14 @@ class CloudStylesTest {
             Styles.all()
                 .contains(Styles.STRATUS));
     }
+
+    @Test
+    void cirrusOverlaysAnything() {
+        assertEquals(StyleKind.OVERLAY, Styles.CIRRUS.kind);
+        assertTrue(Styles.CIRRUS.canOverlay(Styles.PLAINS));
+        assertTrue(Styles.CIRRUS.canOverlay(Styles.ISLETS));
+        assertTrue(
+            Styles.all()
+                .contains(Styles.CIRRUS));
+    }
 }
