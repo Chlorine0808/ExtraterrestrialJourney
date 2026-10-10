@@ -68,4 +68,13 @@ class CloudStylesTest {
             Styles.all()
                 .contains(Styles.ANVILS));
     }
+
+    @Test
+    void rollCloudsOverlayAnything() {
+        assertEquals(StyleKind.OVERLAY, Styles.ROLL_CLOUDS.kind);
+        assertTrue(Styles.ROLL_CLOUDS.canOverlay(Styles.ISLETS));
+        assertTrue(
+            Styles.all()
+                .contains(Styles.ROLL_CLOUDS));
+    }
 }

@@ -16,6 +16,7 @@ import chlorine.etjourney.world.end.feature.ZoneIslands;
 import chlorine.etjourney.world.end.feature.cloud.Anvil;
 import chlorine.etjourney.world.end.feature.cloud.Cumulus;
 import chlorine.etjourney.world.end.feature.cloud.Mammatus;
+import chlorine.etjourney.world.end.feature.cloud.RollCloud;
 import chlorine.etjourney.world.end.modifier.BlockSink;
 import chlorine.etjourney.world.end.modifier.ChunkArea;
 import chlorine.etjourney.world.end.modifier.DensityField;
@@ -48,6 +49,7 @@ public final class FeatureModifiers {
         all.add(StructureModifiers.of(Cumulus.KIND, 855));
         all.add(StructureModifiers.of(Mammatus.KIND, 856));
         all.add(StructureModifiers.of(Anvil.KIND, 857));
+        all.add(StructureModifiers.of(RollCloud.KIND, 858));
         all.add(StructureModifiers.ringlets());
         all.add(StructureModifiers.voxels(Structures.CROSSES, 861, EndBlock.STONE));
         all.add(StructureModifiers.voxels(Structures.HANGING_CHAINS, 862, EndBlock.CHAIN));
