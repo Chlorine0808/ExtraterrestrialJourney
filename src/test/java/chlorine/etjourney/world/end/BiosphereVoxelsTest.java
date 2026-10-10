@@ -13,6 +13,7 @@ import org.junit.jupiter.api.Test;
 import chlorine.etjourney.world.end.feature.Biosphere;
 import chlorine.etjourney.world.end.modifier.BiomePart;
 import chlorine.etjourney.world.end.modifier.EndBlock;
+import chlorine.etjourney.world.end.modifier.builtin.StructureModifiers;
 import chlorine.etjourney.world.end.region.RegionPicker;
 import chlorine.etjourney.world.end.region.Styles;
 
@@ -102,5 +103,31 @@ class BiosphereVoxelsTest {
                 }
             }
         }
+    }
+
+    /** HEE turns stone below Y 128 into end stone after the block pass, so the deep rock is drawn again alone. */
+    @Test
+    void theDeepRockIsDrawnAgainAlone() {
+        int[] c = biosphereChunk();
+        assertNotNull(c);
+        MemorySink whole = draw(c, 0, 256), deep = new MemorySink(c[0], c[1], 0, 128);
+        ChunkPlan plan = new ChunkPlan(SAMPLER, c[0], c[1], (a, b) -> Collections.emptyList());
+        StructureModifiers.biosphereDeep(SEED, plan, deep);
+        int n = 0;
+        for (int x = c[0] * 16; x < c[0] * 16 + 16; x++) {
+            for (int z = c[1] * 16; z < c[1] * 16 + 16; z++) {
+                for (int y = 0; y < 128; y++) {
+                    String at = "at " + x + "," + y + "," + z;
+                    if (whole.biomePart(x, y, z) == BiomePart.DEEP) {
+                        n++;
+                        assertEquals(BiomePart.DEEP, deep.biomePart(x, y, z), at);
+                        assertEquals(whole.pick(x, y, z), deep.pick(x, y, z), at);
+                    } else {
+                        assertNull(deep.get(x, y, z), at);
+                    }
+                }
+            }
+        }
+        assertTrue(n > 0, "no deep rock below Y 128");
     }
 }

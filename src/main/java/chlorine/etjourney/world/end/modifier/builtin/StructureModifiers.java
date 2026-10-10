@@ -6,6 +6,7 @@ import chlorine.etjourney.world.end.feature.Biosphere;
 import chlorine.etjourney.world.end.feature.Structure;
 import chlorine.etjourney.world.end.feature.Structures;
 import chlorine.etjourney.world.end.modifier.BiomePart;
+import chlorine.etjourney.world.end.modifier.BlockSink;
 import chlorine.etjourney.world.end.modifier.ChunkArea;
 import chlorine.etjourney.world.end.modifier.EndBlock;
 import chlorine.etjourney.world.end.modifier.Modifier;
@@ -56,41 +57,50 @@ public final class StructureModifiers {
      * and the floor takes the blocks of the ball's biome.
      */
     public static Modifier biospheres() {
-        return FeatureModifiers.blockModifier(890, (area, view, sink) -> {
-            int ox = sink.originX(), oz = sink.originZ();
-            for (Biosphere b : Biosphere.KIND.near(area.seed, ox + 8, oz + 8, 12, view.structures())) {
-                if (!stands(view, b, Biosphere.KIND)) continue;
-                int x0 = Math.max(ox, (int) Math.floor(b.minX())), x1 = Math.min(ox + 15, (int) Math.ceil(b.maxX()));
-                int z0 = Math.max(oz, (int) Math.floor(b.minZ())), z1 = Math.min(oz + 15, (int) Math.ceil(b.maxZ()));
-                int y0 = Math.max(sink.minY(), (int) Math.floor(b.minY()));
-                int y1 = Math.min(sink.maxY() - 1, (int) Math.ceil(b.maxY()));
-                for (int x = x0; x <= x1; x++) {
-                    for (int z = z0; z <= z1; z++) {
-                        for (int y = y0; y <= y1; y++) {
-                            switch (b.part(x, y, z)) {
-                                case GLASS:
-                                    sink.set(x, y, z, EndBlock.GLASS);
-                                    break;
-                                case AIR:
-                                    sink.clear(x, y, z);
-                                    break;
-                                case TOP:
-                                    sink.setBiome(x, y, z, BiomePart.TOP, b.pick);
-                                    break;
-                                case FILLER:
-                                    sink.setBiome(x, y, z, BiomePart.FILLER, b.pick);
-                                    break;
-                                case DEEP:
-                                    sink.setBiome(x, y, z, BiomePart.DEEP, b.pick);
-                                    break;
-                                default:
-                                    break;
-                            }
+        return FeatureModifiers.blockModifier(890, (area, view, sink) -> drawBiospheres(area.seed, view, sink, false));
+    }
+
+    /** Only the deep rock of the biospheres reaching the sink, drawn again over what has since replaced it. */
+    public static void biosphereDeep(long seed, TerrainView view, BlockSink sink) {
+        drawBiospheres(seed, view, sink, true);
+    }
+
+    private static void drawBiospheres(long seed, TerrainView view, BlockSink sink, boolean deepOnly) {
+        int ox = sink.originX(), oz = sink.originZ();
+        for (Biosphere b : Biosphere.KIND.near(seed, ox + 8, oz + 8, 12, view.structures())) {
+            if (!stands(view, b, Biosphere.KIND)) continue;
+            int x0 = Math.max(ox, (int) Math.floor(b.minX())), x1 = Math.min(ox + 15, (int) Math.ceil(b.maxX()));
+            int z0 = Math.max(oz, (int) Math.floor(b.minZ())), z1 = Math.min(oz + 15, (int) Math.ceil(b.maxZ()));
+            int y0 = Math.max(sink.minY(), (int) Math.floor(b.minY()));
+            int y1 = Math.min(sink.maxY() - 1, (int) Math.ceil(b.maxY()));
+            for (int x = x0; x <= x1; x++) {
+                for (int z = z0; z <= z1; z++) {
+                    for (int y = y0; y <= y1; y++) {
+                        Biosphere.Part part = b.part(x, y, z);
+                        if (deepOnly && part != Biosphere.Part.DEEP) continue;
+                        switch (part) {
+                            case GLASS:
+                                sink.set(x, y, z, EndBlock.GLASS);
+                                break;
+                            case AIR:
+                                sink.clear(x, y, z);
+                                break;
+                            case TOP:
+                                sink.setBiome(x, y, z, BiomePart.TOP, b.pick);
+                                break;
+                            case FILLER:
+                                sink.setBiome(x, y, z, BiomePart.FILLER, b.pick);
+                                break;
+                            case DEEP:
+                                sink.setBiome(x, y, z, BiomePart.DEEP, b.pick);
+                                break;
+                            default:
+                                break;
                         }
                     }
                 }
             }
-        });
+        }
     }
 
     /** Whether a structure forms, rather than giving way to a reserved island; decided at its centre chunk. */
