@@ -13,6 +13,7 @@ import net.minecraft.world.gen.feature.WorldGenAbstractTree;
 import net.minecraft.world.gen.feature.WorldGenFlowers;
 
 import chlorine.etjourney.core.util.ModLog;
+import chlorine.etjourney.core.util.ShadowFields;
 import chlorine.etjourney.world.end.feature.Biosphere;
 import chlorine.etjourney.world.end.modifier.builtin.StructureModifiers;
 import cpw.mods.fml.common.IWorldGenerator;
@@ -61,7 +62,7 @@ public final class BiospherePlants implements IWorldGenerator {
     }
 
     private static void decorate(World world, Random random, BiomeGenBase biome, Biosphere b, int ox, int oz) {
-        BiomeDecorator d = biome.theBiomeDecorator;
+        BiomeDecorator d = decorator(biome);
         int trees = Math.min(MAX_TREES, Math.max(0, d.treesPerChunk)) + (random.nextInt(10) == 0 ? 1 : 0);
         for (int i = 0; i < trees; i++) {
             int x = ox + random.nextInt(16), z = oz + random.nextInt(16), y = b.plantY(x, z);
@@ -86,5 +87,11 @@ public final class BiospherePlants implements IWorldGenerator {
             biome.getRandomWorldGenForGrass(random)
                 .generate(world, random, x, y, z);
         }
+    }
+
+    /** The decorator holding the biome's counts; BoP hides the vanilla field behind one of its own. */
+    private static BiomeDecorator decorator(BiomeGenBase biome) {
+        BiomeDecorator hidden = ShadowFields.find(biome, BiomeGenBase.class, BiomeDecorator.class);
+        return hidden != null ? hidden : biome.theBiomeDecorator;
     }
 }
