@@ -12,7 +12,7 @@ class RollCloudTest {
     void aLongTubeClosedAtTheEnds() {
         RollCloud r = Probes.first(RollCloud.KIND, 531L, Probes.VOID);
         assertNotNull(r);
-        assertTrue(r.footprint <= 220, "footprint " + r.footprint);
+        assertTrue(r.footprint <= RollCloud.MAX_FOOTPRINT, "footprint " + r.footprint);
         assertTrue(r.length >= 200);
         double[] mid = r.axis(0.5), end = r.axis(1), before = r.axis(0.98);
         // The wall at mid length is solid: on the axis when filled, just inside the surface when hollow.
