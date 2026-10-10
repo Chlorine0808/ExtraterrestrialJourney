@@ -1,10 +1,12 @@
 package chlorine.etjourney.world.end.biosphere;
 
+import java.lang.ref.WeakReference;
 import java.util.HashSet;
 import java.util.Set;
 
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.World;
+import net.minecraft.world.WorldProvider;
 import net.minecraft.world.WorldServer;
 import net.minecraft.world.biome.BiomeGenBase;
 import net.minecraftforge.common.BiomeDictionary;
@@ -18,18 +20,29 @@ import chlorine.etjourney.world.end.feature.BiosphereSource;
 /** The hidden dimensions biosphere cut-outs are generated in. */
 public final class SampleWorlds {
 
-    /** Sample dimensions that failed to load, and the server run that saw it. */
+    /** Sample dimensions registered at start; one another mod already holds is left out. */
+    private static final Set<Integer> REGISTERED = new HashSet<>();
+    /** Sample dimensions that failed to load, and the server run that saw it (weakly, so it can be collected). */
     private static final Set<Integer> BROKEN = new HashSet<>();
-    private static MinecraftServer brokenIn;
+    private static WeakReference<MinecraftServer> brokenIn = new WeakReference<>(null);
 
     private SampleWorlds() {}
 
     public static void register() {
-        DimensionManager.registerProviderType(ETJConfig.sampleDimension, SampleProvider.class, false);
-        DimensionManager.registerDimension(ETJConfig.sampleDimension, ETJConfig.sampleDimension);
-        DimensionManager.registerProviderType(ETJConfig.netherSampleDimension, NetherSampleProvider.class, false);
-        DimensionManager.registerDimension(ETJConfig.netherSampleDimension, ETJConfig.netherSampleDimension);
+        register(ETJConfig.sampleDimension, SampleProvider.class);
+        register(ETJConfig.netherSampleDimension, NetherSampleProvider.class);
         MinecraftForge.TERRAIN_GEN_BUS.register(new SampleStructures());
+    }
+
+    /** Registers a sample dimension unless another mod holds its ID, which would stop the game from starting. */
+    private static void register(int dim, Class<? extends WorldProvider> provider) {
+        if (DimensionManager.isDimensionRegistered(dim)
+            || !DimensionManager.registerProviderType(dim, provider, false)) {
+            ModLog.LOG.error("Biosphere sample dimension {} is taken by another mod; change it in etjourney.cfg", dim);
+            return;
+        }
+        DimensionManager.registerDimension(dim, dim);
+        REGISTERED.add(dim);
     }
 
     /**
@@ -38,10 +51,11 @@ public final class SampleWorlds {
      */
     public static WorldServer world(BiosphereSource.Kind kind) {
         int dim = kind == BiosphereSource.Kind.NETHER ? ETJConfig.netherSampleDimension : ETJConfig.sampleDimension;
+        if (!REGISTERED.contains(dim)) return null;
         MinecraftServer server = MinecraftServer.getServer();
-        if (server != brokenIn) {
+        if (server != brokenIn.get()) {
             BROKEN.clear();
-            brokenIn = server;
+            brokenIn = new WeakReference<>(server);
         }
         if (BROKEN.contains(dim)) return null;
         WorldServer w = DimensionManager.getWorld(dim);
@@ -49,7 +63,8 @@ public final class SampleWorlds {
         try {
             DimensionManager.initDimension(dim);
             w = DimensionManager.getWorld(dim);
-        } catch (RuntimeException | LinkageError e) {
+        } catch (Throwable e) {
+            rethrowFatal(e);
             ModLog.LOG
                 .error("Biosphere sample dimension {} could not be loaded; balls are cut from the other one", dim, e);
             w = null;
@@ -68,6 +83,15 @@ public final class SampleWorlds {
             if (world(k) != null) return k;
         }
         return null;
+    }
+
+    /**
+     * Lets through only what must not be swallowed: a dying thread or a JVM out of memory. Anything else thrown
+     * by another mod's generation, a stack overflow included, has unwound by the time it is caught.
+     */
+    static void rethrowFatal(Throwable t) {
+        if (t instanceof ThreadDeath) throw (ThreadDeath) t;
+        if (t instanceof VirtualMachineError && !(t instanceof StackOverflowError)) throw (VirtualMachineError) t;
     }
 
     public static boolean isSample(World w) {
