@@ -17,7 +17,7 @@ public final class Structures {
     /** A ring only forms where its style holds at least this weight at its centre. */
     private static final double MIN_WEIGHT = 0.5;
     /** Highest block any structure reaches. */
-    private static final double CEILING = 248;
+    static final double CEILING = 248;
     /** No structure forms closer to the origin, clear of the vanilla central area. */
     public static final double MIN_RADIUS = 1000;
     /** Share of each stone kind that comes out worn. */
@@ -28,7 +28,7 @@ public final class Structures {
     private Structures() {}
 
     /** Whether the structure of a cell forms at its style's weight there, thinning out across the border. */
-    private static boolean forms(long s, int cx, int cz, double weight) {
+    static boolean forms(long s, int cx, int cz, double weight) {
         return Fade.forms(weight, Hash.hash01(s + 99, cx, cz));
     }
 
@@ -303,7 +303,7 @@ public final class Structures {
     }
 
     /** Ground to stand on (slightly sunk in), or a random low height over the void. */
-    private static double base(StructureProbe probe, double x, double z, double roll) {
+    static double base(StructureProbe probe, double x, double z, double roll) {
         double ground = probe.ground(x, z);
         return ground > -100 ? ground - 4 : VOID_BASE + 40 * roll;
     }

@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.function.IntPredicate;
 
 import chlorine.etjourney.world.end.feature.ArcPaths;
+import chlorine.etjourney.world.end.feature.Enoki;
 import chlorine.etjourney.world.end.feature.Holes;
 import chlorine.etjourney.world.end.feature.Islets;
 import chlorine.etjourney.world.end.feature.Lakes;
@@ -68,6 +69,7 @@ public final class FeatureModifiers {
         all.add(StructureModifiers.voxels(Virga.KIND, 866, EndBlock.STONE));
         all.add(StructureModifiers.voxels(Billow.KIND, 867, EndBlock.STONE));
         all.add(StructureModifiers.voxels(Paper.KIND, 868, EndBlock.STONE));
+        all.add(StructureModifiers.voxels(Enoki.KIND, 869, EndBlock.STONE));
         all.add(StructureModifiers.biospheres());
         return all;
     }
