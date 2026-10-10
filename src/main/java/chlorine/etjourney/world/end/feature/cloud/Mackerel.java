@@ -12,8 +12,10 @@ public final class Mackerel extends Structure {
     public static final double LEVEL = 120;
     /** Height of the second tier over the first. */
     private static final double TIER = 30;
+    /** Farthest a lobe reaches from the cell's point: 4 * sqrt(2) of offset plus a size of 7. */
+    private static final double REACH = 13;
 
-    public static final Structure.Kind<Mackerel> KIND = new Structure.Kind<Mackerel>("MACKEREL", 24, 12) {
+    public static final Structure.Kind<Mackerel> KIND = new Structure.Kind<Mackerel>("MACKEREL", 24, REACH) {
 
         @Override
         protected Mackerel compute(long seed, int cx, int cz, StructureProbe probe) {
@@ -45,7 +47,7 @@ public final class Mackerel extends Structure {
     private final double[] lobes;
 
     Mackerel(double x, double z, double y, int tiers, double[] lobes) {
-        super(x, z, 12, y - 7, y + (tiers - 1) * TIER + 7);
+        super(x, z, REACH, y - 7, y + (tiers - 1) * TIER + 7);
         this.centreY = y;
         this.tiers = tiers;
         this.lobes = lobes;
