@@ -5,6 +5,7 @@ import java.util.List;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
+import net.minecraft.entity.Entity;
 import net.minecraft.world.ChunkCoordIntPair;
 import net.minecraft.world.WorldServer;
 import net.minecraft.world.chunk.Chunk;
@@ -101,6 +102,16 @@ final class CutoutMaker {
     private static void discard(WorldServer w) {
         List<Chunk> chunks = new ArrayList<>(w.theChunkProviderServer.loadedChunks);
         for (Chunk chunk : chunks) {
+            // An idle world stops updating its entities, which is where unloaded ones leave its lists; take the
+            // chunk's entities and tile entities out here instead.
+            for (List<?> list : chunk.entityLists) {
+                for (Object o : list) {
+                    Entity e = (Entity) o;
+                    w.loadedEntityList.remove(e);
+                    w.onEntityRemoved(e);
+                }
+            }
+            w.loadedTileEntityList.removeAll(chunk.chunkTileEntityMap.values());
             chunk.onChunkUnload();
             w.theChunkProviderServer.loadedChunks.remove(chunk);
             w.theChunkProviderServer.loadedChunkHashMap
