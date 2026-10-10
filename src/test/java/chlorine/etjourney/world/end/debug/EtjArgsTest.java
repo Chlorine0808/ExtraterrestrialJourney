@@ -23,14 +23,16 @@ class EtjArgsTest {
     }
 
     @Test
-    void completesTheWordEnd() {
+    void completesTheTopWords() {
         assertEquals(Collections.singletonList("end"), complete("e"));
+        assertEquals(Collections.singletonList("look"), complete("l"));
     }
 
     @Test
     void completesSubcommandsByPrefix() {
         assertEquals(Arrays.asList("style", "styles"), complete("end", "sty"));
-        assertTrue(complete("end", "").contains("look"));
+        assertTrue(complete("end", "").contains("lake"));
+        assertTrue(!complete("end", "").contains("look"), "look moved to /etj look");
     }
 
     @Test
@@ -81,5 +83,17 @@ class EtjArgsTest {
         assertArrayEquals(new double[] { 0, 0, 1 }, EtjArgs.lookDirection(0, 0), 1e-9);
         assertArrayEquals(new double[] { -1, 0, 0 }, EtjArgs.lookDirection(90, 0), 1e-9);
         assertArrayEquals(new double[] { 0, -1, 0 }, EtjArgs.lookDirection(0, 90), 1e-9);
+    }
+
+    @Test
+    void lookGoesTheWholeRangeWhenNothingIsInTheWay() {
+        double[] to = EtjArgs.lookTarget(new double[] { 0, 100, 0 }, new double[] { 0, 0, 1 }, 1024);
+        assertArrayEquals(new double[] { 0, 100, 1024 }, to, 1e-9);
+    }
+
+    @Test
+    void lookStaysBetweenY0AndY270() {
+        assertEquals(270, EtjArgs.lookTarget(new double[] { 0, 100, 0 }, new double[] { 0, 1, 0 }, 1024)[1], 1e-9);
+        assertEquals(0, EtjArgs.lookTarget(new double[] { 0, 100, 0 }, new double[] { 0, -1, 0 }, 1024)[1], 1e-9);
     }
 }

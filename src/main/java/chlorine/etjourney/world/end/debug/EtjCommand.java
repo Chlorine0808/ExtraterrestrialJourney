@@ -43,7 +43,7 @@ public final class EtjCommand extends CommandBase {
 
     @Override
     public String getCommandUsage(ICommandSender sender) {
-        return "/etj end <here|styles|look [range]|style <name>|style <name> pure|mix [a] [b] [c]|mountain [minTopY]|lake|hole|valley|zone <name>|heeisland|destitute>";
+        return "/etj look [range] | /etj end <here|styles|style <name>|style <name> pure|mix [a] [b] [c]|mountain [minTopY]|lake|hole|valley|zone <name>|heeisland|destitute>";
     }
 
     @Override
@@ -57,6 +57,10 @@ public final class EtjCommand extends CommandBase {
 
     @Override
     public void processCommand(ICommandSender sender, String[] args) {
+        if (args.length >= 1 && args[0].equals("look")) {
+            look(getCommandSenderAsPlayer(sender), args.length > 1 ? parseIntBounded(sender, args[1], 1, 4096) : 1024);
+            return;
+        }
         if (args.length < 2 || !args[0].equals("end")) {
             say(sender, "Usage: " + getCommandUsage(sender));
             return;
@@ -66,10 +70,6 @@ public final class EtjCommand extends CommandBase {
             return;
         }
         EntityPlayerMP player = getCommandSenderAsPlayer(sender);
-        if (args[1].equals("look")) {
-            look(player, args.length > 2 ? parseIntBounded(sender, args[2], 1, 1024) : 256);
-            return;
-        }
         if (player.dimension != END) {
             player.travelToDimension(END);
             say(player, "Moved to the End; run the command again");
@@ -199,22 +199,27 @@ public final class EtjCommand extends CommandBase {
         teleport(player, hit[0], 140, hit[1], picker.base(seed, cx, cz) + " " + picker.overlays(seed, cx, cz));
     }
 
-    /** Moves the player onto the block they look at, up to range blocks away. */
+    /**
+     * Moves the player onto the block they look at, up to range blocks away, or to the point range blocks ahead when
+     * nothing is in the way; never below Y 0 or above Y 270.
+     */
     private static void look(EntityPlayerMP player, int range) {
         double[] d = EtjArgs.lookDirection(player.rotationYaw, player.rotationPitch);
-        Vec3 eye = Vec3.createVectorHelper(player.posX, player.posY + player.getEyeHeight(), player.posZ);
-        Vec3 end = eye.addVector(d[0] * range, d[1] * range, d[2] * range);
+        double[] eye = { player.posX, player.posY + player.getEyeHeight(), player.posZ };
+        double[] far = EtjArgs.lookTarget(eye, d, range);
         World world = player.worldObj;
-        MovingObjectPosition hit = world.rayTraceBlocks(eye, end);
+        MovingObjectPosition hit = world.rayTraceBlocks(
+            Vec3.createVectorHelper(eye[0], eye[1], eye[2]),
+            Vec3.createVectorHelper(eye[0] + d[0] * range, eye[1] + d[1] * range, eye[2] + d[2] * range));
         if (hit == null || hit.typeOfHit != MovingObjectPosition.MovingObjectType.BLOCK) {
-            say(player, "Nothing within " + range + " blocks");
+            teleport(player, far[0], far[1], far[2], "look (nothing in the way)");
             return;
         }
         // Stand on the first two free blocks above the hit, so a wall hit still lands on top.
         int y = hit.blockY + 1;
-        while (y < 255
+        while (y < EtjArgs.MAX_Y
             && !(world.isAirBlock(hit.blockX, y, hit.blockZ) && world.isAirBlock(hit.blockX, y + 1, hit.blockZ))) y++;
-        teleport(player, hit.blockX + 0.5, y, hit.blockZ + 0.5, "look");
+        teleport(player, hit.blockX + 0.5, Math.min(EtjArgs.MAX_Y, y), hit.blockZ + 0.5, "look");
     }
 
     private static void mountain(EntityPlayerMP player, TerrainSampler sampler, int minTop) {

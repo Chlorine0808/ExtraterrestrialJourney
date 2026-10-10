@@ -16,7 +16,6 @@ final class EtjArgs {
         "style",
         "styles",
         "mix",
-        "look",
         "mountain",
         "lake",
         "hole",
@@ -24,6 +23,8 @@ final class EtjArgs {
         "zone",
         "heeisland",
         "destitute");
+    /** Heights /etj look keeps the player between. */
+    static final double MIN_Y = 0, MAX_Y = 270;
     /** Most styles mix accepts: a base and two overlays. */
     private static final int MIX = 3;
 
@@ -32,7 +33,7 @@ final class EtjArgs {
     /** Candidates for the last word of args. */
     static List<String> complete(String[] args, List<String> styles, List<String> zones) {
         String last = args[args.length - 1];
-        if (args.length == 1) return matching(Collections.singletonList("end"), last);
+        if (args.length == 1) return matching(Arrays.asList("end", "look"), last);
         if (!args[0].equals("end")) return Collections.emptyList();
         if (args.length == 2) return matching(SUBCOMMANDS, last);
         switch (args[1]) {
@@ -80,5 +81,11 @@ final class EtjArgs {
     static double[] lookDirection(double yaw, double pitch) {
         double y = Math.toRadians(yaw), p = Math.toRadians(pitch);
         return new double[] { -Math.sin(y) * Math.cos(p), -Math.sin(p), Math.cos(y) * Math.cos(p) };
+    }
+
+    /** The point range blocks from eye along dir, kept between MIN_Y and MAX_Y. */
+    static double[] lookTarget(double[] eye, double[] dir, int range) {
+        double y = Math.max(MIN_Y, Math.min(MAX_Y, eye[1] + dir[1] * range));
+        return new double[] { eye[0] + dir[0] * range, y, eye[2] + dir[2] * range };
     }
 }
