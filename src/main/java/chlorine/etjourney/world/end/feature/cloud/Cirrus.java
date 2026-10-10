@@ -13,6 +13,8 @@ import chlorine.etjourney.world.end.region.RegionMap;
 /** CIRRUS: high streaks one or two blocks thick, running along the wind of their region. */
 public final class Cirrus {
 
+    /** Lowest and highest block a streak takes. */
+    public static final int LOWEST = 200, HIGHEST = 241;
     private static final long SALT = 0x2E7B4D9A1C5F3068L;
     /** Ridged value above which a streak forms at full weight. */
     private static final double THRESHOLD = 0.75;
@@ -37,7 +39,7 @@ public final class Cirrus {
         double r = Fractal.ridged(s + 2 + 31L * cell.cx + cell.cz, u, v * (160 / 12.0), 160, 3);
         double threshold = 1 - (1 - THRESHOLD) * fade;
         if (r < threshold) return;
-        int bottom = (int) Math.floor(200 + 40 * ValueNoise.mask(s + 3, x, z, 600));
+        int bottom = (int) Math.floor(LOWEST + 40 * ValueNoise.mask(s + 3, x, z, 600));
         if (ground > bottom - 3) return;
         int top = r > threshold + 0.1 * fade ? bottom + 1 : bottom;
         out.add(new Layer(top, bottom));

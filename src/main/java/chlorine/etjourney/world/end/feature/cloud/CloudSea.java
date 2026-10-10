@@ -11,6 +11,8 @@ public final class CloudSea {
 
     /** Mean height of the sheet's top. */
     public static final double LEVEL = 100;
+    /** Lowest and highest block the sheet takes: six blocks under the lowest top, two lumps over the highest. */
+    public static final int LOWEST = 91, HIGHEST = 106;
     private static final long SALT = 0x6A3F1D8C5E2B9074L;
 
     private CloudSea() {}

@@ -23,15 +23,15 @@ public final class CloudModifiers {
     private CloudModifiers() {}
 
     public static Modifier stratus() {
-        return sheets(870, "STRATUS", Stratus::sheets);
+        return sheets(870, "STRATUS", 0, Stratus.TOP, Stratus::sheets);
     }
 
     public static Modifier cirrus() {
-        return sheets(871, "CIRRUS", Cirrus::sheets);
+        return sheets(871, "CIRRUS", Cirrus.LOWEST, Cirrus.HIGHEST, Cirrus::sheets);
     }
 
     public static Modifier cloudSea() {
-        return sheets(872, "CLOUD_SEA", CloudSea::sheets);
+        return sheets(872, "CLOUD_SEA", CloudSea.LOWEST, CloudSea.HIGHEST, CloudSea::sheets);
     }
 
     /** Land sinks 30 blocks, so only the peaks reach the sheet. */
@@ -41,10 +41,12 @@ public final class CloudModifiers {
 
     /**
      * Fills the air of each sheet block by block, since the 4-block density grid loses anything thinner. Sheets keep
-     * out of the ground and its top two blocks, and fade out where another mod reserves the land.
+     * out of the ground and its top two blocks, and fade out where another mod reserves the land. A sink that lies
+     * wholly outside the style's heights, low to high, is skipped.
      */
-    static Modifier sheets(int order, String style, SheetSource source) {
+    static Modifier sheets(int order, String style, int low, int high, SheetSource source) {
         return FeatureModifiers.blockModifier(order, (area, view, sink) -> {
+            if (sink.maxY() <= low || sink.minY() > high) return;
             List<Layer> found = new ArrayList<>();
             for (int x = sink.originX(); x < sink.originX() + 16; x++) {
                 for (int z = sink.originZ(); z < sink.originZ() + 16; z++) {

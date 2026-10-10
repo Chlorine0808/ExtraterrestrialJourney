@@ -33,6 +33,7 @@ class CloudSeaTest {
                 double blocks = l.top - l.bottom + 1;
                 assertTrue(blocks >= 3 && blocks <= 8, "thickness " + blocks);
                 assertTrue(l.top >= 95 && l.top <= 107, "top " + l.top);
+                assertTrue(l.bottom >= CloudSea.LOWEST && l.top <= CloudSea.HIGHEST, l.bottom + ".." + l.top);
                 sheets++;
             }
         }
