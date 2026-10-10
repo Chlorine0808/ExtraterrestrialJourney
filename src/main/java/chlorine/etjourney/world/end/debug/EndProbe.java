@@ -12,6 +12,7 @@ import net.minecraftforge.common.DimensionManager;
 import chlorine.etjourney.core.util.ModLog;
 import chlorine.etjourney.world.end.EndTerrain;
 import chlorine.etjourney.world.end.TerrainSampler;
+import chlorine.etjourney.world.end.biosphere.SampleWorlds;
 import chlorine.etjourney.world.end.feature.Biosphere;
 import chlorine.etjourney.world.end.feature.BiosphereSource;
 import chlorine.etjourney.world.end.region.Style;
@@ -175,6 +176,17 @@ public final class EndProbe {
                         counts);
                 }
             }
+        }
+        // Chunks of the sample worlds are thrown away; nothing they held may stay in the worlds' lists.
+        for (BiosphereSource.Kind kind : new BiosphereSource.Kind[] { BiosphereSource.Kind.SURFACE,
+            BiosphereSource.Kind.NETHER }) {
+            WorldServer w = SampleWorlds.world(kind);
+            ModLog.LOG.info(
+                "[probe] {} sample world keeps {} chunks, {} entities, {} tile entities",
+                kind,
+                w.theChunkProviderServer.loadedChunks.size(),
+                w.loadedEntityList.size(),
+                w.loadedTileEntityList.size());
         }
         ModLog.LOG.info("[probe] biospheres done");
     }
