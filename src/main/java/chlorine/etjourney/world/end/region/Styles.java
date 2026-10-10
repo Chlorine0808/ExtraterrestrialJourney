@@ -127,6 +127,7 @@ public final class Styles {
     public static final Style HOLLOW_PILLARS = structure("HOLLOW_PILLARS", Style.ANY);
     public static final Style CROSSES = structure("CROSSES", Style.ANY);
     public static final Style CHAINS = structure("CHAINS", Style.ANY);
+    public static final Style CUMULUS = structure("CUMULUS", Style.ANY);
 
     /** Thin sheets stacked over the land, drawn block by block. */
     public static final Style STRATUS = Style.builder("STRATUS", StyleKind.BOTH)
@@ -176,7 +177,8 @@ public final class Styles {
             CHAINS,
             STRATUS,
             CIRRUS,
-            CLOUD_SEA));
+            CLOUD_SEA,
+            CUMULUS));
 
     private Styles() {}
 

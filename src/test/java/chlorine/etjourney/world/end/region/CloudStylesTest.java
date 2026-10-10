@@ -39,4 +39,14 @@ class CloudStylesTest {
             Styles.all()
                 .contains(Styles.CLOUD_SEA));
     }
+
+    @Test
+    void cumulusOverlaysAnything() {
+        assertEquals(StyleKind.OVERLAY, Styles.CUMULUS.kind);
+        assertTrue(Styles.CUMULUS.canOverlay(Styles.ISLETS));
+        assertTrue(Styles.CUMULUS.canOverlay(Styles.PLAINS));
+        assertTrue(
+            Styles.all()
+                .contains(Styles.CUMULUS));
+    }
 }
