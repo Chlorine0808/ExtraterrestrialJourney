@@ -139,7 +139,12 @@ public final class EtjCommand extends CommandBase {
         say(player, out.toString());
         // Biospheres over this column; the sample point is found from the biome map alone.
         for (Biosphere b : Biosphere.KIND.near(sampler.seed(), player.posX, player.posZ, 0, sampler.structureProbe())) {
-            BiosphereSource.Kind kind = BiosphereSource.kind(sampler.seed(), b);
+            // The kind actually used: the other world stands in when the ball's own cannot be loaded.
+            BiosphereSource.Kind kind = SampleWorlds.usable(BiosphereSource.kind(sampler.seed(), b));
+            if (kind == null) {
+                say(player, "Biosphere: no sample world could be loaded");
+                continue;
+            }
             WorldServer w = SampleWorlds.world(kind);
             int[] p = BiosphereSource.point(sampler.seed(), b, kind, (x, z) -> SampleWorlds.isWater(w, x, z));
             say(player, EtjArgs.biosphereLine(kind.name(), p[0], p[1]));
