@@ -4,6 +4,7 @@ import java.io.File;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import net.minecraft.block.Block;
 import net.minecraft.init.Blocks;
 import net.minecraft.world.WorldServer;
 import net.minecraftforge.common.DimensionManager;
@@ -11,6 +12,8 @@ import net.minecraftforge.common.DimensionManager;
 import chlorine.etjourney.core.util.ModLog;
 import chlorine.etjourney.world.end.EndTerrain;
 import chlorine.etjourney.world.end.TerrainSampler;
+import chlorine.etjourney.world.end.feature.Biosphere;
+import chlorine.etjourney.world.end.feature.BiosphereSource;
 import chlorine.etjourney.world.end.region.Style;
 
 /**
@@ -24,6 +27,10 @@ public final class EndProbe {
     private EndProbe() {}
 
     public static void runIfRequested() {
+        if (new File("etj-biospheres").exists()) {
+            biospheres();
+            return;
+        }
         if (!new File("etj-endscan").exists()) return;
         DimensionManager.initDimension(1);
         WorldServer end = DimensionManager.getWorld(1);
@@ -109,5 +116,66 @@ public final class EndProbe {
                 .append('%');
         }
         ModLog.LOG.info("[probe] style weights (overlays add on top):{}", out);
+    }
+
+    /** Fills biospheres of each kind and logs, per ball, the time taken and what lies inside. */
+    private static void biospheres() {
+        DimensionManager.initDimension(1);
+        WorldServer end = DimensionManager.getWorld(1);
+        Long seed = EndTerrain.seed();
+        if (end == null || seed == null) return;
+        TerrainSampler sampler = EndTerrain.sampler(seed);
+        // How many balls of each kind to fill: SURFACE, CAVE, NETHER.
+        int[] wanted = { 3, 2, 3 };
+        int left = 8;
+        for (int r = 8; r < 400 && left > 0; r++) {
+            for (int i = -r; i <= r && left > 0; i++) {
+                for (int j = -r; j <= r && left > 0; j++) {
+                    if (Math.max(Math.abs(i), Math.abs(j)) != r) continue;
+                    Biosphere b = Biosphere.KIND.inCell(seed, i, j, sampler.structureProbe());
+                    if (b == null) continue;
+                    BiosphereSource.Kind kind = BiosphereSource.kind(seed, b);
+                    if (wanted[kind.ordinal()] == 0) continue;
+                    wanted[kind.ordinal()]--;
+                    left--;
+                    long start = System.nanoTime();
+                    int c0x = ((int) Math.floor(b.minX()) >> 4) - 2, c1x = ((int) Math.floor(b.maxX()) >> 4) + 2;
+                    int c0z = ((int) Math.floor(b.minZ()) >> 4) - 2, c1z = ((int) Math.floor(b.maxZ()) >> 4) + 2;
+                    for (int cx = c0x; cx <= c1x; cx++) {
+                        for (int cz = c0z; cz <= c1z; cz++) end.theChunkProviderServer.loadChunk(cx, cz);
+                    }
+                    long took = System.nanoTime() - start;
+                    int glass = 0, solid = 0, inside = 0;
+                    Map<String, Integer> counts = new LinkedHashMap<>();
+                    for (int x = (int) Math.floor(b.minX()); x <= (int) Math.ceil(b.maxX()); x++) {
+                        for (int z = (int) Math.floor(b.minZ()); z <= (int) Math.ceil(b.maxZ()); z++) {
+                            for (int y = Math.max(0, (int) b.minY()); y <= Math.min(255, (int) b.maxY()); y++) {
+                                Biosphere.Part part = b.part(x, y, z);
+                                Block k = end.getBlock(x, y, z);
+                                if (part == Biosphere.Part.GLASS && k == Blocks.glass) glass++;
+                                if (part != Biosphere.Part.INSIDE) continue;
+                                inside++;
+                                if (k == Blocks.air) continue;
+                                solid++;
+                                counts.merge(k.getUnlocalizedName(), 1, Integer::sum);
+                            }
+                        }
+                    }
+                    ModLog.LOG.info(
+                        "[probe] biosphere {},{},{} r={} {}: {} ms, glass {}, filled {} of {} -> {}",
+                        (int) b.centreX,
+                        (int) b.y,
+                        (int) b.centreZ,
+                        (int) b.radius,
+                        kind,
+                        took / 1_000_000,
+                        glass,
+                        solid,
+                        inside,
+                        counts);
+                }
+            }
+        }
+        ModLog.LOG.info("[probe] biospheres done");
     }
 }
