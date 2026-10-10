@@ -2,7 +2,9 @@ package chlorine.etjourney.world.end.modifier.builtin;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
+import java.util.function.IntPredicate;
 
 import chlorine.etjourney.world.end.feature.ArcPaths;
 import chlorine.etjourney.world.end.feature.Holes;
@@ -36,6 +38,8 @@ public final class FeatureModifiers {
     /** Footprint reach, in island radii, over which a zone island's surface is repainted. */
     private static final double PAINT_REACH = 1.3;
     private static final int PAINT_DEPTH = 3;
+    /** How far outside the island's density a block may lie and still be painted, for the roughened rim. */
+    private static final double ISLAND_MARGIN = 2;
 
     private FeatureModifiers() {}
 
@@ -182,7 +186,12 @@ public final class FeatureModifiers {
                     if (owner == null) return;
                     // The island may carry on above this sink (the generator's half ends at Y 127).
                     boolean above = owner.y + owner.up * 1.2 >= sink.maxY();
-                    paintColumn(sink, x, z, ZoneIslands.zoneOf(area.seed, owner), above);
+                    List<ZoneIslands.Island> own = Collections.singletonList(owner);
+                    double edge = ZoneIslands.edge(area.seed, x, z);
+                    // Only the island's own rock, with room for its roughened rim.
+                    IntPredicate onIsland = y -> ZoneIslands.density(own, x + 0.5, y + 0.5, z + 0.5, edge)
+                        > -ISLAND_MARGIN;
+                    paintColumn(sink, x, z, ZoneIslands.zoneOf(area.seed, owner), above, onIsland);
                 });
             }
         };
@@ -278,13 +287,14 @@ public final class FeatureModifiers {
     }
 
     /**
-     * Paints the top PAINT_DEPTH blocks of every solid run in a column. When the column continues above the sink, the
-     * run touching the sink's top is not a surface and is left alone; the other half paints the real top.
+     * Paints the top PAINT_DEPTH blocks of every solid run of island rock in a column. When the column continues above
+     * the sink, the run touching the sink's top is not a surface and is left alone; the other half paints the real top.
+     * Blocks that are not on the island are never painted, and the island rock under them counts as a surface.
      */
-    static void paintColumn(BlockSink sink, int x, int z, Zone zone, boolean continuesAbove) {
+    static void paintColumn(BlockSink sink, int x, int z, Zone zone, boolean continuesAbove, IntPredicate onIsland) {
         int depth = continuesAbove ? PAINT_DEPTH : -1;
         for (int y = sink.maxY() - 1; y >= sink.minY(); y--) {
-            if (sink.isAir(x, y, z)) {
+            if (sink.isAir(x, y, z) || !onIsland.test(y)) {
                 depth = -1;
                 continue;
             }

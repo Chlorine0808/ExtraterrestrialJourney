@@ -67,10 +67,10 @@ class ZonePaintTest {
     @Test
     void theLowerHalfLeavesARunThatContinuesAboveUnpainted() {
         Column lower = new Column(0, 128, 100, 160);
-        FeatureModifiers.paintColumn(lower, 0, 0, Zone.SOLAR, true);
+        FeatureModifiers.paintColumn(lower, 0, 0, Zone.SOLAR, true, y -> true);
         assertEquals(EndBlock.STONE, lower.blocks[127]);
         Column upper = new Column(128, 256, 100, 160);
-        FeatureModifiers.paintColumn(upper, 0, 0, Zone.SOLAR, false);
+        FeatureModifiers.paintColumn(upper, 0, 0, Zone.SOLAR, false, y -> true);
         assertEquals(Zone.SOLAR.top, upper.blocks[160 - 128]);
         assertEquals(Zone.SOLAR.fill, upper.blocks[159 - 128]);
         assertEquals(EndBlock.STONE, upper.blocks[157 - 128]);
@@ -79,8 +79,27 @@ class ZonePaintTest {
     @Test
     void anIslandBelowTheCeilingIsPaintedInTheLowerHalf() {
         Column lower = new Column(0, 128, 60, 90);
-        FeatureModifiers.paintColumn(lower, 0, 0, Zone.NEBULA, false);
+        FeatureModifiers.paintColumn(lower, 0, 0, Zone.NEBULA, false, y -> true);
         assertEquals(Zone.NEBULA.top, lower.blocks[90]);
         assertEquals(EndBlock.STONE, lower.blocks[87]);
+    }
+
+    @Test
+    void landOutsideTheIslandIsLeftAlone() {
+        Column column = new Column(0, 128, 60, 70);
+        FeatureModifiers.paintColumn(column, 0, 0, Zone.SOLAR, false, y -> false);
+        for (int y = 60; y <= 70; y++) assertEquals(EndBlock.STONE, column.blocks[y], "at " + y);
+    }
+
+    @Test
+    void theIslandUnderSomethingElseIsPaintedAtItsOwnTop() {
+        // Island rock up to Y 90 with another shape's blocks on top of it up to Y 100.
+        Column column = new Column(0, 128, 60, 100);
+        FeatureModifiers.paintColumn(column, 0, 0, Zone.SOLAR, false, y -> y <= 90);
+        assertEquals(EndBlock.STONE, column.blocks[100]);
+        assertEquals(EndBlock.STONE, column.blocks[91]);
+        assertEquals(Zone.SOLAR.top, column.blocks[90]);
+        assertEquals(Zone.SOLAR.fill, column.blocks[89]);
+        assertEquals(EndBlock.STONE, column.blocks[87]);
     }
 }
