@@ -120,4 +120,14 @@ class BiosphereTest {
         assertTrue(b.onFloor(x, z));
         assertTrue(!b.onFloor(x + (int) b.radius, z), "the rim column counts as floor");
     }
+
+    @Test
+    void plantsGoJustAboveTheFloorAndNowhereElse() {
+        Biosphere b = first(probe(1, 70));
+        assertNotNull(b);
+        int x = (int) Math.floor(b.centreX), z = (int) Math.floor(b.centreZ);
+        assertEquals(b.floorTop(x, z) + 1, b.plantY(x, z));
+        assertEquals(-1, b.plantY(x + (int) b.radius, z));
+        assertEquals(-1, b.plantY(x + 100, z));
+    }
 }

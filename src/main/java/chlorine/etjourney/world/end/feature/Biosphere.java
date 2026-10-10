@@ -91,6 +91,11 @@ public final class Biosphere extends Structure {
         return d < radius - 3;
     }
 
+    /** The height a plant of column (x, z) starts at, just above the floor, or -1 where nothing may grow. */
+    public int plantY(int x, int z) {
+        return onFloor(x, z) ? floorTop(x, z) + 1 : -1;
+    }
+
     private static double sq(double v) {
         return v * v;
     }
