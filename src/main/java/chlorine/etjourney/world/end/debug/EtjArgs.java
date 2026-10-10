@@ -93,4 +93,16 @@ final class EtjArgs {
     static String biosphereLine(String biome, int id, String className) {
         return "Biosphere: " + biome + " (ID " + id + ", " + className + ")";
     }
+
+    /** The look from eye along dir, range blocks long, as joined pieces {x0, y0, z0, x1, y1, z1} of at most step. */
+    static List<double[]> lookSegments(double[] eye, double[] dir, int range, int step) {
+        List<double[]> out = new ArrayList<>();
+        for (int from = 0; from < range; from += step) {
+            int to = Math.min(range, from + step);
+            out.add(
+                new double[] { eye[0] + dir[0] * from, eye[1] + dir[1] * from, eye[2] + dir[2] * from,
+                    eye[0] + dir[0] * to, eye[1] + dir[1] * to, eye[2] + dir[2] * to });
+        }
+        return out;
+    }
 }

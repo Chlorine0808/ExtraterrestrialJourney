@@ -103,4 +103,24 @@ class EtjArgsTest {
             "Biosphere: Crimson Forest (ID 176, DelirusCrux.Netherlicious.Biomes.CrimsonForest)",
             EtjArgs.biosphereLine("Crimson Forest", 176, "DelirusCrux.Netherlicious.Biomes.CrimsonForest"));
     }
+
+    /** Vanilla ray tracing gives up after 200 block boundaries, so a long look is traced in short pieces. */
+    @Test
+    void aLongLookIsSplitIntoJoinedPiecesOfAtMostTheStep() {
+        double[] eye = { 10, 70, -5 }, dir = { 0.6, -0.48, 0.64 };
+        List<double[]> pieces = EtjArgs.lookSegments(eye, dir, 1000, 64);
+        assertEquals(16, pieces.size());
+        double[] from = eye;
+        for (double[] p : pieces) {
+            assertArrayEquals(from, Arrays.copyOfRange(p, 0, 3), 1e-9);
+            double len = Math.sqrt(sq(p[3] - p[0]) + sq(p[4] - p[1]) + sq(p[5] - p[2]));
+            assertTrue(len <= 64 + 1e-9, "piece of " + len);
+            from = Arrays.copyOfRange(p, 3, 6);
+        }
+        assertArrayEquals(new double[] { 610, -410, 635 }, from, 1e-9);
+    }
+
+    private static double sq(double v) {
+        return v * v;
+    }
 }

@@ -38,6 +38,8 @@ import chlorine.etjourney.world.end.reserve.Reservations;
 public final class EtjCommand extends CommandBase {
 
     private static final int END = 1;
+    /** Length of each piece a look is traced in. */
+    private static final int LOOK_STEP = 64;
 
     @Override
     public String getCommandName() {
@@ -222,9 +224,13 @@ public final class EtjCommand extends CommandBase {
         double[] eye = { player.posX, player.posY + player.getEyeHeight(), player.posZ };
         double[] far = EtjArgs.lookTarget(eye, d, range);
         World world = player.worldObj;
-        MovingObjectPosition hit = world.rayTraceBlocks(
-            Vec3.createVectorHelper(eye[0], eye[1], eye[2]),
-            Vec3.createVectorHelper(eye[0] + d[0] * range, eye[1] + d[1] * range, eye[2] + d[2] * range));
+        MovingObjectPosition hit = null;
+        // rayTraceBlocks stops after 200 block boundaries, about 115 blocks on a diagonal, so trace in pieces.
+        for (double[] p : EtjArgs.lookSegments(eye, d, range, LOOK_STEP)) {
+            hit = world
+                .rayTraceBlocks(Vec3.createVectorHelper(p[0], p[1], p[2]), Vec3.createVectorHelper(p[3], p[4], p[5]));
+            if (hit != null && hit.typeOfHit == MovingObjectPosition.MovingObjectType.BLOCK) break;
+        }
         if (hit == null || hit.typeOfHit != MovingObjectPosition.MovingObjectType.BLOCK) {
             teleport(player, far[0], far[1], far[2], "look (nothing in the way)");
             return;
