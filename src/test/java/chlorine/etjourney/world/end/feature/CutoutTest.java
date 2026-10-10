@@ -61,4 +61,18 @@ class CutoutTest {
         assertTrue(cache.failed(7));
         assertNull(cache.get(7));
     }
+
+    /** A cut-out or a failure of one world means nothing in the next, so a new seed empties the cache. */
+    @Test
+    void aNewSeedForgetsEverything() {
+        CutoutCache cache = new CutoutCache(2);
+        cache.forSeed(1L);
+        cache.put(5, new Cutout(BALL));
+        cache.fail(6);
+        cache.forSeed(1L);
+        assertEquals(1, cache.size());
+        cache.forSeed(2L);
+        assertEquals(0, cache.size());
+        assertFalse(cache.failed(6));
+    }
 }

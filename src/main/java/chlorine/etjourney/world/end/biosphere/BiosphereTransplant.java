@@ -38,6 +38,7 @@ public final class BiosphereTransplant implements IWorldGenerator {
         if (Math.hypot(ox + 8, oz + 8) < EndTerrain.TERRAIN_START) return;
         Long seed = EndTerrain.seed();
         if (seed == null) return;
+        cache.forSeed(seed);
         ChunkPlan plan = null;
         for (Biosphere b : Biosphere.KIND.near(
             seed,
