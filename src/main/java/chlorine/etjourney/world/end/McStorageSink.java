@@ -4,6 +4,7 @@ import net.minecraft.block.Block;
 import net.minecraft.init.Blocks;
 import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
 
+import chlorine.etjourney.world.end.modifier.BiomePart;
 import chlorine.etjourney.world.end.modifier.BlockSink;
 import chlorine.etjourney.world.end.modifier.EndBlock;
 
@@ -63,6 +64,11 @@ final class McStorageSink implements BlockSink {
     @Override
     public void set(int x, int y, int z, EndBlock block) {
         put(x, y, z, EndPalette.block(block), EndPalette.meta(block));
+    }
+
+    @Override
+    public void setBiome(int x, int y, int z, BiomePart part, double pick) {
+        put(x, y, z, BiomePalette.block(part, pick), BiomePalette.meta(part, pick));
     }
 
     @Override
