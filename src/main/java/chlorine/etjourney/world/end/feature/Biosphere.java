@@ -25,15 +25,16 @@ public final class Biosphere extends Structure {
 
     public static final Structure.Kind<Biosphere> KIND = new Structure.Kind<Biosphere>(
         "BIOSPHERES",
-        160,
+        112,
         MAX_RADIUS + 1) {
 
         @Override
         protected Biosphere compute(long seed, int cx, int cz, StructureProbe probe) {
             long s = seed ^ 0x3A7D1F9B5C2E8064L;
             if (Hash.hash01(s, cx, cz) > 0.5) return null;
-            double x = (cx + 0.3 + 0.4 * Hash.hash01(s + 1, cx, cz)) * cell;
-            double z = (cz + 0.3 + 0.4 * Hash.hash01(s + 2, cx, cz)) * cell;
+            // Centres keep 0.68 cells apart, wider than two of the largest balls.
+            double x = (cx + 0.34 + 0.32 * Hash.hash01(s + 1, cx, cz)) * cell;
+            double z = (cz + 0.34 + 0.32 * Hash.hash01(s + 2, cx, cz)) * cell;
             if (!Fade.forms(probe.weight(style, x, z), Hash.hash01(s + 99, cx, cz))) return null;
             double radius = 28 + (MAX_RADIUS - 28) * Hash.hash01(s + 3, cx, cz);
             double ground = probe.ground(x, z);

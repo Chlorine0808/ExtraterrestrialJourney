@@ -5,13 +5,16 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.junit.jupiter.api.Test;
 
 /** A biosphere is a glass ball about 32 blocks in radius holding a floor of one biome's blocks. */
 class BiosphereTest {
 
     /** Cells are cached per seed, so each probe gets a seed of its own. */
-    private static final long SEED = 31L, EMPTY_SEED = 32L, VOID_SEED = 33L;
+    private static final long SEED = 31L, EMPTY_SEED = 32L, VOID_SEED = 33L, DENSE_SEED = 34L;
 
     private static StructureProbe probe(double weight, double ground) {
         return new StructureProbe() {
@@ -129,5 +132,28 @@ class BiosphereTest {
         assertEquals(b.floorTop(x, z) + 1, b.plantY(x, z));
         assertEquals(-1, b.plantY(x + (int) b.radius, z));
         assertEquals(-1, b.plantY(x + 100, z));
+    }
+
+    @Test
+    void aboutOnePerTwelveThousandSquareBlocksAndNeverTouching() {
+        StructureProbe probe = probe(1, -1000);
+        List<Biosphere> balls = new ArrayList<>();
+        for (int cx = 20; cx < 60; cx++) {
+            for (int cz = 20; cz < 60; cz++) {
+                Biosphere b = Biosphere.KIND.inCell(DENSE_SEED, cx, cz, probe);
+                if (b != null) balls.add(b);
+            }
+        }
+        double area = Math.pow(40 * Biosphere.KIND.cell, 2);
+        // Twice as many as one per 160 x 160 cell at a chance of a half.
+        double perBall = area / balls.size();
+        assertTrue(perBall < 160 * 160 / 0.5 / 1.8, "one per " + (int) perBall + " square blocks");
+        for (int i = 0; i < balls.size(); i++) {
+            for (int j = i + 1; j < balls.size(); j++) {
+                Biosphere a = balls.get(i), b = balls.get(j);
+                double d = Math.hypot(a.centreX - b.centreX, a.centreZ - b.centreZ);
+                assertTrue(d >= a.radius + b.radius + 2, "balls " + (int) d + " apart");
+            }
+        }
     }
 }
