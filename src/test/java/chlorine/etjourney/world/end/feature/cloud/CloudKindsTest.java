@@ -17,9 +17,15 @@ import chlorine.etjourney.world.end.feature.Structures;
 /** Every cloud structure forms only where its style is, inside the world, its footprint and the outer End. */
 class CloudKindsTest {
 
-    /** Each task adds its kind here. */
-    static final List<Structure.Kind<? extends Structure>> KINDS = Arrays
-        .asList(Cumulus.KIND, Mammatus.KIND, Anvil.KIND);
+    static final List<Structure.Kind<? extends Structure>> KINDS = Arrays.asList(
+        Cumulus.KIND,
+        Mammatus.KIND,
+        Anvil.KIND,
+        RollCloud.KIND,
+        Lenticular.KIND,
+        Mackerel.KIND,
+        Virga.KIND,
+        Billow.KIND);
 
     /** Land with an underside, so the kinds that stand on or hang from the land form too. */
     private static StructureProbe at(double weight) {
