@@ -50,13 +50,15 @@ public final class BiosphereTransplant implements IWorldGenerator {
             if (plan == null) plan = EndTerrain.plan(generator, world, seed, chunkX, chunkZ);
             // A ball that gives way to a reserved island has no shell; leave it out as the block pass does.
             if (!StructureModifiers.stands(plan, b, Biosphere.KIND)) continue;
+            if (cache.failed(b.key())) continue;
             Cutout cut = cache.get(b.key());
             if (cut == null) {
                 try {
                     cut = CutoutMaker.make(seed, b);
                 } catch (RuntimeException e) {
-                    // Another mod's generator failing in the sample dimension leaves this ball empty.
+                    // Another mod's generator failing in the sample dimension leaves this ball empty, once.
                     ModLog.LOG.warn("Biosphere at {},{} could not be filled", (int) b.centreX, (int) b.centreZ, e);
+                    cache.fail(b.key());
                     continue;
                 }
                 cache.put(b.key(), cut);

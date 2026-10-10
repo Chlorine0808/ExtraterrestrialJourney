@@ -52,4 +52,13 @@ class CutoutTest {
         cache.remove(1);
         assertEquals(1, cache.size());
     }
+
+    @Test
+    void aBallThatFailedIsRememberedSoItIsNotRetried() {
+        CutoutCache cache = new CutoutCache(2);
+        assertFalse(cache.failed(7));
+        cache.fail(7);
+        assertTrue(cache.failed(7));
+        assertNull(cache.get(7));
+    }
 }
