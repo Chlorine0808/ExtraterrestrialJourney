@@ -17,6 +17,9 @@ import net.minecraft.world.chunk.IChunkProvider;
 
 import chlorine.etjourney.world.end.EndTerrain;
 import chlorine.etjourney.world.end.TerrainSampler;
+import chlorine.etjourney.world.end.biosphere.SampleWorlds;
+import chlorine.etjourney.world.end.feature.Biosphere;
+import chlorine.etjourney.world.end.feature.BiosphereSource;
 import chlorine.etjourney.world.end.feature.Holes;
 import chlorine.etjourney.world.end.feature.Lakes;
 import chlorine.etjourney.world.end.feature.Mountains;
@@ -134,6 +137,13 @@ public final class EtjCommand extends CommandBase {
                 .append('%');
         }
         say(player, out.toString());
+        // Biospheres over this column; the sample point is found from the biome map alone.
+        for (Biosphere b : Biosphere.KIND.near(sampler.seed(), player.posX, player.posZ, 0, sampler.structureProbe())) {
+            BiosphereSource.Kind kind = BiosphereSource.kind(sampler.seed(), b);
+            WorldServer w = SampleWorlds.world(kind);
+            int[] p = BiosphereSource.point(sampler.seed(), b, kind, (x, z) -> SampleWorlds.isWater(w, x, z));
+            say(player, EtjArgs.biosphereLine(kind.name(), p[0], p[1]));
+        }
     }
 
     /** Nearest region holding the style as its base or an overlay, or with pure, as its base with no overlay. */

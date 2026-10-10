@@ -98,10 +98,8 @@ class EtjArgsTest {
     }
 
     @Test
-    void aBiosphereLineNamesTheBiomeItsIdAndClass() {
-        assertEquals(
-            "Biosphere: Crimson Forest (ID 176, DelirusCrux.Netherlicious.Biomes.CrimsonForest)",
-            EtjArgs.biosphereLine("Crimson Forest", 176, "DelirusCrux.Netherlicious.Biomes.CrimsonForest"));
+    void aBiosphereLineNamesItsKindAndSamplePoint() {
+        assertEquals("Biosphere: SURFACE from 4196,-84154", EtjArgs.biosphereLine("SURFACE", 4196, -84154));
     }
 
     /** Vanilla ray tracing gives up after 200 block boundaries, so a long look is traced in short pieces. */

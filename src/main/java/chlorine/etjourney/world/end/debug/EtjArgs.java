@@ -89,9 +89,9 @@ final class EtjArgs {
         return new double[] { eye[0] + dir[0] * range, y, eye[2] + dir[2] * range };
     }
 
-    /** What /etj end here says about a biosphere: its biome, the biome ID and the class that tells its mod. */
-    static String biosphereLine(String biome, int id, String className) {
-        return "Biosphere: " + biome + " (ID " + id + ", " + className + ")";
+    /** What /etj end here says about a biosphere: where its terrain comes from. */
+    static String biosphereLine(String kind, int x, int z) {
+        return "Biosphere: " + kind + " from " + x + "," + z;
     }
 
     /** The look from eye along dir, range blocks long, as joined pieces {x0, y0, z0, x1, y1, z1} of at most step. */
