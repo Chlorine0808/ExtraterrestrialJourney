@@ -2,12 +2,7 @@ package chlorine.etjourney.world.end;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
 
 import org.junit.jupiter.api.Test;
 
@@ -16,7 +11,6 @@ import chlorine.etjourney.world.end.modifier.DensityField;
 import chlorine.etjourney.world.end.modifier.EndBlock;
 import chlorine.etjourney.world.end.modifier.builtin.FeatureModifiers;
 import chlorine.etjourney.world.end.region.RegionPicker;
-import chlorine.etjourney.world.end.region.Style;
 import chlorine.etjourney.world.end.region.Styles;
 
 /**
@@ -26,27 +20,7 @@ import chlorine.etjourney.world.end.region.Styles;
 class CliffFacesTest {
 
     private static final long SEED = 77L;
-    private static final TerrainSampler SAMPLER = new TerrainSampler(SEED, new RegionPicker(withoutClouds()));
-
-    /** Clouds float over the ground and are drawn block by block, so they are no faces of the terrain. */
-    private static List<Style> withoutClouds() {
-        Set<String> clouds = new HashSet<>(
-            Arrays.asList(
-                "STRATUS",
-                "CIRRUS",
-                "CLOUD_SEA",
-                "CUMULUS",
-                "MAMMATUS",
-                "ANVILS",
-                "ROLL_CLOUDS",
-                "LENTICULARS",
-                "MACKEREL",
-                "VIRGA",
-                "BILLOWS"));
-        List<Style> out = new ArrayList<>();
-        for (Style style : Styles.all()) if (!clouds.contains(style.name)) out.add(style);
-        return out;
-    }
+    private static final TerrainSampler SAMPLER = new TerrainSampler(SEED, new RegionPicker(Styles.all()));
 
     /**
      * Exposed solid blocks per column, for steep cells (corner spread of 16 or more) and flat ones (under 4), as
