@@ -168,6 +168,9 @@ public final class Styles {
         .holes(true)
         .build();
 
+    /** Floating glass balls, each holding a floor of one biome. */
+    public static final Style BIOSPHERES = structure("BIOSPHERES", Style.ANY);
+
     private static final List<Style> ALL = Collections.unmodifiableList(
         Arrays.asList(
             PLAINS,
@@ -204,7 +207,8 @@ public final class Styles {
             MACKEREL,
             VIRGA,
             BILLOWS,
-            CHASMS));
+            CHASMS,
+            BIOSPHERES));
 
     private Styles() {}
 
