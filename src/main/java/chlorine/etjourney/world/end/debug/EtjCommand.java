@@ -23,6 +23,7 @@ import chlorine.etjourney.world.end.feature.ZoneIslands;
 import chlorine.etjourney.world.end.region.RegionMap;
 import chlorine.etjourney.world.end.region.RegionPicker;
 import chlorine.etjourney.world.end.region.Style;
+import chlorine.etjourney.world.end.region.Styles;
 import chlorine.etjourney.world.end.reserve.Area;
 import chlorine.etjourney.world.end.reserve.PredictedIslands;
 import chlorine.etjourney.world.end.reserve.Reservations;
@@ -39,13 +40,26 @@ public final class EtjCommand extends CommandBase {
 
     @Override
     public String getCommandUsage(ICommandSender sender) {
-        return "/etj end <here|style <name>|mix [style]|mountain [minTopY]|lake|hole|valley|zone <name>|heeisland|destitute>";
+        return "/etj end <here|styles|style <name>|mix [style]|mountain [minTopY]|lake|hole|valley|zone <name>|heeisland|destitute>";
+    }
+
+    @Override
+    public List<String> addTabCompletionOptions(ICommandSender sender, String[] args) {
+        List<String> styles = new ArrayList<>();
+        for (Style style : Styles.all()) styles.add(style.name);
+        List<String> zones = new ArrayList<>();
+        for (Zone zone : Zone.values()) zones.add(zone.name());
+        return EtjArgs.complete(args, styles, zones);
     }
 
     @Override
     public void processCommand(ICommandSender sender, String[] args) {
         if (args.length < 2 || !args[0].equals("end")) {
             say(sender, "Usage: " + getCommandUsage(sender));
+            return;
+        }
+        if (args[1].equals("styles")) {
+            for (String line : EtjArgs.styleLines(Styles.all())) say(sender, line);
             return;
         }
         EntityPlayerMP player = getCommandSenderAsPlayer(sender);
