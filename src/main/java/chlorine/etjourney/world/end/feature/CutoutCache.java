@@ -1,14 +1,19 @@
 package chlorine.etjourney.world.end.feature;
 
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Set;
 
 /** Cut-outs by biosphere key, dropping the least recently used beyond a capacity, and balls that failed. */
 public final class CutoutCache {
 
     private final Map<Long, Cutout> map;
-    /** Balls whose sample could not be generated, kept so that later windows do not try again. */
-    private final Map<Long, Boolean> failures;
+    /**
+     * Balls whose sample could not be generated, so later windows do not try again. Never trimmed within a
+     * world: a forgotten failure could refill a ball whose shell is gone. Each is one key.
+     */
+    private final Set<Long> failures = new HashSet<>();
     private Long seed;
 
     public CutoutCache(int capacity) {
@@ -16,13 +21,6 @@ public final class CutoutCache {
 
             @Override
             protected boolean removeEldestEntry(Map.Entry<Long, Cutout> eldest) {
-                return size() > capacity;
-            }
-        };
-        failures = new LinkedHashMap<Long, Boolean>(16, 0.75f, true) {
-
-            @Override
-            protected boolean removeEldestEntry(Map.Entry<Long, Boolean> eldest) {
                 return size() > capacity;
             }
         };
@@ -37,11 +35,11 @@ public final class CutoutCache {
     }
 
     public void fail(long key) {
-        failures.put(key, Boolean.TRUE);
+        failures.add(key);
     }
 
     public boolean failed(long key) {
-        return failures.containsKey(key);
+        return failures.contains(key);
     }
 
     public Cutout get(long key) {

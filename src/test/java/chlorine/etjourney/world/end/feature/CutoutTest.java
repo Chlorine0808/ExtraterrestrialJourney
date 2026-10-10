@@ -75,4 +75,22 @@ class CutoutTest {
         assertEquals(0, cache.size());
         assertFalse(cache.failed(6));
     }
+
+    /** A forgotten failure would be retried and refill a ball whose shell is already gone. */
+    @Test
+    void failuresAreNeverForgottenWithinAWorld() {
+        CutoutCache cache = new CutoutCache(2);
+        for (long k = 0; k < 10; k++) cache.fail(k);
+        for (long k = 0; k < 10; k++) assertTrue(cache.failed(k), "forgot " + k);
+    }
+
+    /** Tile entity data travels with its block, by position. */
+    @Test
+    void tileDataIsKeptByPosition() {
+        Cutout cut = new Cutout(BALL);
+        Object data = new Object();
+        cut.putTile(1001, 120, -500, data);
+        assertSame(data, cut.tile(1001, 120, -500));
+        assertNull(cut.tile(1002, 120, -500));
+    }
 }

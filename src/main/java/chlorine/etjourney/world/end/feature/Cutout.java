@@ -1,10 +1,15 @@
 package chlorine.etjourney.world.end.feature;
 
+import java.util.HashMap;
+import java.util.Map;
+
 /** The blocks cut for one biosphere, packed as id << 4 | meta with 0 for air, until every window has them. */
 public final class Cutout {
 
     private final int x0, y0, z0, sx, sy, sz;
     private final int[] blocks;
+    /** Tile entity data of the blocks that carry one, by index; kept opaque so this class stays plain Java. */
+    private final Map<Integer, Object> tiles = new HashMap<>();
     private int windowsLeft;
 
     public Cutout(Biosphere b) {
@@ -28,6 +33,15 @@ public final class Cutout {
 
     public void set(int x, int y, int z, int packed) {
         blocks[index(x, y, z)] = packed;
+    }
+
+    public void putTile(int x, int y, int z, Object data) {
+        tiles.put(index(x, y, z), data);
+    }
+
+    /** The tile entity data stored for (x, y, z), or null. */
+    public Object tile(int x, int y, int z) {
+        return tiles.get(index(x, y, z));
     }
 
     /** Counts one window copied; true once all of them are. */
