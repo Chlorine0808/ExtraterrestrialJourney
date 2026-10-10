@@ -14,7 +14,6 @@ import org.junit.jupiter.api.Test;
 import chlorine.etjourney.world.end.feature.cloud.Cirrus;
 import chlorine.etjourney.world.end.feature.cloud.CloudSea;
 import chlorine.etjourney.world.end.feature.cloud.Stratus;
-import chlorine.etjourney.world.end.modifier.ColumnState;
 import chlorine.etjourney.world.end.modifier.EndBlock;
 import chlorine.etjourney.world.end.modifier.Layer;
 import chlorine.etjourney.world.end.modifier.builtin.CloudModifiers;
@@ -59,10 +58,11 @@ class CloudSheetsTest {
         List<Layer> sheets = new ArrayList<>();
         for (int x = c[0] * 16; x < c[0] * 16 + 16; x++) {
             for (int z = c[1] * 16; z < c[1] * 16 + 16; z++) {
-                ColumnState column = plan.column(x, z);
-                double ground = column.land > 0 ? column.top : -1000;
+                // Ground and weight as the pass sees them: from the built land and the chunk's grid columns.
+                double[] in = CloudModifiers.sheetInputs(plan, c[0] * 16, c[1] * 16, style, x, z);
+                double ground = in[0];
                 sheets.clear();
-                source.sheets(SEED, x, z, ground, SAMPLER.styleWeight(style, x, z), sheets);
+                source.sheets(SEED, x, z, ground, in[1], sheets);
                 for (Layer l : sheets) {
                     for (int y = Math.max((int) l.bottom, (int) Math.floor(ground) + 3); y <= l.top; y++) {
                         expected++;
