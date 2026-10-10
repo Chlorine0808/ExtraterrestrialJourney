@@ -1,5 +1,8 @@
 package chlorine.etjourney.world.end.biosphere;
 
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.function.Supplier;
 
 import net.minecraft.world.chunk.IChunkProvider;
@@ -17,6 +20,14 @@ import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 /** Keeps villages, mineshafts, strongholds, temples, fortresses and dungeons out of the sample dimensions. */
 public final class SampleStructures {
 
+    private static final Set<Class<?>> VANILLA = new HashSet<>(
+        Arrays.asList(
+            MapGenVillage.class,
+            MapGenMineshaft.class,
+            MapGenStronghold.class,
+            MapGenScatteredFeature.class,
+            MapGenNetherBridge.class));
+
     /** Set while a sample dimension builds its generator, which is when the map generators are created. */
     private static boolean building;
 
@@ -33,6 +44,8 @@ public final class SampleStructures {
     public void onInitMapGen(InitMapGenEvent event) {
         if (!building) return;
         // The generators cast to these types, so each stand-in is the same class that never starts a structure.
+        // A generator another mod has already replaced may be cast to that mod's own type; leave it alone.
+        if (event.newGen == null || !VANILLA.contains(event.newGen.getClass())) return;
         switch (event.type) {
             case VILLAGE:
                 event.newGen = new MapGenVillage() {
