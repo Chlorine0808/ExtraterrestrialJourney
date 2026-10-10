@@ -5,7 +5,6 @@ import java.util.List;
 import chlorine.etjourney.world.end.feature.Biosphere;
 import chlorine.etjourney.world.end.feature.Structure;
 import chlorine.etjourney.world.end.feature.Structures;
-import chlorine.etjourney.world.end.modifier.BiomePart;
 import chlorine.etjourney.world.end.modifier.BlockSink;
 import chlorine.etjourney.world.end.modifier.ChunkArea;
 import chlorine.etjourney.world.end.modifier.EndBlock;
@@ -52,20 +51,12 @@ public final class StructureModifiers {
         });
     }
 
-    /**
-     * Glass balls drawn block by block over whatever else is there: the shell is glass, the air inside is cleared,
-     * and the floor takes the blocks of the ball's biome.
-     */
+    /** Glass balls drawn block by block over whatever else is there, cleared inside for the populate pass. */
     public static Modifier biospheres() {
-        return FeatureModifiers.blockModifier(890, (area, view, sink) -> drawBiospheres(area.seed, view, sink, false));
+        return FeatureModifiers.blockModifier(890, (area, view, sink) -> drawBiospheres(area.seed, view, sink));
     }
 
-    /** Only the deep rock of the biospheres reaching the sink, drawn again over what has since replaced it. */
-    public static void biosphereDeep(long seed, TerrainView view, BlockSink sink) {
-        drawBiospheres(seed, view, sink, true);
-    }
-
-    private static void drawBiospheres(long seed, TerrainView view, BlockSink sink, boolean deepOnly) {
+    private static void drawBiospheres(long seed, TerrainView view, BlockSink sink) {
         int ox = sink.originX(), oz = sink.originZ();
         for (Biosphere b : Biosphere.KIND.near(seed, ox + 8, oz + 8, 12, view.structures())) {
             if (!stands(view, b, Biosphere.KIND)) continue;
@@ -77,26 +68,8 @@ public final class StructureModifiers {
                 for (int z = z0; z <= z1; z++) {
                     for (int y = y0; y <= y1; y++) {
                         Biosphere.Part part = b.part(x, y, z);
-                        if (deepOnly && part != Biosphere.Part.DEEP) continue;
-                        switch (part) {
-                            case GLASS:
-                                sink.set(x, y, z, EndBlock.GLASS);
-                                break;
-                            case AIR:
-                                sink.clear(x, y, z);
-                                break;
-                            case TOP:
-                                sink.setBiome(x, y, z, BiomePart.TOP, b.pick);
-                                break;
-                            case FILLER:
-                                sink.setBiome(x, y, z, BiomePart.FILLER, b.pick);
-                                break;
-                            case DEEP:
-                                sink.setBiome(x, y, z, BiomePart.DEEP, b.pick);
-                                break;
-                            default:
-                                break;
-                        }
+                        if (part == Biosphere.Part.GLASS) sink.set(x, y, z, EndBlock.GLASS);
+                        else if (part == Biosphere.Part.INSIDE) sink.clear(x, y, z);
                     }
                 }
             }

@@ -4,29 +4,22 @@ import net.minecraft.block.Block;
 import net.minecraft.init.Blocks;
 import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
 
-import chlorine.etjourney.world.end.modifier.BiomePart;
 import chlorine.etjourney.world.end.modifier.BlockSink;
 import chlorine.etjourney.world.end.modifier.EndBlock;
 
-/** Heights of a freshly generated chunk, Y 128-255 by default, written straight into its block storage. */
+/** Y 128-255 of a freshly generated chunk, written straight into its block storage, as a BlockSink. */
 final class McStorageSink implements BlockSink {
 
     private final ExtendedBlockStorage[] storage;
     private final boolean hasSky;
-    private final int originX, originZ, minY, maxY;
+    private final int originX, originZ;
     private boolean wrote;
 
     McStorageSink(ExtendedBlockStorage[] storage, boolean hasSky, int chunkX, int chunkZ) {
-        this(storage, hasSky, chunkX, chunkZ, TallPass.BASE_Y, 256);
-    }
-
-    McStorageSink(ExtendedBlockStorage[] storage, boolean hasSky, int chunkX, int chunkZ, int minY, int maxY) {
         this.storage = storage;
         this.hasSky = hasSky;
         this.originX = chunkX * 16;
         this.originZ = chunkZ * 16;
-        this.minY = minY;
-        this.maxY = maxY;
     }
 
     /** True once any block was placed, set or cleared. */
@@ -46,12 +39,12 @@ final class McStorageSink implements BlockSink {
 
     @Override
     public int minY() {
-        return minY;
+        return TallPass.BASE_Y;
     }
 
     @Override
     public int maxY() {
-        return maxY;
+        return 256;
     }
 
     @Override
@@ -70,11 +63,6 @@ final class McStorageSink implements BlockSink {
     @Override
     public void set(int x, int y, int z, EndBlock block) {
         put(x, y, z, EndPalette.block(block), EndPalette.meta(block));
-    }
-
-    @Override
-    public void setBiome(int x, int y, int z, BiomePart part, double pick) {
-        put(x, y, z, BiomePalette.block(part, pick), BiomePalette.meta(part, pick));
     }
 
     @Override

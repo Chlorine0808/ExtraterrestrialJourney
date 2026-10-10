@@ -11,13 +11,11 @@ import java.util.List;
 import org.junit.jupiter.api.Test;
 
 import chlorine.etjourney.world.end.feature.Biosphere;
-import chlorine.etjourney.world.end.modifier.BiomePart;
 import chlorine.etjourney.world.end.modifier.EndBlock;
-import chlorine.etjourney.world.end.modifier.builtin.StructureModifiers;
 import chlorine.etjourney.world.end.region.RegionPicker;
 import chlorine.etjourney.world.end.region.Styles;
 
-/** Biospheres are drawn block by block: a glass shell, cleared air and a floor of biome blocks. */
+/** Biospheres are drawn block by block: a glass shell around cleared air. */
 class BiosphereVoxelsTest {
 
     private static final long SEED = 77L;
@@ -45,26 +43,13 @@ class BiosphereVoxelsTest {
         return sink;
     }
 
-    private static BiomePart biomePart(Biosphere.Part part) {
-        switch (part) {
-            case TOP:
-                return BiomePart.TOP;
-            case FILLER:
-                return BiomePart.FILLER;
-            case DEEP:
-                return BiomePart.DEEP;
-            default:
-                return null;
-        }
-    }
-
     @Test
     void everyPartIsDrawn() {
         int[] c = biosphereChunk();
         assertNotNull(c, "no biosphere found in a BIOSPHERES region");
         MemorySink sink = draw(c, 0, 256);
         List<Biosphere> balls = Biosphere.KIND.near(SEED, c[0] * 16 + 8, c[1] * 16 + 8, 12, SAMPLER.structureProbe());
-        int glass = 0, floor = 0;
+        int glass = 0, inside = 0;
         for (int x = c[0] * 16; x < c[0] * 16 + 16; x++) {
             for (int z = c[1] * 16; z < c[1] * 16 + 16; z++) {
                 for (int y = 0; y < 256; y++) {
@@ -74,18 +59,15 @@ class BiosphereVoxelsTest {
                         if (part == Biosphere.Part.GLASS) {
                             glass++;
                             assertEquals(EndBlock.GLASS, sink.get(x, y, z), at);
-                        } else if (part == Biosphere.Part.AIR) {
+                        } else if (part == Biosphere.Part.INSIDE) {
+                            inside++;
                             assertNull(sink.get(x, y, z), at);
-                        } else if (part != Biosphere.Part.OUTSIDE) {
-                            floor++;
-                            assertEquals(biomePart(part), sink.biomePart(x, y, z), at);
-                            assertEquals(b.pick, sink.pick(x, y, z), at);
                         }
                     }
                 }
             }
         }
-        assertTrue(glass > 0 && floor > 0, "glass " + glass + ", floor " + floor);
+        assertTrue(glass > 0 && inside > 0, "glass " + glass + ", inside " + inside);
     }
 
     @Test
@@ -99,35 +81,8 @@ class BiosphereVoxelsTest {
                     MemorySink half = y < 128 ? low : high;
                     String at = "at " + x + "," + y + "," + z;
                     assertEquals(whole.get(x, y, z), half.get(x, y, z), at);
-                    assertEquals(whole.biomePart(x, y, z), half.biomePart(x, y, z), at);
                 }
             }
         }
-    }
-
-    /** HEE turns stone below Y 128 into end stone after the block pass, so the deep rock is drawn again alone. */
-    @Test
-    void theDeepRockIsDrawnAgainAlone() {
-        int[] c = biosphereChunk();
-        assertNotNull(c);
-        MemorySink whole = draw(c, 0, 256), deep = new MemorySink(c[0], c[1], 0, 128);
-        ChunkPlan plan = new ChunkPlan(SAMPLER, c[0], c[1], (a, b) -> Collections.emptyList());
-        StructureModifiers.biosphereDeep(SEED, plan, deep);
-        int n = 0;
-        for (int x = c[0] * 16; x < c[0] * 16 + 16; x++) {
-            for (int z = c[1] * 16; z < c[1] * 16 + 16; z++) {
-                for (int y = 0; y < 128; y++) {
-                    String at = "at " + x + "," + y + "," + z;
-                    if (whole.biomePart(x, y, z) == BiomePart.DEEP) {
-                        n++;
-                        assertEquals(BiomePart.DEEP, deep.biomePart(x, y, z), at);
-                        assertEquals(whole.pick(x, y, z), deep.pick(x, y, z), at);
-                    } else {
-                        assertNull(deep.get(x, y, z), at);
-                    }
-                }
-            }
-        }
-        assertTrue(n > 0, "no deep rock below Y 128");
     }
 }

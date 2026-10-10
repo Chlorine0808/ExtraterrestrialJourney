@@ -1,6 +1,5 @@
 package chlorine.etjourney.world.end;
 
-import chlorine.etjourney.world.end.modifier.BiomePart;
 import chlorine.etjourney.world.end.modifier.BlockSink;
 import chlorine.etjourney.world.end.modifier.EndBlock;
 
@@ -9,8 +8,6 @@ final class MemorySink implements BlockSink {
 
     private final int originX, originZ, minY, maxY;
     private final EndBlock[] blocks;
-    private final BiomePart[] parts;
-    private final double[] picks;
     private boolean outOfRange;
 
     MemorySink(int chunkX, int chunkZ, int height) {
@@ -23,8 +20,6 @@ final class MemorySink implements BlockSink {
         this.minY = minY;
         this.maxY = maxY;
         this.blocks = new EndBlock[16 * 16 * (maxY - minY)];
-        this.parts = new BiomePart[blocks.length];
-        this.picks = new double[blocks.length];
     }
 
     private int index(int x, int y, int z) {
@@ -42,16 +37,6 @@ final class MemorySink implements BlockSink {
 
     EndBlock get(int x, int y, int z) {
         return blocks[index(x, y, z)];
-    }
-
-    /** The biome part set at a position, or null where the block is not a biome's. */
-    BiomePart biomePart(int x, int y, int z) {
-        int i = index(x, y, z);
-        return blocks[i] == null ? null : parts[i];
-    }
-
-    double pick(int x, int y, int z) {
-        return picks[index(x, y, z)];
     }
 
     @Override
@@ -86,23 +71,11 @@ final class MemorySink implements BlockSink {
 
     @Override
     public void set(int x, int y, int z, EndBlock block) {
-        int i = index(x, y, z);
-        blocks[i] = block;
-        parts[i] = null;
-    }
-
-    @Override
-    public void setBiome(int x, int y, int z, BiomePart part, double pick) {
-        int i = index(x, y, z);
-        blocks[i] = EndBlock.STONE;
-        parts[i] = part;
-        picks[i] = pick;
+        blocks[index(x, y, z)] = block;
     }
 
     @Override
     public void clear(int x, int y, int z) {
-        int i = index(x, y, z);
-        blocks[i] = null;
-        parts[i] = null;
+        blocks[index(x, y, z)] = null;
     }
 }

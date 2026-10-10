@@ -1,7 +1,6 @@
 package chlorine.etjourney.world;
 
 import chlorine.etjourney.core.util.ModLog;
-import chlorine.etjourney.world.end.BiospherePlants;
 import chlorine.etjourney.world.end.EndTerrain;
 import chlorine.etjourney.world.end.VoidFalls;
 import chlorine.etjourney.world.end.debug.EndProbe;
@@ -25,7 +24,6 @@ public final class ModWorld {
 
     public static void init() {
         VoidFalls.register();
-        BiospherePlants.register();
         ModLog.LOG.debug("world: init");
     }
 }

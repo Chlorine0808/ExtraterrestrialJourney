@@ -14,8 +14,6 @@ import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.terraingen.ChunkProviderEvent;
 import net.minecraftforge.event.world.ChunkEvent;
 
-import chlorine.etjourney.world.end.feature.Biosphere;
-import chlorine.etjourney.world.end.modifier.builtin.StructureModifiers;
 import chlorine.etjourney.world.end.region.RegionPicker;
 import chlorine.etjourney.world.end.region.Styles;
 import chlorine.etjourney.world.end.reserve.Reservations;
@@ -120,27 +118,11 @@ public final class EndTerrain {
         if (!outside(chunk.xPosition, chunk.zPosition)) return;
         Long seed = seed();
         if (seed == null) return;
-        IChunkProvider generator = ((WorldServer) world).theChunkProviderServer.currentChunkProvider;
         ExtendedBlockStorage[] storage = chunk.getBlockStorageArray();
-        int cx = chunk.xPosition * 16 + 8, cz = chunk.zPosition * 16 + 8;
-        if (!Biosphere.KIND.near(seed, cx, cz, 12, sampler(seed).structureProbe())
-            .isEmpty()) {
-            // The generator turned the stone of the lower half into end stone after the block pass; biosphere
-            // rock goes back. Drawing it again is harmless, so a reloaded unpopulated chunk may run this twice.
-            McStorageSink lower = new McStorageSink(
-                storage,
-                !world.provider.hasNoSky,
-                chunk.xPosition,
-                chunk.zPosition,
-                0,
-                TallPass.BASE_Y);
-            StructureModifiers
-                .biosphereDeep(seed, plan(generator, world, seed, chunk.xPosition, chunk.zPosition), lower);
-            if (lower.wrote()) chunk.isModified = true;
-        }
         for (int i = TallPass.BASE_Y >> 4; i < storage.length; i++) {
             if (storage[i] != null) return;
         }
+        IChunkProvider generator = ((WorldServer) world).theChunkProviderServer.currentChunkProvider;
         ChunkPlan plan = plan(generator, world, seed, chunk.xPosition, chunk.zPosition);
         McStorageSink upper = new McStorageSink(storage, !world.provider.hasNoSky, chunk.xPosition, chunk.zPosition);
         if (TallPass.needed(plan)) {

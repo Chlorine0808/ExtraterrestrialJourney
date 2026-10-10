@@ -3,7 +3,6 @@ package chlorine.etjourney.world.end;
 import net.minecraft.block.Block;
 import net.minecraft.init.Blocks;
 
-import chlorine.etjourney.world.end.modifier.BiomePart;
 import chlorine.etjourney.world.end.modifier.BlockSink;
 import chlorine.etjourney.world.end.modifier.EndBlock;
 
@@ -65,11 +64,6 @@ final class McBlockSink implements BlockSink {
         // Without a metadata array, coloured clay falls back to plain hardened clay.
         if (m != 0 && meta == null) b = Blocks.hardened_clay;
         put(x, y, z, b, m);
-    }
-
-    @Override
-    public void setBiome(int x, int y, int z, BiomePart part, double pick) {
-        put(x, y, z, BiomePalette.block(part, pick), BiomePalette.meta(part, pick));
     }
 
     private void put(int x, int y, int z, Block b, int m) {

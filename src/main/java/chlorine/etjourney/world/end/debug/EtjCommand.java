@@ -13,13 +13,10 @@ import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.util.Vec3;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
-import net.minecraft.world.biome.BiomeGenBase;
 import net.minecraft.world.chunk.IChunkProvider;
 
-import chlorine.etjourney.world.end.BiomePalette;
 import chlorine.etjourney.world.end.EndTerrain;
 import chlorine.etjourney.world.end.TerrainSampler;
-import chlorine.etjourney.world.end.feature.Biosphere;
 import chlorine.etjourney.world.end.feature.Holes;
 import chlorine.etjourney.world.end.feature.Lakes;
 import chlorine.etjourney.world.end.feature.Mountains;
@@ -137,17 +134,6 @@ public final class EtjCommand extends CommandBase {
                 .append('%');
         }
         say(player, out.toString());
-        // Biospheres over this column; their biome is not the world's, so F3 cannot show it.
-        for (Biosphere b : Biosphere.KIND.near(sampler.seed(), player.posX, player.posZ, 0, sampler.structureProbe())) {
-            BiomeGenBase biome = BiomePalette.biome(b.pick);
-            if (biome != null) say(
-                player,
-                EtjArgs.biosphereLine(
-                    biome.biomeName,
-                    biome.biomeID,
-                    biome.getClass()
-                        .getName()));
-        }
     }
 
     /** Nearest region holding the style as its base or an overlay, or with pure, as its base with no overlay. */

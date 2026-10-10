@@ -10,7 +10,7 @@ import java.util.List;
 
 import org.junit.jupiter.api.Test;
 
-/** A biosphere is a glass ball about 32 blocks in radius holding a floor of one biome's blocks. */
+/** A biosphere is a glass ball about 32 blocks in radius, empty inside for the populate pass to fill. */
 class BiosphereTest {
 
     /** Cells are cached per seed, so each probe gets a seed of its own. */
@@ -67,7 +67,6 @@ class BiosphereTest {
                 assertTrue(b.radius >= 28 && b.radius <= 36, "radius " + b.radius);
                 assertTrue(b.y + b.radius <= 248, "above the ceiling: " + b.y);
                 assertTrue(b.y - b.radius >= 70 + 8, "into the ground: " + b.y);
-                assertTrue(b.pick >= 0 && b.pick < 1, "pick " + b.pick);
             }
         }
         assertTrue(n > 20, "only " + n + " biospheres");
@@ -81,23 +80,24 @@ class BiosphereTest {
     }
 
     @Test
-    void glassShellAroundAFloorOfTopFillerAndDeepBlocks() {
+    void glassShellAroundAnEmptyInside() {
+        Biosphere b = first(probe(1, 70));
+        assertNotNull(b);
+        int x = (int) Math.floor(b.centreX), y = (int) Math.floor(b.y), z = (int) Math.floor(b.centreZ);
+        assertEquals(Biosphere.Part.INSIDE, b.part(x, y, z));
+        int top = y;
+        while (b.part(x, top, z) == Biosphere.Part.INSIDE) top++;
+        assertEquals(Biosphere.Part.GLASS, b.part(x, top, z));
+        assertEquals(Biosphere.Part.OUTSIDE, b.part(x, top + 1, z));
+    }
+
+    @Test
+    void theFloorLevelSitsInTheLowerHalf() {
         Biosphere b = first(probe(1, 70));
         assertNotNull(b);
         int x = (int) Math.floor(b.centreX), z = (int) Math.floor(b.centreZ);
-        int top = b.floorTop(x, z);
-        assertEquals(Biosphere.Part.TOP, b.part(x, top, z));
-        assertEquals(Biosphere.Part.FILLER, b.part(x, top - 1, z));
-        assertEquals(Biosphere.Part.FILLER, b.part(x, top - 3, z));
-        assertEquals(Biosphere.Part.DEEP, b.part(x, top - 4, z));
-        assertEquals(Biosphere.Part.AIR, b.part(x, top + 1, z));
-        // Straight up from the floor the first solid block is the glass ceiling, then nothing.
-        int y = top + 1;
-        while (b.part(x, y, z) == Biosphere.Part.AIR) y++;
-        assertEquals(Biosphere.Part.GLASS, b.part(x, y, z));
-        assertEquals(Biosphere.Part.OUTSIDE, b.part(x, y + 1, z));
-        // The floor sits in the lower half, leaving room for trees.
-        assertTrue(y - top > b.radius, "headroom " + (y - top));
+        int floor = b.floorTop(x, z);
+        assertTrue(floor < b.y && floor > b.y - b.radius * 0.5, "floor " + floor + " in ball at " + b.y);
     }
 
     @Test
@@ -113,25 +113,6 @@ class BiosphereTest {
             }
             assertTrue(glass, "no glass along " + d[0] + "," + d[1] + "," + d[2]);
         }
-    }
-
-    @Test
-    void floorColumnsKeepClearOfTheGlass() {
-        Biosphere b = first(probe(1, 70));
-        assertNotNull(b);
-        int x = (int) Math.floor(b.centreX), z = (int) Math.floor(b.centreZ);
-        assertTrue(b.onFloor(x, z));
-        assertTrue(!b.onFloor(x + (int) b.radius, z), "the rim column counts as floor");
-    }
-
-    @Test
-    void plantsGoJustAboveTheFloorAndNowhereElse() {
-        Biosphere b = first(probe(1, 70));
-        assertNotNull(b);
-        int x = (int) Math.floor(b.centreX), z = (int) Math.floor(b.centreZ);
-        assertEquals(b.floorTop(x, z) + 1, b.plantY(x, z));
-        assertEquals(-1, b.plantY(x + (int) b.radius, z));
-        assertEquals(-1, b.plantY(x + 100, z));
     }
 
     @Test
