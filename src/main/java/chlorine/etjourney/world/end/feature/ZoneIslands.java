@@ -130,7 +130,7 @@ public final class ZoneIslands {
 
     /** Density of the islands: a flattened dome on top and a superellipse underside below the centre. */
     public static double density(List<Island> islands, double x, double y, double z, double edge) {
-        double best = -100;
+        double best = Double.NEGATIVE_INFINITY;
         for (Island island : islands) {
             double horiz = Math.hypot(x - island.x, z - island.z);
             double dy = y - island.y;
