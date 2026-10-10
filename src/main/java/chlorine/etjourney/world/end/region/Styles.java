@@ -161,6 +161,15 @@ public final class Styles {
         .build();
     public static final Style VIRGA = structure("VIRGA", Style.LAND);
 
+    /** Curling wave crests on subdued land, as a base or over other land. */
+    public static final Style BILLOWS = Style.builder("BILLOWS", StyleKind.BOTH)
+        .share(1)
+        .overlay(OVERLAY_CHANCE, Style.LAND)
+        .mountains(0.3)
+        .valleys(0.3)
+        .holes(true)
+        .build();
+
     private static final List<Style> ALL = Collections.unmodifiableList(
         Arrays.asList(
             PLAINS,
@@ -196,7 +205,8 @@ public final class Styles {
             ROLL_CLOUDS,
             LENTICULARS,
             MACKEREL,
-            VIRGA));
+            VIRGA,
+            BILLOWS));
 
     private Styles() {}
 

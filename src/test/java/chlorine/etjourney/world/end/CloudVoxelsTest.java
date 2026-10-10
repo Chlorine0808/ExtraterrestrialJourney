@@ -39,4 +39,9 @@ class CloudVoxelsTest {
     void bothHalvesDrawTheSameVirga() {
         assertHalvesAgree("VIRGA");
     }
+
+    @Test
+    void bothHalvesDrawTheSameBillows() {
+        assertHalvesAgree("BILLOWS");
+    }
 }

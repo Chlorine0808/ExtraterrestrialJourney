@@ -14,6 +14,7 @@ import chlorine.etjourney.world.end.feature.Structures;
 import chlorine.etjourney.world.end.feature.Zone;
 import chlorine.etjourney.world.end.feature.ZoneIslands;
 import chlorine.etjourney.world.end.feature.cloud.Anvil;
+import chlorine.etjourney.world.end.feature.cloud.Billow;
 import chlorine.etjourney.world.end.feature.cloud.Cumulus;
 import chlorine.etjourney.world.end.feature.cloud.Lenticular;
 import chlorine.etjourney.world.end.feature.cloud.Mackerel;
@@ -60,6 +61,7 @@ public final class FeatureModifiers {
         all.add(StructureModifiers.voxels(Lenticular.KIND, 864, EndBlock.STONE));
         all.add(StructureModifiers.voxels(Mackerel.KIND, 865, EndBlock.STONE));
         all.add(StructureModifiers.voxels(Virga.KIND, 866, EndBlock.STONE));
+        all.add(StructureModifiers.voxels(Billow.KIND, 867, EndBlock.STONE));
         return all;
     }
 

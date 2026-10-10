@@ -106,4 +106,15 @@ class CloudStylesTest {
             Styles.all()
                 .contains(Styles.VIRGA));
     }
+
+    @Test
+    void billowsAreALandBaseThatAlsoOverlaysLand() {
+        assertEquals(StyleKind.BOTH, Styles.BILLOWS.kind);
+        assertEquals(1, Styles.BILLOWS.share);
+        assertTrue(Styles.BILLOWS.canOverlay(Styles.PLAINS));
+        assertFalse(Styles.BILLOWS.canOverlay(Styles.ISLETS));
+        assertTrue(
+            Styles.all()
+                .contains(Styles.BILLOWS));
+    }
 }
