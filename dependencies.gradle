@@ -42,6 +42,9 @@ dependencies {
     devOnlyNonPublishable(rfg.deobf("curse.maven:novacraft-705131:7753716"))
     devOnlyNonPublishable(rfg.deobf("curse.maven:biomes-o-plenty-220318:2499612"))
     devOnlyNonPublishable(rfg.deobf("curse.maven:biome-decoration-fix-533258:3479308"))
+    devOnlyNonPublishable("com.github.GTNewHorizons:Natura:2.8.24:dev")
+    devOnlyNonPublishable(rfg.deobf("curse.maven:netherlicious-385860:4363437"))
+    devOnlyNonPublishable(rfg.deobf("curse.maven:realistic-world-gen-revived-1663621:8706364"))
 
     runtimeOnlyNonPublishable(rfg.deobf("maven.modrinth:carbon-config:WfL4zVO9"))
     runtimeOnlyNonPublishable(rfg.deobf("maven.modrinth:salutation:MGHtgMX3"))
