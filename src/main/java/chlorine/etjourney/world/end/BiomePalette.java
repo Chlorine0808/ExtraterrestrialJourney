@@ -9,6 +9,7 @@ import net.minecraft.init.Blocks;
 import net.minecraft.world.biome.BiomeGenBase;
 import net.minecraft.world.biome.BiomeGenEnd;
 import net.minecraft.world.biome.BiomeGenHell;
+import net.minecraftforge.common.BiomeDictionary;
 
 import chlorine.etjourney.world.end.modifier.BiomePart;
 
@@ -53,6 +54,14 @@ public final class BiomePalette {
         return Collections.unmodifiableList(out);
     }
 
+    /** Rock under the filler: netherrack in the Nether, end stone in the End, stone anywhere else. */
+    private static Block deep(BiomeGenBase biome, Block top, Block filler) {
+        // Nether biomes of other mods do not extend BiomeGenHell; they register the type or keep netherrack.
+        if (BiomeDictionary.isBiomeOfType(biome, BiomeDictionary.Type.NETHER) || top == Blocks.netherrack
+            || filler == Blocks.netherrack) return Blocks.netherrack;
+        return BiomeDictionary.isBiomeOfType(biome, BiomeDictionary.Type.END) ? Blocks.end_stone : Blocks.stone;
+    }
+
     private static final class Ground {
 
         final BiomeGenBase biome;
@@ -74,9 +83,7 @@ public final class BiomePalette {
                 filler = biome.fillerBlock != null ? biome.fillerBlock : Blocks.dirt;
                 // 1.7.10 keeps no filler metadata; field_76754_C next to fillerBlock is a colour.
                 fillerMeta = 0;
-                // The vanilla End turns stone below Y 128 into end stone, so both halves use end stone. Nether
-                // biomes of other mods do not extend BiomeGenHell but keep netherrack ground.
-                deep = top == Blocks.netherrack || filler == Blocks.netherrack ? Blocks.netherrack : Blocks.end_stone;
+                deep = deep(biome, top, filler);
                 deepMeta = 0;
             }
         }
