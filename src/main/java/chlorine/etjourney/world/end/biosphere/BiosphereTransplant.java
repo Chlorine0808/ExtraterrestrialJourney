@@ -43,7 +43,7 @@ public final class BiosphereTransplant implements IWorldGenerator {
             seed,
             ox + 8,
             oz + 8,
-            12,
+            Biosphere.WINDOW_REACH,
             EndTerrain.sampler(seed)
                 .structureProbe())) {
             if (!b.touchesWindow(chunkX, chunkZ)) continue;

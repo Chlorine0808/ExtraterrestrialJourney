@@ -177,4 +177,22 @@ class BiosphereTest {
             }
         }
     }
+
+    /** Populate finds balls with near() from its window's centre; every window counted must find the ball. */
+    @Test
+    void populateFindsTheBallInEveryWindowCounted() {
+        StructureProbe probe = probe(1, 70);
+        Biosphere b = first(probe);
+        assertNotNull(b);
+        int c0x = (int) Math.floor(b.minX() / 16) - 3, c1x = (int) Math.floor(b.maxX() / 16) + 3;
+        int c0z = (int) Math.floor(b.minZ() / 16) - 3, c1z = (int) Math.floor(b.maxZ() / 16) + 3;
+        for (int i = c0x; i <= c1x; i++) {
+            for (int j = c0z; j <= c1z; j++) {
+                if (!b.touchesWindow(i, j)) continue;
+                List<Biosphere> seen = Biosphere.KIND
+                    .near(SEED, i * 16 + 16, j * 16 + 16, Biosphere.WINDOW_REACH, probe);
+                assertTrue(seen.contains(b), "window " + i + "," + j + " counted but populate misses the ball");
+            }
+        }
+    }
 }

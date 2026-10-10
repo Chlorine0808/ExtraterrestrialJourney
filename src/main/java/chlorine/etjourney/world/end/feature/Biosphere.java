@@ -17,6 +17,8 @@ public final class Biosphere extends Structure {
     /** Clearance over the ground, and the lowest bottom over the void. */
     private static final double OVER_GROUND = 12, VOID_FLOOR = 40;
     private static final double MAX_RADIUS = 36;
+    /** Reach from a populate window's centre within which the populate pass looks for balls. */
+    public static final double WINDOW_REACH = 12;
 
     public static final Structure.Kind<Biosphere> KIND = new Structure.Kind<Biosphere>(
         "BIOSPHERES",
@@ -73,19 +75,25 @@ public final class Biosphere extends Structure {
         return d > radius - 1 ? Part.GLASS : Part.INSIDE;
     }
 
-    /** Whether the populate window of chunk (chunkX, chunkZ), 16 x 16 from 8 blocks into it, meets the ball. */
+    /**
+     * Whether the populate window of chunk (chunkX, chunkZ), 16 x 16 from 8 blocks into it, meets the ball and
+     * finds it: populate looks for balls within WINDOW_REACH plus their footprint of the window's centre.
+     */
     public boolean touchesWindow(int chunkX, int chunkZ) {
         int wx = chunkX * 16 + 8, wz = chunkZ * 16 + 8;
-        return wx <= maxX() && wx + 15 >= minX() && wz <= maxZ() && wz + 15 >= minZ();
+        if (wx > maxX() || wx + 15 < minX() || wz > maxZ() || wz + 15 < minZ()) return false;
+        return Math.hypot(centreX - (wx + 8), centreZ - (wz + 8)) <= WINDOW_REACH + footprint;
     }
 
-    /** How many populate windows meet the ball. */
+    /** How many populate windows meet and find the ball. */
     public int windowCount() {
-        return windows(minX(), maxX()) * windows(minZ(), maxZ());
-    }
-
-    private static int windows(double low, double high) {
-        return (int) Math.floor((high - 8) / 16) - (int) Math.ceil((low - 23) / 16) + 1;
+        int n = 0;
+        int c0x = (int) Math.ceil((minX() - 23) / 16), c1x = (int) Math.floor((maxX() - 8) / 16);
+        int c0z = (int) Math.ceil((minZ() - 23) / 16), c1z = (int) Math.floor((maxZ() - 8) / 16);
+        for (int i = c0x; i <= c1x; i++) {
+            for (int j = c0z; j <= c1z; j++) if (touchesWindow(i, j)) n++;
+        }
+        return n;
     }
 
     /** Identifies the ball by its centre block. */
