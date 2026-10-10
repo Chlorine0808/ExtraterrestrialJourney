@@ -8,19 +8,25 @@ import chlorine.etjourney.world.end.modifier.BiomePart;
 import chlorine.etjourney.world.end.modifier.BlockSink;
 import chlorine.etjourney.world.end.modifier.EndBlock;
 
-/** Y 128-255 of a freshly generated chunk, written straight into its block storage, as a BlockSink. */
+/** Heights of a freshly generated chunk, Y 128-255 by default, written straight into its block storage. */
 final class McStorageSink implements BlockSink {
 
     private final ExtendedBlockStorage[] storage;
     private final boolean hasSky;
-    private final int originX, originZ;
+    private final int originX, originZ, minY, maxY;
     private boolean wrote;
 
     McStorageSink(ExtendedBlockStorage[] storage, boolean hasSky, int chunkX, int chunkZ) {
+        this(storage, hasSky, chunkX, chunkZ, TallPass.BASE_Y, 256);
+    }
+
+    McStorageSink(ExtendedBlockStorage[] storage, boolean hasSky, int chunkX, int chunkZ, int minY, int maxY) {
         this.storage = storage;
         this.hasSky = hasSky;
         this.originX = chunkX * 16;
         this.originZ = chunkZ * 16;
+        this.minY = minY;
+        this.maxY = maxY;
     }
 
     /** True once any block was placed, set or cleared. */
@@ -40,12 +46,12 @@ final class McStorageSink implements BlockSink {
 
     @Override
     public int minY() {
-        return TallPass.BASE_Y;
+        return minY;
     }
 
     @Override
     public int maxY() {
-        return 256;
+        return maxY;
     }
 
     @Override
