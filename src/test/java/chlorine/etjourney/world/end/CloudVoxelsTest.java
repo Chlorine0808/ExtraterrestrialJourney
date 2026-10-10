@@ -36,6 +36,11 @@ class CloudVoxelsTest {
     }
 
     @Test
+    void bothHalvesDrawTheSameStratus() {
+        assertHalvesAgree("STRATUS");
+    }
+
+    @Test
     void bothHalvesDrawTheSameMackerel() {
         assertHalvesAgree("MACKEREL");
     }

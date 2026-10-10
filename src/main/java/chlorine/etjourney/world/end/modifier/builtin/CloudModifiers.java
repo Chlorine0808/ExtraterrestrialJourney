@@ -5,7 +5,6 @@ import java.util.List;
 
 import chlorine.etjourney.world.end.feature.cloud.Cirrus;
 import chlorine.etjourney.world.end.feature.cloud.CloudSea;
-import chlorine.etjourney.world.end.feature.cloud.Stratus;
 import chlorine.etjourney.world.end.modifier.DensityField;
 import chlorine.etjourney.world.end.modifier.EndBlock;
 import chlorine.etjourney.world.end.modifier.Layer;
@@ -22,10 +21,6 @@ public final class CloudModifiers {
     }
 
     private CloudModifiers() {}
-
-    public static Modifier stratus() {
-        return sheets(870, "STRATUS", 0, Stratus.TOP, Stratus::sheets);
-    }
 
     public static Modifier cirrus() {
         return sheets(871, "CIRRUS", Cirrus.LOWEST, Cirrus.HIGHEST, Cirrus::sheets);

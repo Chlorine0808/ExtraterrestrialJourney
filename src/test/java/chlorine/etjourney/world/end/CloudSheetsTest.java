@@ -13,7 +13,6 @@ import org.junit.jupiter.api.Test;
 
 import chlorine.etjourney.world.end.feature.cloud.Cirrus;
 import chlorine.etjourney.world.end.feature.cloud.CloudSea;
-import chlorine.etjourney.world.end.feature.cloud.Stratus;
 import chlorine.etjourney.world.end.modifier.EndBlock;
 import chlorine.etjourney.world.end.modifier.Layer;
 import chlorine.etjourney.world.end.modifier.builtin.CloudModifiers;
@@ -103,22 +102,13 @@ class CloudSheetsTest {
     }
 
     @Test
-    void stratusSheetsAreDrawn() {
-        assertDrawn("STRATUS", Stratus::sheets);
-    }
-
-    @Test
-    void bothHalvesDrawTheSameStratus() {
-        assertHalvesAgree("STRATUS");
-    }
-
-    @Test
     void sheetsGiveWayToReservedAreas() {
-        int[] c = chunkOf("STRATUS");
+        int[] c = chunkOf("CLOUD_SEA");
         assertNotNull(c);
         Area island = new Area("hee", c[0] * 16 + 8, c[1] * 16 + 8, 400);
         MemorySink sink = draw(c, 0, 256, (a, b) -> Collections.singletonList(island));
-        int[] n = filledOf("STRATUS", Stratus::sheets, sink, c);
+        int[] n = filledOf("CLOUD_SEA", CloudSea::sheets, sink, c);
+        assertTrue(n[0] > 0, "no sheet to give way");
         assertTrue(n[1] * 100 <= n[0], n[1] + " of " + n[0] + " sheet blocks inside a reserved area");
     }
 

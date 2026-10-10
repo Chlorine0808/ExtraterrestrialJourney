@@ -25,7 +25,8 @@ class CloudKindsTest {
         Lenticular.KIND,
         Mackerel.KIND,
         Virga.KIND,
-        Billow.KIND);
+        Billow.KIND,
+        Paper.KIND);
 
     /** Land with an underside, so the kinds that stand on or hang from the land form too. */
     private static StructureProbe at(double weight) {

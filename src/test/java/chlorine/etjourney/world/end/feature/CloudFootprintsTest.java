@@ -13,6 +13,7 @@ import chlorine.etjourney.world.end.feature.cloud.Cumulus;
 import chlorine.etjourney.world.end.feature.cloud.Lenticular;
 import chlorine.etjourney.world.end.feature.cloud.Mackerel;
 import chlorine.etjourney.world.end.feature.cloud.Mammatus;
+import chlorine.etjourney.world.end.feature.cloud.Paper;
 import chlorine.etjourney.world.end.feature.cloud.RollCloud;
 import chlorine.etjourney.world.end.feature.cloud.Virga;
 
@@ -27,7 +28,8 @@ class CloudFootprintsTest {
         Lenticular.KIND,
         Mackerel.KIND,
         Virga.KIND,
-        Billow.KIND);
+        Billow.KIND,
+        Paper.KIND);
 
     /** Flat land with an underside, so every kind forms. */
     private static final StructureProbe LAND = new StructureProbe() {

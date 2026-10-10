@@ -134,11 +134,10 @@ public final class Styles {
     public static final Style CHAINS = structure("CHAINS", Style.ANY);
     public static final Style CUMULUS = structure("CUMULUS", Style.ANY);
 
-    /** Thin sheets stacked over the land, drawn block by block. */
+    /** Sharp-edged papers drifting over the land, crowded in places; drawn block by block. */
     public static final Style STRATUS = Style.builder("STRATUS", StyleKind.BOTH)
         .share(1)
         .overlay(OVERLAY_CHANCE, Style.LAND)
-        .modifiers(CloudModifiers.stratus())
         .build();
 
     /** High thin streaks along the wind of their region, over any base. */

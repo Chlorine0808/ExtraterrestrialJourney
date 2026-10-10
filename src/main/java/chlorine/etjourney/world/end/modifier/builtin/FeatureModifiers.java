@@ -21,6 +21,7 @@ import chlorine.etjourney.world.end.feature.cloud.Cumulus;
 import chlorine.etjourney.world.end.feature.cloud.Lenticular;
 import chlorine.etjourney.world.end.feature.cloud.Mackerel;
 import chlorine.etjourney.world.end.feature.cloud.Mammatus;
+import chlorine.etjourney.world.end.feature.cloud.Paper;
 import chlorine.etjourney.world.end.feature.cloud.RollCloud;
 import chlorine.etjourney.world.end.feature.cloud.Virga;
 import chlorine.etjourney.world.end.modifier.BlockSink;
@@ -66,6 +67,7 @@ public final class FeatureModifiers {
         all.add(StructureModifiers.voxels(Mackerel.KIND, 865, EndBlock.STONE));
         all.add(StructureModifiers.voxels(Virga.KIND, 866, EndBlock.STONE));
         all.add(StructureModifiers.voxels(Billow.KIND, 867, EndBlock.STONE));
+        all.add(StructureModifiers.voxels(Paper.KIND, 868, EndBlock.STONE));
         return all;
     }
 
