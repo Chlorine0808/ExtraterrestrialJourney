@@ -87,8 +87,9 @@ public final class StructureModifiers {
         return kind.overIslands || !blocked(reserved, s) ? s : null;
     }
 
-    /** On a reserved island, or standing on ground that an island's fade has lowered. */
+    /** On a reserved island, or standing on ground that an island's fade has lowered; never above the islands. */
     static boolean blocked(List<Area> reserved, Structure s) {
+        if (s.minY() >= Reservations.CLEAR_Y) return false;
         if (Reservations.touches(reserved, s.centreX, s.centreZ, s.footprint)) return true;
         for (double[] foot : s.feet()) {
             if (Reservations.suppression(reserved, foot[0], foot[1]) > 0.1) return true;
