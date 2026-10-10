@@ -13,5 +13,7 @@ public enum EndBlock {
     STARDUST_TOP,
     STARDUST_FILL,
     /** Links of hanging and sky chains. */
-    CHAIN
+    CHAIN,
+    /** Shells of biospheres. */
+    GLASS
 }

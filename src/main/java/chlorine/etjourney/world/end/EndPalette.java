@@ -51,6 +51,8 @@ public final class EndPalette {
                 return Blocks.sandstone;
             case CHAIN:
                 return Blocks.obsidian;
+            case GLASS:
+                return Blocks.glass;
             default:
                 return Blocks.end_stone;
         }
