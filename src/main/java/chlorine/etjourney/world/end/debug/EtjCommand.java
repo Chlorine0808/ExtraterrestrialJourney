@@ -40,7 +40,7 @@ public final class EtjCommand extends CommandBase {
 
     @Override
     public String getCommandUsage(ICommandSender sender) {
-        return "/etj end <here|styles|style <name>|mix [style]|mountain [minTopY]|lake|hole|valley|zone <name>|heeisland|destitute>";
+        return "/etj end <here|styles|style <name>|style <name> pure|mix [a] [b] [c]|mountain [minTopY]|lake|hole|valley|zone <name>|heeisland|destitute>";
     }
 
     @Override
@@ -78,8 +78,10 @@ public final class EtjCommand extends CommandBase {
                 here(player, sampler);
                 break;
             case "style":
+                styleRegion(player, sampler, arg, args.length > 3 && args[3].equals("pure"));
+                break;
             case "mix":
-                styleRegion(player, sampler, arg, what.equals("mix"));
+                mixRegion(player, sampler, Arrays.copyOfRange(args, 2, args.length));
                 break;
             case "mountain":
                 mountain(player, sampler, arg == null ? 128 : parseInt(sender, arg));
@@ -125,24 +127,60 @@ public final class EtjCommand extends CommandBase {
         say(player, out.toString());
     }
 
-    /**
-     * Nearest region holding the style as its base or an overlay (style), or nearest region with any overlay,
-     * optionally including the style (mix). Overlay-only styles such as SPIRES are never a base.
-     */
-    private static void styleRegion(EntityPlayerMP player, TerrainSampler sampler, String name, boolean mix) {
+    /** Nearest region holding the style as its base or an overlay, or with pure, as its base with no overlay. */
+    private static void styleRegion(EntityPlayerMP player, TerrainSampler sampler, String name, boolean pure) {
         RegionPicker picker = sampler.picker();
         Style target = name == null ? null : picker.byName(name);
-        if (name != null && target == null || target == null && !mix) {
-            say(player, "Styles: " + picker.styles());
+        if (target == null) {
+            say(player, (name == null ? "Name a style" : "Unknown style " + name) + "; /etj end styles lists them");
+            return;
+        }
+        if (pure && !target.isBase()) {
+            say(player, target + " is only ever laid over a base; use /etj end mix " + target);
             return;
         }
         long seed = sampler.seed();
+        nearestRegion(
+            player,
+            sampler,
+            (cx, cz) -> pure ? picker.isPure(seed, cx, cz, target) : picker.contains(seed, cx, cz, target));
+    }
+
+    /** Nearest region with at least one overlay that holds every named style (up to three) as its base or overlays. */
+    private static void mixRegion(EntityPlayerMP player, TerrainSampler sampler, String[] names) {
+        RegionPicker picker = sampler.picker();
+        if (names.length > RegionPicker.MAX_OVERLAYS + 1) {
+            say(player, "A region holds at most " + (RegionPicker.MAX_OVERLAYS + 1) + " styles");
+            return;
+        }
+        List<Style> wanted = new ArrayList<>();
+        for (String name : names) {
+            Style style = picker.byName(name);
+            if (style == null) {
+                say(player, "Unknown style " + name + "; /etj end styles lists them");
+                return;
+            }
+            wanted.add(style);
+        }
+        long seed = sampler.seed();
+        nearestRegion(
+            player,
+            sampler,
+            (cx, cz) -> !picker.overlays(seed, cx, cz)
+                .isEmpty() && picker.containsAll(seed, cx, cz, wanted));
+    }
+
+    private interface CellTest {
+
+        boolean test(int cx, int cz);
+    }
+
+    /** Teleports to the centre of the nearest region cell that passes, clear of the central island. */
+    private static void nearestRegion(EntityPlayerMP player, TerrainSampler sampler, CellTest test) {
+        RegionPicker picker = sampler.picker();
+        long seed = sampler.seed();
         double[] hit = EndSearch.nearestInCells(RegionMap.REGION, player.posX, player.posZ, (cx, cz) -> {
-            Style base = picker.base(seed, cx, cz);
-            List<Style> overlays = picker.overlays(seed, cx, cz);
-            boolean has = target == null || picker.contains(seed, cx, cz, target);
-            boolean match = mix ? !overlays.isEmpty() && has : has;
-            if (!match) return null;
+            if (!test.test(cx, cz)) return null;
             double[] c = RegionMap.cellCentre(seed, cx, cz);
             return Math.hypot(c[0], c[1]) < 1100 ? null : c;
         });
