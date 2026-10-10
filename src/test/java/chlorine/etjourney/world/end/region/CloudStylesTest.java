@@ -29,4 +29,14 @@ class CloudStylesTest {
             Styles.all()
                 .contains(Styles.CIRRUS));
     }
+
+    @Test
+    void cloudSeaIsALandBaseOnly() {
+        assertEquals(StyleKind.BASE_LAND, Styles.CLOUD_SEA.kind);
+        assertEquals(1, Styles.CLOUD_SEA.share);
+        assertFalse(Styles.CLOUD_SEA.canOverlay(Styles.PLAINS));
+        assertTrue(
+            Styles.all()
+                .contains(Styles.CLOUD_SEA));
+    }
 }

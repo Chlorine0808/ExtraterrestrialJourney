@@ -12,6 +12,7 @@ import java.util.List;
 import org.junit.jupiter.api.Test;
 
 import chlorine.etjourney.world.end.feature.cloud.Cirrus;
+import chlorine.etjourney.world.end.feature.cloud.CloudSea;
 import chlorine.etjourney.world.end.feature.cloud.Stratus;
 import chlorine.etjourney.world.end.modifier.ColumnState;
 import chlorine.etjourney.world.end.modifier.EndBlock;
@@ -129,5 +130,15 @@ class CloudSheetsTest {
     @Test
     void bothHalvesDrawTheSameCirrus() {
         assertHalvesAgree("CIRRUS");
+    }
+
+    @Test
+    void cloudSeaSheetsAreDrawn() {
+        assertDrawn("CLOUD_SEA", CloudSea::sheets);
+    }
+
+    @Test
+    void bothHalvesDrawTheSameCloudSea() {
+        assertHalvesAgree("CLOUD_SEA");
     }
 }

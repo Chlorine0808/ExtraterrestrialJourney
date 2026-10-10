@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import chlorine.etjourney.world.end.feature.cloud.Cirrus;
+import chlorine.etjourney.world.end.feature.cloud.CloudSea;
 import chlorine.etjourney.world.end.feature.cloud.Stratus;
 import chlorine.etjourney.world.end.modifier.ColumnState;
 import chlorine.etjourney.world.end.modifier.EndBlock;
@@ -27,6 +28,15 @@ public final class CloudModifiers {
 
     public static Modifier cirrus() {
         return sheets(871, "CIRRUS", Cirrus::sheets);
+    }
+
+    public static Modifier cloudSea() {
+        return sheets(872, "CLOUD_SEA", CloudSea::sheets);
+    }
+
+    /** Land sinks 30 blocks, so only the peaks reach the sheet. */
+    public static Modifier cloudSeaFloor() {
+        return CoreModifiers.simple(215, (area, view, s, weight) -> s.level -= 30 * weight);
     }
 
     /**

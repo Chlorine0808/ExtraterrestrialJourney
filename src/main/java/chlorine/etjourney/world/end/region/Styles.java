@@ -141,6 +141,13 @@ public final class Styles {
         .modifiers(CloudModifiers.cirrus())
         .build();
 
+    /** Sunken land under a level sheet of cloud, with only the ridges standing through. */
+    public static final Style CLOUD_SEA = Style.builder("CLOUD_SEA", StyleKind.BASE_LAND)
+        .share(1)
+        .mountains(0.4)
+        .modifiers(CloudModifiers.cloudSeaFloor(), StyleModifiers.ranges(), CloudModifiers.cloudSea())
+        .build();
+
     private static final List<Style> ALL = Collections.unmodifiableList(
         Arrays.asList(
             PLAINS,
@@ -168,7 +175,8 @@ public final class Styles {
             CROSSES,
             CHAINS,
             STRATUS,
-            CIRRUS));
+            CIRRUS,
+            CLOUD_SEA));
 
     private Styles() {}
 
