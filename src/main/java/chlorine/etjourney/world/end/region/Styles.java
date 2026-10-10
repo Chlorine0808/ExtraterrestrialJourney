@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.function.Predicate;
 
+import chlorine.etjourney.world.end.modifier.builtin.CloudModifiers;
 import chlorine.etjourney.world.end.modifier.builtin.StyleModifiers;
 
 /** The terrain styles carried over from the spike, as bases and overlays. Core modifiers are not listed here. */
@@ -127,6 +128,13 @@ public final class Styles {
     public static final Style CROSSES = structure("CROSSES", Style.ANY);
     public static final Style CHAINS = structure("CHAINS", Style.ANY);
 
+    /** Thin sheets stacked over the land, drawn block by block. */
+    public static final Style STRATUS = Style.builder("STRATUS", StyleKind.BOTH)
+        .share(1)
+        .overlay(OVERLAY_CHANCE, Style.LAND)
+        .modifiers(CloudModifiers.stratus())
+        .build();
+
     private static final List<Style> ALL = Collections.unmodifiableList(
         Arrays.asList(
             PLAINS,
@@ -152,7 +160,8 @@ public final class Styles {
             SPIRAL_TOWERS,
             HOLLOW_PILLARS,
             CROSSES,
-            CHAINS));
+            CHAINS,
+            STRATUS));
 
     private Styles() {}
 

@@ -1,0 +1,111 @@
+package chlorine.etjourney.world.end;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
+import org.junit.jupiter.api.Test;
+
+import chlorine.etjourney.world.end.feature.cloud.Stratus;
+import chlorine.etjourney.world.end.modifier.ColumnState;
+import chlorine.etjourney.world.end.modifier.EndBlock;
+import chlorine.etjourney.world.end.modifier.Layer;
+import chlorine.etjourney.world.end.modifier.builtin.CloudModifiers;
+import chlorine.etjourney.world.end.region.RegionPicker;
+import chlorine.etjourney.world.end.region.Styles;
+import chlorine.etjourney.world.end.reserve.Area;
+
+/** Sheet styles fill their sheets block by block, the same in both halves, and give way to reserved areas. */
+class CloudSheetsTest {
+
+    private static final long SEED = 91L;
+    private static final TerrainSampler SAMPLER = new TerrainSampler(SEED, new RegionPicker(Styles.all()));
+    private static final ChunkPlan.ReservedLookup NONE = (a, b) -> Collections.emptyList();
+
+    /** A chunk whose centre holds the style at 0.75 or more; an overlay peaks at 0.8. */
+    static int[] chunkOf(String style) {
+        for (int i = 0; i < 300; i++) {
+            for (int j = 0; j < 300; j++) {
+                int cx = 100 + i * 3, cz = -450 + j * 3;
+                if (SAMPLER.styleWeight(style, cx * 16 + 8, cz * 16 + 8) >= 0.75) return new int[] { cx, cz };
+            }
+        }
+        return null;
+    }
+
+    static MemorySink draw(int[] c, int minY, int maxY, ChunkPlan.ReservedLookup reserved) {
+        MemorySink sink = new MemorySink(c[0], c[1], minY, maxY);
+        new ChunkPlan(SAMPLER, c[0], c[1], reserved).blocks(sink);
+        return sink;
+    }
+
+    /** Blocks of the source's sheets that lie in the air above the ground, which the pass must have filled. */
+    static int[] filledOf(String style, CloudModifiers.SheetSource source, MemorySink sink, int[] c) {
+        ChunkPlan plan = new ChunkPlan(SAMPLER, c[0], c[1], NONE);
+        int expected = 0, filled = 0;
+        List<Layer> sheets = new ArrayList<>();
+        for (int x = c[0] * 16; x < c[0] * 16 + 16; x++) {
+            for (int z = c[1] * 16; z < c[1] * 16 + 16; z++) {
+                ColumnState column = plan.column(x, z);
+                double ground = column.land > 0 ? column.top : -1000;
+                sheets.clear();
+                source.sheets(SEED, x, z, ground, SAMPLER.styleWeight(style, x, z), sheets);
+                for (Layer l : sheets) {
+                    for (int y = Math.max((int) l.bottom, (int) Math.floor(ground) + 3); y <= l.top; y++) {
+                        expected++;
+                        if (sink.get(x, y, z) != null) filled++;
+                    }
+                }
+            }
+        }
+        return new int[] { expected, filled };
+    }
+
+    static void assertDrawn(String style, CloudModifiers.SheetSource source) {
+        int[] c = chunkOf(style);
+        assertNotNull(c, "no " + style + " chunk found");
+        MemorySink sink = draw(c, 0, 256, NONE);
+        assertTrue(sink.placedOnlyWithinRange());
+        int[] n = filledOf(style, source, sink, c);
+        assertTrue(n[0] > 0, style + " has no sheet in its chunk");
+        assertEquals(n[0], n[1], "holes in the " + style + " sheets");
+    }
+
+    static void assertHalvesAgree(String style) {
+        int[] c = chunkOf(style);
+        assertNotNull(c);
+        MemorySink whole = draw(c, 0, 256, NONE), low = draw(c, 0, 128, NONE), high = draw(c, 128, 256, NONE);
+        for (int x = c[0] * 16; x < c[0] * 16 + 16; x++) {
+            for (int z = c[1] * 16; z < c[1] * 16 + 16; z++) {
+                for (int y = 0; y < 256; y++) {
+                    EndBlock half = y < 128 ? low.get(x, y, z) : high.get(x, y, z);
+                    assertEquals(whole.get(x, y, z), half, "at " + x + "," + y + "," + z);
+                }
+            }
+        }
+    }
+
+    @Test
+    void stratusSheetsAreDrawn() {
+        assertDrawn("STRATUS", Stratus::sheets);
+    }
+
+    @Test
+    void bothHalvesDrawTheSameStratus() {
+        assertHalvesAgree("STRATUS");
+    }
+
+    @Test
+    void sheetsGiveWayToReservedAreas() {
+        int[] c = chunkOf("STRATUS");
+        assertNotNull(c);
+        Area island = new Area("hee", c[0] * 16 + 8, c[1] * 16 + 8, 400);
+        MemorySink sink = draw(c, 0, 256, (a, b) -> Collections.singletonList(island));
+        int[] n = filledOf("STRATUS", Stratus::sheets, sink, c);
+        assertTrue(n[1] * 100 <= n[0], n[1] + " of " + n[0] + " sheet blocks inside a reserved area");
+    }
+}
