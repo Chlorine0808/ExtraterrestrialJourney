@@ -16,6 +16,7 @@ import chlorine.etjourney.world.end.feature.ZoneIslands;
 import chlorine.etjourney.world.end.feature.cloud.Anvil;
 import chlorine.etjourney.world.end.feature.cloud.Cumulus;
 import chlorine.etjourney.world.end.feature.cloud.Lenticular;
+import chlorine.etjourney.world.end.feature.cloud.Mackerel;
 import chlorine.etjourney.world.end.feature.cloud.Mammatus;
 import chlorine.etjourney.world.end.feature.cloud.RollCloud;
 import chlorine.etjourney.world.end.modifier.BlockSink;
@@ -56,6 +57,7 @@ public final class FeatureModifiers {
         all.add(StructureModifiers.voxels(Structures.HANGING_CHAINS, 862, EndBlock.CHAIN));
         all.add(StructureModifiers.voxels(Structures.SKY_CHAINS, 863, EndBlock.CHAIN));
         all.add(StructureModifiers.voxels(Lenticular.KIND, 864, EndBlock.STONE));
+        all.add(StructureModifiers.voxels(Mackerel.KIND, 865, EndBlock.STONE));
         return all;
     }
 

@@ -153,6 +153,13 @@ public final class Styles {
     public static final Style ROLL_CLOUDS = structure("ROLL_CLOUDS", Style.ANY);
     public static final Style LENTICULARS = structure("LENTICULARS", Style.ANY);
 
+    /** Small puffs in a loose grid over the void, on one waving sheet. */
+    public static final Style MACKEREL = Style.builder("MACKEREL", StyleKind.BASE_VOID)
+        .share(1)
+        .mountains(0)
+        .valleys(0)
+        .build();
+
     private static final List<Style> ALL = Collections.unmodifiableList(
         Arrays.asList(
             PLAINS,
@@ -186,7 +193,8 @@ public final class Styles {
             MAMMATUS,
             ANVILS,
             ROLL_CLOUDS,
-            LENTICULARS));
+            LENTICULARS,
+            MACKEREL));
 
     private Styles() {}
 

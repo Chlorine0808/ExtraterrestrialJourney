@@ -86,4 +86,14 @@ class CloudStylesTest {
             Styles.all()
                 .contains(Styles.LENTICULARS));
     }
+
+    @Test
+    void mackerelIsAVoidBaseOnly() {
+        assertEquals(StyleKind.BASE_VOID, Styles.MACKEREL.kind);
+        assertEquals(1, Styles.MACKEREL.share);
+        assertFalse(Styles.MACKEREL.canOverlay(Styles.ISLETS));
+        assertTrue(
+            Styles.all()
+                .contains(Styles.MACKEREL));
+    }
 }
