@@ -4,9 +4,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 import net.minecraft.block.Block;
+import net.minecraft.block.BlockFalling;
 import net.minecraft.block.material.Material;
-import net.minecraft.entity.Entity;
 import net.minecraft.init.Blocks;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.tileentity.TileEntity;
 import net.minecraft.world.ChunkCoordIntPair;
 import net.minecraft.world.WorldServer;
 import net.minecraft.world.chunk.Chunk;
@@ -39,8 +41,12 @@ final class CutoutMaker {
             if (w == null) continue;
             try {
                 return cut(seed, b, kind, w);
-            } catch (RuntimeException | LinkageError e) {
+            } catch (Throwable e) {
                 // Another mod's generator failing in the sample dimension; try the other world.
+                SampleWorlds.rethrowFatal(e);
+                // Vanilla population sets this for its duration; an exception part way would leave sand falling
+                // instantly everywhere.
+                BlockFalling.fallInstantly = false;
                 ModLog.LOG
                     .warn("Biosphere at {},{} could not be cut from {}", (int) b.centreX, (int) b.centreZ, kind, e);
             }
@@ -80,7 +86,9 @@ final class CutoutMaker {
                             if (sy < 0) continue;
                             block = w.getBlock(sx, sy, sz);
                         }
-                        cut.set(x, y, z, Block.getIdFromBlock(block) << 4 | w.getBlockMetadata(sx, sy, sz));
+                        int meta = w.getBlockMetadata(sx, sy, sz);
+                        if (block.hasTileEntity(meta) && !keepTile(w, cut, x, y, z, sx, sy, sz)) continue;
+                        cut.set(x, y, z, Block.getIdFromBlock(block) << 4 | meta);
                     }
                 }
             }
@@ -95,6 +103,24 @@ final class CutoutMaker {
             return cut;
         } finally {
             discard(w);
+        }
+    }
+
+    /**
+     * Keeps the tile entity data of the sample block at (sx, sy, sz) for the ball's (x, y, z); false when there
+     * is none to keep, and the block is then left out: a mod's tile entity built empty may fail as it ticks.
+     */
+    private static boolean keepTile(WorldServer w, Cutout cut, int x, int y, int z, int sx, int sy, int sz) {
+        try {
+            TileEntity tile = w.getTileEntity(sx, sy, sz);
+            if (tile == null) return false;
+            NBTTagCompound tag = new NBTTagCompound();
+            tile.writeToNBT(tag);
+            cut.putTile(x, y, z, tag);
+            return true;
+        } catch (Throwable t) {
+            SampleWorlds.rethrowFatal(t);
+            return false;
         }
     }
 
@@ -151,20 +177,16 @@ final class CutoutMaker {
         if (!w.playerEntities.isEmpty()) return;
         List<Chunk> chunks = new ArrayList<>(w.theChunkProviderServer.loadedChunks);
         for (Chunk chunk : chunks) {
-            // An idle world stops updating its entities, which is where unloaded ones leave its lists; take the
-            // chunk's entities and tile entities out here instead.
-            for (List<?> list : chunk.entityLists) {
-                for (Object o : list) {
-                    Entity e = (Entity) o;
-                    w.loadedEntityList.remove(e);
-                    w.onEntityRemoved(e);
-                }
-            }
+            // They stop ticking now; the world forgets them on its next entity update.
+            for (List<?> list : chunk.entityLists) w.loadedEntityList.removeAll(list);
             w.loadedTileEntityList.removeAll(chunk.chunkTileEntityMap.values());
             chunk.onChunkUnload();
             w.theChunkProviderServer.loadedChunks.remove(chunk);
             w.theChunkProviderServer.loadedChunkHashMap
                 .remove(ChunkCoordIntPair.chunkXZ2Int(chunk.xPosition, chunk.zPosition));
         }
+        // An idle world skips its entity updates, which is where unloaded entities and tile entities leave its
+        // lists; without this they would stay there for the rest of the run.
+        w.resetUpdateEntityTick();
     }
 }
