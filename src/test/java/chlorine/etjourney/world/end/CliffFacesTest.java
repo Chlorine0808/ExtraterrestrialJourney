@@ -48,9 +48,12 @@ class CliffFacesTest {
         return out;
     }
 
-    /** Exposed solid blocks per column, for steep cells (corner spread of 16 or more) and flat ones (under 4). */
+    /**
+     * Exposed solid blocks per column, for steep cells (corner spread of 16 or more) and flat ones (under 4), as
+     * {steep, flat} with faces() and {steep, flat} from the density grid alone, over the same cells.
+     */
     static double[] exposure() {
-        double steep = 0, flat = 0;
+        double steep = 0, flat = 0, smoothSteep = 0, smoothFlat = 0;
         int steepColumns = 0, flatColumns = 0, chunks = 0;
         for (int n = 0; n < 80000 && chunks < 250; n++) {
             int cx = 80 + n % 200 * 5, cz = -1500 + n / 200 * 11;
@@ -68,16 +71,19 @@ class CliffFacesTest {
             chunks++;
             double[] field = new double[DensityBuilder.SIZE_X * DensityBuilder.SIZE_Y * DensityBuilder.SIZE_Z];
             DensityBuilder.fill(plan, field, cx * 2, cz * 2, 0);
-            MemorySink sink = new MemorySink(cx, cz, 0, 128);
-            TallPass.forEachSolid(
-                field,
-                (x, y, z) -> sink.set(cx * 16 + x, y - TallPass.BASE_Y, cz * 16 + z, EndBlock.STONE));
-            plan.blocks(sink);
+            MemorySink smooth = new MemorySink(cx, cz, 0, 128), sink = new MemorySink(cx, cz, 0, 128);
+            TallPass.forEachSolid(field, (x, y, z) -> {
+                smooth.set(cx * 16 + x, y - TallPass.BASE_Y, cz * 16 + z, EndBlock.STONE);
+                sink.set(cx * 16 + x, y - TallPass.BASE_Y, cz * 16 + z, EndBlock.STONE);
+            });
+            FeatureModifiers.faces()
+                .blocks(plan.area(), sink, 1);
+            // Cells are told apart on the smooth surface, so both counts cover the same cells.
             int[][] top = new int[16][16];
             for (int x = 0; x < 16; x++) {
                 for (int z = 0; z < 16; z++) {
                     int y = 127;
-                    while (y > 0 && sink.get(cx * 16 + x, y, cz * 16 + z) == null) y--;
+                    while (y > 0 && smooth.get(cx * 16 + x, y, cz * 16 + z) == null) y--;
                     top[x][z] = y;
                 }
             }
@@ -85,38 +91,46 @@ class CliffFacesTest {
             double spread = Math.max(Math.max(t00, t10), Math.max(t01, t11))
                 - Math.min(Math.min(t00, t10), Math.min(t01, t11));
             if (spread >= 4 && spread < 16) continue;
-            // Exposed solid blocks per column inside the cell, away from the chunk edges.
-            int exposed = 0, cols = 0;
-            for (int x = 1; x < 8; x++) {
-                for (int z = 1; z < 8; z++) {
-                    cols++;
-                    for (int y = 1; y < 127; y++) {
-                        if (sink.get(cx * 16 + x, y, cz * 16 + z) == null) continue;
-                        if (air(sink, cx * 16 + x + 1, y, cz * 16 + z) || air(sink, cx * 16 + x - 1, y, cz * 16 + z)
-                            || air(sink, cx * 16 + x, y, cz * 16 + z + 1)
-                            || air(sink, cx * 16 + x, y, cz * 16 + z - 1)
-                            || air(sink, cx * 16 + x, y + 1, cz * 16 + z)) exposed++;
-                    }
-                }
-            }
+            int exposed = exposed(sink, cx, cz), smoothExposed = exposed(smooth, cx, cz);
             if (spread >= 16) {
                 steep += exposed;
-                steepColumns += cols;
+                smoothSteep += smoothExposed;
+                steepColumns += 49;
             } else {
                 flat += exposed;
-                flatColumns += cols;
+                smoothFlat += smoothExposed;
+                flatColumns += 49;
             }
         }
         assertTrue(steepColumns > 400 && flatColumns > 400, steepColumns + " steep, " + flatColumns + " flat columns");
-        return new double[] { steep / steepColumns, flat / flatColumns };
+        return new double[] { steep / steepColumns, flat / flatColumns, smoothSteep / steepColumns,
+            smoothFlat / flatColumns };
+    }
+
+    /** Exposed solid blocks in the 7 x 7 columns of the chunk's first cell, away from the chunk edges. */
+    private static int exposed(MemorySink sink, int cx, int cz) {
+        int exposed = 0;
+        for (int x = 1; x < 8; x++) {
+            for (int z = 1; z < 8; z++) {
+                for (int y = 1; y < 127; y++) {
+                    if (sink.get(cx * 16 + x, y, cz * 16 + z) == null) continue;
+                    if (air(sink, cx * 16 + x + 1, y, cz * 16 + z) || air(sink, cx * 16 + x - 1, y, cz * 16 + z)
+                        || air(sink, cx * 16 + x, y, cz * 16 + z + 1)
+                        || air(sink, cx * 16 + x, y, cz * 16 + z - 1)
+                        || air(sink, cx * 16 + x, y + 1, cz * 16 + z)) exposed++;
+                }
+            }
+        }
+        return exposed;
     }
 
     @Test
     void steepFacesAreRoughAndFlatGroundIsNot() {
         double[] s = exposure();
-        // Smooth faces, as the density grid alone leaves them, expose about 2.55 blocks per column; flat ground 1.12.
-        assertTrue(s[0] > 2.65, "steep faces are smooth: " + s[0]);
-        assertTrue(s[1] < 1.15, "flat ground got rough: " + s[1]);
+        // Against the same cells as the density grid alone leaves them: rough steep faces expose clearly more blocks,
+        // while flat ground stays nearly as it was.
+        assertTrue(s[0] > s[2] + 0.1, "steep faces are smooth: " + s[0] + " against " + s[2]);
+        assertTrue(s[1] < s[3] + 0.03, "flat ground got rough: " + s[1] + " against " + s[3]);
     }
 
     private static boolean air(MemorySink sink, int x, int y, int z) {
