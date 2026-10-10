@@ -73,7 +73,9 @@ public final class BiomePalette {
                 topMeta = biome.topBlock != null ? biome.field_150604_aj : 0;
                 filler = biome.fillerBlock != null ? biome.fillerBlock : Blocks.dirt;
                 fillerMeta = biome.fillerBlock != null ? biome.field_76754_C : 0;
-                deep = Blocks.stone;
+                // The vanilla End turns stone below Y 128 into end stone, so both halves use end stone. Nether
+                // biomes of other mods do not extend BiomeGenHell but keep netherrack ground.
+                deep = top == Blocks.netherrack || filler == Blocks.netherrack ? Blocks.netherrack : Blocks.end_stone;
                 deepMeta = 0;
             }
         }
