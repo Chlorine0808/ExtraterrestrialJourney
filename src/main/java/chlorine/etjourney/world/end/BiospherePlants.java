@@ -1,7 +1,9 @@
 package chlorine.etjourney.world.end;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
+import java.util.concurrent.ConcurrentHashMap;
 
 import net.minecraft.block.BlockFlower;
 import net.minecraft.block.material.Material;
@@ -25,6 +27,8 @@ public final class BiospherePlants implements IWorldGenerator {
     private static final int END = 1;
     /** Most tries of each kind per populate window, against biomes that decorate very densely. */
     private static final int MAX_TREES = 8, MAX_FLOWERS = 8, MAX_GRASS = 24;
+
+    private static final Map<BiomeGenBase, int[]> COUNTS = new ConcurrentHashMap<>();
 
     public static void register() {
         GameRegistry.registerWorldGenerator(new BiospherePlants(), 0);
@@ -62,8 +66,8 @@ public final class BiospherePlants implements IWorldGenerator {
     }
 
     private static void decorate(World world, Random random, BiomeGenBase biome, Biosphere b, int ox, int oz) {
-        BiomeDecorator d = decorator(biome);
-        int trees = Math.min(MAX_TREES, Math.max(0, d.treesPerChunk)) + (random.nextInt(10) == 0 ? 1 : 0);
+        int[] counts = counts(biome);
+        int trees = Math.min(MAX_TREES, counts[0]) + (random.nextInt(10) == 0 ? 1 : 0);
         for (int i = 0; i < trees; i++) {
             int x = ox + random.nextInt(16), z = oz + random.nextInt(16), y = b.plantY(x, z);
             if (y < 0) continue;
@@ -71,7 +75,7 @@ public final class BiospherePlants implements IWorldGenerator {
             tree.setScale(1, 1, 1);
             if (tree.generate(world, random, x, y, z)) tree.func_150524_b(world, random, x, y, z);
         }
-        for (int i = 0; i < Math.min(MAX_FLOWERS, d.flowersPerChunk); i++) {
+        for (int i = 0; i < Math.min(MAX_FLOWERS, counts[1]); i++) {
             int x = ox + random.nextInt(16), z = oz + random.nextInt(16), y = b.plantY(x, z);
             if (y < 0) continue;
             String name = biome.func_150572_a(random, x, y, z);
@@ -81,7 +85,7 @@ public final class BiospherePlants implements IWorldGenerator {
             gen.func_150550_a(flower, BlockFlower.func_149856_f(name));
             gen.generate(world, random, x, y, z);
         }
-        for (int i = 0; i < Math.min(MAX_GRASS, d.grassPerChunk); i++) {
+        for (int i = 0; i < Math.min(MAX_GRASS, counts[2]); i++) {
             int x = ox + random.nextInt(16), z = oz + random.nextInt(16), y = b.plantY(x, z);
             if (y < 0) continue;
             biome.getRandomWorldGenForGrass(random)
@@ -89,7 +93,27 @@ public final class BiospherePlants implements IWorldGenerator {
         }
     }
 
-    /** The decorator holding the biome's counts; BoP hides the vanilla field behind one of its own. */
+    /**
+     * Trees, flowers and grass per chunk, as {trees, flowers, grass}. BoP hides the vanilla decorator behind one of
+     * its own, and a biome it overrides keeps the counts in the vanilla biome it wraps, so the larger count wins.
+     */
+    private static int[] counts(BiomeGenBase biome) {
+        return COUNTS.computeIfAbsent(biome, b -> {
+            int[] out = new int[3];
+            add(out, decorator(b));
+            BiomeGenBase wrapped = ShadowFields.find(b, BiomeGenBase.class, BiomeGenBase.class);
+            if (wrapped != null) add(out, decorator(wrapped));
+            return out;
+        });
+    }
+
+    private static void add(int[] counts, BiomeDecorator d) {
+        if (d == null) return;
+        counts[0] = Math.max(counts[0], d.treesPerChunk);
+        counts[1] = Math.max(counts[1], d.flowersPerChunk);
+        counts[2] = Math.max(counts[2], d.grassPerChunk);
+    }
+
     private static BiomeDecorator decorator(BiomeGenBase biome) {
         BiomeDecorator hidden = ShadowFields.find(biome, BiomeGenBase.class, BiomeDecorator.class);
         return hidden != null ? hidden : biome.theBiomeDecorator;
