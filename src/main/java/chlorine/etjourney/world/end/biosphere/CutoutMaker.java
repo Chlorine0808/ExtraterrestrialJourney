@@ -159,14 +159,20 @@ final class CutoutMaker {
 
             @Override
             public boolean air(int x, int y, int z) {
-                return w.isAirBlock(x, y, z);
+                // The world reports air outside its height; that is no cave to fill a ball with.
+                return y >= 0 && y < w.getActualHeight() && w.isAirBlock(x, y, z);
             }
         };
-        int high = kind == BiosphereSource.Kind.CAVE ? Math.min(CAVE_TOP, surface - CAVE_DEPTH)
-            : w.getActualHeight() - 8;
-        int floor = FloorFinder.broadest(blocks, p[0], p[1], b.radius, LOWEST_FLOOR, high);
-        if (floor >= 0) return floor;
-        return kind == BiosphereSource.Kind.CAVE ? surface : NETHER_FALLBACK;
+        if (kind == BiosphereSource.Kind.CAVE) {
+            // Caves are too narrow for a shared floor; centre the ball on the most open space instead.
+            int cx = (int) Math.floor(b.centreX), cz = (int) Math.floor(b.centreZ);
+            double rise = b.y - b.floorTop(cx, cz);
+            int floor = FloorFinder
+                .roomiest(blocks, p[0], p[1], b.radius, rise, LOWEST_FLOOR, Math.min(CAVE_TOP, surface - CAVE_DEPTH));
+            return floor >= 0 ? floor : surface;
+        }
+        int floor = FloorFinder.broadest(blocks, p[0], p[1], b.radius, LOWEST_FLOOR, w.getActualHeight() - 8);
+        return floor >= 0 ? floor : NETHER_FALLBACK;
     }
 
     /**

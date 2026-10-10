@@ -3,7 +3,7 @@ package chlorine.etjourney.world.end.feature;
 import java.util.ArrayList;
 import java.util.List;
 
-/** Finds the floor height most columns of a cut-out share, so a ball is not filled from a pillar or a ledge. */
+/** Finds the height a cut-out is aligned to: the floor most columns share, or for caves the most open space. */
 public final class FloorFinder {
 
     /** The blocks of the world a cut-out is taken from. */
@@ -60,6 +60,38 @@ public final class FloorFinder {
             }
         }
         return best;
+    }
+
+    /**
+     * The floor height from low to high that puts the most air inside a ball of the radius whose centre is rise
+     * above it, or -1 where there is none; caves are narrow, so a cave ball follows open space, not floors.
+     * Among equally open heights the middle one is taken, which centres the ball on its chamber.
+     */
+    public static int roomiest(Blocks blocks, int x, int z, double radius, double rise, int low, int high) {
+        if (high < low) return -1;
+        int reach = (int) (radius * 0.9);
+        int[] counts = new int[high - low + 1];
+        int best = 0;
+        for (int g = low; g <= high; g++) {
+            int cy = (int) Math.round(g + rise), n = 0;
+            for (int dx = -reach; dx <= reach; dx += STEP) {
+                for (int dy = -reach; dy <= reach; dy += STEP) {
+                    for (int dz = -reach; dz <= reach; dz += STEP) {
+                        if (dx * dx + dy * dy + dz * dz <= reach * reach && blocks.air(x + dx, cy + dy, z + dz)) n++;
+                    }
+                }
+            }
+            counts[g - low] = n;
+            best = Math.max(best, n);
+        }
+        if (best == 0) return -1;
+        int first = -1, last = -1;
+        for (int i = 0; i < counts.length; i++) {
+            if (counts[i] != best) continue;
+            if (first < 0) first = i;
+            last = i;
+        }
+        return low + (first + last) / 2;
     }
 
     private static boolean isFloor(Blocks blocks, int x, int y, int z) {

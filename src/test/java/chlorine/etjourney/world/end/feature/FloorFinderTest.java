@@ -1,6 +1,7 @@
 package chlorine.etjourney.world.end.feature;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.junit.jupiter.api.Test;
 
@@ -78,5 +79,36 @@ class FloorFinderTest {
             }
         };
         assertEquals(-1, FloorFinder.broadest(w, 0, 0, 32, 6, 120));
+    }
+
+    /** Rock everywhere but a chamber from Y 20 to 40 within 20 blocks of the centre. */
+    private static final FloorFinder.Blocks CHAMBER = new FloorFinder.Blocks() {
+
+        @Override
+        public boolean ground(int x, int y, int z) {
+            return !air(x, y, z);
+        }
+
+        @Override
+        public boolean air(int x, int y, int z) {
+            return y >= 20 && y <= 40 && Math.abs(x) <= 20 && Math.abs(z) <= 20;
+        }
+    };
+
+    @Test
+    void aCaveBallCentresOnTheBiggestChamber() {
+        // The ball's centre sits rise blocks above the floor height returned.
+        int floor = FloorFinder.roomiest(CHAMBER, 0, 0, 32, 8, 6, 56);
+        assertTrue(floor + 8 >= 26 && floor + 8 <= 34, "centre at " + (floor + 8));
+    }
+
+    @Test
+    void solidRockHasNoRoomiestHeight() {
+        assertEquals(-1, FloorFinder.roomiest(terrain((x, z) -> 255), 0, 0, 32, 8, 6, 56));
+    }
+
+    @Test
+    void anEmptyRangeHasNoRoomiestHeight() {
+        assertEquals(-1, FloorFinder.roomiest(CHAMBER, 0, 0, 32, 8, 6, 2));
     }
 }
