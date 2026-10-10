@@ -159,6 +159,7 @@ public final class Styles {
         .mountains(0)
         .valleys(0)
         .build();
+    public static final Style VIRGA = structure("VIRGA", Style.LAND);
 
     private static final List<Style> ALL = Collections.unmodifiableList(
         Arrays.asList(
@@ -194,7 +195,8 @@ public final class Styles {
             ANVILS,
             ROLL_CLOUDS,
             LENTICULARS,
-            MACKEREL));
+            MACKEREL,
+            VIRGA));
 
     private Styles() {}
 

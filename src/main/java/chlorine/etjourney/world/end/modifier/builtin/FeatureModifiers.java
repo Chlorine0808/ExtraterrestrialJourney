@@ -19,6 +19,7 @@ import chlorine.etjourney.world.end.feature.cloud.Lenticular;
 import chlorine.etjourney.world.end.feature.cloud.Mackerel;
 import chlorine.etjourney.world.end.feature.cloud.Mammatus;
 import chlorine.etjourney.world.end.feature.cloud.RollCloud;
+import chlorine.etjourney.world.end.feature.cloud.Virga;
 import chlorine.etjourney.world.end.modifier.BlockSink;
 import chlorine.etjourney.world.end.modifier.ChunkArea;
 import chlorine.etjourney.world.end.modifier.DensityField;
@@ -58,6 +59,7 @@ public final class FeatureModifiers {
         all.add(StructureModifiers.voxels(Structures.SKY_CHAINS, 863, EndBlock.CHAIN));
         all.add(StructureModifiers.voxels(Lenticular.KIND, 864, EndBlock.STONE));
         all.add(StructureModifiers.voxels(Mackerel.KIND, 865, EndBlock.STONE));
+        all.add(StructureModifiers.voxels(Virga.KIND, 866, EndBlock.STONE));
         return all;
     }
 

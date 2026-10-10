@@ -96,4 +96,14 @@ class CloudStylesTest {
             Styles.all()
                 .contains(Styles.MACKEREL));
     }
+
+    @Test
+    void virgaOverlaysLandOnly() {
+        assertEquals(StyleKind.OVERLAY, Styles.VIRGA.kind);
+        assertTrue(Styles.VIRGA.canOverlay(Styles.PLAINS));
+        assertFalse(Styles.VIRGA.canOverlay(Styles.ISLETS));
+        assertTrue(
+            Styles.all()
+                .contains(Styles.VIRGA));
+    }
 }
