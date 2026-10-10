@@ -21,6 +21,8 @@ class StylesTest {
         assertTrue(Styles.ARCS.canOverlay(Styles.ISLETS));
         assertTrue(Styles.ARCS.canOverlay(Styles.RANGES));
         assertFalse(Styles.SHOALS.canOverlay(Styles.PLAINS));
+        assertEquals(StyleKind.BASE_VOID, Styles.BIOSPHERES.kind);
+        assertFalse(Styles.BIOSPHERES.canOverlay(Styles.ISLETS));
     }
 
     @Test

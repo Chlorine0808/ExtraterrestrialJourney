@@ -168,8 +168,12 @@ public final class Styles {
         .holes(true)
         .build();
 
-    /** Floating glass balls, each holding a floor of one biome. */
-    public static final Style BIOSPHERES = structure("BIOSPHERES", Style.ANY);
+    /** Glass balls over the void, each holding a floor of one biome. */
+    public static final Style BIOSPHERES = Style.builder("BIOSPHERES", StyleKind.BASE_VOID)
+        .share(1)
+        .mountains(0)
+        .valleys(0)
+        .build();
 
     private static final List<Style> ALL = Collections.unmodifiableList(
         Arrays.asList(
