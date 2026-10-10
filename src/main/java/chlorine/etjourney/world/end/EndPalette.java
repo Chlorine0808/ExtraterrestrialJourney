@@ -20,7 +20,7 @@ public final class EndPalette {
         META.bind(kind, meta);
     }
 
-    static Block block(EndBlock kind) {
+    public static Block block(EndBlock kind) {
         Block bound = BLOCKS.get(kind);
         return bound != null ? bound : standIn(kind);
     }
