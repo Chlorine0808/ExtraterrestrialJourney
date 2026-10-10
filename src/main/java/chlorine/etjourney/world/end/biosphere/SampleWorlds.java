@@ -20,7 +20,7 @@ import chlorine.etjourney.world.end.feature.BiosphereSource;
 /** The hidden dimensions biosphere cut-outs are generated in. */
 public final class SampleWorlds {
 
-    /** Sample dimensions registered at start; one another mod already holds is left out. */
+    /** Sample dimensions registered at start. */
     private static final Set<Integer> REGISTERED = new HashSet<>();
     /** Sample dimensions that failed to load, and the server run that saw it (weakly, so it can be collected). */
     private static final Set<Integer> BROKEN = new HashSet<>();
@@ -34,12 +34,17 @@ public final class SampleWorlds {
         MinecraftForge.TERRAIN_GEN_BUS.register(new SampleStructures());
     }
 
-    /** Registers a sample dimension unless another mod holds its ID, which would stop the game from starting. */
+    /**
+     * Registers a sample dimension. An ID another mod holds stops the game here, with a message saying what to
+     * change: going on without the dimension would leave biospheres quietly missing.
+     */
     private static void register(int dim, Class<? extends WorldProvider> provider) {
         if (DimensionManager.isDimensionRegistered(dim)
             || !DimensionManager.registerProviderType(dim, provider, false)) {
-            ModLog.LOG.error("Biosphere sample dimension {} is taken by another mod; change it in etjourney.cfg", dim);
-            return;
+            throw new IllegalStateException(
+                "Extraterrestrial Journey: biosphere sample dimension " + dim
+                    + " is already taken by another mod. Set sampleDimension and netherSampleDimension in"
+                    + " config/etjourney.cfg (section biospheres) to free dimension IDs.");
         }
         DimensionManager.registerDimension(dim, dim);
         REGISTERED.add(dim);
