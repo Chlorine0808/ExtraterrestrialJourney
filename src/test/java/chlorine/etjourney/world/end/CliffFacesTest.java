@@ -28,8 +28,9 @@ class CliffFacesTest {
      */
     static double[] exposure() {
         double steep = 0, flat = 0, smoothSteep = 0, smoothFlat = 0;
-        int steepColumns = 0, flatColumns = 0, chunks = 0;
-        for (int n = 0; n < 80000 && chunks < 250; n++) {
+        int steepColumns = 0, flatColumns = 0;
+        // Until both kinds of cell are well sampled, however the styles share the land out.
+        for (int n = 0; n < 200000 && (steepColumns < 1000 || flatColumns < 1000); n++) {
             int cx = 80 + n % 200 * 5, cz = -1500 + n / 200 * 11;
             ChunkPlan plan = new ChunkPlan(SAMPLER, cx, cz, (a, b) -> Collections.emptyList());
             if (!plan.shapes()
@@ -42,7 +43,6 @@ class CliffFacesTest {
                 }
             }
             if (!usable) continue;
-            chunks++;
             double[] field = new double[DensityBuilder.SIZE_X * DensityBuilder.SIZE_Y * DensityBuilder.SIZE_Z];
             DensityBuilder.fill(plan, field, cx * 2, cz * 2, 0);
             MemorySink smooth = new MemorySink(cx, cz, 0, 128), sink = new MemorySink(cx, cz, 0, 128);
