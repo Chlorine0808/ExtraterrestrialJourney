@@ -18,7 +18,7 @@ import chlorine.etjourney.world.end.feature.Structures;
 class CloudKindsTest {
 
     /** Each task adds its kind here. */
-    static final List<Structure.Kind<? extends Structure>> KINDS = Arrays.asList(Cumulus.KIND);
+    static final List<Structure.Kind<? extends Structure>> KINDS = Arrays.asList(Cumulus.KIND, Mammatus.KIND);
 
     /** Land with an underside, so the kinds that stand on or hang from the land form too. */
     private static StructureProbe at(double weight) {

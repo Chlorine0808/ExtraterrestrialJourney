@@ -11,7 +11,7 @@ class StylesTest {
     @Test
     void elevenStylesWithTheSpecsOverlayTable() {
         assertEquals(
-            28,
+            29,
             Styles.all()
                 .size());
         assertTrue(Styles.SPIRES.canOverlay(Styles.PLAINS));

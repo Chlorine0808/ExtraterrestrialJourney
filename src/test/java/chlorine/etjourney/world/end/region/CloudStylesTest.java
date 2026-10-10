@@ -49,4 +49,14 @@ class CloudStylesTest {
             Styles.all()
                 .contains(Styles.CUMULUS));
     }
+
+    @Test
+    void mammatusOverlaysLandOnly() {
+        assertEquals(StyleKind.OVERLAY, Styles.MAMMATUS.kind);
+        assertTrue(Styles.MAMMATUS.canOverlay(Styles.PLAINS));
+        assertFalse(Styles.MAMMATUS.canOverlay(Styles.ISLETS));
+        assertTrue(
+            Styles.all()
+                .contains(Styles.MAMMATUS));
+    }
 }
