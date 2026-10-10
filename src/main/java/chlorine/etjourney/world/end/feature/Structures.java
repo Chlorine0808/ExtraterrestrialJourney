@@ -330,7 +330,10 @@ public final class Structures {
             double stem = Math.min(stalk - d, Math.min(capY + dome - thickness + 1 - y, y - base));
             double t = Math.min(1, d / cap);
             double surface = capY + dome * (1 - t * t);
-            double hat = Math.min(cap - d, Math.min(surface - y, y - (surface - thickness)));
+            // A slab of the cap's thickness whose rim is rounded to a half circle.
+            double half = thickness / 2, inner = cap - half;
+            double hat = d <= inner ? Math.min(surface - y, y - (surface - thickness))
+                : half - Math.hypot(d - inner, y - (surface - half));
             return Math.max(stem, hat);
         }
     }

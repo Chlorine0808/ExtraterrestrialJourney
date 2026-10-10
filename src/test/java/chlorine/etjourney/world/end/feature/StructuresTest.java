@@ -467,4 +467,15 @@ class StructuresTest {
             if (c != null) assertTrue(c.top + c.wire() < 93, "chain pokes out at " + (c.top + c.wire()));
         }
     }
+
+    @Test
+    void mushroomCapsHaveARoundedRim() {
+        Structures.Mushroom m = first(Structures.MUSHROOMS, 305L);
+        assertNotNull(m);
+        double x = m.centreX + m.cap - 0.5, top = m.capY;
+        // The rim's middle reaches out to the full radius, but its upper and lower corners are rounded away.
+        assertTrue(m.density(x, top - m.thickness / 2, m.centreZ) > 0, "rim middle");
+        assertTrue(m.density(x, top - 0.5, m.centreZ) < 0, "upper corner");
+        assertTrue(m.density(x, top - m.thickness + 0.5, m.centreZ) < 0, "lower corner");
+    }
 }
