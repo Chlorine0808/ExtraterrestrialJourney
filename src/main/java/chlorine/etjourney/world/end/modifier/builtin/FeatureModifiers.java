@@ -41,8 +41,11 @@ public final class FeatureModifiers {
     /** Footprint reach, in island radii, over which a zone island's surface is repainted. */
     private static final double PAINT_REACH = 1.3;
     private static final int PAINT_DEPTH = 3;
-    /** How far outside the island's density a block may lie and still be painted, for the roughened rim. */
-    private static final double ISLAND_MARGIN = 2;
+    /**
+     * How far outside the island's own grid density a block may lie and still be painted: over void near land the
+     * terrain grid sits above the island's floor, which lifts the rim by a few blocks.
+     */
+    private static final double ISLAND_MARGIN = 8;
 
     private FeatureModifiers() {}
 
@@ -197,10 +200,10 @@ public final class FeatureModifiers {
                     // The island may carry on above this sink (the generator's half ends at Y 127).
                     boolean above = owner.y + owner.up * 1.2 >= sink.maxY();
                     List<ZoneIslands.Island> own = Collections.singletonList(owner);
-                    double edge = ZoneIslands.edge(area.seed, x, z);
-                    // Only the island's own rock, with room for its roughened rim.
-                    IntPredicate onIsland = y -> ZoneIslands.density(own, x + 0.5, y + 0.5, z + 0.5, edge)
-                        > -ISLAND_MARGIN;
+                    // Rock the grid laid near the island's own grid density; the exact density strays from the
+                    // grid by a few blocks where the rim noise changes within a cell.
+                    IntPredicate onIsland = y -> area.view.densityAt(x, y, z) > -1
+                        && ZoneIslands.gridDensity(area.seed, own, x, y, z) > -ISLAND_MARGIN;
                     // The dome drops steeply at its rim, so all of it is painted, not just the top few blocks.
                     int floor = (int) Math.floor(owner.y);
                     paintColumn(sink, x, z, ZoneIslands.zoneOf(area.seed, owner), above, onIsland, floor);

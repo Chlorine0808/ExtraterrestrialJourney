@@ -24,6 +24,8 @@ public final class ZoneIslands {
     private static final double MIN_Y = 28, MAX_Y = 200;
     /** Islands avoid land within this multiple of their radius. */
     private static final double LAND_REACH = 1.3;
+    /** The terrain grid's density over open void, the floor under every island node. */
+    private static final double VOID_DENSITY = -20;
     private static final long SALT = 0x2545F4914F6CDD1DL;
     private static final long SHAPE_SALT = 0x6A09E667F3BCC908L;
     private static final CellCache<Island> CELLS = new CellCache<>(4096);
@@ -146,6 +148,26 @@ public final class ZoneIslands {
             best = Math.max(best, island.radius * edge * profile - horiz);
         }
         return best;
+    }
+
+    /**
+     * Density at block (x, y, z) as the terrain grid lays it: the islands' density at the 8 x 4 x 8 grid nodes around
+     * the block, interpolated the way the generator places blocks. Nodes are floored at the void's density, as the
+     * terrain grid takes the higher of the two.
+     */
+    public static double gridDensity(long seed, List<Island> islands, int x, int y, int z) {
+        int x0 = Math.floorDiv(x, 8) * 8, y0 = Math.floorDiv(y, 4) * 4, z0 = Math.floorDiv(z, 8) * 8;
+        double tx = (x - x0) / 8.0, ty = (y - y0) / 4.0, tz = (z - z0) / 8.0;
+        double[] c = new double[4];
+        for (int n = 0; n < 4; n++) {
+            int nx = x0 + (n & 1) * 8, nz = z0 + (n >> 1) * 8;
+            double edge = edge(seed, nx, nz);
+            double low = Math.max(VOID_DENSITY, density(islands, nx, y0, nz, edge));
+            double high = Math.max(VOID_DENSITY, density(islands, nx, y0 + 4, nz, edge));
+            c[n] = low + (high - low) * ty;
+        }
+        double near = c[0] + (c[1] - c[0]) * tx, far = c[2] + (c[3] - c[2]) * tx;
+        return near + (far - near) * tz;
     }
 
     /** The island whose footprint (in radii, up to reach) covers (x, z), nearest first; null over open void. */
