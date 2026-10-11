@@ -84,6 +84,31 @@ class StructureLinesTest {
     }
 
     @Test
+    void toolLinesMatchTheirDensity() {
+        assertTrue(checkKind(Tool.KIND, 335L, 30, 1) >= 30);
+    }
+
+    @Test
+    void toolLinesCoverLittleOfTheirBox() {
+        int seen = 0;
+        for (int i = 0; i < 4000 && seen < 20; i++) {
+            Tool t = Tool.KIND.inCell(336L, 10 + i % 60, i / 60, LAND);
+            if (t == null) continue;
+            seen++;
+            double covered = 0, box = 0;
+            for (int x = (int) t.minX(); x <= t.maxX(); x++) {
+                for (int z = (int) t.minZ(); z <= t.maxZ(); z++) {
+                    Shape.Line line = t.line(x + 0.5, z + 0.5);
+                    covered += Math.max(0, line.maxY() - line.minY());
+                    box += t.maxY() - t.minY();
+                }
+            }
+            assertTrue(covered < box / 3, "covered " + covered + " of " + box);
+        }
+        assertTrue(seen >= 20);
+    }
+
+    @Test
     void mushroomLinesBeyondTheStalkSkipToTheCap() {
         int seen = 0;
         for (int i = 0; i < 4000 && seen < 20; i++) {

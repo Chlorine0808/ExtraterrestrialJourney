@@ -59,6 +59,9 @@ public final class Tool extends Structure {
         }
     }.worn(Structures.WORN, 6);
 
+    /** Kept around the local bounds a line is narrowed to, in pixels, against rounding. */
+    private static final double BOUNDS_SLACK = 1e-6;
+
     public final ToolShape shape;
     public final double scale;
     private final double[] origin, side, axis, normal, bounds;
@@ -145,6 +148,27 @@ public final class Tool extends Structure {
         if (u < bounds[0] || u > bounds[1] || v < bounds[2] || v > bounds[3] || w < bounds[4] || w > bounds[5])
             return -1;
         return shape.inside(u, v, w) ? 1 : -1;
+    }
+
+    @Override
+    protected Line bodyLine(double x, double z) {
+        // Along a vertical line each local coordinate changes linearly with y: keep the stretch inside the bounds.
+        double px = x - origin[0], pz = z - origin[2], low = minY(), high = maxY();
+        double[][] frame = { side, axis, normal };
+        for (int a = 0; a < 3 && low <= high; a++) {
+            double[] e = frame[a];
+            double c = px * e[0] + pz * e[2];
+            double lo = (bounds[2 * a] - BOUNDS_SLACK) * scale, hi = (bounds[2 * a + 1] + BOUNDS_SLACK) * scale;
+            if (Math.abs(e[1]) < 1e-12) {
+                if (c < lo || c > hi) return Line.EMPTY;
+                continue;
+            }
+            double y0 = (lo - c) / e[1] + origin[1], y1 = (hi - c) / e[1] + origin[1];
+            low = Math.max(low, Math.min(y0, y1));
+            high = Math.min(high, Math.max(y0, y1));
+        }
+        if (low > high) return Line.EMPTY;
+        return Line.of(low, high, y -> body(x, y, z) >= 0);
     }
 
     private static double[] scaled(double[] a, double k) {
