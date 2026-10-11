@@ -103,4 +103,10 @@ class HangingCloudsTest {
     void mammatusHangsFromTheRock() {
         assertHangs("MAMMATUS", 10, 100, false);
     }
+
+    @Test
+    void virgaHangsFromTheRock() {
+        // Each streak is one column wide.
+        assertHangs("VIRGA", 200, 30, true);
+    }
 }

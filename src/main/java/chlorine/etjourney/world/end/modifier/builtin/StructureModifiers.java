@@ -7,6 +7,7 @@ import chlorine.etjourney.world.end.feature.Biosphere;
 import chlorine.etjourney.world.end.feature.Spire;
 import chlorine.etjourney.world.end.feature.Structure;
 import chlorine.etjourney.world.end.feature.Structures;
+import chlorine.etjourney.world.end.feature.cloud.Virga;
 import chlorine.etjourney.world.end.modifier.BlockSink;
 import chlorine.etjourney.world.end.modifier.ChunkArea;
 import chlorine.etjourney.world.end.modifier.EndBlock;
@@ -59,7 +60,26 @@ public final class StructureModifiers {
                 if (!stands(view, s, kind)) continue;
                 Shape shape = lifted(s, liftTo(view, s, underside.applyAsDouble(s)));
                 draw(shape, sink, EndBlock.STONE);
-                fillUp(view, shape, sink);
+                fillUp(view, shape, sink, false);
+            }
+        });
+    }
+
+    /**
+     * Virga hung the same way, leaving out the streaks with no rock above their root, as at the land's edge. Only
+     * the streaks' roots are filled up, so a leaning streak does not grow a stub from each column it crosses.
+     */
+    public static Modifier virga(int order) {
+        return FeatureModifiers.blockModifier(order, (area, view, sink) -> {
+            for (Virga v : Virga.KIND.near(area.seed, sink.originX() + 8, sink.originZ() + 8, 12, view.structures())) {
+                if (!stands(view, v, Virga.KIND)) continue;
+                int dy = liftTo(view, v, v.top - 2);
+                int root = (int) v.top + dy;
+                Virga kept = v.rootedOnly((x, z) -> rockAbove(view, x, root, z) > 0);
+                if (kept == null) continue;
+                Shape shape = lifted(kept, dy);
+                draw(shape, sink, EndBlock.STONE);
+                fillUp(view, shape, sink, true);
             }
         });
     }
@@ -118,7 +138,7 @@ public final class StructureModifiers {
     }
 
     /** Fills the air between each column's top block of the shape and the rock just above it, within the sink. */
-    private static void fillUp(TerrainView view, Shape shape, BlockSink sink) {
+    private static void fillUp(TerrainView view, Shape shape, BlockSink sink, boolean fromTopOnly) {
         int ox = sink.originX(), oz = sink.originZ();
         int x0 = Math.max(ox, (int) Math.floor(shape.minX())), x1 = Math.min(ox + 15, (int) Math.ceil(shape.maxX()));
         int z0 = Math.max(oz, (int) Math.floor(shape.minZ())), z1 = Math.min(oz + 15, (int) Math.ceil(shape.maxZ()));
@@ -127,7 +147,7 @@ public final class StructureModifiers {
             for (int z = z0; z <= z1; z++) {
                 int y = top;
                 while (y >= bottom && shape.density(x + 0.5, y + 0.5, z + 0.5) < 0) y--;
-                if (y < bottom) continue;
+                if (y < bottom || fromTopOnly && y < top - 1) continue;
                 int gap = rockAbove(view, x, y, z);
                 if (gap <= 0) continue;
                 for (int f = Math.max(y + 1, sink.minY()); f < Math.min(y + gap, sink.maxY()); f++) {
