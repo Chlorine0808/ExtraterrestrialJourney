@@ -114,4 +114,32 @@ class CloudVarietyTest {
         Billow b = Probes.first(Billow.KIND, 909L, Probes.LAND);
         assertTrue(b.radiusAt(b.length * 0.45) < b.radiusAt(0) * 0.85, "no taper");
     }
+
+    @Test
+    void papersComeInManyLengths() {
+        double length = spread(Paper.KIND, 910L, Probes.LAND, p -> p.length);
+        assertTrue(length >= 4, "length spread " + length);
+    }
+
+    @Test
+    void paperEdgesAreNibbled() {
+        // The end of a long paper does not run straight across.
+        Paper p = null;
+        int c0 = Probes.cell0(Paper.KIND);
+        for (int i = 0; i < 1600 && (p == null || p.length < 24); i++)
+            p = Paper.KIND.inCell(911L, c0 + i % 40, c0 + i / 40, Probes.LAND);
+        double shortest = Double.MAX_VALUE, longest = 0;
+        for (double w = -p.width / 3; w <= p.width / 3; w += 1) {
+            double u = 0;
+            while (u < p.length && solid(p, u + 0.25, w)) u += 0.25;
+            shortest = Math.min(shortest, u);
+            longest = Math.max(longest, u);
+        }
+        assertTrue(longest - shortest >= 1, "end from " + shortest + " to " + longest);
+    }
+
+    private static boolean solid(Paper p, double u, double w) {
+        double[] s = p.at(u, w);
+        return p.density(s[0], s[1], s[2]) >= 0;
+    }
 }

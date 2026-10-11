@@ -22,12 +22,12 @@ class PaperTest {
     void aThinSheetWithSharpEdges() {
         Paper p = Probes.first(Paper.KIND, 581L, Probes.LAND);
         assertNotNull(p);
-        assertTrue(p.length >= 8 && p.length <= 24, "length " + p.length);
-        assertTrue(p.footprint <= 18, "footprint " + p.footprint);
+        assertTrue(p.length >= 6 && p.length <= 40, "length " + p.length);
+        assertTrue(p.footprint <= 23, "footprint " + p.footprint);
         int t = thickness(p, 0, 0);
         assertTrue(t >= 1 && t <= 3, "thickness " + t);
-        // Solid right up to the corner, and nothing just past the edge.
-        assertTrue(thickness(p, p.length / 2 - 0.6, p.width / 2 - 0.6) >= 1, "corner");
+        // Solid well out towards the edges, which are nibbled, and nothing just past them.
+        assertTrue(thickness(p, p.length * 0.35, 0) >= 1, "towards the end");
         assertTrue(thickness(p, p.length / 2 + 1, 0) == 0, "past the end");
         assertTrue(thickness(p, 0, p.width / 2 + 1) == 0, "past the side");
     }

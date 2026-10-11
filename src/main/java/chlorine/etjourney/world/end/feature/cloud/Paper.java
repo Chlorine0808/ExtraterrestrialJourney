@@ -5,14 +5,16 @@ import chlorine.etjourney.world.end.feature.StructureProbe;
 import chlorine.etjourney.world.end.noise.Hash;
 import chlorine.etjourney.world.end.noise.ValueNoise;
 
-/** STRATUS: a sharp-edged sheet one block thick, tilted and gently waving, like a drifting piece of paper. */
+/** STRATUS: a sharp-edged sheet one block thick with nibbled edges, tilted and gently waving, like drifting paper. */
 public final class Paper extends Structure {
 
     private static final long SALT = 0x4E9A2C7F1B3D5068L;
     /** Steepest tilt along the paper's length and across it. */
     private static final double MAX_PITCH = Math.toRadians(25), MAX_ROLL = Math.toRadians(12);
+    /** Deepest bite into the edges, as a share of the half length or width. */
+    private static final double NIBBLE = 0.25;
 
-    public static final Structure.Kind<Paper> KIND = new Structure.Kind<Paper>("STRATUS", 16, 18) {
+    public static final Structure.Kind<Paper> KIND = new Structure.Kind<Paper>("STRATUS", 16, 23) {
 
         @Override
         protected Paper compute(long seed, int cx, int cz, StructureProbe probe) {
@@ -23,8 +25,9 @@ public final class Paper extends Structure {
             double x = Clouds.place(cx, cell, 0.15, Hash.hash01(s + 1, cx, cz));
             double z = Clouds.place(cz, cell, 0.15, Hash.hash01(s + 2, cx, cz));
             if (!Clouds.forms(s, cx, cz, probe.weight(style, x, z))) return null;
-            double length = 8 + 16 * Hash.hash01(s + 3, cx, cz);
-            double width = length * (0.5 + 0.4 * Hash.hash01(s + 4, cx, cz));
+            // Mostly short scraps, now and then a long strip.
+            double length = 6 + 34 * Math.pow(Hash.hash01(s + 3, cx, cz), 1.5);
+            double width = Math.min(length, 20) * (0.35 + 0.55 * Hash.hash01(s + 4, cx, cz));
             double yaw = Hash.hash01(s + 5, cx, cz) * Math.PI * 2;
             double pitch = (2 * Hash.hash01(s + 6, cx, cz) - 1) * MAX_PITCH;
             double roll = (2 * Hash.hash01(s + 7, cx, cz) - 1) * MAX_ROLL;
@@ -37,15 +40,28 @@ public final class Paper extends Structure {
                 ? Clouds.between(ground + 4 + reach, Math.min(ground + 90, Clouds.CEILING - reach), height)
                 : Clouds.between(60, 200, height);
             return Double.isNaN(y) ? null
-                : new Paper(x, z, y, length, width, yaw, Math.tan(pitch), Math.tan(roll), amp, wave, phase);
+                : new Paper(
+                    x,
+                    z,
+                    y,
+                    length,
+                    width,
+                    yaw,
+                    Math.tan(pitch),
+                    Math.tan(roll),
+                    amp,
+                    wave,
+                    phase,
+                    s ^ ((long) cx << 20) ^ cz);
         }
     };
 
     public final double centreY, length, width;
     private final double yaw, tanPitch, tanRoll, amp, k, phase;
+    private final long salt;
 
     Paper(double x, double z, double y, double length, double width, double yaw, double tanPitch, double tanRoll,
-        double amp, double wave, double phase) {
+        double amp, double wave, double phase, long salt) {
         super(
             x,
             z,
@@ -61,6 +77,7 @@ public final class Paper extends Structure {
         this.amp = amp;
         this.k = 2 * Math.PI / wave;
         this.phase = phase;
+        this.salt = salt;
     }
 
     /** Farthest the sheet rises or sinks from its centre height. */
@@ -82,8 +99,10 @@ public final class Paper extends Structure {
     protected double body(double x, double y, double z) {
         double dx = x - centreX, dz = z - centreZ, c = Math.cos(yaw), s = Math.sin(yaw);
         double u = dx * c + dz * s, w = -dx * s + dz * c;
-        // Cut square at the edges.
-        if (Math.abs(u) > length / 2 || Math.abs(w) > width / 2) return -1;
+        // Cut square at the edges, with bites taken out of them.
+        double reach = Math.max(Math.abs(u) / (length / 2), Math.abs(w) / (width / 2));
+        double bite = Math.max(0, Math.min(1, (ValueNoise.mask(salt, x, z, 3) - 0.3) / 0.4));
+        if (reach > 1 - NIBBLE * bite) return -1;
         double slope = Math.abs(tanPitch + amp * k * Math.cos(k * u + phase)) + Math.abs(tanRoll);
         // Half a block, widened on slopes so neighbouring columns of the sheet still touch.
         return 0.5 * (1 + slope) - Math.abs(y - surface(u, w));
