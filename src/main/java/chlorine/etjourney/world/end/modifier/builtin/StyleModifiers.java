@@ -93,7 +93,7 @@ public final class StyleModifiers {
     public static Modifier ranges() {
         return CoreModifiers.simple(420, (area, view, s, weight) -> {
             double[] w = Continent.warped(area.seed, s.x, s.z);
-            double r = Fractal.ridged(salt(area.seed) + 25, w[0], w[1], 420, 4);
+            double r = Fractal.ridged(salt(area.seed) + 25, w[0], w[1], 420, 3);
             s.rise += weight * s.interior * (1 - s.suppression) * 165 * Math.pow(r, 2.2);
         });
     }
