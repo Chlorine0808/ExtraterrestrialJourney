@@ -20,7 +20,7 @@ import chlorine.etjourney.world.end.region.Styles;
 class ZoneIslandPaintTest {
 
     private static final long SEED = 91L;
-    private static final TerrainSampler SAMPLER = new TerrainSampler(SEED, new RegionPicker(Styles.all()));
+    static final TerrainSampler SAMPLER = new TerrainSampler(SEED, new RegionPicker(Styles.all()));
 
     /** Both halves of a chunk as the game builds them: grid rock first, then the block pass. */
     static MemorySink[] generate(int cx, int cz) {

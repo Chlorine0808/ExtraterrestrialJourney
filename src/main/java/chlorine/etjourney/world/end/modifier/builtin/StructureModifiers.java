@@ -1,6 +1,7 @@
 package chlorine.etjourney.world.end.modifier.builtin;
 
 import java.util.List;
+import java.util.function.ToDoubleFunction;
 
 import chlorine.etjourney.world.end.feature.Biosphere;
 import chlorine.etjourney.world.end.feature.Spire;
@@ -38,6 +39,108 @@ public final class StructureModifiers {
                 if (placed != null) draw(placed, sink, block);
             }
         });
+    }
+
+    /** How far up or down the rock's real underside is looked for, from the one the structure was placed under. */
+    private static final int HANG_SEARCH = 16;
+    /** Widest gap between a hanging structure and the rock above it that is filled in. */
+    private static final int HANG_GAP = 12;
+
+    /**
+     * A kind hanging under the land, drawn block by block against the rock the grid actually laid. Placement only
+     * knows the column's smooth underside, but the grid's lumps and slant leave the real one a few blocks off, so the
+     * structure is first moved to the real underside above its centre, then every column whose top block is still
+     * short of the rock is filled up to it.
+     */
+    public static <T extends Structure> Modifier hanging(Structure.Kind<T> kind, int order,
+        ToDoubleFunction<T> underside) {
+        return FeatureModifiers.blockModifier(order, (area, view, sink) -> {
+            for (T s : kind.near(area.seed, sink.originX() + 8, sink.originZ() + 8, 12, view.structures())) {
+                if (!stands(view, s, kind)) continue;
+                Shape shape = lifted(s, liftTo(view, s, underside.applyAsDouble(s)));
+                draw(shape, sink, EndBlock.STONE);
+                fillUp(view, shape, sink);
+            }
+        });
+    }
+
+    /** Whole blocks from the given underside to the real one above the structure's centre; 0 when none is near. */
+    private static int liftTo(TerrainView view, Structure s, double underside) {
+        int x = (int) Math.floor(s.centreX), z = (int) Math.floor(s.centreZ), y = (int) Math.floor(underside);
+        if (view.densityAt(x, y, z) > 0) {
+            // Inside the rock: down to its lowest block.
+            for (int d = 1; d <= HANG_SEARCH; d++) if (view.densityAt(x, y - d, z) <= 0) return 1 - d;
+            return 0;
+        }
+        for (int d = 1; d <= HANG_SEARCH; d++) if (view.densityAt(x, y + d, z) > 0) return d;
+        return 0;
+    }
+
+    private static Shape lifted(Shape s, int dy) {
+        if (dy == 0) return s;
+        return new Shape() {
+
+            @Override
+            public double minX() {
+                return s.minX();
+            }
+
+            @Override
+            public double maxX() {
+                return s.maxX();
+            }
+
+            @Override
+            public double minZ() {
+                return s.minZ();
+            }
+
+            @Override
+            public double maxZ() {
+                return s.maxZ();
+            }
+
+            @Override
+            public double minY() {
+                return s.minY() + dy;
+            }
+
+            @Override
+            public double maxY() {
+                return s.maxY() + dy;
+            }
+
+            @Override
+            public double density(double x, double y, double z) {
+                return s.density(x, y - dy, z);
+            }
+        };
+    }
+
+    /** Fills the air between each column's top block of the shape and the rock just above it, within the sink. */
+    private static void fillUp(TerrainView view, Shape shape, BlockSink sink) {
+        int ox = sink.originX(), oz = sink.originZ();
+        int x0 = Math.max(ox, (int) Math.floor(shape.minX())), x1 = Math.min(ox + 15, (int) Math.ceil(shape.maxX()));
+        int z0 = Math.max(oz, (int) Math.floor(shape.minZ())), z1 = Math.min(oz + 15, (int) Math.ceil(shape.maxZ()));
+        int bottom = Math.max(0, (int) Math.floor(shape.minY())), top = Math.min(254, (int) Math.ceil(shape.maxY()));
+        for (int x = x0; x <= x1; x++) {
+            for (int z = z0; z <= z1; z++) {
+                int y = top;
+                while (y >= bottom && shape.density(x + 0.5, y + 0.5, z + 0.5) < 0) y--;
+                if (y < bottom) continue;
+                int gap = rockAbove(view, x, y, z);
+                if (gap <= 0) continue;
+                for (int f = Math.max(y + 1, sink.minY()); f < Math.min(y + gap, sink.maxY()); f++) {
+                    sink.place(x, f, z, EndBlock.STONE);
+                }
+            }
+        }
+    }
+
+    /** Blocks up from (x, y, z) to the first rock within HANG_GAP above it, or 0 when there is none. */
+    private static int rockAbove(TerrainView view, int x, int y, int z) {
+        for (int gap = 1; gap <= HANG_GAP && y + gap <= 255; gap++) if (view.densityAt(x, y + gap, z) > 0) return gap;
+        return 0;
     }
 
     /** Places the block wherever the shape's density at the block centre is not negative, within the sink. */
