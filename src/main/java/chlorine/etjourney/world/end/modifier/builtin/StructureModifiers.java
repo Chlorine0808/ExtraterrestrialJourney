@@ -3,6 +3,7 @@ package chlorine.etjourney.world.end.modifier.builtin;
 import java.util.List;
 
 import chlorine.etjourney.world.end.feature.Biosphere;
+import chlorine.etjourney.world.end.feature.Spire;
 import chlorine.etjourney.world.end.feature.Structure;
 import chlorine.etjourney.world.end.feature.Structures;
 import chlorine.etjourney.world.end.modifier.BlockSink;
@@ -53,6 +54,17 @@ public final class StructureModifiers {
                 }
             }
         }
+    }
+
+    /** Spire needles drawn block by block, leaving out those whose root a sinkhole has taken away. */
+    public static Modifier spires(int order) {
+        return FeatureModifiers.blockModifier(order, (area, view, sink) -> {
+            for (Spire s : Spire.KIND.near(area.seed, sink.originX() + 8, sink.originZ() + 8, 12, view.structures())) {
+                if (!stands(view, s, Spire.KIND)) continue;
+                Spire kept = s.outsideHoles(area.seed, view.holes());
+                if (kept != null) draw(kept, sink, EndBlock.STONE);
+            }
+        });
     }
 
     /** Glass balls drawn block by block over whatever else is there, cleared inside for the populate pass. */
