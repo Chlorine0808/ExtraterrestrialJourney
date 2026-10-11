@@ -24,6 +24,31 @@ class BillowTest {
     }
 
     @Test
+    void aSheetAtMostThreeBlocksThick() {
+        int c0 = Probes.cell0(Billow.KIND);
+        for (int i = 0; i < 400; i++) {
+            Billow b = Billow.KIND.inCell(575L, c0 + i % 20, c0 + i / 20, Probes.LAND);
+            if (b == null) continue;
+            assertTrue(densityAt(b, 0, 0, -b.radius - 1.5) < 0, "below the bottom of the curl");
+            assertTrue(densityAt(b, 0, 0, -b.radius + 1.5) < 0, "above the bottom of the curl");
+        }
+    }
+
+    @Test
+    void aboutHalfAreWorn() {
+        int all = 0, worn = 0, c0 = Probes.cell0(Billow.KIND);
+        for (int i = 0; i < 1600; i++) {
+            Billow b = Billow.KIND.inCell(576L, c0 + i % 40, c0 + i / 40, Probes.LAND);
+            if (b == null) continue;
+            all++;
+            if (b.wear() > 0) worn++;
+        }
+        assertTrue(all > 20, "formed " + all);
+        double share = worn / (double) all;
+        assertTrue(share > 0.35 && share < 0.65, "worn share " + share);
+    }
+
+    @Test
     void floatsClearOfTheGround() {
         int c0 = Probes.cell0(Billow.KIND);
         for (int i = 0; i < 400; i++) {

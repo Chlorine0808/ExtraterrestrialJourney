@@ -13,6 +13,11 @@ public final class Billow extends Structure {
 
     public static final Structure.Kind<Billow> KIND = new Structure.Kind<Billow>("BILLOWS", 96, 90) {
 
+        {
+            // Half of them break up, as real billows do.
+            worn(0.5, 6);
+        }
+
         @Override
         protected Billow compute(long seed, int cx, int cz, StructureProbe probe) {
             long s = seed ^ SALT;
@@ -22,7 +27,7 @@ public final class Billow extends Structure {
             if (!Clouds.forms(s, cx, cz, probe.weight(style, x, z))) return null;
             double radius = 12 + 12 * Hash.hash01(s + 3, cx, cz);
             double length = 60 + 60 * Hash.hash01(s + 4, cx, cz);
-            double sheet = 1.5 + Hash.hash01(s + 5, cx, cz);
+            double sheet = 0.7 + 0.5 * Hash.hash01(s + 5, cx, cz);
             double wind = Hash.hash01(s + 6, cx, cz) * Math.PI * 2;
             double reach = radius + sheet + 1;
             double eye = Clouds
