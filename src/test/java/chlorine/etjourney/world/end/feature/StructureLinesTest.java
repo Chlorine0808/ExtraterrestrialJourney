@@ -84,6 +84,20 @@ class StructureLinesTest {
     }
 
     @Test
+    void mushroomLinesBeyondTheStalkSkipToTheCap() {
+        int seen = 0;
+        for (int i = 0; i < 4000 && seen < 20; i++) {
+            Structures.Mushroom m = Structures.MUSHROOMS.inCell(334L, 10 + i % 60, i / 60, LAND);
+            if (m == null || m.cap - m.stalk < 3) continue;
+            seen++;
+            Shape.Line line = m.line(m.centreX + m.stalk + 1, m.centreZ);
+            double span = line.maxY() - line.minY();
+            assertTrue(span <= 2 * m.curl + m.thickness + m.dome + 1, "span " + span);
+        }
+        assertTrue(seen >= 20);
+    }
+
+    @Test
     void anvilLinesAwayFromTheStalkSkipToTheCap() {
         Anvil a = null;
         for (int i = 0; i < 4000 && a == null; i++) a = Anvil.KIND.inCell(333L, 10 + i % 60, i / 60, LAND);

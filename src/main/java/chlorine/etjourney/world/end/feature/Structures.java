@@ -316,6 +316,8 @@ public final class Structures {
 
         /** How far round the curl rolls, from the top of the rim outwards and under. */
         private static final double CURL_SWEEP = Math.toRadians(210);
+        /** Kept around the bands a line is narrowed to, against rounding. */
+        private static final double BAND_SLACK = 1e-6;
 
         final double base, capY, stalk, cap, thickness, dome;
         /** Radius of the rolled rim, 0 for a plain one; the roll turns about (eyeD, eyeY). */
@@ -353,9 +355,34 @@ public final class Structures {
         @Override
         protected double body(double x, double y, double z) {
             double d = Distance.planar(x - centreX, z - centreZ);
+            return bodyAt(d, surface(capY, dome, cap, d), y);
+        }
+
+        @Override
+        protected Line bodyLine(double x, double z) {
+            double d = Distance.planar(x - centreX, z - centreZ), surface = surface(capY, dome, cap, d);
+            double half = thickness / 2, low = Double.POSITIVE_INFINITY, high = Double.NEGATIVE_INFINITY;
+            if (stalk - d >= 0) {
+                low = base;
+                high = capY + dome - thickness + 1;
+            }
+            // The cap lies within its slab's band; a rolled rim within half a thickness of its circle.
+            boolean slab = curl > 0 ? eyeD - d >= 0 : d - (cap - half) <= half + BAND_SLACK;
+            if (slab) {
+                low = Math.min(low, surface - thickness - BAND_SLACK);
+                high = Math.max(high, surface + BAND_SLACK);
+            }
+            if (curl > 0 && Math.abs(d - eyeD) <= curl + half + BAND_SLACK) {
+                low = Math.min(low, eyeY - curl - half - BAND_SLACK);
+                high = Math.max(high, eyeY + curl + half + BAND_SLACK);
+            }
+            if (low > high) return Line.EMPTY;
+            return Line.of(Math.max(low, minY()), Math.min(high, maxY()), y -> bodyAt(d, surface, y) >= 0);
+        }
+
+        private double bodyAt(double d, double surface, double y) {
             // The stalk runs up into the cap's underside, which is highest on the axis.
             double stem = Math.min(stalk - d, Math.min(capY + dome - thickness + 1 - y, y - base));
-            double surface = surface(capY, dome, cap, d);
             double slab = Math.min(surface - y, y - (surface - thickness));
             double half = thickness / 2;
             if (curl > 0) return Math.max(stem, Math.max(Math.min(slab, eyeD - d), half - rollDistance(d, y)));
