@@ -61,4 +61,27 @@ class CloudVarietyTest {
         }
         assertTrue(widest - narrowest >= 2, "rim from " + narrowest + " to " + widest);
     }
+
+    @Test
+    void mammatusComeInManySizesAndSags() {
+        double radius = spread(Mammatus.KIND, 904L, Probes.LAND, m -> m.radius);
+        assertTrue(radius >= 2.5, "radius spread " + radius);
+        double sag = spread(Mammatus.KIND, 904L, Probes.LAND, m -> m.sag);
+        assertTrue(sag >= 1.5, "sag spread " + sag);
+    }
+
+    @Test
+    void mammatusAreLumpy() {
+        Mammatus m = Probes.first(Mammatus.KIND, 905L, Probes.LAND);
+        double low = Double.MAX_VALUE, high = -Double.MAX_VALUE;
+        for (int k = 0; k < 16; k++) {
+            double t = k * Math.PI / 8, d = m.density(
+                m.centreX + Math.cos(t) * m.radius * 0.85,
+                m.centreY,
+                m.centreZ + Math.sin(t) * m.radius * 0.85);
+            low = Math.min(low, d);
+            high = Math.max(high, d);
+        }
+        assertTrue(high - low >= 0.5, "density round the pouch from " + low + " to " + high);
+    }
 }

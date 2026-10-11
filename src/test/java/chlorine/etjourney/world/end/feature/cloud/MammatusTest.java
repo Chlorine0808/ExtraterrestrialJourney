@@ -16,7 +16,7 @@ class MammatusTest {
         assertTrue(m.density(m.centreX, m.centreY, m.centreZ) > 0);
         // No gap between the pouch and the land above it.
         assertTrue(m.density(m.centreX, 50, m.centreZ) > 0);
-        assertTrue(m.density(m.centreX, m.centreY - m.radius - 1, m.centreZ) < 0);
+        assertTrue(m.density(m.centreX, m.centreY - m.radius * m.sag * 1.15 - 1, m.centreZ) < 0);
     }
 
     @Test

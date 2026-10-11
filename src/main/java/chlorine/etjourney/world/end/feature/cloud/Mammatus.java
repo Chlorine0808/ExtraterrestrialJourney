@@ -9,8 +9,10 @@ public final class Mammatus extends Structure {
 
     /** Lowest underside a pouch hangs from, so it stays clear of the void floor. */
     private static final double MIN_UNDERSIDE = 40;
+    /** Farthest the lumps move the surface, as a share of the radius. */
+    private static final double LUMPS = 0.15;
 
-    public static final Structure.Kind<Mammatus> KIND = new Structure.Kind<Mammatus>("MAMMATUS", 24, 11) {
+    public static final Structure.Kind<Mammatus> KIND = new Structure.Kind<Mammatus>("MAMMATUS", 24, 15) {
 
         @Override
         protected Mammatus compute(long seed, int cx, int cz, StructureProbe probe) {
@@ -21,25 +23,33 @@ public final class Mammatus extends Structure {
             if (!Clouds.forms(s, cx, cz, probe.weight(style, x, z))) return null;
             double under = probe.underside(x, z);
             if (under < MIN_UNDERSIDE) return null;
-            double r = 6 + 4 * Hash.hash01(s + 3, cx, cz);
-            // The pouch rises 0.6 r into the slab; thinner land would show it above the ground.
-            if (probe.ground(x, z) - under < 0.6 * r + 2) return null;
+            double r = 4 + 8 * Hash.hash01(s + 3, cx, cz);
+            // Some hang down further than they are wide.
+            double sag = 1 + 0.8 * Hash.hash01(s + 4, cx, cz);
+            // The pouch rises 0.6 r into the slab, lumps aside; thinner land would show it above the ground.
+            if (probe.ground(x, z) - under < 0.6 * r + LUMPS * r + 2) return null;
             // Sunk into the slab, so no gap opens between the pouch and the land.
-            return new Mammatus(x, under - 0.4 * r, z, r);
+            return new Mammatus(x, under - 0.4 * r, z, r, sag, s ^ ((long) cx << 20) ^ cz);
         }
     };
 
-    public final double centreY, radius;
+    public final double centreY, radius, sag;
+    private final long salt;
 
-    Mammatus(double x, double y, double z, double radius) {
-        super(x, z, radius + 1, y - radius - 1, y + radius + 1);
+    Mammatus(double x, double y, double z, double radius, double sag, long salt) {
+        super(x, z, radius * (1 + LUMPS) + 1, y - radius * (sag + LUMPS) - 1, y + radius * (1 + LUMPS) + 1);
         this.centreY = y;
         this.radius = radius;
+        this.sag = sag;
+        this.salt = salt;
     }
 
     @Override
     protected double body(double x, double y, double z) {
         double dx = x - centreX, dy = y - centreY, dz = z - centreZ;
-        return radius - Math.sqrt(dx * dx + dy * dy + dz * dz);
+        // Below the centre the pouch is drawn out downwards by its sag.
+        if (dy < 0) dy /= sag;
+        return radius - Math.sqrt(dx * dx + dy * dy + dz * dz)
+            + Clouds.ruffle(salt, x, y, z, Math.max(3, radius * 0.7), LUMPS * radius);
     }
 }
