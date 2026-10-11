@@ -30,25 +30,29 @@ public final class StructureModifiers {
      */
     public static Modifier voxels(Structure.Kind<? extends Structure> kind, int order, EndBlock block) {
         return FeatureModifiers.blockModifier(order, (area, view, sink) -> {
-            int ox = sink.originX(), oz = sink.originZ();
-            for (Structure s : kind.near(area.seed, ox + 8, oz + 8, 12, view.structures())) {
+            for (Structure s : kind.near(area.seed, sink.originX() + 8, sink.originZ() + 8, 12, view.structures())) {
                 List<Area> reserved = view
                     .reservedAt((int) Math.floor(s.centreX) >> 4, (int) Math.floor(s.centreZ) >> 4);
                 Shape placed = placed(reserved, s, kind);
-                if (placed == null) continue;
-                int x0 = Math.max(ox, (int) Math.floor(s.minX())), x1 = Math.min(ox + 15, (int) Math.ceil(s.maxX()));
-                int z0 = Math.max(oz, (int) Math.floor(s.minZ())), z1 = Math.min(oz + 15, (int) Math.ceil(s.maxZ()));
-                int y0 = Math.max(sink.minY(), (int) Math.floor(s.minY()));
-                int y1 = Math.min(sink.maxY() - 1, (int) Math.ceil(s.maxY()));
-                for (int x = x0; x <= x1; x++) {
-                    for (int z = z0; z <= z1; z++) {
-                        for (int y = y0; y <= y1; y++) {
-                            if (placed.density(x + 0.5, y + 0.5, z + 0.5) >= 0) sink.place(x, y, z, block);
-                        }
-                    }
-                }
+                if (placed != null) draw(placed, sink, block);
             }
         });
+    }
+
+    /** Places the block wherever the shape's density at the block centre is not negative, within the sink. */
+    private static void draw(Shape shape, BlockSink sink, EndBlock block) {
+        int ox = sink.originX(), oz = sink.originZ();
+        int x0 = Math.max(ox, (int) Math.floor(shape.minX())), x1 = Math.min(ox + 15, (int) Math.ceil(shape.maxX()));
+        int z0 = Math.max(oz, (int) Math.floor(shape.minZ())), z1 = Math.min(oz + 15, (int) Math.ceil(shape.maxZ()));
+        int y0 = Math.max(sink.minY(), (int) Math.floor(shape.minY()));
+        int y1 = Math.min(sink.maxY() - 1, (int) Math.ceil(shape.maxY()));
+        for (int x = x0; x <= x1; x++) {
+            for (int z = z0; z <= z1; z++) {
+                for (int y = y0; y <= y1; y++) {
+                    if (shape.density(x + 0.5, y + 0.5, z + 0.5) >= 0) sink.place(x, y, z, block);
+                }
+            }
+        }
     }
 
     /** Glass balls drawn block by block over whatever else is there, cleared inside for the populate pass. */
