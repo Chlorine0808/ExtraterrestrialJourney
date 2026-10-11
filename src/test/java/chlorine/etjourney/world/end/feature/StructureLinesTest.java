@@ -82,4 +82,14 @@ class StructureLinesTest {
         }
         assertTrue(worn >= 10, "worn " + worn);
     }
+
+    @Test
+    void anvilLinesAwayFromTheStalkSkipToTheCap() {
+        Anvil a = null;
+        for (int i = 0; i < 4000 && a == null; i++) a = Anvil.KIND.inCell(333L, 10 + i % 60, i / 60, LAND);
+        // Under the far side of the cap, past the stalk's reach, only the cap's few blocks are looked at.
+        double dx = a.capX - a.centreX, dz = a.capZ - a.centreZ, d = Math.hypot(dx, dz);
+        Shape.Line line = a.line(a.capX + dx / d * a.radius * 0.6, a.capZ + dz / d * a.radius * 0.6);
+        assertTrue(line.maxY() - line.minY() < 30, "span " + (line.maxY() - line.minY()));
+    }
 }

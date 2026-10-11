@@ -12,6 +12,8 @@ public final class Anvil extends Structure {
     private static final double DOME = 4;
     /** Farthest the lumps lift the roof. */
     private static final double LUMPS = 2;
+    /** Farthest the ruffles push the stalk's side out. */
+    private static final double STALK_RUFFLE = 1.5;
 
     public static final Structure.Kind<Anvil> KIND = new Structure.Kind<Anvil>("ANVILS", 160, 145) {
 
@@ -58,16 +60,51 @@ public final class Anvil extends Structure {
 
     @Override
     protected double body(double x, double y, double z) {
-        // The stalk widens by half towards the cap and runs two blocks into it.
-        double widen = 1 + 0.5 * Math.max(0, Math.min(1, (y - base) / (capY - base)));
-        double side = stalk * widen - Distance.planar(x - centreX, z - centreZ) + Clouds.ruffle(salt, x, y, z, 6, 1.5);
-        double stem = Math.min(side, Math.min(y - base, capY + 2 - y));
-        double px = x - capX, pz = z - capZ, c = Math.cos(heading), s = Math.sin(heading);
-        double dc = Distance.planar((px * c + pz * s) / stretch, -px * s + pz * c), u = Math.min(1, dc / radius);
-        double rim = radius + Clouds.ruffle(salt + 2, x, 0, z, 16, 0.15 * radius);
-        double roof = capY + thick + DOME * (1 - u * u) + Clouds.ruffle(salt + 4, x, 0, z, 10, LUMPS);
-        double floor = capY + Clouds.ruffle(salt + 6, x, 0, z, 12, 1.5);
-        double cap = Math.min(rim - dc, Math.min(y - floor, roof - y));
-        return Math.max(stem, cap);
+        return new Plumb(x, z).body(y);
+    }
+
+    @Override
+    protected Line bodyLine(double x, double z) {
+        Plumb p = new Plumb(x, z);
+        // Widened by half at most and ruffled by STALK_RUFFLE, the stalk reaches no further out than this.
+        boolean stem = p.d <= stalk * 1.5 + STALK_RUFFLE + 1e-6;
+        boolean cap = p.rim - p.dc >= 0;
+        if (!stem && !cap) return Line.EMPTY;
+        double low = cap ? p.floor : Double.POSITIVE_INFINITY, high = cap ? p.roof : Double.NEGATIVE_INFINITY;
+        if (stem) {
+            low = Math.min(low, base);
+            high = Math.max(high, capY + 2);
+        }
+        return Line.of(Math.max(low, minY()), Math.min(high, maxY()), stem ? y -> p.body(y) >= 0 : y -> p.cap(y) >= 0);
+    }
+
+    /** The terms of one vertical line that do not change with height. */
+    private final class Plumb {
+
+        final double x, z, d, dc, rim, roof, floor;
+
+        Plumb(double x, double z) {
+            this.x = x;
+            this.z = z;
+            d = Distance.planar(x - centreX, z - centreZ);
+            double px = x - capX, pz = z - capZ, c = Math.cos(heading), s = Math.sin(heading);
+            dc = Distance.planar((px * c + pz * s) / stretch, -px * s + pz * c);
+            double u = Math.min(1, dc / radius);
+            rim = radius + Clouds.ruffle(salt + 2, x, 0, z, 16, 0.15 * radius);
+            roof = capY + thick + DOME * (1 - u * u) + Clouds.ruffle(salt + 4, x, 0, z, 10, LUMPS);
+            floor = capY + Clouds.ruffle(salt + 6, x, 0, z, 12, 1.5);
+        }
+
+        double body(double y) {
+            // The stalk widens by half towards the cap and runs two blocks into it.
+            double widen = 1 + 0.5 * Math.max(0, Math.min(1, (y - base) / (capY - base)));
+            double side = stalk * widen - d + Clouds.ruffle(salt, x, y, z, 6, STALK_RUFFLE);
+            double stem = Math.min(side, Math.min(y - base, capY + 2 - y));
+            return Math.max(stem, cap(y));
+        }
+
+        double cap(double y) {
+            return Math.min(rim - dc, Math.min(y - floor, roof - y));
+        }
     }
 }
