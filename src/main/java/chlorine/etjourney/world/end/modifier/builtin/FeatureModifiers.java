@@ -200,7 +200,9 @@ public final class FeatureModifiers {
                     // Only the island's own rock, with room for its roughened rim.
                     IntPredicate onIsland = y -> ZoneIslands.density(own, x + 0.5, y + 0.5, z + 0.5, edge)
                         > -ISLAND_MARGIN;
-                    paintColumn(sink, x, z, ZoneIslands.zoneOf(area.seed, owner), above, onIsland);
+                    // The dome drops steeply at its rim, so all of it is painted, not just the top few blocks.
+                    int floor = (int) Math.floor(owner.y);
+                    paintColumn(sink, x, z, ZoneIslands.zoneOf(area.seed, owner), above, onIsland, floor);
                 });
             }
         };
@@ -301,11 +303,13 @@ public final class FeatureModifiers {
     }
 
     /**
-     * Paints the top PAINT_DEPTH blocks of every solid run of island rock in a column. When the column continues above
+     * Paints the top PAINT_DEPTH blocks of every solid run of island rock in a column, and all of it from floor up.
+     * When the column continues above
      * the sink, the run touching the sink's top is not a surface and is left alone; the other half paints the real top.
      * Blocks that are not on the island are never painted, and the island rock under them counts as a surface.
      */
-    static void paintColumn(BlockSink sink, int x, int z, Zone zone, boolean continuesAbove, IntPredicate onIsland) {
+    static void paintColumn(BlockSink sink, int x, int z, Zone zone, boolean continuesAbove, IntPredicate onIsland,
+        int floor) {
         int depth = continuesAbove ? PAINT_DEPTH : -1;
         for (int y = sink.maxY() - 1; y >= sink.minY(); y--) {
             if (sink.isAir(x, y, z) || !onIsland.test(y)) {
@@ -313,7 +317,7 @@ public final class FeatureModifiers {
                 continue;
             }
             depth++;
-            if (depth < PAINT_DEPTH) sink.set(x, y, z, depth == 0 ? zone.top : zone.fill);
+            if (depth < PAINT_DEPTH || y >= floor) sink.set(x, y, z, depth == 0 ? zone.top : zone.fill);
         }
     }
 
