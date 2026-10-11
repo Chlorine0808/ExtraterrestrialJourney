@@ -14,6 +14,7 @@ import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.terraingen.ChunkProviderEvent;
 import net.minecraftforge.event.world.ChunkEvent;
 
+import chlorine.etjourney.world.end.noise.Distance;
 import chlorine.etjourney.world.end.region.RegionPicker;
 import chlorine.etjourney.world.end.region.Styles;
 import chlorine.etjourney.world.end.reserve.Reservations;
@@ -73,7 +74,7 @@ public final class EndTerrain {
     }
 
     private static boolean outside(int chunkX, int chunkZ) {
-        return Math.hypot(chunkX * 16 + 8, chunkZ * 16 + 8) >= TERRAIN_START;
+        return Distance.planar(chunkX * 16 + 8, chunkZ * 16 + 8) >= TERRAIN_START;
     }
 
     @SubscribeEvent

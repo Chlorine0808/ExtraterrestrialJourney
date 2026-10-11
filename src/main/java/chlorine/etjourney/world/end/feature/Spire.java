@@ -3,6 +3,7 @@ package chlorine.etjourney.world.end.feature;
 import java.util.ArrayList;
 import java.util.List;
 
+import chlorine.etjourney.world.end.noise.Distance;
 import chlorine.etjourney.world.end.noise.Hash;
 
 /** A cluster of thin needles tapering to a point, standing on the land of SPIRES regions; drawn block by block. */
@@ -90,12 +91,13 @@ public final class Spire extends Structure {
             double fc = Math.max(0, f);
             // Concave taper: the needle thins fast and ends in a long fine point.
             double r = radius * Math.pow(1 - fc, 1.4);
-            double d = r - Math.hypot(x - (x0 + (x1 - x0) * fc), z - (z0 + (z1 - z0) * fc));
+            double d = r - Distance.planar(x - (x0 + (x1 - x0) * fc), z - (z0 + (z1 - z0) * fc));
             return Math.min(d, y - y0 + 1);
         }
 
         double reach(double centreX, double centreZ) {
-            return Math.max(Math.hypot(x0 - centreX, z0 - centreZ), Math.hypot(x1 - centreX, z1 - centreZ)) + radius;
+            return Math.max(Distance.planar(x0 - centreX, z0 - centreZ), Distance.planar(x1 - centreX, z1 - centreZ))
+                + radius;
         }
     }
 

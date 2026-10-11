@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+import chlorine.etjourney.world.end.noise.Distance;
 import chlorine.etjourney.world.end.noise.Fractal;
 import chlorine.etjourney.world.end.noise.Warp;
 
@@ -76,7 +77,7 @@ public final class Reservations {
      */
     public static boolean touches(List<Area> areas, double x, double z, double radius) {
         for (Area area : areas) {
-            if (Math.hypot(x - area.x, z - area.z) < radius + area.radius * 1.2) return true;
+            if (Distance.planar(x - area.x, z - area.z) < radius + area.radius * 1.2) return true;
         }
         return false;
     }
@@ -84,7 +85,7 @@ public final class Reservations {
     /** True when a footprint (centre, radius) touches an area or its fade ring. */
     public static boolean overlaps(List<Area> areas, double x, double z, double radius) {
         for (Area area : areas) {
-            if (Math.hypot(x - area.x, z - area.z) < radius + area.radius * (1 + WOBBLE) + FADE) return true;
+            if (Distance.planar(x - area.x, z - area.z) < radius + area.radius * (1 + WOBBLE) + FADE) return true;
         }
         return false;
     }
@@ -100,7 +101,7 @@ public final class Reservations {
 
     public static boolean insideFootprint(List<Area> areas, double x, double z, double margin) {
         for (Area area : areas) {
-            if (Math.hypot(x - area.x, z - area.z) < area.radius * 1.2 + margin) return true;
+            if (Distance.planar(x - area.x, z - area.z) < area.radius * 1.2 + margin) return true;
         }
         return false;
     }
@@ -112,7 +113,7 @@ public final class Reservations {
     public static double suppression(List<Area> areas, double x, double z) {
         double best = 0;
         for (Area area : areas) {
-            double real = Math.hypot(x - area.x, z - area.z);
+            double real = Distance.planar(x - area.x, z - area.z);
             // The island itself fills a square reaching about 1.15 radii: a plain fade from 1.2 radii keeps land
             // out of it whatever the warp does, and the warped fade shapes the coast beyond.
             double footprint = area.radius * 1.2;
@@ -124,7 +125,7 @@ public final class Reservations {
             if (real >= area.radius * (1 + WOBBLE) + FADE + 30) continue;
             long s = Double.doubleToLongBits(area.x) * 31 + Double.doubleToLongBits(area.z);
             double[] w = Warp.warp(s, x, z, 30, 90);
-            double d = Math.hypot(w[0] - area.x, w[1] - area.z);
+            double d = Distance.planar(w[0] - area.x, w[1] - area.z);
             double radius = area.radius * (1 - WOBBLE + 2 * WOBBLE * Fractal.fbm(s + 7, x, z, 60, 3));
             if (d <= radius) return 1;
             if (d >= radius + FADE) continue;

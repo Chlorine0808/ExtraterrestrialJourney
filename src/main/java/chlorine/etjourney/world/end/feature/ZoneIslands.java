@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import chlorine.etjourney.world.end.noise.CellCache;
+import chlorine.etjourney.world.end.noise.Distance;
 import chlorine.etjourney.world.end.noise.Hash;
 import chlorine.etjourney.world.end.noise.ValueNoise;
 import chlorine.etjourney.world.end.reserve.Area;
@@ -92,7 +93,7 @@ public final class ZoneIslands {
                 if (i == cx && j == cz) continue;
                 Island other = raw(seed, i, j);
                 if (other == null) continue;
-                double half = Math.hypot(raw.x - other.x, raw.z - other.z) / 2 - GAP / 2;
+                double half = Distance.planar(raw.x - other.x, raw.z - other.z) / 2 - GAP / 2;
                 radius = Math.min(radius, half / 1.2);
             }
         }
@@ -106,7 +107,7 @@ public final class ZoneIslands {
         if (Hash.hash01(s, cx, cz) > CHANCE) return null;
         double ix = cx * CELL + 48 + Hash.hash01(s + 1, cx, cz) * (CELL - 96);
         double iz = cz * CELL + 48 + Hash.hash01(s + 2, cx, cz) * (CELL - 96);
-        if (Math.hypot(ix, iz) < MIN_DISTANCE) return null;
+        if (Distance.planar(ix, iz) < MIN_DISTANCE) return null;
         double radius = MIN_RADIUS + Hash.hash01(s + 3, cx, cz) * (MAX_RADIUS - MIN_RADIUS);
         // The top surface (y + 0.18 r * 1.2 edge) must stay below the world's ceiling.
         double maxY = Math.min(MAX_Y, 250 - radius * 0.18 * 1.2);
@@ -134,7 +135,7 @@ public final class ZoneIslands {
     public static double density(List<Island> islands, double x, double y, double z, double edge) {
         double best = Double.NEGATIVE_INFINITY;
         for (Island island : islands) {
-            double horiz = Math.hypot(x - island.x, z - island.z);
+            double horiz = Distance.planar(x - island.x, z - island.z);
             double dy = y - island.y;
             double profile;
             if (dy >= 0) {
@@ -175,7 +176,7 @@ public final class ZoneIslands {
         Island owner = null;
         double best = reach;
         for (Island island : islands) {
-            double ratio = Math.hypot(x - island.x, z - island.z) / island.radius;
+            double ratio = Distance.planar(x - island.x, z - island.z) / island.radius;
             if (ratio < best) {
                 best = ratio;
                 owner = island;

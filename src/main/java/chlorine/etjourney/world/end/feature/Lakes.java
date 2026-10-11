@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import chlorine.etjourney.world.end.noise.CellCache;
+import chlorine.etjourney.world.end.noise.Distance;
 import chlorine.etjourney.world.end.noise.Hash;
 import chlorine.etjourney.world.end.noise.ValueNoise;
 import chlorine.etjourney.world.end.reserve.Area;
@@ -121,7 +122,7 @@ public final class Lakes {
     /** Ground after lakes reshape it: an uneven basin below the water, a flat ring above it, then a blend. */
     public static double shape(List<Lake> lakes, double top, double x, double z) {
         for (Lake lake : lakes) {
-            double d = Math.hypot(x - lake.x, z - lake.z);
+            double d = Distance.planar(x - lake.x, z - lake.z);
             double flatEnd = lake.radius + SHORE_BAND, blendEnd = flatEnd + lake.radius * SHORE_BLEND;
             if (d >= blendEnd) continue;
             double shore = lake.waterLevel + 2;
@@ -146,7 +147,7 @@ public final class Lakes {
 
     public static Lake floodAt(List<Lake> lakes, double x, double z) {
         for (Lake lake : lakes) {
-            if (Math.hypot(x - lake.x, z - lake.z) < floodRadius(lake)) return lake;
+            if (Distance.planar(x - lake.x, z - lake.z) < floodRadius(lake)) return lake;
         }
         return null;
     }

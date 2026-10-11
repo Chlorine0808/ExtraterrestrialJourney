@@ -22,6 +22,7 @@ import chlorine.etjourney.world.end.modifier.Modifier;
 import chlorine.etjourney.world.end.modifier.ModifierChain;
 import chlorine.etjourney.world.end.modifier.TerrainView;
 import chlorine.etjourney.world.end.modifier.builtin.CoreModifiers;
+import chlorine.etjourney.world.end.noise.Distance;
 import chlorine.etjourney.world.end.region.RegionMap;
 import chlorine.etjourney.world.end.region.RegionPicker;
 import chlorine.etjourney.world.end.region.Style;
@@ -248,7 +249,7 @@ public final class TerrainSampler {
     /** True when (x, y, z) lies within or just around a zone island. */
     public boolean nearZoneIsland(double x, double y, double z) {
         for (ZoneIslands.Island island : ZoneIslands.near(seed, x, z, ZoneIslands.CELL, landProbe())) {
-            if (Math.hypot(x - island.x, z - island.z) > island.radius * 1.3 + 12) continue;
+            if (Distance.planar(x - island.x, z - island.z) > island.radius * 1.3 + 12) continue;
             if (y > island.y - island.down - 12 && y < island.y + island.up + 12) return true;
         }
         return false;

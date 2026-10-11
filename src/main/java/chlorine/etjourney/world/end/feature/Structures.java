@@ -4,6 +4,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+import chlorine.etjourney.world.end.noise.Distance;
 import chlorine.etjourney.world.end.noise.Hash;
 import chlorine.etjourney.world.end.noise.ValueNoise;
 
@@ -80,7 +81,7 @@ public final class Structures {
                     }
                 }
             }
-            if (best < MIN_WEIGHT || Math.hypot(x, z) < 1400) return null;
+            if (best < MIN_WEIGHT || Distance.planar(x, z) < 1400) return null;
             double radius = 120 + 140 * Hash.hash01(s + 3, cx, cz);
             double tube = 7 + 5 * Hash.hash01(s + 4, cx, cz);
             double tilt = ringTilt(Math.toRadians(35 * Hash.hash01(s + 5, cx, cz)), radius, tube);
@@ -351,7 +352,7 @@ public final class Structures {
 
         @Override
         protected double body(double x, double y, double z) {
-            double d = Math.hypot(x - centreX, z - centreZ);
+            double d = Distance.planar(x - centreX, z - centreZ);
             // The stalk runs up into the cap's underside, which is highest on the axis.
             double stem = Math.min(stalk - d, Math.min(capY + dome - thickness + 1 - y, y - base));
             double surface = surface(capY, dome, cap, d);
@@ -360,7 +361,7 @@ public final class Structures {
             if (curl > 0) return Math.max(stem, Math.max(Math.min(slab, eyeD - d), half - rollDistance(d, y)));
             // A slab of the cap's thickness whose rim is rounded to a half circle.
             double inner = cap - half;
-            double hat = d <= inner ? slab : half - Math.hypot(d - inner, y - (surface - half));
+            double hat = d <= inner ? slab : half - Distance.planar(d - inner, y - (surface - half));
             return Math.max(stem, hat);
         }
 
@@ -370,10 +371,10 @@ public final class Structures {
             // Clockwise from straight up, the way the rim rolls.
             double turned = Math.PI / 2 - Math.atan2(py, pd);
             turned = ((turned % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI);
-            if (turned <= CURL_SWEEP) return Math.abs(Math.hypot(pd, py) - curl);
+            if (turned <= CURL_SWEEP) return Math.abs(Distance.planar(pd, py) - curl);
             double endAngle = Math.PI / 2 - CURL_SWEEP;
-            double toEnd = Math.hypot(pd - curl * Math.cos(endAngle), py - curl * Math.sin(endAngle));
-            return Math.min(toEnd, Math.hypot(pd, py - curl));
+            double toEnd = Distance.planar(pd - curl * Math.cos(endAngle), py - curl * Math.sin(endAngle));
+            return Math.min(toEnd, Distance.planar(pd, py - curl));
         }
     }
 
@@ -422,7 +423,7 @@ public final class Structures {
             double px = x - centreX, py = y - this.y, pz = z - centreZ;
             double h = px * n[0] + py * n[1] + pz * n[2];
             double a = px * u[0] + py * u[1] + pz * u[2], b = px * v[0] + py * v[1] + pz * v[2];
-            double r = Math.hypot(a, b) - radius;
+            double r = Distance.planar(a, b) - radius;
             double d = tube - Math.sqrt(h * h + r * r);
             return inner == null ? d : Math.max(d, inner.body(x, y, z));
         }
@@ -463,7 +464,7 @@ public final class Structures {
                             double px = base[0] + up[0] * u + arm[0] * a + out[0] * n;
                             double py = base[1] + up[1] * u + arm[1] * a + out[1] * n;
                             double pz = base[2] + up[2] * u + arm[2] * a + out[2] * n;
-                            reach = Math.max(reach, Math.hypot(px - centre[0], pz - centre[1]));
+                            reach = Math.max(reach, Distance.planar(px - centre[0], pz - centre[1]));
                             low = Math.min(low, py);
                             high = Math.max(high, py);
                         }
@@ -579,8 +580,8 @@ public final class Structures {
                     double v = depth - (k * pitch() + half);
                     double u = k % 2 == 0 ? a : b, n = k % 2 == 0 ? b : a;
                     double along = Math.max(Math.abs(v) - (half - w), 0);
-                    double loop = Math.hypot(u, along) - w;
-                    d = Math.max(d, r - Math.hypot(loop, n));
+                    double loop = Distance.planar(u, along) - w;
+                    d = Math.max(d, r - Distance.planar(loop, n));
                 }
             }
             if (weight > 0) d = Math.max(d, weight - Math.sqrt(px * px + sq(y - (bottom - weight + 1)) + pz * pz));
@@ -644,7 +645,7 @@ public final class Structures {
 
         @Override
         protected double body(double x, double y, double z) {
-            double column = Math.min(pillar - Math.hypot(x - centreX, z - centreZ), Math.min(top - y, y - base));
+            double column = Math.min(pillar - Distance.planar(x - centreX, z - centreZ), Math.min(top - y, y - base));
             return Math.max(column, ArcPaths.density(ramp, x, y, z));
         }
     }
@@ -665,7 +666,7 @@ public final class Structures {
 
         @Override
         protected double body(double x, double y, double z) {
-            double d = Math.hypot(x - centreX, z - centreZ);
+            double d = Distance.planar(x - centreX, z - centreZ);
             double shell = Math.min(wall / 2 - Math.abs(d - radius), Math.min(top - y, y - base));
             // Windows: openings where a 3D noise peaks.
             double n = ValueNoise.noise3(seed, x, y, z, 9);

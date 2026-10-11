@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Random;
 
 import chlorine.etjourney.world.end.noise.CellCache;
+import chlorine.etjourney.world.end.noise.Distance;
 import chlorine.etjourney.world.end.noise.Hash;
 import chlorine.etjourney.world.end.reserve.Area;
 import chlorine.etjourney.world.end.reserve.Reservations;
@@ -77,10 +78,10 @@ public final class Shoals {
         if (Hash.hash01(s, cx, cz) > CHANCE) return null;
         double x = (cx + Hash.hash01(s + 1, cx, cz)) * CELL;
         double z = (cz + Hash.hash01(s + 2, cx, cz)) * CELL;
-        if (Math.hypot(x, z) < 1000) return null;
+        if (Distance.planar(x, z) < 1000) return null;
         // Stay out of zone islands, which share the open void.
         for (ZoneIslands.Island island : probe.zoneIslandsNear(x, z)) {
-            if (Math.hypot(x - island.x, z - island.z) < island.radius * 1.3 + EXTENT) return null;
+            if (Distance.planar(x - island.x, z - island.z) < island.radius * 1.3 + EXTENT) return null;
         }
         boolean always = Fade.forms(probe.weight(x, z), Hash.hash01(s + 9, cx, cz));
         double y = MIN_Y + (MAX_Y - MIN_Y) * Hash.hash01(s + 3, cx, cz);
@@ -106,7 +107,7 @@ public final class Shoals {
         if (!high && Reservations.insideFootprint(reserved, school.x, school.z, EXTENT + 4 * SIDE_SIGMA)) return false;
         if (school.always) return true;
         for (Area area : reserved) {
-            if (Math.hypot(school.x - area.x, school.z - area.z) < area.radius * 1.15 + Reservations.FADE + 30) {
+            if (Distance.planar(school.x - area.x, school.z - area.z) < area.radius * 1.15 + Reservations.FADE + 30) {
                 return true;
             }
         }

@@ -17,6 +17,7 @@ import chlorine.etjourney.world.end.feature.Cutout;
 import chlorine.etjourney.world.end.feature.CutoutCache;
 import chlorine.etjourney.world.end.modifier.EndBlock;
 import chlorine.etjourney.world.end.modifier.builtin.StructureModifiers;
+import chlorine.etjourney.world.end.noise.Distance;
 import cpw.mods.fml.common.IWorldGenerator;
 import cpw.mods.fml.common.registry.GameRegistry;
 
@@ -39,7 +40,7 @@ public final class BiosphereTransplant implements IWorldGenerator {
         IChunkProvider provider) {
         if (world.isRemote || world.provider.dimensionId != END) return;
         int ox = chunkX * 16 + 8, oz = chunkZ * 16 + 8;
-        if (Math.hypot(ox + 8, oz + 8) < EndTerrain.TERRAIN_START) return;
+        if (Distance.planar(ox + 8, oz + 8) < EndTerrain.TERRAIN_START) return;
         Long seed = EndTerrain.seed();
         if (seed == null) return;
         cache.forSeed(seed);

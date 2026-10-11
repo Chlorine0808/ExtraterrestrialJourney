@@ -2,6 +2,7 @@ package chlorine.etjourney.world.end.feature.cloud;
 
 import chlorine.etjourney.world.end.feature.Structure;
 import chlorine.etjourney.world.end.feature.StructureProbe;
+import chlorine.etjourney.world.end.noise.Distance;
 import chlorine.etjourney.world.end.noise.Hash;
 import chlorine.etjourney.world.end.noise.ValueNoise;
 
@@ -65,7 +66,7 @@ public final class Paper extends Structure {
         super(
             x,
             z,
-            Math.hypot(length / 2, width / 2) + 1,
+            Distance.planar(length / 2, width / 2) + 1,
             y - reach(length, width, tanPitch, tanRoll, amp) - 1,
             y + reach(length, width, tanPitch, tanRoll, amp) + 1);
         this.centreY = y;

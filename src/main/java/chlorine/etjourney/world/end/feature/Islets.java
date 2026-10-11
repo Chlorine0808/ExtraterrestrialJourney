@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import chlorine.etjourney.world.end.noise.CellCache;
+import chlorine.etjourney.world.end.noise.Distance;
 import chlorine.etjourney.world.end.noise.Hash;
 
 /** Small flat-topped islets, like the small End islands of 1.9+; too small for the density grid. */
@@ -65,7 +66,7 @@ public final class Islets {
         // Islets near the region border are fewer and smaller.
         double radius = Math.max(MIN_RADIUS, (MIN_RADIUS + (MAX_RADIUS - MIN_RADIUS) * u * u) * (0.6 + 0.4 * fade));
         for (ZoneIslands.Island island : probe.zoneIslandsNear(x, z)) {
-            if (Math.hypot(x - island.x, z - island.z) < island.radius * 1.3 + radius + 8) return null;
+            if (Distance.planar(x - island.x, z - island.z) < island.radius * 1.3 + radius + 8) return null;
         }
         double y = MIN_Y + (MAX_Y - MIN_Y) * Hash.hash01(s + 4, cx, cz);
         double flat = 2 + 2 * Hash.hash01(s + 5, cx, cz);

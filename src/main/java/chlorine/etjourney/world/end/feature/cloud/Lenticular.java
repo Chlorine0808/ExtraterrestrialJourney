@@ -2,6 +2,7 @@ package chlorine.etjourney.world.end.feature.cloud;
 
 import chlorine.etjourney.world.end.feature.Structure;
 import chlorine.etjourney.world.end.feature.StructureProbe;
+import chlorine.etjourney.world.end.noise.Distance;
 import chlorine.etjourney.world.end.noise.Hash;
 
 /** LENTICULARS: three to five lens-shaped discs stacked with gaps, drawn block by block for their thin rims. */
@@ -46,7 +47,7 @@ public final class Lenticular extends Structure {
 
     @Override
     protected double body(double x, double y, double z) {
-        double r = Math.hypot(x - centreX, z - centreZ), best = Double.NEGATIVE_INFINITY;
+        double r = Distance.planar(x - centreX, z - centreZ), best = Double.NEGATIVE_INFINITY;
         for (int i = 0; i < discs; i++) {
             // Upper discs are a little smaller and thinner.
             double rim = radius * (1 - 0.12 * i);

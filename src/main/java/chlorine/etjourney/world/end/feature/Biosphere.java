@@ -1,5 +1,6 @@
 package chlorine.etjourney.world.end.feature;
 
+import chlorine.etjourney.world.end.noise.Distance;
 import chlorine.etjourney.world.end.noise.Hash;
 import chlorine.etjourney.world.end.noise.ValueNoise;
 
@@ -82,7 +83,7 @@ public final class Biosphere extends Structure {
     public boolean touchesWindow(int chunkX, int chunkZ) {
         int wx = chunkX * 16 + 8, wz = chunkZ * 16 + 8;
         if (wx > maxX() || wx + 15 < minX() || wz > maxZ() || wz + 15 < minZ()) return false;
-        return Math.hypot(centreX - (wx + 8), centreZ - (wz + 8)) <= WINDOW_REACH + footprint;
+        return Distance.planar(centreX - (wx + 8), centreZ - (wz + 8)) <= WINDOW_REACH + footprint;
     }
 
     /** How many populate windows meet and find the ball. */

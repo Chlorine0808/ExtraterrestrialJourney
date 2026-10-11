@@ -1,5 +1,6 @@
 package chlorine.etjourney.world.end.feature;
 
+import chlorine.etjourney.world.end.noise.Distance;
 import chlorine.etjourney.world.end.noise.Hash;
 
 /** A solid round column among the hollow pillars, thin and tall or short and stubby; drawn block by block. */
@@ -35,6 +36,6 @@ public final class Column extends Structure {
 
     @Override
     protected double body(double x, double y, double z) {
-        return Math.min(radius - Math.hypot(x - centreX, z - centreZ), Math.min(top - y, y - base));
+        return Math.min(radius - Distance.planar(x - centreX, z - centreZ), Math.min(top - y, y - base));
     }
 }

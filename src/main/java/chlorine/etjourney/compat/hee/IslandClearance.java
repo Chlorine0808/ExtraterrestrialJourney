@@ -6,6 +6,7 @@ import chlorine.etjourney.world.end.EndTerrain;
 import chlorine.etjourney.world.end.TerrainSampler;
 import chlorine.etjourney.world.end.feature.Islets;
 import chlorine.etjourney.world.end.feature.ZoneIslands;
+import chlorine.etjourney.world.end.noise.Distance;
 
 /** Decides whether an HEE sphere or meteoroid at (x, y, z) would touch our End terrain. */
 final class IslandClearance {
@@ -26,11 +27,11 @@ final class IslandClearance {
     static boolean blocked(TerrainSampler sampler, double x, double y, double z) {
         long seed = sampler.seed();
         for (ZoneIslands.Island island : ZoneIslands.near(seed, x, z, ZoneIslands.CELL, sampler.landProbe())) {
-            if (Math.hypot(x - island.x, z - island.z) > island.radius * 1.2 + MARGIN) continue;
+            if (Distance.planar(x - island.x, z - island.z) > island.radius * 1.2 + MARGIN) continue;
             if (y >= island.y - island.down - MARGIN && y <= island.y + island.up + MARGIN) return true;
         }
         for (Islets.Islet islet : Islets.near(seed, x, z, MARGIN, sampler.isletProbe())) {
-            if (Math.hypot(x - islet.x, z - islet.z) > islet.radius + MARGIN) continue;
+            if (Distance.planar(x - islet.x, z - islet.z) > islet.radius + MARGIN) continue;
             if (y >= islet.y - islet.flat - islet.depth - MARGIN && y <= islet.y + MARGIN) return true;
         }
         // Keep spheres off continents at any height, so nothing hangs above them.

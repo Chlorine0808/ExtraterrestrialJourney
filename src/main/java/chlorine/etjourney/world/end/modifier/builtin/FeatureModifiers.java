@@ -32,6 +32,7 @@ import chlorine.etjourney.world.end.modifier.EndBlock;
 import chlorine.etjourney.world.end.modifier.Modifier;
 import chlorine.etjourney.world.end.modifier.Shape;
 import chlorine.etjourney.world.end.modifier.TerrainView;
+import chlorine.etjourney.world.end.noise.Distance;
 import chlorine.etjourney.world.end.noise.ValueNoise;
 
 /** Shape and block modifiers built from the chunk's features. */
@@ -257,7 +258,7 @@ public final class FeatureModifiers {
         return blockModifier(820, (area, view, sink) -> {
             for (Islets.Islet islet : view.islets()) {
                 forEachColumn(sink, (x, z) -> {
-                    int[] span = Islets.span(islet, Math.hypot(x + 0.5 - islet.x, z + 0.5 - islet.z));
+                    int[] span = Islets.span(islet, Distance.planar(x + 0.5 - islet.x, z + 0.5 - islet.z));
                     if (span == null) return;
                     for (int y = Math.max(sink.minY(), span[0]); y <= Math.min(sink.maxY() - 1, span[1]); y++) {
                         sink.place(x, y, z, EndBlock.STONE);

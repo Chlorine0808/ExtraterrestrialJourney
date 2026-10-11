@@ -2,6 +2,7 @@ package chlorine.etjourney.world.end.feature.cloud;
 
 import chlorine.etjourney.world.end.feature.Structure;
 import chlorine.etjourney.world.end.feature.StructureProbe;
+import chlorine.etjourney.world.end.noise.Distance;
 import chlorine.etjourney.world.end.noise.Hash;
 import chlorine.etjourney.world.end.noise.ValueNoise;
 
@@ -105,7 +106,7 @@ public final class Billow extends Structure {
         for (int k = 0; k < CURL; k++) {
             double ax = curl[k * 2], ay = curl[k * 2 + 1], ex = curl[k * 2 + 2] - ax, ey = curl[k * 2 + 3] - ay;
             double t = Math.max(0, Math.min(1, ((p - ax) * ex + (q - ay) * ey) / (ex * ex + ey * ey)));
-            best = Math.min(best, Math.hypot(p - ax - ex * t, q - ay - ey * t));
+            best = Math.min(best, Distance.planar(p - ax - ex * t, q - ay - ey * t));
         }
         // Back to blocks, so the sheet keeps its thickness however the curl is scaled.
         return sheet - best * f;

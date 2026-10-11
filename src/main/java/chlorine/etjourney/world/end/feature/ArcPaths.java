@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Random;
 
 import chlorine.etjourney.world.end.noise.CellCache;
+import chlorine.etjourney.world.end.noise.Distance;
 import chlorine.etjourney.world.end.noise.Hash;
 import chlorine.etjourney.world.end.noise.ValueNoise;
 
@@ -215,7 +216,7 @@ public final class ArcPaths {
     private static List<Path> computePaths(long seed, int cx, int cz, Probe probe) {
         long s = seed ^ SALT;
         double x = (cx + 0.5) * CELL, z = (cz + 0.5) * CELL;
-        if (Math.hypot(x, z) < 1000 || !Fade.forms(probe.weight(x, z), Hash.hash01(s + 2, cx, cz)))
+        if (Distance.planar(x, z) < 1000 || !Fade.forms(probe.weight(x, z), Hash.hash01(s + 2, cx, cz)))
             return Collections.emptyList();
         double factor = 1 + (MAX_COUNT_FACTOR - 1) * Hash.hash01(s, cx, cz);
         // Laid over another base, ARCS only accents it, so it draws fewer paths.
@@ -254,7 +255,7 @@ public final class ArcPaths {
             dir = normalize(add(dir, gaussian(r, 0.03 * wiggle)));
             // Bounce off the floor and ceiling, and head home once too far out.
             if (py < MIN_Y + tube + 4 && dir[1] < 0 || py > MAX_Y - tube - 4 && dir[1] > 0) dir[1] = -dir[1];
-            if (Math.hypot(px - x, pz - z) > MAX_REACH - 40) {
+            if (Distance.planar(px - x, pz - z) > MAX_REACH - 40) {
                 dir = normalize(add(dir, new double[] { (x - px) * 0.01, 0, (z - pz) * 0.01 }));
             }
             px += dir[0] * STEP;

@@ -1,5 +1,7 @@
 package chlorine.etjourney.world.end.modifier;
 
+import chlorine.etjourney.world.end.noise.Distance;
+
 /**
  * Block-level reads of a chunk's 3 x 33 x 3 density grid, interpolated over 8 x 4 x 8-block cells exactly as the
  * vanilla End generator places its blocks. The grid nodes are shared between chunks, so these values are the same
@@ -34,7 +36,7 @@ public final class DensityField {
         double dx = ((c - a) + ((d - b) - (c - a)) * tz) / 8;
         double near = a + (c - a) * tx, far = b + (d - b) * tx;
         double dz = (far - near) / 8;
-        return Math.hypot(dx, dz);
+        return Distance.planar(dx, dz);
     }
 
     /** The density's change per block at a block, as {x, y, z}. */

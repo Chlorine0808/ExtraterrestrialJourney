@@ -1,5 +1,6 @@
 package chlorine.etjourney.world.end.feature;
 
+import chlorine.etjourney.world.end.noise.Distance;
 import chlorine.etjourney.world.end.noise.Hash;
 
 /** A tuft of thin stalks with small caps, splaying out from one root like enoki; drawn block by block. */
@@ -73,7 +74,7 @@ public final class Enoki extends Structure {
         }
 
         double reach(double centreX, double centreZ) {
-            return Math.hypot(x1 - centreX, z1 - centreZ) + capRadius;
+            return Distance.planar(x1 - centreX, z1 - centreZ) + capRadius;
         }
     }
 

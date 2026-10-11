@@ -6,6 +6,7 @@ import chlorine.etjourney.world.end.feature.Relief;
 import chlorine.etjourney.world.end.modifier.ColumnState;
 import chlorine.etjourney.world.end.modifier.Layer;
 import chlorine.etjourney.world.end.modifier.Modifier;
+import chlorine.etjourney.world.end.noise.Distance;
 import chlorine.etjourney.world.end.noise.Fractal;
 import chlorine.etjourney.world.end.noise.Hash;
 import chlorine.etjourney.world.end.noise.ValueNoise;
@@ -282,7 +283,7 @@ public final class StyleModifiers {
                     int cx = ox + i, cz = oz + j;
                     double px = (cx + 0.15 + 0.7 * Hash.hash01(salt + 43, cx, cz)) * SHARD;
                     double pz = (cz + 0.15 + 0.7 * Hash.hash01(salt + 44, cx, cz)) * SHARD;
-                    double d = Math.hypot(w[0] - px, w[1] - pz);
+                    double d = Distance.planar(w[0] - px, w[1] - pz);
                     if (d < d1) {
                         d2 = d1;
                         d1 = d;

@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import chlorine.etjourney.world.end.noise.CellCache;
+import chlorine.etjourney.world.end.noise.Distance;
 import chlorine.etjourney.world.end.noise.Fractal;
 import chlorine.etjourney.world.end.noise.Hash;
 import chlorine.etjourney.world.end.noise.Warp;
@@ -86,7 +87,7 @@ public final class Holes {
         double clear = outerRadius(radius) * MAX_STRETCH + 4;
         // Water must not pour into the void, so holes keep clear of lake shores.
         for (Lakes.Lake lake : probe.lakesNear(x, z, clear)) {
-            if (Math.hypot(x - lake.x, z - lake.z) < lake.radius * 1.6 + Lakes.SHORE_BAND + clear) return null;
+            if (Distance.planar(x - lake.x, z - lake.z) < lake.radius * 1.6 + Lakes.SHORE_BAND + clear) return null;
         }
         return new Hole(x, z, radius);
     }
@@ -104,7 +105,7 @@ public final class Holes {
         double ripple = (Fractal.fbm(s + 7, x, z, 9, 2) - 0.5) * 0.45;
         double best = 0;
         for (Hole hole : holes) {
-            double d = Math.hypot(w[0] - hole.x, w[1] - hole.z);
+            double d = Distance.planar(w[0] - hole.x, w[1] - hole.z);
             double rim = hole.radius * (0.6 + 0.8 * rimNoise);
             if (d < rim) return 1;
             double outer = rim + (outerRadius(hole.radius) - hole.radius) * stretch;

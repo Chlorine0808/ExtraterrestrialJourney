@@ -1,5 +1,6 @@
 package chlorine.etjourney.world.end.feature;
 
+import chlorine.etjourney.world.end.noise.Distance;
 import chlorine.etjourney.world.end.noise.Hash;
 
 /**
@@ -97,7 +98,7 @@ public final class Tool extends Structure {
             high = Math.max(high, c[1]);
         }
         double reach = 0;
-        for (double[] c : corners) reach = Math.max(reach, Math.hypot(c[0] - cx, c[2] - cz));
+        for (double[] c : corners) reach = Math.max(reach, Distance.planar(c[0] - cx, c[2] - cz));
         return new Tool(
             shape,
             origin,

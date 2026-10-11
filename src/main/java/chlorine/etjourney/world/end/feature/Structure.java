@@ -6,6 +6,7 @@ import java.util.List;
 
 import chlorine.etjourney.world.end.modifier.Shape;
 import chlorine.etjourney.world.end.noise.CellCache;
+import chlorine.etjourney.world.end.noise.Distance;
 import chlorine.etjourney.world.end.noise.Hash;
 import chlorine.etjourney.world.end.noise.ValueNoise;
 
@@ -38,7 +39,7 @@ public abstract class Structure implements Shape {
      */
     @Override
     public final double density(double x, double y, double z) {
-        if (Math.hypot(x - centreX, z - centreZ) > footprint) return Double.NEGATIVE_INFINITY;
+        if (Distance.planar(x - centreX, z - centreZ) > footprint) return Double.NEGATIVE_INFINITY;
         double d = body(x, y, z);
         if (wear <= 0) return d;
         // Bites where a 3D noise peaks; heavier wear lowers the peak that bites.
@@ -132,7 +133,7 @@ public abstract class Structure implements Shape {
         public T inCell(long seed, int cx, int cz, StructureProbe probe) {
             return cells.get(seed, cx, cz, (s, i, j) -> {
                 T structure = compute(s, i, j, probe);
-                if (structure == null || Math.hypot(structure.centreX, structure.centreZ) < Structures.MIN_RADIUS)
+                if (structure == null || Distance.planar(structure.centreX, structure.centreZ) < Structures.MIN_RADIUS)
                     return null;
                 long w = s ^ WEAR_SALT ^ style.hashCode();
                 if (Hash.hash01(w, i, j) < wearChance)
@@ -150,7 +151,7 @@ public abstract class Structure implements Shape {
             for (int cx = c0x; cx <= c1x; cx++) {
                 for (int cz = c0z; cz <= c1z; cz++) {
                     T s = inCell(seed, cx, cz, probe);
-                    if (s == null || Math.hypot(s.centreX - x, s.centreZ - z) > range + s.footprint) continue;
+                    if (s == null || Distance.planar(s.centreX - x, s.centreZ - z) > range + s.footprint) continue;
                     if (out == null) out = new ArrayList<>();
                     out.add(s);
                 }

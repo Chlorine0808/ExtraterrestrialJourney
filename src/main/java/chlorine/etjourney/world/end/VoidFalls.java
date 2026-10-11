@@ -7,6 +7,7 @@ import net.minecraft.world.World;
 import net.minecraft.world.chunk.IChunkProvider;
 
 import chlorine.etjourney.world.end.feature.Falls;
+import chlorine.etjourney.world.end.noise.Distance;
 import cpw.mods.fml.common.IWorldGenerator;
 import cpw.mods.fml.common.registry.GameRegistry;
 
@@ -28,7 +29,7 @@ public final class VoidFalls implements IWorldGenerator {
         if (world.isRemote || world.provider.dimensionId != END) return;
         // The populate area is offset by 8 so springs and their neighbours stay in loaded chunks.
         int ox = chunkX * 16 + 8, oz = chunkZ * 16 + 8;
-        if (Math.hypot(ox + 8, oz + 8) < EndTerrain.TERRAIN_START + 64) return;
+        if (Distance.planar(ox + 8, oz + 8) < EndTerrain.TERRAIN_START + 64) return;
         Long seed = EndTerrain.seed();
         if (seed == null || !Falls.forms(
             seed,

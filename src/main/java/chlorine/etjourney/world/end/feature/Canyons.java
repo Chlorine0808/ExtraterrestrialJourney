@@ -1,5 +1,6 @@
 package chlorine.etjourney.world.end.feature;
 
+import chlorine.etjourney.world.end.noise.Distance;
 import chlorine.etjourney.world.end.noise.ValueNoise;
 import chlorine.etjourney.world.end.noise.Warp;
 
@@ -42,7 +43,7 @@ public final class Canyons {
         double n = ValueNoise.mask(seed, x, z, scale) - 0.5;
         double gx = (ValueNoise.mask(seed, x + 1, z, scale) - ValueNoise.mask(seed, x - 1, z, scale)) / 2;
         double gz = (ValueNoise.mask(seed, x, z + 1, scale) - ValueNoise.mask(seed, x, z - 1, scale)) / 2;
-        double g = Math.hypot(gx, gz);
+        double g = Distance.planar(gx, gz);
         return g < 1e-6 ? Double.MAX_VALUE : Math.abs(n) / g;
     }
 }

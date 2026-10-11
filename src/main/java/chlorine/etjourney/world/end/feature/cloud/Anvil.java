@@ -2,6 +2,7 @@ package chlorine.etjourney.world.end.feature.cloud;
 
 import chlorine.etjourney.world.end.feature.Structure;
 import chlorine.etjourney.world.end.feature.StructureProbe;
+import chlorine.etjourney.world.end.noise.Distance;
 import chlorine.etjourney.world.end.noise.Hash;
 
 /** ANVILS: a stalk rising from the ground or the void under a flat cap that drifts to one side. */
@@ -59,10 +60,10 @@ public final class Anvil extends Structure {
     protected double body(double x, double y, double z) {
         // The stalk widens by half towards the cap and runs two blocks into it.
         double widen = 1 + 0.5 * Math.max(0, Math.min(1, (y - base) / (capY - base)));
-        double side = stalk * widen - Math.hypot(x - centreX, z - centreZ) + Clouds.ruffle(salt, x, y, z, 6, 1.5);
+        double side = stalk * widen - Distance.planar(x - centreX, z - centreZ) + Clouds.ruffle(salt, x, y, z, 6, 1.5);
         double stem = Math.min(side, Math.min(y - base, capY + 2 - y));
         double px = x - capX, pz = z - capZ, c = Math.cos(heading), s = Math.sin(heading);
-        double dc = Math.hypot((px * c + pz * s) / stretch, -px * s + pz * c), u = Math.min(1, dc / radius);
+        double dc = Distance.planar((px * c + pz * s) / stretch, -px * s + pz * c), u = Math.min(1, dc / radius);
         double rim = radius + Clouds.ruffle(salt + 2, x, 0, z, 16, 0.15 * radius);
         double roof = capY + thick + DOME * (1 - u * u) + Clouds.ruffle(salt + 4, x, 0, z, 10, LUMPS);
         double floor = capY + Clouds.ruffle(salt + 6, x, 0, z, 12, 1.5);

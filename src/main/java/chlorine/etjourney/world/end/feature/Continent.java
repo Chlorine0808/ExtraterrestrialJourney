@@ -3,6 +3,7 @@ package chlorine.etjourney.world.end.feature;
 import java.util.ArrayList;
 import java.util.List;
 
+import chlorine.etjourney.world.end.noise.Distance;
 import chlorine.etjourney.world.end.noise.Fractal;
 import chlorine.etjourney.world.end.noise.Hash;
 import chlorine.etjourney.world.end.noise.ValueNoise;
@@ -65,7 +66,7 @@ public final class Continent {
     public static double rawHeight(List<Seed> seeds, double x, double z) {
         double best = -100;
         for (Seed s : seeds) {
-            best = Math.max(best, 100 - Math.hypot(x - s.x, z - s.z) / 8 * s.falloff);
+            best = Math.max(best, 100 - Distance.planar(x - s.x, z - s.z) / 8 * s.falloff);
         }
         return Math.min(MAX_HEIGHT, best);
     }
