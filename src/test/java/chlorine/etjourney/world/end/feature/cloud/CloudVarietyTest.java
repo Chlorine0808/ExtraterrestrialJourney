@@ -100,4 +100,18 @@ class CloudVarietyTest {
         double flat = spread(Mackerel.KIND, 907L, Probes.VOID, m -> m.flatten);
         assertTrue(flat >= 1.5, "flatness spread " + flat);
     }
+
+    @Test
+    void billowsComeInManyLengthsAndTurns() {
+        double length = spread(Billow.KIND, 908L, Probes.LAND, b -> b.length);
+        assertTrue(length >= 3.5, "length spread " + length);
+        double turns = spread(Billow.KIND, 908L, Probes.LAND, b -> b.turns);
+        assertTrue(turns >= 1.4, "turn spread " + turns);
+    }
+
+    @Test
+    void billowsNarrowTowardsTheirEnds() {
+        Billow b = Probes.first(Billow.KIND, 909L, Probes.LAND);
+        assertTrue(b.radiusAt(b.length * 0.45) < b.radiusAt(0) * 0.85, "no taper");
+    }
 }

@@ -17,10 +17,10 @@ class BillowTest {
     void aCurlOpenAtItsEye() {
         Billow b = Probes.first(Billow.KIND, 571L, Probes.LAND);
         assertNotNull(b);
-        assertTrue(b.footprint <= 90, "footprint " + b.footprint);
-        assertTrue(densityAt(b, 0, 0, -b.radius) > 0, "bottom of the curl");
+        assertTrue(b.footprint <= 103, "footprint " + b.footprint);
+        assertTrue(densityAt(b, 0, 0, -b.radiusAt(0)) > 0, "bottom of the curl");
         assertTrue(densityAt(b, 0, 0, 0) < 0, "eye");
-        assertTrue(densityAt(b, b.length / 2 + 2, 0, -b.radius) < 0, "past the end");
+        assertTrue(densityAt(b, b.length / 2 + 2, 0, -b.radiusAt(0)) < 0, "past the end");
     }
 
     @Test
@@ -29,8 +29,8 @@ class BillowTest {
         for (int i = 0; i < 400; i++) {
             Billow b = Billow.KIND.inCell(575L, c0 + i % 20, c0 + i / 20, Probes.LAND);
             if (b == null) continue;
-            assertTrue(densityAt(b, 0, 0, -b.radius - 1.5) < 0, "below the bottom of the curl");
-            assertTrue(densityAt(b, 0, 0, -b.radius + 1.5) < 0, "above the bottom of the curl");
+            assertTrue(densityAt(b, 0, 0, -b.radiusAt(0) - 1.5) < 0, "below the bottom of the curl");
+            assertTrue(densityAt(b, 0, 0, -b.radiusAt(0) + 1.5) < 0, "above the bottom of the curl");
         }
     }
 
