@@ -57,9 +57,10 @@ public final class FeatureModifiers {
         int order = 850;
         for (Structure.Kind<? extends Structure> kind : Structures.kinds())
             all.add(StructureModifiers.of(kind, order++));
-        all.add(StructureModifiers.of(Cumulus.KIND, 855));
-        all.add(StructureModifiers.of(Mammatus.KIND, 856));
-        all.add(StructureModifiers.of(Anvil.KIND, 857));
+        // Clouds block by block too, so their round edges are not cut into the grid's polygons.
+        all.add(StructureModifiers.voxels(Cumulus.KIND, 855, EndBlock.STONE));
+        all.add(StructureModifiers.voxels(Mammatus.KIND, 856, EndBlock.STONE));
+        all.add(StructureModifiers.voxels(Anvil.KIND, 857, EndBlock.STONE));
         // Mushrooms block by block, so their round caps are not cut into the 8-block grid's polygons.
         all.add(StructureModifiers.voxels(Structures.MUSHROOMS, 859, EndBlock.STONE));
         all.add(StructureModifiers.ringlets());
