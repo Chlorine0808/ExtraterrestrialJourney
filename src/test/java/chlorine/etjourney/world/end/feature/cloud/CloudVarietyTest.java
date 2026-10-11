@@ -92,4 +92,12 @@ class CloudVarietyTest {
         double lean = spread(Virga.KIND, 906L, Probes.LAND, v -> 0.01 + v.lean);
         assertTrue(lean >= 10, "lean spread " + lean);
     }
+
+    @Test
+    void mackerelPuffsComeInManySizesAndFlatnesses() {
+        double size = spread(Mackerel.KIND, 907L, Probes.VOID, m -> m.size);
+        assertTrue(size >= 2.2, "size spread " + size);
+        double flat = spread(Mackerel.KIND, 907L, Probes.VOID, m -> m.flatten);
+        assertTrue(flat >= 1.5, "flatness spread " + flat);
+    }
 }
