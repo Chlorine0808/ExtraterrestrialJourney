@@ -12,7 +12,7 @@ class AnvilTest {
     void stalkAndDriftingCap() {
         Anvil a = Probes.first(Anvil.KIND, 521L, Probes.LAND);
         assertNotNull(a);
-        assertTrue(a.footprint <= 101, "footprint " + a.footprint);
+        assertTrue(a.footprint <= 145, "footprint " + a.footprint);
         assertTrue(a.density(a.centreX, a.base + 10, a.centreZ) > 0, "stalk");
         assertTrue(a.density(a.capX, a.capY + a.thick / 2, a.capZ) > 0, "cap");
         assertTrue(a.capY - a.base >= 60);

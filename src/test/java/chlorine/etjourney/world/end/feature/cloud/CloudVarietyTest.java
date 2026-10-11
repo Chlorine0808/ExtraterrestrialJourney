@@ -35,4 +35,30 @@ class CloudVarietyTest {
         double stretch = spread(Cumulus.KIND, 901L, Probes.LAND, c -> c.stretch);
         assertTrue(stretch >= 1.4, "stretch spread " + stretch);
     }
+
+    @Test
+    void anvilsComeInManySizesThicknessesAndStretches() {
+        double radius = spread(Anvil.KIND, 902L, Probes.LAND, a -> a.radius);
+        assertTrue(radius >= 2.2, "radius spread " + radius);
+        double thick = spread(Anvil.KIND, 902L, Probes.LAND, a -> a.thick);
+        assertTrue(thick >= 2.5, "thickness spread " + thick);
+        double stretch = spread(Anvil.KIND, 902L, Probes.LAND, a -> a.stretch);
+        assertTrue(stretch >= 1.3, "stretch spread " + stretch);
+    }
+
+    @Test
+    void anvilRimsAreRagged() {
+        Anvil a = Probes.first(Anvil.KIND, 903L, Probes.LAND);
+        double y = a.capY + a.thick / 2, cos = Math.cos(a.heading), sin = Math.sin(a.heading);
+        double widest = 0, narrowest = Double.MAX_VALUE;
+        // The rim across the drift, where the stretch leaves the radius as it is.
+        for (int k = -6; k <= 6; k++) {
+            double t = Math.toRadians(90 + 4 * k), dx = Math.cos(t) * cos - Math.sin(t) * sin;
+            double dz = Math.cos(t) * sin + Math.sin(t) * cos, r = 0;
+            while (r < a.radius * 2 && a.density(a.capX + dx * r, y, a.capZ + dz * r) > 0) r += 0.25;
+            widest = Math.max(widest, r);
+            narrowest = Math.min(narrowest, r);
+        }
+        assertTrue(widest - narrowest >= 2, "rim from " + narrowest + " to " + widest);
+    }
 }
