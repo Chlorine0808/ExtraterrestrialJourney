@@ -3,6 +3,7 @@ package chlorine.etjourney.world.end.feature.cloud;
 import chlorine.etjourney.world.end.feature.Fade;
 import chlorine.etjourney.world.end.feature.StructureProbe;
 import chlorine.etjourney.world.end.noise.Hash;
+import chlorine.etjourney.world.end.noise.ValueNoise;
 
 /** Shared limits and placement rules of the cloud structures. */
 final class Clouds {
@@ -33,6 +34,13 @@ final class Clouds {
     /** roll of the way from low to high, or NaN when low is above high. */
     static double between(double low, double high, double roll) {
         return low > high ? Double.NaN : low + (high - low) * roll;
+    }
+
+    /** A lumpy offset of up to amp either way, from two octaves of 3D noise of the given scale. */
+    static double ruffle(long salt, double x, double y, double z, double scale, double amp) {
+        double n = 0.7 * ValueNoise.noise3(salt, x, y, z, scale)
+            + 0.3 * ValueNoise.noise3(salt + 1, x, y, z, scale / 2.5);
+        return (n - 0.5) * 2 * amp;
     }
 
     /** Like max, but rounds the seam where a and b lie within k of each other. */

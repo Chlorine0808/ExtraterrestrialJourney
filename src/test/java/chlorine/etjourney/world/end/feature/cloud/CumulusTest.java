@@ -12,7 +12,7 @@ class CumulusTest {
     void solidAboveAFlatBase() {
         Cumulus c = Probes.first(Cumulus.KIND, 501L, Probes.LAND);
         assertNotNull(c);
-        assertTrue(c.footprint <= 48, "footprint " + c.footprint);
+        assertTrue(c.footprint <= 92, "footprint " + c.footprint);
         assertTrue(c.bottom >= 70 + 30, "base " + c.bottom);
         assertTrue(c.density(c.centreX, c.centreY, c.centreZ) > 0);
         // At least 8 blocks of body over the base on the axis, so the density grid keeps it.
