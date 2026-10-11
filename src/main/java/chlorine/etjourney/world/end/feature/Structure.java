@@ -49,6 +49,23 @@ public abstract class Structure implements Shape {
 
     protected abstract double body(double x, double y, double z);
 
+    @Override
+    public final Line line(double x, double z) {
+        if (Distance.planar(x - centreX, z - centreZ) > footprint) return Line.EMPTY;
+        Line body = bodyLine(x, z);
+        if (wear <= 0) return body;
+        double limit = 0.85 - 0.3 * wear;
+        return Line.of(
+            body.minY(),
+            body.maxY(),
+            y -> body.solid(y) && (limit - ValueNoise.noise3(wearSalt, x, y, z, wearScale)) * 40 >= 0);
+    }
+
+    /** The body along the vertical line through (x, z); kinds drawn block by block narrow it to save work. */
+    protected Line bodyLine(double x, double z) {
+        return Line.of(minY(), maxY(), y -> body(x, y, z) >= 0);
+    }
+
     void wearDown(double wear, double scale, long salt) {
         this.wear = wear;
         this.wearScale = scale;

@@ -134,6 +134,12 @@ public final class StructureModifiers {
             public double density(double x, double y, double z) {
                 return s.density(x, y - dy, z);
             }
+
+            @Override
+            public Line line(double x, double z) {
+                Line line = s.line(x, z);
+                return Line.of(line.minY() + dy, line.maxY() + dy, y -> line.solid(y - dy));
+            }
         };
     }
 
@@ -145,8 +151,11 @@ public final class StructureModifiers {
         int bottom = Math.max(0, (int) Math.floor(shape.minY())), top = Math.min(254, (int) Math.ceil(shape.maxY()));
         for (int x = x0; x <= x1; x++) {
             for (int z = z0; z <= z1; z++) {
-                int y = top;
-                while (y >= bottom && shape.density(x + 0.5, y + 0.5, z + 0.5) < 0) y--;
+                Shape.Line line = shape.line(x + 0.5, z + 0.5);
+                int y = Math.min(top, lastBlockTo(line.maxY()));
+                int lowest = Math.max(bottom, firstBlockFrom(line.minY()));
+                while (y >= lowest && !line.solid(y + 0.5)) y--;
+                if (y < lowest) y = bottom - 1;
                 if (y < bottom || fromTopOnly && y < top - 1) continue;
                 int gap = rockAbove(view, x, y, z);
                 if (gap <= 0) continue;
@@ -163,6 +172,16 @@ public final class StructureModifiers {
         return 0;
     }
 
+    /** The lowest block whose centre lies at or above y. */
+    private static int firstBlockFrom(double y) {
+        return (int) Math.max(Integer.MIN_VALUE / 2, Math.min(Integer.MAX_VALUE / 2, Math.ceil(y - 0.5)));
+    }
+
+    /** The highest block whose centre lies at or below y. */
+    private static int lastBlockTo(double y) {
+        return (int) Math.max(Integer.MIN_VALUE / 2, Math.min(Integer.MAX_VALUE / 2, Math.floor(y - 0.5)));
+    }
+
     /** Places the block wherever the shape's density at the block centre is not negative, within the sink. */
     private static void draw(Shape shape, BlockSink sink, EndBlock block) {
         int ox = sink.originX(), oz = sink.originZ();
@@ -172,8 +191,10 @@ public final class StructureModifiers {
         int y1 = Math.min(sink.maxY() - 1, (int) Math.ceil(shape.maxY()));
         for (int x = x0; x <= x1; x++) {
             for (int z = z0; z <= z1; z++) {
-                for (int y = y0; y <= y1; y++) {
-                    if (shape.density(x + 0.5, y + 0.5, z + 0.5) >= 0) sink.place(x, y, z, block);
+                Shape.Line line = shape.line(x + 0.5, z + 0.5);
+                int top = Math.min(y1, lastBlockTo(line.maxY()));
+                for (int y = Math.max(y0, firstBlockFrom(line.minY())); y <= top; y++) {
+                    if (line.solid(y + 0.5)) sink.place(x, y, z, block);
                 }
             }
         }
