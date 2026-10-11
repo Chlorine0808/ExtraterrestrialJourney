@@ -79,7 +79,7 @@ public final class FeatureModifiers {
     }
 
     /** How far a steep face moves in or out, in blocks. */
-    private static final double FACE_DEPTH = 4;
+    private static final double FACE_DEPTH = 3;
     /** Sideways density change per block at which roughening starts. */
     private static final double FACE_STEEP = 0.8;
     private static final long FACE_SALT = 0x2C9B5E7A1F3D8046L;
@@ -127,9 +127,9 @@ public final class FeatureModifiers {
                     double steep = ValueNoise.smooth(Math.max(0, Math.min(1, (g - FACE_STEEP) / 1.4)));
                     double reach = FACE_DEPTH * g * steep;
                     if (reach <= 0 || Math.abs(d) >= reach) continue;
-                    double n = (ValueNoise.noise3(s, x, y, z, 5) - 0.5) * 2 * 0.65
+                    double n = (ValueNoise.noise3(s, x, y, z, 8) - 0.5) * 2 * 0.65
                         + (ValueNoise.noise3(s + 1, x / 4.0, y, z / 4.0, 3) - 0.5) * 2 * 0.35;
-                    n = Math.max(-1, Math.min(1, n * 2));
+                    n = Math.max(-1, Math.min(1, n * 1.4));
                     boolean solid = d + n * reach > 0;
                     if (solid == d > 0 || !surfaceNear(view, all, lx, ly, lz, x, y, z, d > 0)) continue;
                     if (solid && sink.isAir(x, y, z)) sink.set(x, y, z, EndBlock.STONE);

@@ -102,8 +102,9 @@ class CliffFacesTest {
     void steepFacesAreRoughAndFlatGroundIsNot() {
         double[] s = exposure();
         // Against the same cells as the density grid alone leaves them: rough steep faces expose clearly more blocks,
-        // while flat ground stays nearly as it was.
+        // but not so many that they look ragged, while flat ground stays nearly as it was.
         assertTrue(s[0] > s[2] + 0.1, "steep faces are smooth: " + s[0] + " against " + s[2]);
+        assertTrue(s[0] < s[2] + 0.3, "steep faces are ragged: " + s[0] + " against " + s[2]);
         assertTrue(s[1] < s[3] + 0.03, "flat ground got rough: " + s[1] + " against " + s[3]);
     }
 
@@ -141,7 +142,7 @@ class CliffFacesTest {
                             boolean now = sink.get(cx * 16 + x, base + y, cz * 16 + z) != null;
                             if (now == was[x][y][z]) continue;
                             changed++;
-                            // A face moves at most FACE_DEPTH (4) blocks, plus a block for rounding.
+                            // A face moves at most FACE_DEPTH (3) blocks, plus a block for rounding.
                             assertTrue(
                                 nearSurface(was, x, y, z, 6),
                                 "changed far from the surface at " + x + "," + (base + y) + "," + z);
