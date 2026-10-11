@@ -135,8 +135,7 @@ public final class Styles {
     public static final Style CUMULUS = structure("CUMULUS", Style.ANY);
 
     /** Sharp-edged papers drifting over the land, crowded in places; drawn block by block. */
-    public static final Style STRATUS = Style.builder("STRATUS", StyleKind.BOTH)
-        .share(1)
+    public static final Style STRATUS = Style.builder("STRATUS", StyleKind.OVERLAY)
         .overlay(OVERLAY_CHANCE, Style.LAND)
         .build();
 

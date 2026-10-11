@@ -10,9 +10,9 @@ import org.junit.jupiter.api.Test;
 class CloudStylesTest {
 
     @Test
-    void stratusIsALandBaseThatAlsoOverlaysLand() {
-        assertEquals(StyleKind.BOTH, Styles.STRATUS.kind);
-        assertEquals(1, Styles.STRATUS.share);
+    void stratusOverlaysLandOnlyAndIsNoBase() {
+        assertEquals(StyleKind.OVERLAY, Styles.STRATUS.kind);
+        assertEquals(0, Styles.STRATUS.share);
         assertTrue(Styles.STRATUS.canOverlay(Styles.PLAINS));
         assertFalse(Styles.STRATUS.canOverlay(Styles.ISLETS));
         assertTrue(
