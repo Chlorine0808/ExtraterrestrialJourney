@@ -4,6 +4,7 @@ import java.util.List;
 
 import net.minecraft.block.BlockFalling;
 import net.minecraft.world.WorldServer;
+import net.minecraftforge.common.DimensionManager;
 
 import chlorine.etjourney.core.config.ETJConfig;
 import chlorine.etjourney.core.util.ModLog;
@@ -74,6 +75,11 @@ final class CutoutJob {
 
     boolean done() {
         return done;
+    }
+
+    /** Whether the job holds a sample world that is no longer loaded, as after the server stopped part way. */
+    boolean stale() {
+        return world != null && DimensionManager.getWorld(world.provider.dimensionId) != world;
     }
 
     /** Stops the job and throws its sample chunks away, so the next cut starts from an empty sample world. */

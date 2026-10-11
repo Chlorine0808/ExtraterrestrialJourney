@@ -18,6 +18,7 @@ import chlorine.etjourney.world.end.feature.CutoutCache;
 import chlorine.etjourney.world.end.modifier.EndBlock;
 import chlorine.etjourney.world.end.modifier.builtin.StructureModifiers;
 import chlorine.etjourney.world.end.noise.Distance;
+import cpw.mods.fml.common.FMLCommonHandler;
 import cpw.mods.fml.common.IWorldGenerator;
 import cpw.mods.fml.common.registry.GameRegistry;
 
@@ -29,10 +30,15 @@ public final class BiosphereTransplant implements IWorldGenerator {
     private static final int CACHED = 16;
 
     private final CutoutCache cache = new CutoutCache(CACHED);
+    private final CutoutPrefetch prefetch = new CutoutPrefetch(cache);
 
     public static void register() {
         SampleWorlds.register();
-        GameRegistry.registerWorldGenerator(new BiosphereTransplant(), 10);
+        BiosphereTransplant transplant = new BiosphereTransplant();
+        GameRegistry.registerWorldGenerator(transplant, 10);
+        FMLCommonHandler.instance()
+            .bus()
+            .register(transplant.prefetch);
     }
 
     @Override
@@ -74,7 +80,7 @@ public final class BiosphereTransplant implements IWorldGenerator {
         }
         Cutout cut = cache.get(b.key());
         if (cut == null) {
-            cut = CutoutMaker.make(seed, b);
+            cut = prefetch.make(seed, b);
             if (cut == null) {
                 // Neither world could make it: take the shell away rather than leave an empty ball.
                 cache.fail(b.key());
