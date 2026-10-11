@@ -15,8 +15,8 @@ class VirgaTest {
         assertNotNull(v);
         int upper = 0, lower = 0;
         double quarter = v.longest / 4;
-        for (int x = (int) Math.floor(v.centreX - 7); x <= v.centreX + 7; x++) {
-            for (int z = (int) Math.floor(v.centreZ - 7); z <= v.centreZ + 7; z++) {
+        for (int x = (int) Math.floor(v.centreX - v.footprint); x <= v.centreX + v.footprint; x++) {
+            for (int z = (int) Math.floor(v.centreZ - v.footprint); z <= v.centreZ + v.footprint; z++) {
                 for (int y = (int) Math.floor(v.top - v.longest); y <= v.top; y++) {
                     if (v.density(x + 0.5, y + 0.5, z + 0.5) < 0) continue;
                     if (y > v.top - quarter) upper++;

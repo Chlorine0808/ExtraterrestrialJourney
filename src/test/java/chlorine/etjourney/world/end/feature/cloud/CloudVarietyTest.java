@@ -84,4 +84,12 @@ class CloudVarietyTest {
         }
         assertTrue(high - low >= 0.5, "density round the pouch from " + low + " to " + high);
     }
+
+    @Test
+    void virgaComeInManyLengthsAndLeans() {
+        double longest = spread(Virga.KIND, 906L, Probes.LAND, v -> v.longest);
+        assertTrue(longest >= 2.5, "length spread " + longest);
+        double lean = spread(Virga.KIND, 906L, Probes.LAND, v -> 0.01 + v.lean);
+        assertTrue(lean >= 10, "lean spread " + lean);
+    }
 }
