@@ -3,8 +3,9 @@ package chlorine.etjourney.world.end.feature;
 import chlorine.etjourney.world.end.noise.Hash;
 
 /**
- * A giant tool in CROSSES regions: a tool sprite blown up to 2-5 blocks a pixel and given depth. Over land most are
- * driven in at a lean by their planted end; the rest float at any angle. Drawn block by block.
+ * A giant tool in CROSSES regions: a tool sprite blown up to 2-5 blocks a pixel and, like a cross's beams, as thick as
+ * it is wide. Over land most are driven in at a lean by their planted end; the rest float at any angle. Drawn block by
+ * block.
  */
 public final class Tool extends Structure {
 
@@ -23,7 +24,7 @@ public final class Tool extends Structure {
             ToolSprite sprite = sprites[(int) (Hash.hash01(s + 3, cx, cz) * sprites.length)];
             // More small tools than large ones.
             double scale = 2 + 3 * Math.pow(Hash.hash01(s + 4, cx, cz), 1.5);
-            double depth = Math.max(2, scale);
+            double depth = ToolSprite.MAX_THICKNESS * scale;
             double ground = probe.ground(x, z);
             boolean grounded = ground > -100 && Hash.hash01(s + 5, cx, cz) < 0.6;
             double lean = Math.toRadians((grounded ? 25 : 70) * Hash.hash01(s + 6, cx, cz));
@@ -59,6 +60,7 @@ public final class Tool extends Structure {
     }.worn(Structures.WORN, 6);
 
     public final ToolSprite sprite;
+    /** Blocks a pixel, and the thickest the tool gets in blocks. */
     public final double scale, depth;
     private final double[] origin, e1, e2, normal;
     /** Where it is driven into the ground, as {x, z}, or null when it floats. */
@@ -150,7 +152,7 @@ public final class Tool extends Structure {
         if (Math.abs(w) > depth / 2) return -1;
         double u = px * e1[0] + py * e1[1] + pz * e1[2], v = px * e2[0] + py * e2[1] + pz * e2[2];
         int col = (int) Math.floor(u / scale), row = 15 - (int) Math.floor(v / scale);
-        return sprite.filled(col, row) ? 1 : -1;
+        return Math.abs(w) < sprite.thickness(col, row) * scale / 2 ? 1 : -1;
     }
 
     private static double[] add(double[] a, double[] b) {

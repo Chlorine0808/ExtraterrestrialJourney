@@ -10,8 +10,8 @@ import java.util.Set;
 import org.junit.jupiter.api.Test;
 
 /**
- * Giant tools in CROSSES regions: a tool sprite blown up to 2-5 blocks a pixel, driven into the ground at a lean or
- * floating at any angle.
+ * Giant tools in CROSSES regions: a tool sprite blown up to 2-5 blocks a pixel and as thick as it is wide, driven into
+ * the ground at a lean or floating at any angle.
  */
 class ToolTest {
 
@@ -74,15 +74,17 @@ class ToolTest {
                     double d = t.body(p[0], p[1], p[2]);
                     assertTrue(t.sprite.filled(col, row) ? d > 0 : d < 0, t.sprite + " pixel " + col + "," + row);
                     if (!t.sprite.filled(col, row)) continue;
-                    for (double w : new double[] { -0.5, 0.5 }) {
-                        double[] q = t.pixel(col, row, w * t.depth);
+                    double half = t.sprite.thickness(col, row) * t.scale / 2;
+                    for (double w : new double[] { -1, 1 }) {
+                        double[] in = t.pixel(col, row, w * (half - 0.1)), out = t.pixel(col, row, w * (half + 0.1));
+                        assertTrue(t.body(in[0], in[1], in[2]) > 0, t.sprite + " too thin at " + col + "," + row);
+                        assertTrue(t.body(out[0], out[1], out[2]) < 0, t.sprite + " too thick at " + col + "," + row);
+                        double[] q = t.pixel(col, row, w * t.depth / 2);
                         assertTrue(Math.hypot(q[0] - t.centreX, q[2] - t.centreZ) <= t.footprint, "footprint");
                         assertTrue(q[1] >= t.minY() && q[1] <= t.maxY(), "height");
                     }
                 }
             }
-            double[] beyond = t.pixel(8, 8, t.depth);
-            assertTrue(t.body(beyond[0], beyond[1], beyond[2]) < 0, "thickness");
             assertTrue(t.minY() >= 0 && t.maxY() <= 250);
         }
         assertTrue(checked > 20);

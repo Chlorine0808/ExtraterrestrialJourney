@@ -8,7 +8,10 @@ import java.util.Deque;
 
 import org.junit.jupiter.api.Test;
 
-/** Each tool sprite is a 16 x 16 silhouette in one piece, with its planted end filled. */
+/**
+ * Each tool sprite is a 16 x 16 silhouette in one piece, with its planted end filled, and is as thick as it is wide, as
+ * a cross's beams are.
+ */
 class ToolSpriteTest {
 
     @Test
@@ -69,5 +72,29 @@ class ToolSpriteTest {
         }
         assertTrue(ToolSprite.SWORD.tipFirst);
         assertTrue(!ToolSprite.PICKAXE.tipFirst);
+    }
+
+    @Test
+    void asThickAsItIsWide() {
+        for (ToolSprite t : ToolSprite.values()) {
+            for (int col = 0; col < 16; col++) {
+                for (int row = 0; row < 16; row++) {
+                    double th = t.thickness(col, row);
+                    if (!t.filled(col, row)) assertEquals(0, th, t + " " + col + "," + row);
+                    else assertTrue(th >= 1 && th <= ToolSprite.MAX_THICKNESS, t + " " + col + "," + row + ": " + th);
+                }
+            }
+        }
+        // The pickaxe's handle is three pixels across a diagonal, about two pixels wide.
+        for (int row = 8; row <= 12; row++) {
+            for (int col = 0; col < 10; col++) {
+                if (ToolSprite.PICKAXE.filled(col, row))
+                    assertEquals(1.83, ToolSprite.PICKAXE.thickness(col, row), 0.01);
+            }
+        }
+        // The broad hammer head is thicker than its handle, but no thicker than the cap.
+        assertEquals(ToolSprite.MAX_THICKNESS, ToolSprite.HAMMER.thickness(10, 3), 1e-9);
+        // A string one pixel wide is one pixel thick.
+        assertEquals(1, ToolSprite.BOW.thickness(9, 6), 1e-9);
     }
 }
