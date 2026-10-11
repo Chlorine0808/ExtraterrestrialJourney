@@ -274,6 +274,12 @@ public final class FeatureModifiers {
             for (Shoals.School school : view.schools()) {
                 int scx = (int) Math.floor(school.x) >> 4, scz = (int) Math.floor(school.z) >> 4;
                 if (!Shoals.forms(school, view.reservedAt(scx, scz))) continue;
+                int[] box = Shoals.bounds(school);
+                if (box[1] < sink.originX() || box[0] > sink.originX() + 15
+                    || box[3] < sink.minY()
+                    || box[2] >= sink.maxY()
+                    || box[5] < sink.originZ()
+                    || box[4] > sink.originZ() + 15) continue;
                 for (int[] b : Shoals.blocks(school)) {
                     if (inside(sink, b[0], b[1], b[2])) sink.place(b[0], b[1], b[2], EndBlock.STONE);
                 }

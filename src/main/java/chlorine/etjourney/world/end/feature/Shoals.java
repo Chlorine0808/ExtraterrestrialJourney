@@ -46,6 +46,8 @@ public final class Shoals {
          */
         public final boolean always;
         final long seed;
+        /** {minX, maxX, minY, maxY, minZ, maxZ} of the platforms, found on first use. */
+        private volatile int[] bounds;
 
         School(double x, double z, double y, double angle, double pitch, int count, boolean always, long seed) {
             this.x = x;
@@ -102,10 +104,15 @@ public final class Shoals {
      * chunk it spans agrees.
      */
     public static boolean forms(School school, List<Area> reserved) {
+        // Most schools are neither always formed nor near a reserved area: rule them out before building platforms.
+        if (!school.always && !inRing(school, reserved)) return false;
         // Above the reserved height a school may float over the island; below it, it keeps off the island.
-        boolean high = school.y - 4 * VERTICAL_SIGMA >= Reservations.CLEAR_Y && lowest(school) >= Reservations.CLEAR_Y;
-        if (!high && Reservations.insideFootprint(reserved, school.x, school.z, EXTENT + 4 * SIDE_SIGMA)) return false;
-        if (school.always) return true;
+        boolean high = school.y - 4 * VERTICAL_SIGMA >= Reservations.CLEAR_Y
+            && bounds(school)[2] >= Reservations.CLEAR_Y;
+        return high || !Reservations.insideFootprint(reserved, school.x, school.z, EXTENT + 4 * SIDE_SIGMA);
+    }
+
+    private static boolean inRing(School school, List<Area> reserved) {
         for (Area area : reserved) {
             if (Distance.planar(school.x - area.x, school.z - area.z) < area.radius * 1.15 + Reservations.FADE + 30) {
                 return true;
@@ -114,10 +121,21 @@ public final class Shoals {
         return false;
     }
 
-    private static int lowest(School school) {
-        int low = Integer.MAX_VALUE;
-        for (int[] b : blocks(school)) low = Math.min(low, b[1]);
-        return low;
+    /** {minX, maxX, minY, maxY, minZ, maxZ} of the school's platform blocks. */
+    public static int[] bounds(School school) {
+        int[] b = school.bounds;
+        if (b == null) {
+            b = new int[] { Integer.MAX_VALUE, Integer.MIN_VALUE, Integer.MAX_VALUE, Integer.MIN_VALUE,
+                Integer.MAX_VALUE, Integer.MIN_VALUE };
+            for (int[] p : blocks(school)) {
+                for (int i = 0; i < 3; i++) {
+                    b[2 * i] = Math.min(b[2 * i], p[i]);
+                    b[2 * i + 1] = Math.max(b[2 * i + 1], p[i]);
+                }
+            }
+            school.bounds = b;
+        }
+        return b.clone();
     }
 
     /**
