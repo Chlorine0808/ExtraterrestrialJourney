@@ -1,6 +1,7 @@
 package chlorine.etjourney.world.end;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -39,6 +40,8 @@ public final class ChunkPlan implements TerrainView {
     }
 
     private static final double RANGE = 16;
+    /** Cells around the chunk whose grid nodes are kept in an array, and the array's size. */
+    private static final int RING = 2, RING_SIDE = 3 + 2 * RING, RING_HEIGHT = 65;
     private static final double ARC_PAD = 64;
     /** How far below a segment's midpoint its tube can reach: the thickest tube plus half a segment. */
     private static final double ARC_REACH = 14;
@@ -59,6 +62,8 @@ public final class ChunkPlan implements TerrainView {
     private volatile List<Shape> shapes;
     /** Grid nodes outside the chunk, read by densityAt(), keyed by their block position. */
     private final Map<Long, Double> outerNodes = new ConcurrentHashMap<>();
+    /** The same nodes within RING cells of the chunk, by (i, j, k) from the corner cell; NaN until computed. */
+    private volatile double[] ringNodes;
     /** Density grids by half and shapes, built on first use. */
     private final double[][] fields = new double[4][];
 
@@ -150,6 +155,22 @@ public final class ChunkPlan implements TerrainView {
     }
 
     private double outerNode(int x, int y, int z) {
+        int i = (x - area.originX()) / 8 + RING, j = (z - area.originZ()) / 8 + RING, k = y / 4;
+        if (i >= 0 && i < RING_SIDE && j >= 0 && j < RING_SIDE && k >= 0 && k < RING_HEIGHT && y >= 0) {
+            double[] ring = ringNodes;
+            if (ring == null) {
+                ring = new double[RING_SIDE * RING_SIDE * RING_HEIGHT];
+                Arrays.fill(ring, Double.NaN);
+                ringNodes = ring;
+            }
+            int index = (i * RING_SIDE + j) * RING_HEIGHT + k;
+            double value = ring[index];
+            if (Double.isNaN(value)) {
+                value = DensityBuilder.node(this, x, y, z);
+                ring[index] = value;
+            }
+            return value;
+        }
         long key = ((long) (x >> 3) << 40) ^ ((long) (y >> 2) << 20) ^ ((z >> 3) & 0xFFFFFL);
         Double cached = outerNodes.get(key);
         if (cached != null) return cached;
