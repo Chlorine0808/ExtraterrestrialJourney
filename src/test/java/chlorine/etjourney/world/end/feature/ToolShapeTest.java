@@ -1,5 +1,6 @@
 package chlorine.etjourney.world.end.feature;
 
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -38,6 +39,31 @@ class ToolShapeTest {
                 }
             }
             assertTrue(filled > 500, t + " has " + filled + " cells");
+        }
+    }
+
+    @Test
+    void boundsMatchFineSampling() {
+        // The bounds are kept as numbers: sampling them took a second the first time a tool was placed.
+        for (ToolShape t : ToolShape.values()) {
+            double step = 0.25;
+            double[] b = { Double.MAX_VALUE, -Double.MAX_VALUE, Double.MAX_VALUE, -Double.MAX_VALUE, Double.MAX_VALUE,
+                -Double.MAX_VALUE };
+            for (double x = -14; x <= 14; x += step) {
+                for (double y = -3; y <= 28; y += step) {
+                    for (double z = -8; z <= 8; z += step) {
+                        if (!t.inside(x, y, z)) continue;
+                        b[0] = Math.min(b[0], x);
+                        b[1] = Math.max(b[1], x);
+                        b[2] = Math.min(b[2], y);
+                        b[3] = Math.max(b[3], y);
+                        b[4] = Math.min(b[4], z);
+                        b[5] = Math.max(b[5], z);
+                    }
+                }
+            }
+            for (int i = 0; i < 6; i++) b[i] += i % 2 == 0 ? -step : step;
+            assertArrayEquals(b, t.bounds(), 0, t.toString());
         }
     }
 

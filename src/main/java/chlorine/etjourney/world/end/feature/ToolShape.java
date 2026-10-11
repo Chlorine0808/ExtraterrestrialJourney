@@ -6,7 +6,7 @@ package chlorine.etjourney.world.end.feature;
  */
 public enum ToolShape {
 
-    PICKAXE(false, 0, 0) {
+    PICKAXE(false, 0, 0, new double[] { -10.5, 10.5, -0.25, 22.25, -2, 2 }) {
 
         @Override
         public boolean inside(double x, double y, double z) {
@@ -14,7 +14,7 @@ public enum ToolShape {
                 || roundBox(x, y, z, 0, 19.8, 0, 1.5, 2.2, 1.9, 0.5);
         }
     },
-    AXE(false, 0, 0) {
+    AXE(false, 0, 0, new double[] { -2.5, 9.25, -0.25, 22.5, -1.75, 1.75 }) {
 
         @Override
         public boolean inside(double x, double y, double z) {
@@ -22,7 +22,7 @@ public enum ToolShape {
                 || wedge(x, y, z, 1.5, 7.5, 17, 2.6, 5.5, 1.4);
         }
     },
-    HOE(false, 0, 0) {
+    HOE(false, 0, 0, new double[] { -1.75, 10.5, -0.25, 22.25, -2, 2 }) {
 
         @Override
         public boolean inside(double x, double y, double z) {
@@ -31,7 +31,7 @@ public enum ToolShape {
                 || roundBox(x, y, z, 0, 19.8, 0, 1.5, 2.2, 1.9, 0.5);
         }
     },
-    SWORD(true, 0, 21.3) {
+    SWORD(true, 0, 21.3, new double[] { -5.25, 5.25, -0.5, 21.75, -1.5, 1.5 }) {
 
         @Override
         public boolean inside(double x, double y, double z) {
@@ -48,7 +48,7 @@ public enum ToolShape {
                 || ball(x, y, z, 0, 1, 0, 1.25);
         }
     },
-    SHOVEL(false, 0, 0) {
+    SHOVEL(false, 0, 0, new double[] { -3.25, 3.25, -0.25, 28.25, -1.5, 1.5 }) {
 
         @Override
         public boolean inside(double x, double y, double z) {
@@ -62,7 +62,7 @@ public enum ToolShape {
                 || roundBox(x, y, z, 0, 0.6, 0, 2.2, 0.6, 0.8, 0.4);
         }
     },
-    BOW(false, -2, 1.6) {
+    BOW(false, -2, 1.6, new double[] { -2.5, 5, 0.75, 21.25, -1.5, 1.5 }) {
 
         @Override
         public boolean inside(double x, double y, double z) {
@@ -77,7 +77,7 @@ public enum ToolShape {
             return sq(x - tipX) + z * z <= 0.45 * 0.45 && Math.abs(dy) <= radius * Math.sin(span);
         }
     },
-    HAMMER(false, 0, 0) {
+    HAMMER(false, 0, 0, new double[] { -5.25, 6.25, -0.25, 22.25, -2.75, 2.75 }) {
 
         @Override
         public boolean inside(double x, double y, double z) {
@@ -86,7 +86,7 @@ public enum ToolShape {
                 || roundBox(x, y, z, -4.4, 19.5, 0, 0.6, 2.7, 2.7, 0.5);
         }
     },
-    PAXEL(false, 0, 0) {
+    PAXEL(false, 0, 0, new double[] { -11, 8.75, -0.25, 24.25, -2, 2 }) {
 
         @Override
         public boolean inside(double x, double y, double z) {
@@ -101,7 +101,7 @@ public enum ToolShape {
                 || roundBox(x, y, z, 0, 19.2, 0, 1.6, 2.4, 1.8, 0.5);
         }
     },
-    WRENCH(false, 0, -0.1) {
+    WRENCH(false, 0, -0.1, new double[] { -3.25, 3.25, -1, 23.5, -1, 1 }) {
 
         @Override
         public boolean inside(double x, double y, double z) {
@@ -117,12 +117,13 @@ public enum ToolShape {
     /** Whether the tool is driven in tip first, as a sword is, rather than by its handle. */
     public final boolean tipFirst;
     private final double plantedX, plantedY;
-    private double[] bounds;
+    private final double[] bounds;
 
-    ToolShape(boolean tipFirst, double plantedX, double plantedY) {
+    ToolShape(boolean tipFirst, double plantedX, double plantedY, double[] bounds) {
         this.tipFirst = tipFirst;
         this.plantedX = plantedX;
         this.plantedY = plantedY;
+        this.bounds = bounds;
     }
 
     public abstract boolean inside(double x, double y, double z);
@@ -132,28 +133,8 @@ public enum ToolShape {
         return new double[] { plantedX, plantedY };
     }
 
-    /** {minX, maxX, minY, maxY, minZ, maxZ} enclosing the shape, found by sampling it once. */
+    /** {minX, maxX, minY, maxY, minZ, maxZ} enclosing the shape, as sampling it every quarter pixel finds. */
     public double[] bounds() {
-        if (bounds == null) {
-            double step = 0.25;
-            double[] b = { Double.MAX_VALUE, -Double.MAX_VALUE, Double.MAX_VALUE, -Double.MAX_VALUE, Double.MAX_VALUE,
-                -Double.MAX_VALUE };
-            for (double x = -14; x <= 14; x += step) {
-                for (double y = -3; y <= 28; y += step) {
-                    for (double z = -8; z <= 8; z += step) {
-                        if (!inside(x, y, z)) continue;
-                        b[0] = Math.min(b[0], x);
-                        b[1] = Math.max(b[1], x);
-                        b[2] = Math.min(b[2], y);
-                        b[3] = Math.max(b[3], y);
-                        b[4] = Math.min(b[4], z);
-                        b[5] = Math.max(b[5], z);
-                    }
-                }
-            }
-            for (int i = 0; i < 6; i++) b[i] += i % 2 == 0 ? -step : step;
-            bounds = b;
-        }
         return bounds.clone();
     }
 
