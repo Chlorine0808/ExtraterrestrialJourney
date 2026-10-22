@@ -1,4 +1,4 @@
-"""Generate placeholder 16x16 block textures for the End zones and biomes."""
+"""Generate placeholder 16x16 block textures for the End zones, biomes and ores."""
 import math
 import random
 import zlib
@@ -104,12 +104,45 @@ def side(zone):
     return img
 
 
+END_STONE = (219, 222, 158)
+
+# ore block -> grain colour, set in end stone
+ORES = {
+    'ender_gold_ore': (240, 190, 40),
+    'ender_platinum_ore': (210, 230, 235),
+    'sakura_gold_ore': (240, 140, 170),
+    'golden_palladium_ore': (200, 160, 70),
+    'drift_ore': (120, 220, 200),
+    'ascended_crystal_ore': (150, 200, 255),
+    'black_quartz_ore': (30, 26, 34),
+}
+
+
+def ore(name):
+    rng = rng_for(name)
+    img = Image.new('RGBA', (SIZE, SIZE))
+    for y in range(SIZE):
+        for x in range(SIZE):
+            img.putpixel((x, y), noise(rng, END_STONE, 0.06))
+    # clumps of two to four grains, dark-edged so they read on any rock
+    for _ in range(5):
+        cx, cy = rng.randrange(SIZE), rng.randrange(SIZE)
+        for _ in range(rng.randint(2, 4)):
+            img.putpixel((cx % SIZE, cy % SIZE), noise(rng, ORES[name], 0.1))
+            img.putpixel(((cx + 1) % SIZE, (cy + 1) % SIZE), shade(ORES[name], 0.55))
+            cx += rng.choice((-1, 0, 1))
+            cy += rng.choice((-1, 0, 1))
+    return img
+
+
 def main():
     OUT.mkdir(parents=True, exist_ok=True)
     for zone, (surface, _, _) in ZONES.items():
         top(zone).save(OUT / f'{zone}_{surface}_top.png')
         side(zone).save(OUT / f'{zone}_{surface}_side.png')
         rock(zone).save(OUT / f'{zone}_rock.png')
+    for name in ORES:
+        ore(name).save(OUT / f'{name}.png')
 
 
 if __name__ == '__main__':
