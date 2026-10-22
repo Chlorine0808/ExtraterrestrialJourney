@@ -13,6 +13,7 @@ import chlorine.etjourney.world.end.feature.Enoki;
 import chlorine.etjourney.world.end.feature.Holes;
 import chlorine.etjourney.world.end.feature.Islets;
 import chlorine.etjourney.world.end.feature.Lakes;
+import chlorine.etjourney.world.end.feature.Ore;
 import chlorine.etjourney.world.end.feature.Shoals;
 import chlorine.etjourney.world.end.feature.Structure;
 import chlorine.etjourney.world.end.feature.Structures;
@@ -57,7 +58,7 @@ public final class FeatureModifiers {
      */
     public static List<Modifier> core() {
         List<Modifier> all = new ArrayList<>(
-            Arrays.asList(faces(), biomes(), zoneIslands(), holes(), lakeWater(), shoals(), arcs(), islets()));
+            Arrays.asList(faces(), biomes(), zoneIslands(), ores(), holes(), lakeWater(), shoals(), arcs(), islets()));
         int order = 850;
         for (Structure.Kind<? extends Structure> kind : Structures.kinds())
             all.add(StructureModifiers.of(kind, order++));
@@ -236,6 +237,68 @@ public final class FeatureModifiers {
                 depth++;
             }
         }));
+    }
+
+    /** How far up past the sink the rock is counted on the density for ore depths; deeper counts as this deep. */
+    private static final int ORE_DEPTH_CAP = 32;
+
+    /**
+     * Ore veins in the rock, after both paints so the depth counts painted rock as rock, and before lake water and
+     * everything placed block by block (islets, structures, clouds), which so never hold ore. An ore never replaces a
+     * surface block: its depth is at least one.
+     */
+    public static Modifier ores() {
+        return blockModifier(816, (area, view, sink) -> {
+            int ox = sink.originX(), oz = sink.originZ(), minY = sink.minY(), height = sink.maxY() - minY;
+            int[] depth = oreDepths(view, sink);
+            EndBiome[] biomes = new EndBiome[256];
+            Boolean[] offIslands = new Boolean[256];
+            for (Ore ore : Ore.values()) {
+                int y0 = Math.max(minY, ore.minY), y1 = Math.min(sink.maxY() - 1, ore.maxY);
+                if (y0 > y1) continue;
+                int cubeY0 = Math.floorDiv(y0 - Ore.REACH, Ore.CUBE), cubeY1 = Math.floorDiv(y1 + Ore.REACH, Ore.CUBE);
+                for (int cx = Math.floorDiv(ox - Ore.REACH, Ore.CUBE); cx
+                    <= Math.floorDiv(ox + 15 + Ore.REACH, Ore.CUBE); cx++) {
+                    for (int cz = Math.floorDiv(oz - Ore.REACH, Ore.CUBE); cz
+                        <= Math.floorDiv(oz + 15 + Ore.REACH, Ore.CUBE); cz++) {
+                        for (int cy = cubeY0; cy <= cubeY1; cy++) ore.veins(area.seed, cx, cy, cz, (x, y, z) -> {
+                            if (x < ox || x >= ox + 16 || z < oz || z >= oz + 16 || y < y0 || y > y1) return;
+                            int column = (x - ox) * 16 + z - oz;
+                            int d = depth[column * height + y - minY];
+                            if (d < ore.minDepth || d > ore.maxDepth) return;
+                            if (ore.biome != null) {
+                                if (biomes[column] == null) biomes[column] = EndBiome.at(area.seed, x, z);
+                                if (biomes[column] != ore.biome) return;
+                                if (offIslands[column] == null)
+                                    offIslands[column] = ZoneIslands.ownerAt(view.zoneIslands(), x, z, PAINT_REACH)
+                                        == null;
+                                if (!offIslands[column]) return;
+                            }
+                            sink.set(x, y, z, ore.block);
+                        });
+                    }
+                }
+            }
+        });
+    }
+
+    /** Each block's depth below the surface of its run of rock, -1 for air, by column then height. */
+    private static int[] oreDepths(TerrainView view, BlockSink sink) {
+        int minY = sink.minY(), height = sink.maxY() - minY;
+        int[] depth = new int[256 * height];
+        for (int lx = 0; lx < 16; lx++) {
+            for (int lz = 0; lz < 16; lz++) {
+                int x = sink.originX() + lx, z = sink.originZ() + lz, base = (lx * 16 + lz) * height;
+                int d = -1;
+                while (d + 1 < ORE_DEPTH_CAP && sink.maxY() + d + 1 <= 255
+                    && view.densityAt(x, sink.maxY() + d + 1, z) > 0) d++;
+                for (int y = sink.maxY() - 1; y >= minY; y--) {
+                    d = sink.isAir(x, y, z) ? -1 : Math.min(d + 1, ORE_DEPTH_CAP);
+                    depth[base + y - minY] = d;
+                }
+            }
+        }
+        return depth;
     }
 
     /**

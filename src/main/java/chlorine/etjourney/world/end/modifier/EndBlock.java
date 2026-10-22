@@ -20,6 +20,13 @@ public enum EndBlock {
     MYCELIA_FILL,
     AMBER_TOP,
     AMBER_FILL,
+    ENDER_GOLD_ORE,
+    ENDER_PLATINUM_ORE,
+    SAKURA_GOLD_ORE,
+    GOLDEN_PALLADIUM_ORE,
+    DRIFT_ORE,
+    ASCENDED_CRYSTAL,
+    BLACK_QUARTZ,
     /** Links of hanging and sky chains. */
     CHAIN,
     /** Shells of biospheres. */
