@@ -12,6 +12,14 @@ public enum EndBlock {
     NEBULA_FILL,
     STARDUST_TOP,
     STARDUST_FILL,
+    GROVE_TOP,
+    GROVE_FILL,
+    HIGHLAND_TOP,
+    HIGHLAND_FILL,
+    MYCELIA_TOP,
+    MYCELIA_FILL,
+    AMBER_TOP,
+    AMBER_FILL,
     /** Links of hanging and sky chains. */
     CHAIN,
     /** Shells of biospheres. */
