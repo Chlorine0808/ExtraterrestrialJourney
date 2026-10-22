@@ -22,6 +22,7 @@ import chlorine.etjourney.world.end.modifier.Modifier;
 import chlorine.etjourney.world.end.modifier.ModifierChain;
 import chlorine.etjourney.world.end.modifier.TerrainView;
 import chlorine.etjourney.world.end.modifier.builtin.CoreModifiers;
+import chlorine.etjourney.world.end.noise.Distance;
 import chlorine.etjourney.world.end.region.RegionMap;
 import chlorine.etjourney.world.end.region.RegionPicker;
 import chlorine.etjourney.world.end.region.Style;
@@ -40,8 +41,7 @@ public final class TerrainSampler {
     private final RegionPicker picker;
     private final ModifierChain chain;
     private final Map<Point, StyleWeights> weightCache = new ConcurrentHashMap<>();
-    private final ArcPaths.SegmentFilter arcGround = (x, y, z) -> arcProbe().weight(x, z) >= 0.3
-        && !nearZoneIsland(x, y, z);
+    private final ArcPaths.SegmentWeight arcGround = (x, y, z) -> nearZoneIsland(x, y, z) ? 0 : arcProbe().weight(x, z);
     private final Map<Modifier, Style> owners = new ConcurrentHashMap<>();
 
     public TerrainSampler(long seed, RegionPicker picker) {
@@ -180,8 +180,8 @@ public final class TerrainSampler {
         return new Shoals.Probe() {
 
             @Override
-            public boolean dense(double x, double z) {
-                return weights(x, z).baseOf(Styles.SHOALS) >= 0.5;
+            public double weight(double x, double z) {
+                return weights(x, z).baseOf(Styles.SHOALS);
             }
 
             @Override
@@ -226,19 +226,30 @@ public final class TerrainSampler {
         return s == null ? 0 : weights(x, z).of(s);
     }
 
-    /** Arc segments on ARCS ground and clear of zone islands; one instance, so paths can keep its answers. */
-    public ArcPaths.SegmentFilter arcGround() {
+    /** ARCS weight for arc segments, 0 near zone islands; one instance, so paths can keep its answers. */
+    public ArcPaths.SegmentWeight arcGround() {
         return arcGround;
     }
 
     public ArcPaths.Probe arcProbe() {
-        return (x, z) -> weights(x, z).of(Styles.ARCS);
+        return new ArcPaths.Probe() {
+
+            @Override
+            public double weight(double x, double z) {
+                return weights(x, z).of(Styles.ARCS);
+            }
+
+            @Override
+            public double baseWeight(double x, double z) {
+                return weights(x, z).baseOf(Styles.ARCS);
+            }
+        };
     }
 
     /** True when (x, y, z) lies within or just around a zone island. */
     public boolean nearZoneIsland(double x, double y, double z) {
         for (ZoneIslands.Island island : ZoneIslands.near(seed, x, z, ZoneIslands.CELL, landProbe())) {
-            if (Math.hypot(x - island.x, z - island.z) > island.radius * 1.3 + 12) continue;
+            if (Distance.planar(x - island.x, z - island.z) > island.radius * 1.3 + 12) continue;
             if (y > island.y - island.down - 12 && y < island.y + island.up + 12) return true;
         }
         return false;

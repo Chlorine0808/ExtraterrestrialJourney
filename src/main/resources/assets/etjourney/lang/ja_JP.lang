@@ -1,1 +1,10 @@
 # Extraterrestrial Journey
+
+tile.etjourney.solar_crust.name=ソーラーの殻
+tile.etjourney.solar_rock.name=ソーラーの岩
+tile.etjourney.vortex_turf.name=ボルテックスの地表
+tile.etjourney.vortex_rock.name=ボルテックスの岩
+tile.etjourney.nebula_moss.name=ネビュラの苔
+tile.etjourney.nebula_rock.name=ネビュラの岩
+tile.etjourney.stardust_crust.name=スターダストの殻
+tile.etjourney.stardust_rock.name=スターダストの岩

@@ -4,27 +4,36 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+import chlorine.etjourney.world.end.noise.Distance;
 import chlorine.etjourney.world.end.noise.Hash;
 import chlorine.etjourney.world.end.noise.ValueNoise;
 
 /**
  * The free-standing structures of the newer styles: mushroom plateaus, rings, natural arches, spiral towers and
- * hollow pillars. Every part is at least 8 blocks thick so the 8-block density grid keeps it.
+ * hollow pillars. Parts drawn as density shapes are at least 8 blocks thick so the 8-block density grid keeps them;
+ * mushrooms are drawn block by block.
  */
 public final class Structures {
 
-    /** A structure only forms where its style holds at least this weight at its centre. */
+    /** A ring only forms where its style holds at least this weight at its centre. */
     private static final double MIN_WEIGHT = 0.5;
     /** Highest block any structure reaches. */
-    private static final double CEILING = 248;
+    static final double CEILING = 248;
     /** No structure forms closer to the origin, clear of the vanilla central area. */
     public static final double MIN_RADIUS = 1000;
+    /** Share of each stone kind that comes out worn. */
+    static final double WORN = 0.35;
     /** Base height over the void, where there is no ground to stand on. */
-    private static final double VOID_BASE = 20;
+    static final double VOID_BASE = 20;
 
     private Structures() {}
 
-    public static final Structure.Kind<Mushroom> MUSHROOMS = new Structure.Kind<Mushroom>("MUSHROOMS", 72, 46) {
+    /** Whether the structure of a cell forms at its style's weight there, thinning out across the border. */
+    static boolean forms(long s, int cx, int cz, double weight) {
+        return Fade.forms(weight, Hash.hash01(s + 99, cx, cz));
+    }
+
+    public static final Structure.Kind<Mushroom> MUSHROOMS = new Structure.Kind<Mushroom>("MUSHROOMS", 72, 50) {
 
         @Override
         protected Mushroom compute(long seed, int cx, int cz, StructureProbe probe) {
@@ -32,7 +41,7 @@ public final class Structures {
             if (Hash.hash01(s, cx, cz) > 0.6) return null;
             double x = (cx + 0.2 + 0.6 * Hash.hash01(s + 1, cx, cz)) * cell;
             double z = (cz + 0.2 + 0.6 * Hash.hash01(s + 2, cx, cz)) * cell;
-            if (probe.weight(style, x, z) < MIN_WEIGHT) return null;
+            if (!forms(s, cx, cz, probe.weight(style, x, z))) return null;
             double base = base(probe, x, z, Hash.hash01(s + 3, cx, cz));
             double capY = Math.min(CEILING - 14, base + 30 + 80 * Hash.hash01(s + 4, cx, cz));
             if (capY - base < 20) return null;
@@ -40,9 +49,11 @@ public final class Structures {
             double cap = 18 + 27 * Hash.hash01(s + 6, cx, cz);
             double thickness = 5 + 3 * Hash.hash01(s + 7, cx, cz);
             double dome = 4 + 6 * Hash.hash01(s + 8, cx, cz);
-            return new Mushroom(x, z, base, capY, stalk, cap, thickness, dome);
+            // Some rims roll under like a shiitake's.
+            double curl = Hash.hash01(s + 9, cx, cz) < 0.3 ? thickness / 2 + 2 + 3 * Hash.hash01(s + 10, cx, cz) : 0;
+            return new Mushroom(x, z, base, capY, stalk, cap, thickness, dome, curl);
         }
-    };
+    }.worn(WORN, 6);
 
     /** One ring per RINGS region, on the region's own grid, where the style is strongest near the region centre. */
     public static final Structure.Kind<Ring> RINGS = new Structure.Kind<Ring>(
@@ -70,7 +81,7 @@ public final class Structures {
                     }
                 }
             }
-            if (best < MIN_WEIGHT || Math.hypot(x, z) < 1400) return null;
+            if (best < MIN_WEIGHT || Distance.planar(x, z) < 1400) return null;
             double radius = 120 + 140 * Hash.hash01(s + 3, cx, cz);
             double tube = 7 + 5 * Hash.hash01(s + 4, cx, cz);
             double tilt = ringTilt(Math.toRadians(35 * Hash.hash01(s + 5, cx, cz)), radius, tube);
@@ -85,7 +96,7 @@ public final class Structures {
             Ring second = gyro ? new Ring(x, y, z, inner, innerTube, innerTilt, yaw + Math.PI / 2, null) : null;
             return new Ring(x, y, z, radius, tube, tilt, yaw, second);
         }
-    };
+    }.worn(WORN, 12);
 
     /**
      * Many small, thin rings scattered through RINGS regions at any angle. Their tubes are thinner than the density
@@ -99,7 +110,7 @@ public final class Structures {
             if (Hash.hash01(s, cx, cz) > 0.55) return null;
             double x = (cx + 0.15 + 0.7 * Hash.hash01(s + 1, cx, cz)) * cell;
             double z = (cz + 0.15 + 0.7 * Hash.hash01(s + 2, cx, cz)) * cell;
-            if (probe.weight(style, x, z) < MIN_WEIGHT) return null;
+            if (!forms(s, cx, cz, probe.weight(style, x, z))) return null;
             double radius = 8 + 22 * Hash.hash01(s + 3, cx, cz);
             double tube = 1.5 + 2 * Hash.hash01(s + 4, cx, cz);
             double tilt = ringTilt(Math.toRadians(90 * Hash.hash01(s + 5, cx, cz)), radius, tube);
@@ -112,7 +123,7 @@ public final class Structures {
             double y = low + Math.min(high - low, 20 + 120 * Hash.hash01(s + 7, cx, cz));
             return new Ring(x, y, z, radius, tube, tilt, yaw, null);
         }
-    };
+    }.worn(WORN, 6);
 
     /**
      * Crosses 20-100 blocks tall: over land most are driven into the ground at a lean, like grave markers; the rest
@@ -126,7 +137,7 @@ public final class Structures {
             if (Hash.hash01(s, cx, cz) > 0.6) return null;
             double x = (cx + 0.2 + 0.6 * Hash.hash01(s + 1, cx, cz)) * cell;
             double z = (cz + 0.2 + 0.6 * Hash.hash01(s + 2, cx, cz)) * cell;
-            if (probe.weight(style, x, z) < MIN_WEIGHT) return null;
+            if (!forms(s, cx, cz, probe.weight(style, x, z))) return null;
             // More small crosses than large ones.
             double height = 20 + 80 * Math.pow(Hash.hash01(s + 3, cx, cz), 1.5);
             double half = Math.max(1.5, height * 0.06);
@@ -150,7 +161,7 @@ public final class Structures {
             Cross c = Cross.of(base, up, arm, height, half, grounded);
             return c.maxY() > CEILING || c.minY() < 0 ? null : c;
         }
-    };
+    }.worn(WORN, 6);
 
     /** Chains hanging 20-80 blocks from the underside of the land, most with a boulder at the end. */
     public static final Structure.Kind<Chain> HANGING_CHAINS = new Structure.Kind<Chain>("CHAINS", 40, 12) {
@@ -161,7 +172,7 @@ public final class Structures {
             if (Hash.hash01(s, cx, cz) > 0.45) return null;
             double x = (cx + 0.2 + 0.6 * Hash.hash01(s + 1, cx, cz)) * cell;
             double z = (cz + 0.2 + 0.6 * Hash.hash01(s + 2, cx, cz)) * cell;
-            if (probe.weight(style, x, z) < MIN_WEIGHT) return null;
+            if (!forms(s, cx, cz, probe.weight(style, x, z))) return null;
             double under = probe.underside(x, z);
             if (under < 40) return null;
             double scale = 1 + Hash.hash01(s + 3, cx, cz);
@@ -183,7 +194,7 @@ public final class Structures {
             if (Hash.hash01(s, cx, cz) > 0.35) return null;
             double x = (cx + 0.2 + 0.6 * Hash.hash01(s + 1, cx, cz)) * cell;
             double z = (cz + 0.2 + 0.6 * Hash.hash01(s + 2, cx, cz)) * cell;
-            if (probe.weight(style, x, z) < MIN_WEIGHT) return null;
+            if (!forms(s, cx, cz, probe.weight(style, x, z))) return null;
             double scale = 2 + Hash.hash01(s + 3, cx, cz);
             return new Chain(x, z, 253, 2, scale, Hash.hash01(s + 6, cx, cz) * Math.PI, 0, false);
         }
@@ -203,7 +214,7 @@ public final class Structures {
             double length = 40 + 50 * Hash.hash01(s + 1, cx, cz);
             double mx = (cx + 0.2 + 0.6 * Hash.hash01(s + 5, cx, cz)) * cell;
             double mz = (cz + 0.2 + 0.6 * Hash.hash01(s + 6, cx, cz)) * cell;
-            if (probe.weight(style, mx, mz) < MIN_WEIGHT) return null;
+            if (!forms(s, cx, cz, probe.weight(style, mx, mz))) return null;
             // Both feet stand on land: try a few headings before giving up.
             double ax = 0, az = 0, bx = 0, bz = 0;
             boolean standing = false;
@@ -229,7 +240,7 @@ public final class Structures {
             }
             return new Arch(mx, mz, length / 2 + tube, points, tube);
         }
-    };
+    }.worn(WORN, 12);
 
     public static final Structure.Kind<SpiralTower> SPIRAL_TOWERS = new Structure.Kind<SpiralTower>(
         "SPIRAL_TOWERS",
@@ -243,7 +254,7 @@ public final class Structures {
             if (Hash.hash01(s, cx, cz) > 0.5) return null;
             double x = (cx + 0.2 + 0.6 * Hash.hash01(s + 1, cx, cz)) * cell;
             double z = (cz + 0.2 + 0.6 * Hash.hash01(s + 2, cx, cz)) * cell;
-            if (probe.weight(style, x, z) < MIN_WEIGHT) return null;
+            if (!forms(s, cx, cz, probe.weight(style, x, z))) return null;
             double base = base(probe, x, z, Hash.hash01(s + 3, cx, cz));
             double ribbon = 4;
             double top = Math.min(CEILING - ribbon, base + 150 + 90 * Hash.hash01(s + 4, cx, cz));
@@ -264,7 +275,7 @@ public final class Structures {
             }
             return new SpiralTower(x, z, base, top, pillar, helix + ribbon, points, ribbon);
         }
-    };
+    }.worn(WORN, 12);
 
     public static final Structure.Kind<HollowPillar> HOLLOW_PILLARS = new Structure.Kind<HollowPillar>(
         "HOLLOW_PILLARS",
@@ -277,56 +288,120 @@ public final class Structures {
             if (Hash.hash01(s, cx, cz) > 0.5) return null;
             double x = (cx + 0.25 + 0.5 * Hash.hash01(s + 1, cx, cz)) * cell;
             double z = (cz + 0.25 + 0.5 * Hash.hash01(s + 2, cx, cz)) * cell;
-            if (probe.weight(style, x, z) < MIN_WEIGHT) return null;
+            if (!forms(s, cx, cz, probe.weight(style, x, z))) return null;
             double base = base(probe, x, z, Hash.hash01(s + 3, cx, cz));
-            double top = Math.min(CEILING, base + 80 + 120 * Hash.hash01(s + 4, cx, cz));
-            if (top - base < 40) return null;
+            // A third stand only 25-50 tall, like the stump of a broken tower.
+            boolean low = Hash.hash01(s + 7, cx, cz) < 0.3;
+            double rise = low ? 25 + 25 * Hash.hash01(s + 4, cx, cz) : 80 + 120 * Hash.hash01(s + 4, cx, cz);
+            double top = Math.min(CEILING, base + rise);
+            if (top - base < (low ? 20 : 40)) return null;
             double radius = 12 + 13 * Hash.hash01(s + 5, cx, cz);
             double wall = 8 + 2 * Hash.hash01(s + 6, cx, cz);
             return new HollowPillar(x, z, base, top, radius, wall, s ^ ((long) cx << 20) ^ cz);
         }
-    };
+    }.worn(WORN, 12);
 
     public static List<Structure.Kind<? extends Structure>> kinds() {
         return Collections.unmodifiableList(
-            Arrays.<Structure.Kind<? extends Structure>>asList(
-                MUSHROOMS,
-                RINGS,
-                ARCHES,
-                SPIRAL_TOWERS,
-                HOLLOW_PILLARS));
+            Arrays.<Structure.Kind<? extends Structure>>asList(RINGS, ARCHES, SPIRAL_TOWERS, HOLLOW_PILLARS));
     }
 
     /** Ground to stand on (slightly sunk in), or a random low height over the void. */
-    private static double base(StructureProbe probe, double x, double z, double roll) {
+    static double base(StructureProbe probe, double x, double z, double roll) {
         double ground = probe.ground(x, z);
         return ground > -100 ? ground - 4 : VOID_BASE + 40 * roll;
     }
 
     public static final class Mushroom extends Structure {
 
-        final double base, capY, stalk, cap, thickness, dome;
+        /** How far round the curl rolls, from the top of the rim outwards and under. */
+        private static final double CURL_SWEEP = Math.toRadians(210);
+        /** Kept around the bands a line is narrowed to, against rounding. */
+        private static final double BAND_SLACK = 1e-6;
 
-        Mushroom(double x, double z, double base, double capY, double stalk, double cap, double thickness,
-            double dome) {
-            super(x, z, cap + 1, base - 1, capY + dome + 1);
+        final double base, capY, stalk, cap, thickness, dome;
+        /** Radius of the rolled rim, 0 for a plain one; the roll turns about (eyeD, eyeY). */
+        final double curl, eyeD, eyeY;
+
+        Mushroom(double x, double z, double base, double capY, double stalk, double cap, double thickness, double dome,
+            double curl) {
+            super(
+                x,
+                z,
+                cap + thickness / 2 + 1,
+                Math.min(base, eyeY(capY, dome, cap, thickness, curl) - curl - thickness / 2) - 1,
+                capY + dome + 1);
             this.base = base;
             this.capY = capY;
             this.stalk = stalk;
             this.cap = cap;
             this.thickness = thickness;
             this.dome = dome;
+            this.curl = curl;
+            this.eyeD = cap - curl;
+            this.eyeY = eyeY(capY, dome, cap, thickness, curl);
+        }
+
+        private static double surface(double capY, double dome, double cap, double d) {
+            double t = Math.min(1, d / cap);
+            return capY + dome * (1 - t * t);
+        }
+
+        /** The curl's centre lies one curl radius below the middle of the cap where the roll begins. */
+        private static double eyeY(double capY, double dome, double cap, double thickness, double curl) {
+            return surface(capY, dome, cap, cap - curl) - thickness / 2 - curl;
         }
 
         @Override
         protected double body(double x, double y, double z) {
-            double d = Math.hypot(x - centreX, z - centreZ);
+            double d = Distance.planar(x - centreX, z - centreZ);
+            return bodyAt(d, surface(capY, dome, cap, d), y);
+        }
+
+        @Override
+        protected Line bodyLine(double x, double z) {
+            double d = Distance.planar(x - centreX, z - centreZ), surface = surface(capY, dome, cap, d);
+            double half = thickness / 2, low = Double.POSITIVE_INFINITY, high = Double.NEGATIVE_INFINITY;
+            if (stalk - d >= 0) {
+                low = base;
+                high = capY + dome - thickness + 1;
+            }
+            // The cap lies within its slab's band; a rolled rim within half a thickness of its circle.
+            boolean slab = curl > 0 ? eyeD - d >= 0 : d - (cap - half) <= half + BAND_SLACK;
+            if (slab) {
+                low = Math.min(low, surface - thickness - BAND_SLACK);
+                high = Math.max(high, surface + BAND_SLACK);
+            }
+            if (curl > 0 && Math.abs(d - eyeD) <= curl + half + BAND_SLACK) {
+                low = Math.min(low, eyeY - curl - half - BAND_SLACK);
+                high = Math.max(high, eyeY + curl + half + BAND_SLACK);
+            }
+            if (low > high) return Line.EMPTY;
+            return Line.of(Math.max(low, minY()), Math.min(high, maxY()), y -> bodyAt(d, surface, y) >= 0);
+        }
+
+        private double bodyAt(double d, double surface, double y) {
             // The stalk runs up into the cap's underside, which is highest on the axis.
             double stem = Math.min(stalk - d, Math.min(capY + dome - thickness + 1 - y, y - base));
-            double t = Math.min(1, d / cap);
-            double surface = capY + dome * (1 - t * t);
-            double hat = Math.min(cap - d, Math.min(surface - y, y - (surface - thickness)));
+            double slab = Math.min(surface - y, y - (surface - thickness));
+            double half = thickness / 2;
+            if (curl > 0) return Math.max(stem, Math.max(Math.min(slab, eyeD - d), half - rollDistance(d, y)));
+            // A slab of the cap's thickness whose rim is rounded to a half circle.
+            double inner = cap - half;
+            double hat = d <= inner ? slab : half - Distance.planar(d - inner, y - (surface - half));
             return Math.max(stem, hat);
+        }
+
+        /** Distance in the (d, y) plane to the middle line of the rolled rim. */
+        private double rollDistance(double d, double y) {
+            double pd = d - eyeD, py = y - eyeY;
+            // Clockwise from straight up, the way the rim rolls.
+            double turned = Math.PI / 2 - Math.atan2(py, pd);
+            turned = ((turned % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI);
+            if (turned <= CURL_SWEEP) return Math.abs(Distance.planar(pd, py) - curl);
+            double endAngle = Math.PI / 2 - CURL_SWEEP;
+            double toEnd = Distance.planar(pd - curl * Math.cos(endAngle), py - curl * Math.sin(endAngle));
+            return Math.min(toEnd, Distance.planar(pd, py - curl));
         }
     }
 
@@ -375,7 +450,7 @@ public final class Structures {
             double px = x - centreX, py = y - this.y, pz = z - centreZ;
             double h = px * n[0] + py * n[1] + pz * n[2];
             double a = px * u[0] + py * u[1] + pz * u[2], b = px * v[0] + py * v[1] + pz * v[2];
-            double r = Math.hypot(a, b) - radius;
+            double r = Distance.planar(a, b) - radius;
             double d = tube - Math.sqrt(h * h + r * r);
             return inner == null ? d : Math.max(d, inner.body(x, y, z));
         }
@@ -416,7 +491,7 @@ public final class Structures {
                             double px = base[0] + up[0] * u + arm[0] * a + out[0] * n;
                             double py = base[1] + up[1] * u + arm[1] * a + out[1] * n;
                             double pz = base[2] + up[2] * u + arm[2] * a + out[2] * n;
-                            reach = Math.max(reach, Math.hypot(px - centre[0], pz - centre[1]));
+                            reach = Math.max(reach, Distance.planar(px - centre[0], pz - centre[1]));
                             low = Math.min(low, py);
                             high = Math.max(high, py);
                         }
@@ -532,8 +607,8 @@ public final class Structures {
                     double v = depth - (k * pitch() + half);
                     double u = k % 2 == 0 ? a : b, n = k % 2 == 0 ? b : a;
                     double along = Math.max(Math.abs(v) - (half - w), 0);
-                    double loop = Math.hypot(u, along) - w;
-                    d = Math.max(d, r - Math.hypot(loop, n));
+                    double loop = Distance.planar(u, along) - w;
+                    d = Math.max(d, r - Distance.planar(loop, n));
                 }
             }
             if (weight > 0) d = Math.max(d, weight - Math.sqrt(px * px + sq(y - (bottom - weight + 1)) + pz * pz));
@@ -597,7 +672,7 @@ public final class Structures {
 
         @Override
         protected double body(double x, double y, double z) {
-            double column = Math.min(pillar - Math.hypot(x - centreX, z - centreZ), Math.min(top - y, y - base));
+            double column = Math.min(pillar - Distance.planar(x - centreX, z - centreZ), Math.min(top - y, y - base));
             return Math.max(column, ArcPaths.density(ramp, x, y, z));
         }
     }
@@ -618,7 +693,7 @@ public final class Structures {
 
         @Override
         protected double body(double x, double y, double z) {
-            double d = Math.hypot(x - centreX, z - centreZ);
+            double d = Distance.planar(x - centreX, z - centreZ);
             double shell = Math.min(wall / 2 - Math.abs(d - radius), Math.min(top - y, y - base));
             // Windows: openings where a 3D noise peaks.
             double n = ValueNoise.noise3(seed, x, y, z, 9);

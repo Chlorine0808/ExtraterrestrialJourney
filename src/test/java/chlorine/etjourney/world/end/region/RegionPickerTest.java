@@ -1,6 +1,7 @@
 package chlorine.etjourney.world.end.region;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.Arrays;
@@ -41,5 +42,34 @@ class RegionPickerTest {
             for (Style overlay : overlays) assertTrue(overlay.canOverlay(base), overlay + " on " + base);
         }
         assertEquals(0.75, bases.get(PLAINS) / 20000.0, 0.02);
+    }
+
+    @Test
+    void aPureCellHasTheStyleAsItsBaseAndNoOverlay() {
+        RegionPicker picker = new RegionPicker(Arrays.asList(PLAINS, ISLETS, SPIRES, ARCS, WAVES));
+        int pure = 0;
+        for (int i = 0; i < 2000; i++) {
+            int cx = i % 50, cz = i / 50;
+            boolean expected = picker.base(3L, cx, cz) == PLAINS && picker.overlays(3L, cx, cz)
+                .isEmpty();
+            assertEquals(expected, picker.isPure(3L, cx, cz, PLAINS), "cell " + cx + "," + cz);
+            if (expected) pure++;
+            // An overlay-only style is never pure.
+            assertFalse(picker.isPure(3L, cx, cz, SPIRES));
+        }
+        assertTrue(pure > 0);
+    }
+
+    @Test
+    void aCellHoldsAllWhenEveryStyleIsItsBaseOrAnOverlay() {
+        RegionPicker picker = new RegionPicker(Arrays.asList(PLAINS, ISLETS, SPIRES, ARCS, WAVES));
+        int both = 0;
+        for (int i = 0; i < 2000; i++) {
+            int cx = i % 50, cz = i / 50;
+            boolean expected = picker.contains(3L, cx, cz, PLAINS) && picker.contains(3L, cx, cz, SPIRES);
+            assertEquals(expected, picker.containsAll(3L, cx, cz, Arrays.asList(PLAINS, SPIRES)));
+            if (expected) both++;
+        }
+        assertTrue(both > 0);
     }
 }

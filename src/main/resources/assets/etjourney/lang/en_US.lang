@@ -1,1 +1,10 @@
 # Extraterrestrial Journey
+
+tile.etjourney.solar_crust.name=Solar Crust
+tile.etjourney.solar_rock.name=Solar Rock
+tile.etjourney.vortex_turf.name=Vortex Turf
+tile.etjourney.vortex_rock.name=Vortex Rock
+tile.etjourney.nebula_moss.name=Nebula Moss
+tile.etjourney.nebula_rock.name=Nebula Rock
+tile.etjourney.stardust_crust.name=Stardust Crust
+tile.etjourney.stardust_rock.name=Stardust Rock

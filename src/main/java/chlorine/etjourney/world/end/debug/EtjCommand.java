@@ -9,11 +9,17 @@ import net.minecraft.command.CommandBase;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.util.ChatComponentText;
+import net.minecraft.util.MovingObjectPosition;
+import net.minecraft.util.Vec3;
+import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
 import net.minecraft.world.chunk.IChunkProvider;
 
 import chlorine.etjourney.world.end.EndTerrain;
 import chlorine.etjourney.world.end.TerrainSampler;
+import chlorine.etjourney.world.end.biosphere.SampleWorlds;
+import chlorine.etjourney.world.end.feature.Biosphere;
+import chlorine.etjourney.world.end.feature.BiosphereSource;
 import chlorine.etjourney.world.end.feature.Holes;
 import chlorine.etjourney.world.end.feature.Lakes;
 import chlorine.etjourney.world.end.feature.Mountains;
@@ -23,6 +29,7 @@ import chlorine.etjourney.world.end.feature.ZoneIslands;
 import chlorine.etjourney.world.end.region.RegionMap;
 import chlorine.etjourney.world.end.region.RegionPicker;
 import chlorine.etjourney.world.end.region.Style;
+import chlorine.etjourney.world.end.region.Styles;
 import chlorine.etjourney.world.end.reserve.Area;
 import chlorine.etjourney.world.end.reserve.PredictedIslands;
 import chlorine.etjourney.world.end.reserve.Reservations;
@@ -31,6 +38,8 @@ import chlorine.etjourney.world.end.reserve.Reservations;
 public final class EtjCommand extends CommandBase {
 
     private static final int END = 1;
+    /** Length of each piece a look is traced in. */
+    private static final int LOOK_STEP = 64;
 
     @Override
     public String getCommandName() {
@@ -39,13 +48,30 @@ public final class EtjCommand extends CommandBase {
 
     @Override
     public String getCommandUsage(ICommandSender sender) {
-        return "/etj end <here|style <name>|mix [style]|mountain [minTopY]|lake|hole|valley|zone <name>|heeisland|destitute>";
+        return "/etj look [range] | /etj end <here|styles|style <name>|style <name> pure|mix [a] [b] [c]|mountain [minTopY]|lake|hole|valley|zone <name>|heeisland|destitute>";
+    }
+
+    @Override
+    public List<String> addTabCompletionOptions(ICommandSender sender, String[] args) {
+        List<String> styles = new ArrayList<>();
+        for (Style style : Styles.all()) styles.add(style.name);
+        List<String> zones = new ArrayList<>();
+        for (Zone zone : Zone.values()) zones.add(zone.name());
+        return EtjArgs.complete(args, styles, zones);
     }
 
     @Override
     public void processCommand(ICommandSender sender, String[] args) {
+        if (args.length >= 1 && args[0].equals("look")) {
+            look(getCommandSenderAsPlayer(sender), args.length > 1 ? parseIntBounded(sender, args[1], 1, 4096) : 1024);
+            return;
+        }
         if (args.length < 2 || !args[0].equals("end")) {
             say(sender, "Usage: " + getCommandUsage(sender));
+            return;
+        }
+        if (args[1].equals("styles")) {
+            for (String line : EtjArgs.styleLines(Styles.all())) say(sender, line);
             return;
         }
         EntityPlayerMP player = getCommandSenderAsPlayer(sender);
@@ -64,8 +90,10 @@ public final class EtjCommand extends CommandBase {
                 here(player, sampler);
                 break;
             case "style":
+                styleRegion(player, sampler, arg, args.length > 3 && args[3].equals("pure"));
+                break;
             case "mix":
-                styleRegion(player, sampler, arg, what.equals("mix"));
+                mixRegion(player, sampler, Arrays.copyOfRange(args, 2, args.length));
                 break;
             case "mountain":
                 mountain(player, sampler, arg == null ? 128 : parseInt(sender, arg));
@@ -109,26 +137,74 @@ public final class EtjCommand extends CommandBase {
                 .append('%');
         }
         say(player, out.toString());
+        // Biospheres over this column; the sample point is found from the biome map alone.
+        for (Biosphere b : Biosphere.KIND.near(sampler.seed(), player.posX, player.posZ, 0, sampler.structureProbe())) {
+            // The kind actually used: the other world stands in when the ball's own cannot be loaded.
+            BiosphereSource.Kind kind = SampleWorlds.usable(BiosphereSource.kind(sampler.seed(), b));
+            if (kind == null) {
+                say(player, "Biosphere: no sample world could be loaded");
+                continue;
+            }
+            WorldServer w = SampleWorlds.world(kind);
+            int[] p = BiosphereSource.point(sampler.seed(), b, kind, (x, z) -> SampleWorlds.isWater(w, x, z));
+            say(player, EtjArgs.biosphereLine(kind.name(), p[0], p[1]));
+        }
     }
 
-    /**
-     * Nearest region holding the style as its base or an overlay (style), or nearest region with any overlay,
-     * optionally including the style (mix). Overlay-only styles such as SPIRES are never a base.
-     */
-    private static void styleRegion(EntityPlayerMP player, TerrainSampler sampler, String name, boolean mix) {
+    /** Nearest region holding the style as its base or an overlay, or with pure, as its base with no overlay. */
+    private static void styleRegion(EntityPlayerMP player, TerrainSampler sampler, String name, boolean pure) {
         RegionPicker picker = sampler.picker();
         Style target = name == null ? null : picker.byName(name);
-        if (name != null && target == null || target == null && !mix) {
-            say(player, "Styles: " + picker.styles());
+        if (target == null) {
+            say(player, (name == null ? "Name a style" : "Unknown style " + name) + "; /etj end styles lists them");
+            return;
+        }
+        if (pure && !target.isBase()) {
+            say(player, target + " is only ever laid over a base; use /etj end mix " + target);
             return;
         }
         long seed = sampler.seed();
+        nearestRegion(
+            player,
+            sampler,
+            (cx, cz) -> pure ? picker.isPure(seed, cx, cz, target) : picker.contains(seed, cx, cz, target));
+    }
+
+    /** Nearest region with at least one overlay that holds every named style (up to three) as its base or overlays. */
+    private static void mixRegion(EntityPlayerMP player, TerrainSampler sampler, String[] names) {
+        RegionPicker picker = sampler.picker();
+        if (names.length > RegionPicker.MAX_OVERLAYS + 1) {
+            say(player, "A region holds at most " + (RegionPicker.MAX_OVERLAYS + 1) + " styles");
+            return;
+        }
+        List<Style> wanted = new ArrayList<>();
+        for (String name : names) {
+            Style style = picker.byName(name);
+            if (style == null) {
+                say(player, "Unknown style " + name + "; /etj end styles lists them");
+                return;
+            }
+            wanted.add(style);
+        }
+        long seed = sampler.seed();
+        nearestRegion(
+            player,
+            sampler,
+            (cx, cz) -> !picker.overlays(seed, cx, cz)
+                .isEmpty() && picker.containsAll(seed, cx, cz, wanted));
+    }
+
+    private interface CellTest {
+
+        boolean test(int cx, int cz);
+    }
+
+    /** Teleports to the centre of the nearest region cell that passes, clear of the central island. */
+    private static void nearestRegion(EntityPlayerMP player, TerrainSampler sampler, CellTest test) {
+        RegionPicker picker = sampler.picker();
+        long seed = sampler.seed();
         double[] hit = EndSearch.nearestInCells(RegionMap.REGION, player.posX, player.posZ, (cx, cz) -> {
-            Style base = picker.base(seed, cx, cz);
-            List<Style> overlays = picker.overlays(seed, cx, cz);
-            boolean has = target == null || picker.contains(seed, cx, cz, target);
-            boolean match = mix ? !overlays.isEmpty() && has : has;
-            if (!match) return null;
+            if (!test.test(cx, cz)) return null;
             double[] c = RegionMap.cellCentre(seed, cx, cz);
             return Math.hypot(c[0], c[1]) < 1100 ? null : c;
         });
@@ -138,6 +214,33 @@ public final class EtjCommand extends CommandBase {
         }
         int cx = (int) Math.floor(hit[0] / RegionMap.REGION), cz = (int) Math.floor(hit[1] / RegionMap.REGION);
         teleport(player, hit[0], 140, hit[1], picker.base(seed, cx, cz) + " " + picker.overlays(seed, cx, cz));
+    }
+
+    /**
+     * Moves the player onto the block they look at, up to range blocks away, or to the point range blocks ahead when
+     * nothing is in the way; never below Y 0 or above Y 270.
+     */
+    private static void look(EntityPlayerMP player, int range) {
+        double[] d = EtjArgs.lookDirection(player.rotationYaw, player.rotationPitch);
+        double[] eye = { player.posX, player.posY + player.getEyeHeight(), player.posZ };
+        double[] far = EtjArgs.lookTarget(eye, d, range);
+        World world = player.worldObj;
+        MovingObjectPosition hit = null;
+        // rayTraceBlocks stops after 200 block boundaries, about 115 blocks on a diagonal, so trace in pieces.
+        for (double[] p : EtjArgs.lookSegments(eye, d, range, LOOK_STEP)) {
+            hit = world
+                .rayTraceBlocks(Vec3.createVectorHelper(p[0], p[1], p[2]), Vec3.createVectorHelper(p[3], p[4], p[5]));
+            if (hit != null && hit.typeOfHit == MovingObjectPosition.MovingObjectType.BLOCK) break;
+        }
+        if (hit == null || hit.typeOfHit != MovingObjectPosition.MovingObjectType.BLOCK) {
+            teleport(player, far[0], far[1], far[2], "look (nothing in the way)");
+            return;
+        }
+        // Stand on the first two free blocks above the hit, so a wall hit still lands on top.
+        int y = hit.blockY + 1;
+        while (y < EtjArgs.MAX_Y
+            && !(world.isAirBlock(hit.blockX, y, hit.blockZ) && world.isAirBlock(hit.blockX, y + 1, hit.blockZ))) y++;
+        teleport(player, hit.blockX + 0.5, Math.min(EtjArgs.MAX_Y, y), hit.blockZ + 0.5, "look");
     }
 
     private static void mountain(EntityPlayerMP player, TerrainSampler sampler, int minTop) {

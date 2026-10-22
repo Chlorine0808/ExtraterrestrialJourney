@@ -14,6 +14,7 @@ import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.terraingen.ChunkProviderEvent;
 import net.minecraftforge.event.world.ChunkEvent;
 
+import chlorine.etjourney.world.end.noise.Distance;
 import chlorine.etjourney.world.end.region.RegionPicker;
 import chlorine.etjourney.world.end.region.Styles;
 import chlorine.etjourney.world.end.reserve.Reservations;
@@ -73,7 +74,7 @@ public final class EndTerrain {
     }
 
     private static boolean outside(int chunkX, int chunkZ) {
-        return Math.hypot(chunkX * 16 + 8, chunkZ * 16 + 8) >= TERRAIN_START;
+        return Distance.planar(chunkX * 16 + 8, chunkZ * 16 + 8) >= TERRAIN_START;
     }
 
     @SubscribeEvent
@@ -116,12 +117,12 @@ public final class EndTerrain {
         World world = chunk.worldObj;
         if (world.isRemote || world.provider.dimensionId != END || chunk.isTerrainPopulated) return;
         if (!outside(chunk.xPosition, chunk.zPosition)) return;
+        Long seed = seed();
+        if (seed == null) return;
         ExtendedBlockStorage[] storage = chunk.getBlockStorageArray();
         for (int i = TallPass.BASE_Y >> 4; i < storage.length; i++) {
             if (storage[i] != null) return;
         }
-        Long seed = seed();
-        if (seed == null) return;
         IChunkProvider generator = ((WorldServer) world).theChunkProviderServer.currentChunkProvider;
         ChunkPlan plan = plan(generator, world, seed, chunk.xPosition, chunk.zPosition);
         McStorageSink upper = new McStorageSink(storage, !world.provider.hasNoSky, chunk.xPosition, chunk.zPosition);

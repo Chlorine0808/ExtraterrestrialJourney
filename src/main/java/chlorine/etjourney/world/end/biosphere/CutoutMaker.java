@@ -1,0 +1,175 @@
+package chlorine.etjourney.world.end.biosphere;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import net.minecraft.block.Block;
+import net.minecraft.block.material.Material;
+import net.minecraft.init.Blocks;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.tileentity.TileEntity;
+import net.minecraft.world.ChunkCoordIntPair;
+import net.minecraft.world.WorldServer;
+import net.minecraft.world.chunk.Chunk;
+
+import chlorine.etjourney.world.end.feature.Bedrock;
+import chlorine.etjourney.world.end.feature.Biosphere;
+import chlorine.etjourney.world.end.feature.BiosphereSource;
+import chlorine.etjourney.world.end.feature.Cutout;
+import chlorine.etjourney.world.end.feature.FloorFinder;
+
+/** Generates a biosphere's sample in its hidden dimension, cuts the ball out of it and throws the chunks away. */
+final class CutoutMaker {
+
+    /** Highest floor a cave cut-out looks at, how far under the surface it must lie, and the lowest floor. */
+    private static final int CAVE_TOP = 56, CAVE_DEPTH = 12, LOWEST_FLOOR = 6;
+    /** Floor height when the Nether has none. */
+    private static final int NETHER_FALLBACK = 64;
+
+    private CutoutMaker() {}
+
+    /**
+     * The cut-out of a ball, from its own kind of world or else the other one; null when neither could make it,
+     * so the ball is left out rather than left empty.
+     */
+    static Cutout make(long seed, Biosphere b) {
+        CutoutJob job = new CutoutJob(seed, b);
+        job.step(Long.MAX_VALUE);
+        return job.result();
+    }
+
+    /** The sample chunks to load for a ball cut around p, {x, z} in loading order, with one more on every side. */
+    static List<int[]> chunks(Biosphere b, int[] p) {
+        // A chunk is decorated by its own populate and its west and north neighbours'; each populate needs the
+        // chunks east and south of it. So load one chunk beyond the ball on every side.
+        List<int[]> out = new ArrayList<>();
+        int reach = (int) Math.ceil(b.footprint);
+        for (int i = ((p[0] - reach) >> 4) - 1; i <= ((p[0] + reach) >> 4) + 1; i++) {
+            for (int j = ((p[1] - reach) >> 4) - 1; j <= ((p[1] + reach) >> 4) + 1; j++) out.add(new int[] { i, j });
+        }
+        return out;
+    }
+
+    /** Copies the ball's blocks in column x from the loaded sample, dy blocks up from the ball. */
+    static void cutColumn(WorldServer w, Biosphere b, Cutout cut, int[] p, int dy, int x) {
+        int cx = (int) Math.floor(b.centreX), cz = (int) Math.floor(b.centreZ);
+        int height = w.getActualHeight();
+        int y0 = Math.max(0, (int) Math.floor(b.minY())), y1 = Math.min(255, (int) Math.ceil(b.maxY()));
+        for (int z = (int) Math.floor(b.minZ()); z <= (int) Math.ceil(b.maxZ()); z++) {
+            int sx = p[0] + x - cx, sz = p[1] + z - cz;
+            Bedrock.Column column = column(w, sx, sz);
+            Bedrock.Rock rock = null;
+            for (int y = y0; y <= y1; y++) {
+                if (b.part(x, y, z) != Biosphere.Part.INSIDE) continue;
+                int sy = y + dy;
+                Block block = sy >= 0 && sy < height ? w.getBlock(sx, sy, sz) : null;
+                if (block == null || block == Blocks.bedrock) {
+                    // Bedrock, or past the floor or a ceiling: the column's outermost rock, so the ball is not
+                    // hollow there; open sky stays air.
+                    if (rock == null) rock = Bedrock.rock(column, height);
+                    sy = Bedrock.source(column, rock, sy, height, w.provider.hasNoSky);
+                    if (sy < 0) continue;
+                    block = w.getBlock(sx, sy, sz);
+                }
+                int meta = w.getBlockMetadata(sx, sy, sz);
+                if (block.hasTileEntity(meta) && !keepTile(w, cut, x, y, z, sx, sy, sz)) continue;
+                cut.set(x, y, z, Block.getIdFromBlock(block) << 4 | meta);
+            }
+        }
+    }
+
+    /** How far up the sample lies from the ball: its floor height less the ball's floor at the centre. */
+    static int lift(WorldServer w, BiosphereSource.Kind kind, int[] p, Biosphere b) {
+        int cx = (int) Math.floor(b.centreX), cz = (int) Math.floor(b.centreZ);
+        return ground(w, kind, p, b) - b.floorTop(cx, cz);
+    }
+
+    /**
+     * Keeps the tile entity data of the sample block at (sx, sy, sz) for the ball's (x, y, z); false when there
+     * is none to keep, and the block is then left out: a mod's tile entity built empty may fail as it ticks.
+     */
+    private static boolean keepTile(WorldServer w, Cutout cut, int x, int y, int z, int sx, int sy, int sz) {
+        try {
+            TileEntity tile = w.getTileEntity(sx, sy, sz);
+            if (tile == null) return false;
+            NBTTagCompound tag = new NBTTagCompound();
+            tile.writeToNBT(tag);
+            cut.putTile(x, y, z, tag);
+            return true;
+        } catch (Throwable t) {
+            SampleWorlds.rethrowFatal(t);
+            return false;
+        }
+    }
+
+    /** Column (x, z) of the sample, for finding what stands in for its bedrock. */
+    private static Bedrock.Column column(WorldServer w, int x, int z) {
+        return new Bedrock.Column() {
+
+            @Override
+            public boolean bedrock(int y) {
+                return w.getBlock(x, y, z) == Blocks.bedrock;
+            }
+
+            @Override
+            public boolean solid(int y) {
+                Block block = w.getBlock(x, y, z);
+                return block != Blocks.bedrock && block.getMaterial()
+                    .isSolid();
+            }
+        };
+    }
+
+    /** The floor height of the sample, which the ball's floor level is aligned to. */
+    private static int ground(WorldServer w, BiosphereSource.Kind kind, int[] p, Biosphere b) {
+        int surface = w.getTopSolidOrLiquidBlock(p[0], p[1]) - 1;
+        if (kind == BiosphereSource.Kind.SURFACE) return surface;
+        FloorFinder.Blocks blocks = new FloorFinder.Blocks() {
+
+            @Override
+            public boolean ground(int x, int y, int z) {
+                Material m = w.getBlock(x, y, z)
+                    .getMaterial();
+                return m.isSolid() || m.isLiquid();
+            }
+
+            @Override
+            public boolean air(int x, int y, int z) {
+                // The world reports air outside its height; that is no cave to fill a ball with.
+                return y >= 0 && y < w.getActualHeight() && w.isAirBlock(x, y, z);
+            }
+        };
+        if (kind == BiosphereSource.Kind.CAVE) {
+            // Caves are too narrow for a shared floor; centre the ball on the most open space instead.
+            int cx = (int) Math.floor(b.centreX), cz = (int) Math.floor(b.centreZ);
+            double rise = b.y - b.floorTop(cx, cz);
+            int floor = FloorFinder
+                .roomiest(blocks, p[0], p[1], b.radius, rise, LOWEST_FLOOR, Math.min(CAVE_TOP, surface - CAVE_DEPTH));
+            return floor >= 0 ? floor : surface;
+        }
+        int floor = FloorFinder.broadest(blocks, p[0], p[1], b.radius, LOWEST_FLOOR, w.getActualHeight() - 8);
+        return floor >= 0 ? floor : NETHER_FALLBACK;
+    }
+
+    /**
+     * Throws every chunk of the sample dimension away unsaved. Unloading the usual way would save them, and
+     * levelSaving stops unloading altogether in 1.7.10.
+     */
+    static void discard(WorldServer w) {
+        // Someone who reached the sample dimension keeps its chunks; they unload the usual way after.
+        if (!w.playerEntities.isEmpty()) return;
+        List<Chunk> chunks = new ArrayList<>(w.theChunkProviderServer.loadedChunks);
+        for (Chunk chunk : chunks) {
+            // They stop ticking now; the world forgets them on its next entity update.
+            for (List<?> list : chunk.entityLists) w.loadedEntityList.removeAll(list);
+            w.loadedTileEntityList.removeAll(chunk.chunkTileEntityMap.values());
+            chunk.onChunkUnload();
+            w.theChunkProviderServer.loadedChunks.remove(chunk);
+            w.theChunkProviderServer.loadedChunkHashMap
+                .remove(ChunkCoordIntPair.chunkXZ2Int(chunk.xPosition, chunk.zPosition));
+        }
+        // An idle world skips its entity updates, which is where unloaded entities and tile entities leave its
+        // lists; without this they would stay there for the rest of the run.
+        w.resetUpdateEntityTick();
+    }
+}

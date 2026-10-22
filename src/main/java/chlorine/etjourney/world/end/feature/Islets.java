@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import chlorine.etjourney.world.end.noise.CellCache;
+import chlorine.etjourney.world.end.noise.Distance;
 import chlorine.etjourney.world.end.noise.Hash;
 
 /** Small flat-topped islets, like the small End islands of 1.9+; too small for the density grid. */
@@ -13,8 +14,6 @@ public final class Islets {
     private static final double CHANCE = 0.45;
     private static final double MIN_RADIUS = 3, MAX_RADIUS = 9;
     private static final double MIN_Y = 24, MAX_Y = 200;
-    /** An islet only forms where its style holds at least this weight. */
-    private static final double MIN_WEIGHT = 0.6;
     private static final long SALT = 0xA54FF53A5F1D36F1L;
     private static final CellCache<Islet> CELLS = new CellCache<>(16384);
 
@@ -61,11 +60,13 @@ public final class Islets {
         if (Hash.hash01(s, cx, cz) > CHANCE) return null;
         double x = (cx + Hash.hash01(s + 1, cx, cz)) * CELL;
         double z = (cz + Hash.hash01(s + 2, cx, cz)) * CELL;
-        if (probe.weight(x, z) < MIN_WEIGHT) return null;
+        double fade = Fade.of(probe.weight(x, z));
+        if (Hash.hash01(s + 7, cx, cz) >= fade) return null;
         double u = Hash.hash01(s + 3, cx, cz);
-        double radius = MIN_RADIUS + (MAX_RADIUS - MIN_RADIUS) * u * u;
+        // Islets near the region border are fewer and smaller.
+        double radius = Math.max(MIN_RADIUS, (MIN_RADIUS + (MAX_RADIUS - MIN_RADIUS) * u * u) * (0.6 + 0.4 * fade));
         for (ZoneIslands.Island island : probe.zoneIslandsNear(x, z)) {
-            if (Math.hypot(x - island.x, z - island.z) < island.radius * 1.3 + radius + 8) return null;
+            if (Distance.planar(x - island.x, z - island.z) < island.radius * 1.3 + radius + 8) return null;
         }
         double y = MIN_Y + (MAX_Y - MIN_Y) * Hash.hash01(s + 4, cx, cz);
         double flat = 2 + 2 * Hash.hash01(s + 5, cx, cz);

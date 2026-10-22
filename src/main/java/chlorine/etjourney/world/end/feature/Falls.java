@@ -18,6 +18,11 @@ public final class Falls {
         int top(int x, int z);
     }
 
+    /** Whether a chunk sets springs at the VOID_FALLS weight there, thinning out across the border. */
+    public static boolean forms(long seed, int chunkX, int chunkZ, double weight) {
+        return Fade.forms(weight, Hash.hash01(seed ^ 0x3A7F1C5E9B2D4068L, chunkX, chunkZ));
+    }
+
     /**
      * A spring position {x, y, z} for one attempt in the 16x16 area at (originX, originZ), or null. The spring is a
      * rim block whose outward neighbour is open void for at least DROP blocks below it.

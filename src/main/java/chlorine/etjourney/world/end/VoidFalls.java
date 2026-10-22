@@ -7,6 +7,7 @@ import net.minecraft.world.World;
 import net.minecraft.world.chunk.IChunkProvider;
 
 import chlorine.etjourney.world.end.feature.Falls;
+import chlorine.etjourney.world.end.noise.Distance;
 import cpw.mods.fml.common.IWorldGenerator;
 import cpw.mods.fml.common.registry.GameRegistry;
 
@@ -17,7 +18,6 @@ import cpw.mods.fml.common.registry.GameRegistry;
 public final class VoidFalls implements IWorldGenerator {
 
     private static final int END = 1;
-    private static final double MIN_WEIGHT = 0.5;
 
     public static void register() {
         GameRegistry.registerWorldGenerator(new VoidFalls(), 0);
@@ -29,10 +29,15 @@ public final class VoidFalls implements IWorldGenerator {
         if (world.isRemote || world.provider.dimensionId != END) return;
         // The populate area is offset by 8 so springs and their neighbours stay in loaded chunks.
         int ox = chunkX * 16 + 8, oz = chunkZ * 16 + 8;
-        if (Math.hypot(ox + 8, oz + 8) < EndTerrain.TERRAIN_START + 64) return;
+        if (Distance.planar(ox + 8, oz + 8) < EndTerrain.TERRAIN_START + 64) return;
         Long seed = EndTerrain.seed();
-        if (seed == null || EndTerrain.sampler(seed)
-            .styleWeight("VOID_FALLS", ox + 8, oz + 8) < MIN_WEIGHT) return;
+        if (seed == null || !Falls.forms(
+            seed,
+            chunkX,
+            chunkZ,
+            EndTerrain.sampler(seed)
+                .styleWeight("VOID_FALLS", ox + 8, oz + 8)))
+            return;
         Falls.Ground ground = (x, z) -> world.getHeightValue(x, z) - 1;
         for (int attempt = 0; attempt < Falls.ATTEMPTS; attempt++) {
             int[] s = Falls.spring(seed, ox, oz, attempt, ground);

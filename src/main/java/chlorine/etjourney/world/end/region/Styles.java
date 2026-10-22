@@ -5,13 +5,14 @@ import java.util.Collections;
 import java.util.List;
 import java.util.function.Predicate;
 
+import chlorine.etjourney.world.end.modifier.builtin.CloudModifiers;
 import chlorine.etjourney.world.end.modifier.builtin.StyleModifiers;
 
 /** The terrain styles carried over from the spike, as bases and overlays. Core modifiers are not listed here. */
 public final class Styles {
 
-    /** Chance of each overlay per region; with fifteen overlays most regions still get none or one. */
-    private static final double OVERLAY_CHANCE = 0.06;
+    /** Chance of each overlay per region; with about 25 overlays a region gets one on average. */
+    private static final double OVERLAY_CHANCE = 0.04;
 
     public static final Style PLAINS = Style.builder("PLAINS", StyleKind.BASE_LAND)
         .share(3)
@@ -112,6 +113,11 @@ public final class Styles {
         .overlay(OVERLAY_CHANCE, Style.LAND)
         .modifiers(StyleModifiers.slotCanyons())
         .build();
+    /** Slot canyons three times as deep that keep no floor, opening onto the void. */
+    public static final Style CHASMS = Style.builder("CHASMS", StyleKind.OVERLAY)
+        .overlay(OVERLAY_CHANCE, Style.LAND)
+        .modifiers(StyleModifiers.chasms())
+        .build();
 
     /** Springs in the rim cliffs pour water into the void; placed at populate time, outside the modifier chain. */
     public static final Style VOID_FALLS = Style.builder("VOID_FALLS", StyleKind.OVERLAY)
@@ -126,6 +132,40 @@ public final class Styles {
     public static final Style HOLLOW_PILLARS = structure("HOLLOW_PILLARS", Style.ANY);
     public static final Style CROSSES = structure("CROSSES", Style.ANY);
     public static final Style CHAINS = structure("CHAINS", Style.ANY);
+    public static final Style CUMULUS = structure("CUMULUS", Style.ANY);
+
+    /** Sharp-edged papers drifting over the land, crowded in places; drawn block by block. */
+    public static final Style STRATUS = Style.builder("STRATUS", StyleKind.OVERLAY)
+        .overlay(OVERLAY_CHANCE, Style.LAND)
+        .build();
+
+    /** High thin streaks along the wind of their region, over any base. */
+    public static final Style CIRRUS = Style.builder("CIRRUS", StyleKind.OVERLAY)
+        .overlay(OVERLAY_CHANCE, Style.ANY)
+        .modifiers(CloudModifiers.cirrus())
+        .build();
+
+    public static final Style MAMMATUS = structure("MAMMATUS", Style.LAND);
+    public static final Style ANVILS = structure("ANVILS", Style.ANY);
+    public static final Style LENTICULARS = structure("LENTICULARS", Style.ANY);
+
+    /** Small puffs in a loose grid over the void, on one waving sheet. */
+    public static final Style MACKEREL = Style.builder("MACKEREL", StyleKind.BASE_VOID)
+        .share(1)
+        .mountains(0)
+        .valleys(0)
+        .build();
+    public static final Style VIRGA = structure("VIRGA", Style.LAND);
+
+    /** Curling wave crests floating over any base. */
+    public static final Style BILLOWS = structure("BILLOWS", Style.ANY);
+
+    /** Glass balls over the void, each holding a floor of one biome. */
+    public static final Style BIOSPHERES = Style.builder("BIOSPHERES", StyleKind.BASE_VOID)
+        .share(1)
+        .mountains(0)
+        .valleys(0)
+        .build();
 
     private static final List<Style> ALL = Collections.unmodifiableList(
         Arrays.asList(
@@ -152,7 +192,18 @@ public final class Styles {
             SPIRAL_TOWERS,
             HOLLOW_PILLARS,
             CROSSES,
-            CHAINS));
+            CHAINS,
+            STRATUS,
+            CIRRUS,
+            CUMULUS,
+            MAMMATUS,
+            ANVILS,
+            LENTICULARS,
+            MACKEREL,
+            VIRGA,
+            BILLOWS,
+            CHASMS,
+            BIOSPHERES));
 
     private Styles() {}
 

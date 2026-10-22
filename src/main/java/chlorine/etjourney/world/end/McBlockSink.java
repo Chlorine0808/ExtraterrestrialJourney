@@ -59,11 +59,15 @@ final class McBlockSink implements BlockSink {
 
     @Override
     public void set(int x, int y, int z, EndBlock block) {
-        int i = index(x, y, z);
-        Block b = McBlocks.block(block);
-        int m = McBlocks.meta(block);
+        Block b = EndPalette.block(block);
+        int m = EndPalette.meta(block);
         // Without a metadata array, coloured clay falls back to plain hardened clay.
         if (m != 0 && meta == null) b = Blocks.hardened_clay;
+        put(x, y, z, b, m);
+    }
+
+    private void put(int x, int y, int z, Block b, int m) {
+        int i = index(x, y, z);
         blocks[i] = b;
         if (meta != null) meta[i] = (byte) m;
     }

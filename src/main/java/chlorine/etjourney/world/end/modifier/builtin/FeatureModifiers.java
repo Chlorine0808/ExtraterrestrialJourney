@@ -2,17 +2,29 @@ package chlorine.etjourney.world.end.modifier.builtin;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
+import java.util.function.IntPredicate;
 
 import chlorine.etjourney.world.end.feature.ArcPaths;
+import chlorine.etjourney.world.end.feature.Column;
+import chlorine.etjourney.world.end.feature.Enoki;
 import chlorine.etjourney.world.end.feature.Holes;
 import chlorine.etjourney.world.end.feature.Islets;
 import chlorine.etjourney.world.end.feature.Lakes;
 import chlorine.etjourney.world.end.feature.Shoals;
 import chlorine.etjourney.world.end.feature.Structure;
 import chlorine.etjourney.world.end.feature.Structures;
+import chlorine.etjourney.world.end.feature.Tool;
 import chlorine.etjourney.world.end.feature.Zone;
 import chlorine.etjourney.world.end.feature.ZoneIslands;
+import chlorine.etjourney.world.end.feature.cloud.Anvil;
+import chlorine.etjourney.world.end.feature.cloud.Billow;
+import chlorine.etjourney.world.end.feature.cloud.Cumulus;
+import chlorine.etjourney.world.end.feature.cloud.Lenticular;
+import chlorine.etjourney.world.end.feature.cloud.Mackerel;
+import chlorine.etjourney.world.end.feature.cloud.Mammatus;
+import chlorine.etjourney.world.end.feature.cloud.Paper;
 import chlorine.etjourney.world.end.modifier.BlockSink;
 import chlorine.etjourney.world.end.modifier.ChunkArea;
 import chlorine.etjourney.world.end.modifier.DensityField;
@@ -20,6 +32,7 @@ import chlorine.etjourney.world.end.modifier.EndBlock;
 import chlorine.etjourney.world.end.modifier.Modifier;
 import chlorine.etjourney.world.end.modifier.Shape;
 import chlorine.etjourney.world.end.modifier.TerrainView;
+import chlorine.etjourney.world.end.noise.Distance;
 import chlorine.etjourney.world.end.noise.ValueNoise;
 
 /** Shape and block modifiers built from the chunk's features. */
@@ -28,6 +41,11 @@ public final class FeatureModifiers {
     /** Footprint reach, in island radii, over which a zone island's surface is repainted. */
     private static final double PAINT_REACH = 1.3;
     private static final int PAINT_DEPTH = 3;
+    /**
+     * How far outside the island's own grid density a block may lie and still be painted: over void near land the
+     * terrain grid sits above the island's floor, which lifts the rim by a few blocks.
+     */
+    private static final double ISLAND_MARGIN = 8;
 
     private FeatureModifiers() {}
 
@@ -42,15 +60,31 @@ public final class FeatureModifiers {
         int order = 850;
         for (Structure.Kind<? extends Structure> kind : Structures.kinds())
             all.add(StructureModifiers.of(kind, order++));
+        // Clouds block by block too, so their round edges are not cut into the grid's polygons.
+        all.add(StructureModifiers.voxels(Cumulus.KIND, 855, EndBlock.STONE));
+        all.add(StructureModifiers.hanging(Mammatus.KIND, 856, m -> m.centreY + 0.4 * m.radius));
+        all.add(StructureModifiers.voxels(Anvil.KIND, 857, EndBlock.STONE));
+        // Mushrooms block by block, so their round caps are not cut into the 8-block grid's polygons.
+        all.add(StructureModifiers.voxels(Structures.MUSHROOMS, 859, EndBlock.STONE));
         all.add(StructureModifiers.ringlets());
         all.add(StructureModifiers.voxels(Structures.CROSSES, 861, EndBlock.STONE));
         all.add(StructureModifiers.voxels(Structures.HANGING_CHAINS, 862, EndBlock.CHAIN));
         all.add(StructureModifiers.voxels(Structures.SKY_CHAINS, 863, EndBlock.CHAIN));
+        all.add(StructureModifiers.voxels(Lenticular.KIND, 864, EndBlock.STONE));
+        all.add(StructureModifiers.voxels(Mackerel.KIND, 865, EndBlock.STONE));
+        all.add(StructureModifiers.virga(866));
+        all.add(StructureModifiers.voxels(Billow.KIND, 867, EndBlock.STONE));
+        all.add(StructureModifiers.voxels(Paper.KIND, 868, EndBlock.STONE));
+        all.add(StructureModifiers.voxels(Enoki.KIND, 869, EndBlock.STONE));
+        all.add(StructureModifiers.voxels(Column.KIND, 870, EndBlock.STONE));
+        all.add(StructureModifiers.voxels(Tool.KIND, 872, EndBlock.STONE));
+        all.add(StructureModifiers.spires(873));
+        all.add(StructureModifiers.biospheres());
         return all;
     }
 
     /** How far a steep face moves in or out, in blocks. */
-    private static final double FACE_DEPTH = 4;
+    private static final double FACE_DEPTH = 3;
     /** Sideways density change per block at which roughening starts. */
     private static final double FACE_STEEP = 0.8;
     private static final long FACE_SALT = 0x2C9B5E7A1F3D8046L;
@@ -98,9 +132,9 @@ public final class FeatureModifiers {
                     double steep = ValueNoise.smooth(Math.max(0, Math.min(1, (g - FACE_STEEP) / 1.4)));
                     double reach = FACE_DEPTH * g * steep;
                     if (reach <= 0 || Math.abs(d) >= reach) continue;
-                    double n = (ValueNoise.noise3(s, x, y, z, 5) - 0.5) * 2 * 0.65
+                    double n = (ValueNoise.noise3(s, x, y, z, 8) - 0.5) * 2 * 0.65
                         + (ValueNoise.noise3(s + 1, x / 4.0, y, z / 4.0, 3) - 0.5) * 2 * 0.35;
-                    n = Math.max(-1, Math.min(1, n * 2));
+                    n = Math.max(-1, Math.min(1, n * 1.4));
                     boolean solid = d + n * reach > 0;
                     if (solid == d > 0 || !surfaceNear(view, all, lx, ly, lz, x, y, z, d > 0)) continue;
                     if (solid && sink.isAir(x, y, z)) sink.set(x, y, z, EndBlock.STONE);
@@ -166,13 +200,23 @@ public final class FeatureModifiers {
                     if (owner == null) return;
                     // The island may carry on above this sink (the generator's half ends at Y 127).
                     boolean above = owner.y + owner.up * 1.2 >= sink.maxY();
-                    paintColumn(sink, x, z, ZoneIslands.zoneOf(area.seed, owner), above);
+                    List<ZoneIslands.Island> own = Collections.singletonList(owner);
+                    // Rock the grid laid near the island's own grid density; the exact density strays from the
+                    // grid by a few blocks where the rim noise changes within a cell.
+                    IntPredicate onIsland = y -> area.view.densityAt(x, y, z) > -1
+                        && ZoneIslands.gridDensity(area.seed, own, x, y, z) > -ISLAND_MARGIN;
+                    // The dome drops steeply at its rim, so all of it is painted, not just the top few blocks.
+                    int floor = (int) Math.floor(owner.y);
+                    paintColumn(sink, x, z, ZoneIslands.zoneOf(area.seed, owner), above, onIsland, floor);
                 });
             }
         };
     }
 
-    /** Sinkholes: remove a share of each column's rock from the top, all of it inside the shaft. */
+    /**
+     * Sinkholes: remove a share of each column's rock from the top, all of it inside the shaft. The rock is measured
+     * on the density across the whole height, so both halves of a column cut down to the same floor.
+     */
     public static Modifier holes() {
         return blockModifier(810, (area, view, sink) -> {
             List<Holes.Hole> holes = view.holes();
@@ -180,13 +224,15 @@ public final class FeatureModifiers {
             forEachColumn(sink, (x, z) -> {
                 double cut = Holes.cutFraction(area.seed, holes, x, z);
                 if (cut <= 0) return;
-                int top = sink.maxY() - 1;
-                while (top >= sink.minY() && sink.isAir(x, top, z)) top--;
-                if (top < sink.minY()) return;
-                int bottom = sink.minY();
-                while (sink.isAir(x, bottom, z)) bottom++;
-                int remove = cut >= 1 ? top - sink.minY() + 1 : (int) Math.round((top - bottom + 1) * cut);
-                for (int y = top; y > top - remove && y >= sink.minY(); y--) sink.clear(x, y, z);
+                int top = 255;
+                while (top >= 0 && view.densityAt(x, top, z) <= 0) top--;
+                if (top < 0) return;
+                int bottom = 0;
+                while (view.densityAt(x, bottom, z) <= 0) bottom++;
+                int floor = cut >= 1 ? 0 : top + 1 - (int) Math.round((top - bottom + 1) * cut);
+                // Up to the rock's top plus what faces() may have pushed out above it.
+                int ceiling = Math.min(sink.maxY() - 1, top + (int) FACE_DEPTH + 2);
+                for (int y = Math.max(floor, sink.minY()); y <= ceiling; y++) sink.clear(x, y, z);
             });
         });
     }
@@ -212,7 +258,7 @@ public final class FeatureModifiers {
         return blockModifier(820, (area, view, sink) -> {
             for (Islets.Islet islet : view.islets()) {
                 forEachColumn(sink, (x, z) -> {
-                    int[] span = Islets.span(islet, Math.hypot(x + 0.5 - islet.x, z + 0.5 - islet.z));
+                    int[] span = Islets.span(islet, Distance.planar(x + 0.5 - islet.x, z + 0.5 - islet.z));
                     if (span == null) return;
                     for (int y = Math.max(sink.minY(), span[0]); y <= Math.min(sink.maxY() - 1, span[1]); y++) {
                         sink.place(x, y, z, EndBlock.STONE);
@@ -228,6 +274,12 @@ public final class FeatureModifiers {
             for (Shoals.School school : view.schools()) {
                 int scx = (int) Math.floor(school.x) >> 4, scz = (int) Math.floor(school.z) >> 4;
                 if (!Shoals.forms(school, view.reservedAt(scx, scz))) continue;
+                int[] box = Shoals.bounds(school);
+                if (box[1] < sink.originX() || box[0] > sink.originX() + 15
+                    || box[3] < sink.minY()
+                    || box[2] >= sink.maxY()
+                    || box[5] < sink.originZ()
+                    || box[4] > sink.originZ() + 15) continue;
                 for (int[] b : Shoals.blocks(school)) {
                     if (inside(sink, b[0], b[1], b[2])) sink.place(b[0], b[1], b[2], EndBlock.STONE);
                 }
@@ -262,18 +314,21 @@ public final class FeatureModifiers {
     }
 
     /**
-     * Paints the top PAINT_DEPTH blocks of every solid run in a column. When the column continues above the sink, the
-     * run touching the sink's top is not a surface and is left alone; the other half paints the real top.
+     * Paints the top PAINT_DEPTH blocks of every solid run of island rock in a column, and all of it from floor up.
+     * When the column continues above
+     * the sink, the run touching the sink's top is not a surface and is left alone; the other half paints the real top.
+     * Blocks that are not on the island are never painted, and the island rock under them counts as a surface.
      */
-    static void paintColumn(BlockSink sink, int x, int z, Zone zone, boolean continuesAbove) {
+    static void paintColumn(BlockSink sink, int x, int z, Zone zone, boolean continuesAbove, IntPredicate onIsland,
+        int floor) {
         int depth = continuesAbove ? PAINT_DEPTH : -1;
         for (int y = sink.maxY() - 1; y >= sink.minY(); y--) {
-            if (sink.isAir(x, y, z)) {
+            if (sink.isAir(x, y, z) || !onIsland.test(y)) {
                 depth = -1;
                 continue;
             }
             depth++;
-            if (depth < PAINT_DEPTH) sink.set(x, y, z, depth == 0 ? zone.top : zone.fill);
+            if (depth < PAINT_DEPTH || y >= floor) sink.set(x, y, z, depth == 0 ? zone.top : zone.fill);
         }
     }
 

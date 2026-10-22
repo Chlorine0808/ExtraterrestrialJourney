@@ -1,5 +1,6 @@
 package chlorine.etjourney.world.end.modifier.builtin;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -14,6 +15,7 @@ import org.junit.jupiter.api.Test;
 import chlorine.etjourney.world.end.feature.Structure;
 import chlorine.etjourney.world.end.feature.StructureProbe;
 import chlorine.etjourney.world.end.feature.Structures;
+import chlorine.etjourney.world.end.feature.cloud.Billow;
 import chlorine.etjourney.world.end.reserve.Area;
 import chlorine.etjourney.world.end.reserve.Reservations;
 
@@ -85,5 +87,30 @@ class StructureBlockingTest {
         assertNotNull(mushroom);
         List<Area> on = Collections.singletonList(new Area("hee", mushroom.centreX, mushroom.centreZ, 128));
         assertNull(StructureModifiers.placed(on, mushroom, Structures.MUSHROOMS));
+    }
+
+    @Test
+    void billowsHighAboveAnIslandStay() {
+        Billow high = null;
+        for (int i = 0; high == null && i < 400; i++) {
+            Billow b = Billow.KIND.inCell(406L, 30 + i % 20, 5 + i / 20, LAND);
+            if (b != null && b.minY() >= Reservations.CLEAR_Y) high = b;
+        }
+        assertNotNull(high);
+        List<Area> on = Collections.singletonList(new Area("hee", high.centreX, high.centreZ, 128));
+        assertSame(high, StructureModifiers.placed(on, high, Billow.KIND));
+    }
+
+    @Test
+    void lowBillowsGiveWayAndStandOnNothing() {
+        Billow low = null;
+        for (int i = 0; low == null && i < 400; i++) {
+            Billow b = Billow.KIND.inCell(407L, 30 + i % 20, 5 + i / 20, LAND);
+            if (b != null && b.minY() < Reservations.CLEAR_Y) low = b;
+        }
+        assertNotNull(low);
+        List<Area> on = Collections.singletonList(new Area("hee", low.centreX, low.centreZ, 128));
+        assertNull(StructureModifiers.placed(on, low, Billow.KIND));
+        assertEquals(0, low.feet().length);
     }
 }

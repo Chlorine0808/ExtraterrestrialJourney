@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import chlorine.etjourney.world.end.noise.CellCache;
+import chlorine.etjourney.world.end.noise.Distance;
 import chlorine.etjourney.world.end.noise.Hash;
 
 /** Single mountains: rare tall peaks with broad feet that spread land around them. */
@@ -73,7 +74,7 @@ public final class Mountains {
     public static double footLand(List<Mountain> mountains, double wx, double wz) {
         double best = -100;
         for (Mountain m : mountains) {
-            best = Math.max(best, Math.min(100, (m.radius - Math.hypot(wx - m.x, wz - m.z)) * FOOT_SLOPE));
+            best = Math.max(best, Math.min(100, (m.radius - Distance.planar(wx - m.x, wz - m.z)) * FOOT_SLOPE));
         }
         return best;
     }
@@ -82,7 +83,7 @@ public final class Mountains {
     public static double rise(List<Mountain> mountains, double wx, double wz) {
         double best = 0;
         for (Mountain m : mountains) {
-            double t = Math.hypot(wx - m.x, wz - m.z) / m.radius;
+            double t = Distance.planar(wx - m.x, wz - m.z) / m.radius;
             if (t < 1) best = Math.max(best, m.peak * Math.pow(1 - t, 1.6));
         }
         return best;

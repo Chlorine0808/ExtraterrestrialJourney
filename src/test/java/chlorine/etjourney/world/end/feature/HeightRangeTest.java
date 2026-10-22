@@ -58,8 +58,8 @@ class HeightRangeTest {
         Shoals.Probe shoalProbe = new Shoals.Probe() {
 
             @Override
-            public boolean dense(double x, double z) {
-                return true;
+            public double weight(double x, double z) {
+                return 1;
             }
 
             @Override

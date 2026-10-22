@@ -11,6 +11,9 @@ import chlorine.etjourney.world.end.modifier.EndBlock;
 /** Zone paint of a column split at Y 127/128: only the real top surface is painted. */
 class ZonePaintTest {
 
+    /** A floor above the world, so only the top PAINT_DEPTH blocks are painted. */
+    private static final int NO_FLOOR = 256;
+
     /** One column, Y minY to maxY - 1, filled with stone from fromY to toY. */
     private static final class Column implements BlockSink {
 
@@ -67,10 +70,10 @@ class ZonePaintTest {
     @Test
     void theLowerHalfLeavesARunThatContinuesAboveUnpainted() {
         Column lower = new Column(0, 128, 100, 160);
-        FeatureModifiers.paintColumn(lower, 0, 0, Zone.SOLAR, true);
+        FeatureModifiers.paintColumn(lower, 0, 0, Zone.SOLAR, true, y -> true, NO_FLOOR);
         assertEquals(EndBlock.STONE, lower.blocks[127]);
         Column upper = new Column(128, 256, 100, 160);
-        FeatureModifiers.paintColumn(upper, 0, 0, Zone.SOLAR, false);
+        FeatureModifiers.paintColumn(upper, 0, 0, Zone.SOLAR, false, y -> true, NO_FLOOR);
         assertEquals(Zone.SOLAR.top, upper.blocks[160 - 128]);
         assertEquals(Zone.SOLAR.fill, upper.blocks[159 - 128]);
         assertEquals(EndBlock.STONE, upper.blocks[157 - 128]);
@@ -79,8 +82,37 @@ class ZonePaintTest {
     @Test
     void anIslandBelowTheCeilingIsPaintedInTheLowerHalf() {
         Column lower = new Column(0, 128, 60, 90);
-        FeatureModifiers.paintColumn(lower, 0, 0, Zone.NEBULA, false);
+        FeatureModifiers.paintColumn(lower, 0, 0, Zone.NEBULA, false, y -> true, NO_FLOOR);
         assertEquals(Zone.NEBULA.top, lower.blocks[90]);
         assertEquals(EndBlock.STONE, lower.blocks[87]);
+    }
+
+    @Test
+    void landOutsideTheIslandIsLeftAlone() {
+        Column column = new Column(0, 128, 60, 70);
+        FeatureModifiers.paintColumn(column, 0, 0, Zone.SOLAR, false, y -> false, NO_FLOOR);
+        for (int y = 60; y <= 70; y++) assertEquals(EndBlock.STONE, column.blocks[y], "at " + y);
+    }
+
+    @Test
+    void theIslandUnderSomethingElseIsPaintedAtItsOwnTop() {
+        // Island rock up to Y 90 with another shape's blocks on top of it up to Y 100.
+        Column column = new Column(0, 128, 60, 100);
+        FeatureModifiers.paintColumn(column, 0, 0, Zone.SOLAR, false, y -> y <= 90, NO_FLOOR);
+        assertEquals(EndBlock.STONE, column.blocks[100]);
+        assertEquals(EndBlock.STONE, column.blocks[91]);
+        assertEquals(Zone.SOLAR.top, column.blocks[90]);
+        assertEquals(Zone.SOLAR.fill, column.blocks[89]);
+        assertEquals(EndBlock.STONE, column.blocks[87]);
+    }
+
+    @Test
+    void theDomeAboveTheFloorIsPaintedWhole() {
+        // A steep dome drops many blocks between columns; its side must not show bare stone.
+        Column column = new Column(0, 128, 60, 90);
+        FeatureModifiers.paintColumn(column, 0, 0, Zone.VORTEX, false, y -> true, 80);
+        assertEquals(Zone.VORTEX.top, column.blocks[90]);
+        for (int y = 80; y < 90; y++) assertEquals(Zone.VORTEX.fill, column.blocks[y], "at " + y);
+        assertEquals(EndBlock.STONE, column.blocks[79]);
     }
 }

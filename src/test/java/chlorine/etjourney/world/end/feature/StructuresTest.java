@@ -31,10 +31,48 @@ class StructuresTest {
         }
     };
 
+    /** Structures of every kind but RINGS (one per region) over a block of cells, at a fixed weight. */
+    private static int count(long seed, double weight) {
+        StructureProbe probe = new StructureProbe() {
+
+            @Override
+            public double weight(String style, double x, double z) {
+                return weight;
+            }
+
+            @Override
+            public double land(double x, double z) {
+                return 60;
+            }
+
+            @Override
+            public double ground(double x, double z) {
+                return 70;
+            }
+        };
+        int n = 0;
+        for (Structure.Kind<? extends Structure> kind : Structures.kinds()) {
+            if (kind == Structures.RINGS) continue;
+            for (int cx = 100; cx < 130; cx++) {
+                for (int cz = 100; cz < 130; cz++) if (kind.inCell(seed, cx, cz, probe) != null) n++;
+            }
+        }
+        return n;
+    }
+
+    @Test
+    void structuresThinOutAcrossTheBorder() {
+        // Distinct seeds: the cell cache keys on the seed, not the probe.
+        int full = count(310L, 1), half = count(311L, 0.35);
+        assertEquals(0, count(312L, 0.05));
+        assertTrue(half > full / 5 && half < full * 4 / 5, half + " of " + full);
+    }
+
+    /** The first whole structure, so shape checks are not thrown by wear. */
     private static <T extends Structure> T first(Structure.Kind<T> kind, long seed) {
         for (int i = 0; i < 400; i++) {
             T s = kind.inCell(seed, 10 + i % 20, i / 20, LAND);
-            if (s != null) return s;
+            if (s != null && s.wear() == 0) return s;
         }
         return null;
     }
@@ -189,7 +227,7 @@ class StructuresTest {
             checked++;
             double top = m.capY + m.dome;
             for (double y = m.base + 1; y < top - 1; y += 0.5) {
-                assertTrue(m.density(m.centreX, y, m.centreZ) > 0, "gap at " + (y - m.base) + " above the base");
+                assertTrue(m.body(m.centreX, y, m.centreZ) > 0, "gap at " + (y - m.base) + " above the base");
             }
         }
         assertTrue(checked > 20);
@@ -270,8 +308,8 @@ class StructuresTest {
                 if (c == null) continue;
                 inside(c, 75);
                 double[] stem = c.point(c.height * 0.5, 0), arm = c.point(c.armAt, c.armHalf * 0.8);
-                assertTrue(c.density(stem[0], stem[1], stem[2]) > 0, "hollow stem");
-                assertTrue(c.density(arm[0], arm[1], arm[2]) > 0, "hollow arm");
+                assertTrue(c.body(stem[0], stem[1], stem[2]) > 0, "hollow stem");
+                assertTrue(c.body(arm[0], arm[1], arm[2]) > 0, "hollow arm");
                 if (c.feet().length > 0) {
                     stuck++;
                     assertTrue(c.point(0, 0)[1] < 70, "a stuck cross does not reach into the ground");
@@ -429,5 +467,53 @@ class StructuresTest {
             Structures.Chain c = Structures.HANGING_CHAINS.inCell(321L, cx, 4, thin);
             if (c != null) assertTrue(c.top + c.wire() < 93, "chain pokes out at " + (c.top + c.wire()));
         }
+    }
+
+    @Test
+    void mushroomCapsHaveARoundedRim() {
+        Structures.Mushroom m = null;
+        for (int i = 0; m == null && i < 400; i++) {
+            Structures.Mushroom s = Structures.MUSHROOMS.inCell(305L, 10 + i % 20, i / 20, LAND);
+            if (s != null && s.wear() == 0 && s.curl == 0) m = s;
+        }
+        assertNotNull(m);
+        double x = m.centreX + m.cap - 0.5, top = m.capY;
+        // The rim's middle reaches out to the full radius, but its upper and lower corners are rounded away.
+        assertTrue(m.density(x, top - m.thickness / 2, m.centreZ) > 0, "rim middle");
+        assertTrue(m.density(x, top - 0.5, m.centreZ) < 0, "upper corner");
+        assertTrue(m.density(x, top - m.thickness + 0.5, m.centreZ) < 0, "lower corner");
+    }
+
+    @Test
+    void someMushroomCapsCurlUnderLikeShiitake() {
+        int all = 0, curled = 0;
+        for (int i = 0; i < 1600; i++) {
+            Structures.Mushroom m = Structures.MUSHROOMS.inCell(322L, 20 + i % 40, i / 40, LAND);
+            if (m == null) continue;
+            all++;
+            if (m.curl == 0) continue;
+            curled++;
+            double x = m.centreX + m.eyeD, z = m.centreZ;
+            assertTrue(m.body(x, m.eyeY, z) < 0, "the curl is open at its eye");
+            assertTrue(m.body(x + m.curl, m.eyeY, z) > 0, "outer rim");
+            assertTrue(m.body(x, m.eyeY - m.curl, z) > 0, "rolled under");
+            assertTrue(m.body(m.centreX + m.footprint + 0.5, m.eyeY, z) < 0, "inside the footprint");
+            assertTrue(m.minY() <= m.eyeY - m.curl - m.thickness / 2, "box holds the curl");
+        }
+        double share = curled / (double) all;
+        assertTrue(share > 0.15 && share < 0.45, "curled share " + share);
+    }
+
+    @Test
+    void someHollowPillarsAreShort() {
+        int c0 = (int) Math.ceil(Structures.MIN_RADIUS / Structures.HOLLOW_PILLARS.cell) + 1, all = 0, low = 0;
+        for (int i = 0; i < 1600; i++) {
+            Structures.HollowPillar p = Structures.HOLLOW_PILLARS.inCell(861L, c0 + i % 40, c0 + i / 40, LAND);
+            if (p == null) continue;
+            all++;
+            if (p.top - p.base < 60) low++;
+        }
+        double share = low / (double) all;
+        assertTrue(share > 0.15 && share < 0.45, "short share " + share);
     }
 }

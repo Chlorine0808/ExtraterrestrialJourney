@@ -27,6 +27,21 @@ class FallsTest {
     }
 
     @Test
+    void fallsThinOutAcrossTheBorder() {
+        int full = 0, half = 0, none = 0;
+        for (int cx = 0; cx < 40; cx++) {
+            for (int cz = 0; cz < 40; cz++) {
+                if (Falls.forms(5L, cx, cz, 1)) full++;
+                if (Falls.forms(5L, cx, cz, 0.35)) half++;
+                if (Falls.forms(5L, cx, cz, 0.05)) none++;
+            }
+        }
+        assertEquals(1600, full);
+        assertEquals(0, none);
+        assertTrue(half > full / 5 && half < full * 4 / 5, half + " of " + full);
+    }
+
+    @Test
     void noSpringWithoutAnEdge() {
         for (int attempt = 0; attempt < 50; attempt++) assertNull(Falls.spring(1, 0, 0, attempt, (x, z) -> 80));
     }

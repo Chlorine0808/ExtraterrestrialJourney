@@ -3,6 +3,7 @@ package chlorine.etjourney.world.end.region;
 import java.util.ArrayList;
 import java.util.List;
 
+import chlorine.etjourney.world.end.noise.Distance;
 import chlorine.etjourney.world.end.noise.Hash;
 import chlorine.etjourney.world.end.noise.Warp;
 
@@ -53,7 +54,7 @@ public final class RegionMap {
         for (int i = -SEARCH; i <= SEARCH; i++) {
             for (int j = -SEARCH; j <= SEARCH; j++) {
                 double[] c = cellCentre(seed, ox + i, oz + j);
-                distances[n] = Math.hypot(w[0] - c[0], w[1] - c[1]);
+                distances[n] = Distance.planar(w[0] - c[0], w[1] - c[1]);
                 cxs[n] = ox + i;
                 czs[n] = oz + j;
                 nearest = Math.min(nearest, distances[n]);

@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import chlorine.etjourney.world.end.noise.CellCache;
+import chlorine.etjourney.world.end.noise.Distance;
 import chlorine.etjourney.world.end.noise.Hash;
 import chlorine.etjourney.world.end.noise.ValueNoise;
 import chlorine.etjourney.world.end.reserve.Area;
@@ -24,6 +25,8 @@ public final class ZoneIslands {
     private static final double MIN_Y = 28, MAX_Y = 200;
     /** Islands avoid land within this multiple of their radius. */
     private static final double LAND_REACH = 1.3;
+    /** The terrain grid's density over open void, the floor under every island node. */
+    private static final double VOID_DENSITY = -20;
     private static final long SALT = 0x2545F4914F6CDD1DL;
     private static final long SHAPE_SALT = 0x6A09E667F3BCC908L;
     private static final CellCache<Island> CELLS = new CellCache<>(4096);
@@ -90,7 +93,7 @@ public final class ZoneIslands {
                 if (i == cx && j == cz) continue;
                 Island other = raw(seed, i, j);
                 if (other == null) continue;
-                double half = Math.hypot(raw.x - other.x, raw.z - other.z) / 2 - GAP / 2;
+                double half = Distance.planar(raw.x - other.x, raw.z - other.z) / 2 - GAP / 2;
                 radius = Math.min(radius, half / 1.2);
             }
         }
@@ -104,7 +107,7 @@ public final class ZoneIslands {
         if (Hash.hash01(s, cx, cz) > CHANCE) return null;
         double ix = cx * CELL + 48 + Hash.hash01(s + 1, cx, cz) * (CELL - 96);
         double iz = cz * CELL + 48 + Hash.hash01(s + 2, cx, cz) * (CELL - 96);
-        if (Math.hypot(ix, iz) < MIN_DISTANCE) return null;
+        if (Distance.planar(ix, iz) < MIN_DISTANCE) return null;
         double radius = MIN_RADIUS + Hash.hash01(s + 3, cx, cz) * (MAX_RADIUS - MIN_RADIUS);
         // The top surface (y + 0.18 r * 1.2 edge) must stay below the world's ceiling.
         double maxY = Math.min(MAX_Y, 250 - radius * 0.18 * 1.2);
@@ -130,9 +133,9 @@ public final class ZoneIslands {
 
     /** Density of the islands: a flattened dome on top and a superellipse underside below the centre. */
     public static double density(List<Island> islands, double x, double y, double z, double edge) {
-        double best = -100;
+        double best = Double.NEGATIVE_INFINITY;
         for (Island island : islands) {
-            double horiz = Math.hypot(x - island.x, z - island.z);
+            double horiz = Distance.planar(x - island.x, z - island.z);
             double dy = y - island.y;
             double profile;
             if (dy >= 0) {
@@ -148,12 +151,32 @@ public final class ZoneIslands {
         return best;
     }
 
+    /**
+     * Density at block (x, y, z) as the terrain grid lays it: the islands' density at the 8 x 4 x 8 grid nodes around
+     * the block, interpolated the way the generator places blocks. Nodes are floored at the void's density, as the
+     * terrain grid takes the higher of the two.
+     */
+    public static double gridDensity(long seed, List<Island> islands, int x, int y, int z) {
+        int x0 = Math.floorDiv(x, 8) * 8, y0 = Math.floorDiv(y, 4) * 4, z0 = Math.floorDiv(z, 8) * 8;
+        double tx = (x - x0) / 8.0, ty = (y - y0) / 4.0, tz = (z - z0) / 8.0;
+        double[] c = new double[4];
+        for (int n = 0; n < 4; n++) {
+            int nx = x0 + (n & 1) * 8, nz = z0 + (n >> 1) * 8;
+            double edge = edge(seed, nx, nz);
+            double low = Math.max(VOID_DENSITY, density(islands, nx, y0, nz, edge));
+            double high = Math.max(VOID_DENSITY, density(islands, nx, y0 + 4, nz, edge));
+            c[n] = low + (high - low) * ty;
+        }
+        double near = c[0] + (c[1] - c[0]) * tx, far = c[2] + (c[3] - c[2]) * tx;
+        return near + (far - near) * tz;
+    }
+
     /** The island whose footprint (in radii, up to reach) covers (x, z), nearest first; null over open void. */
     public static Island ownerAt(List<Island> islands, double x, double z, double reach) {
         Island owner = null;
         double best = reach;
         for (Island island : islands) {
-            double ratio = Math.hypot(x - island.x, z - island.z) / island.radius;
+            double ratio = Distance.planar(x - island.x, z - island.z) / island.radius;
             if (ratio < best) {
                 best = ratio;
                 owner = island;

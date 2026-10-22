@@ -11,7 +11,7 @@ class StylesTest {
     @Test
     void elevenStylesWithTheSpecsOverlayTable() {
         assertEquals(
-            24,
+            35,
             Styles.all()
                 .size());
         assertTrue(Styles.SPIRES.canOverlay(Styles.PLAINS));
@@ -21,6 +21,8 @@ class StylesTest {
         assertTrue(Styles.ARCS.canOverlay(Styles.ISLETS));
         assertTrue(Styles.ARCS.canOverlay(Styles.RANGES));
         assertFalse(Styles.SHOALS.canOverlay(Styles.PLAINS));
+        assertEquals(StyleKind.BASE_VOID, Styles.BIOSPHERES.kind);
+        assertFalse(Styles.BIOSPHERES.canOverlay(Styles.ISLETS));
     }
 
     @Test
@@ -49,6 +51,33 @@ class StylesTest {
             boolean found = false;
             for (int i = 0; i < 4000 && !found; i++) found = picker.contains(9L, i % 64, i / 64, style);
             assertTrue(found, style + " never appears");
+        }
+    }
+
+    @Test
+    void aboutOneOverlayPerRegion() {
+        RegionPicker picker = new RegionPicker(Styles.all());
+        int overlays = 0, cells = 4000;
+        for (int i = 0; i < cells; i++) {
+            overlays += picker.overlays(5L, i % 64, i / 64)
+                .size();
+        }
+        double mean = overlays / (double) cells;
+        assertTrue(mean >= 0.6 && mean <= 1.0, "mean overlays per region " + mean);
+    }
+
+    @Test
+    void chasmsOverlayLandOnly() {
+        assertEquals(StyleKind.OVERLAY, Styles.CHASMS.kind);
+        assertTrue(Styles.CHASMS.canOverlay(Styles.PLAINS));
+        assertFalse(Styles.CHASMS.canOverlay(Styles.ISLETS));
+    }
+
+    @Test
+    void theRemovedStylesAreGone() {
+        for (Style style : Styles.all()) {
+            assertFalse(style.name.equals("CLOUD_SEA"));
+            assertFalse(style.name.equals("ROLL_CLOUDS"));
         }
     }
 }

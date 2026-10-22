@@ -7,7 +7,9 @@ import java.util.List;
 import java.util.Random;
 
 import chlorine.etjourney.world.end.noise.CellCache;
+import chlorine.etjourney.world.end.noise.Distance;
 import chlorine.etjourney.world.end.noise.Hash;
+import chlorine.etjourney.world.end.noise.ValueNoise;
 
 /**
  * The ARCS style: thick tubes along winding 3D paths, so walking them feels like climbing the branches of a
@@ -20,6 +22,8 @@ public final class ArcPaths {
     private static final int STEP = 4;
     /** Paths per cell: 0.8 on average, times a per-cell factor of 1 to 4. */
     private static final double BASE_COUNT = 0.8, MAX_COUNT_FACTOR = 4;
+    /** Share of the paths ARCS draws where it is laid over another base rather than standing as the base. */
+    private static final double OVERLAY_COUNT = 1 / 3.0;
     /** Path length: 120 blocks times 0.5 to 8 (log-uniform, so short and long are equally common). */
     private static final double BASE_LENGTH = 120, MIN_LENGTH_FACTOR = 0.5, MAX_LENGTH_FACTOR = 8;
     /** Wiggle: 0.5 to 10 times the base jostle (log-uniform). */
@@ -29,6 +33,13 @@ public final class ArcPaths {
     /** Paths turn back once they stray this far from their start, which bounds the search. */
     private static final double MAX_REACH = 420;
     private static final double MIN_Y = 6, MAX_Y = 250;
+    /**
+     * Across the region border a tube narrows to END_TUBE over TAPER of ARCS weight above its path's cutoff, and
+     * stops below it. Thinner tubes fall between the 8-block density grid nodes and break up.
+     */
+    static final double END_TUBE = 4, TAPER = 0.3;
+    /** Range of the per-path cutoff, so paths end at different depths into the border. */
+    private static final double MIN_CUTOFF = 0.02, MAX_CUTOFF = 0.35;
     private static final long SALT = 0x8A5CD789635D2DFFL;
 
     private static final CellCache<List<Path>> CELLS = new CellCache<>(32768);
@@ -39,20 +50,33 @@ public final class ArcPaths {
     public interface Probe {
 
         double weight(double x, double z);
+
+        /** The part of the weight that comes from ARCS as the base rather than as an overlay. */
+        default double baseWeight(double x, double z) {
+            return weight(x, z);
+        }
     }
 
-    /** One path: its points (x, y, z triples) and tube radius, with a horizontal bounding box. */
+    /** One path: its points (x, y, z triples), tube radius and cutoff, with a horizontal bounding box. */
     public static final class Path {
 
         final double[] points;
         public final double tube;
+        /** ARCS weight at or below which the path stops. */
+        final double cutoff;
         final double minX, maxX, minZ, maxZ;
-        /** Answers of the last shared filter, per segment: 0 unknown, 1 keep, 2 drop. */
+        /** Answers of the last shared weight, per segment; NaN when not yet asked. */
         private volatile Memo memo;
 
+        /** A path that keeps its full tube wherever the ARCS weight is above 0. */
         Path(double[] points, double tube) {
+            this(points, tube, 0);
+        }
+
+        Path(double[] points, double tube, double cutoff) {
             this.points = points;
             this.tube = tube;
+            this.cutoff = cutoff;
             double x0 = Double.MAX_VALUE, x1 = -Double.MAX_VALUE, z0 = Double.MAX_VALUE, z1 = -Double.MAX_VALUE;
             for (int i = 0; i < points.length; i += 3) {
                 x0 = Math.min(x0, points[i]);
@@ -71,10 +95,19 @@ public final class ArcPaths {
             return new double[] { points[0], points[1], points[2] };
         }
 
-        private Memo memoFor(SegmentFilter filter) {
+        /** Tube radius at an ARCS weight, or 0 where the path stops. */
+        double tubeAt(double weight) {
+            if (weight <= cutoff) return 0;
+            double t = ValueNoise.smooth(Math.min(1, (weight - cutoff) / TAPER));
+            return END_TUBE + (tube - END_TUBE) * t;
+        }
+
+        private Memo memoFor(SegmentWeight filter) {
             Memo m = memo;
             if (m == null || m.filter != filter) {
-                m = new Memo(filter, new byte[points.length / 3 - 1]);
+                float[] answers = new float[points.length / 3 - 1];
+                Arrays.fill(answers, Float.NaN);
+                m = new Memo(filter, answers);
                 memo = m;
             }
             return m;
@@ -83,10 +116,10 @@ public final class ArcPaths {
 
     private static final class Memo {
 
-        final SegmentFilter filter;
-        final byte[] answers;
+        final SegmentWeight filter;
+        final float[] answers;
 
-        Memo(SegmentFilter filter, byte[] answers) {
+        Memo(SegmentWeight filter, float[] answers) {
             this.filter = filter;
             this.answers = answers;
         }
@@ -151,6 +184,12 @@ public final class ArcPaths {
         boolean keep(double x, double y, double z);
     }
 
+    /** ARCS weight for a segment at its midpoint; 0 drops it. */
+    public interface SegmentWeight {
+
+        double weight(double x, double y, double z);
+    }
+
     /** Paths whose bounding box comes within range of (x, z). */
     public static List<Path> pathsNear(long seed, double x, double z, double range, Probe probe) {
         List<Path> out = new ArrayList<>();
@@ -177,19 +216,24 @@ public final class ArcPaths {
     private static List<Path> computePaths(long seed, int cx, int cz, Probe probe) {
         long s = seed ^ SALT;
         double x = (cx + 0.5) * CELL, z = (cz + 0.5) * CELL;
-        if (Math.hypot(x, z) < 1000 || probe.weight(x, z) < 0.5) return Collections.emptyList();
+        if (Distance.planar(x, z) < 1000 || !Fade.forms(probe.weight(x, z), Hash.hash01(s + 2, cx, cz)))
+            return Collections.emptyList();
         double factor = 1 + (MAX_COUNT_FACTOR - 1) * Hash.hash01(s, cx, cz);
+        // Laid over another base, ARCS only accents it, so it draws fewer paths.
+        double weight = probe.weight(x, z), base = Math.min(1, probe.baseWeight(x, z) / weight);
+        factor *= base + (1 - base) * OVERLAY_COUNT;
         int count = (int) Math.floor(BASE_COUNT * factor + Hash.hash01(s + 1, cx, cz));
         List<Path> out = new ArrayList<>();
         Random r = new Random(s ^ ((long) cx * 0x9E3779B97F4A7C15L) ^ ((long) cz * 0xC2B2AE3D27D4EB4FL));
         for (int i = 0; i < count; i++) {
-            out.add(walk(r, (cx + r.nextDouble()) * CELL, (cz + r.nextDouble()) * CELL));
+            double cutoff = MIN_CUTOFF + (MAX_CUTOFF - MIN_CUTOFF) * Hash.hash01(s + 3 + i, cx, cz);
+            out.add(walk(r, (cx + r.nextDouble()) * CELL, (cz + r.nextDouble()) * CELL, cutoff));
         }
         return out;
     }
 
     /** Walks one path from (x, z): a steady turn about a drifting axis, jostled by the wiggle. */
-    private static Path walk(Random r, double x, double z) {
+    private static Path walk(Random r, double x, double z, double cutoff) {
         double length = BASE_LENGTH * MIN_LENGTH_FACTOR
             * Math.pow(MAX_LENGTH_FACTOR / MIN_LENGTH_FACTOR, r.nextDouble());
         double wiggle = MIN_WIGGLE * Math.pow(MAX_WIGGLE / MIN_WIGGLE, r.nextDouble());
@@ -211,7 +255,7 @@ public final class ArcPaths {
             dir = normalize(add(dir, gaussian(r, 0.03 * wiggle)));
             // Bounce off the floor and ceiling, and head home once too far out.
             if (py < MIN_Y + tube + 4 && dir[1] < 0 || py > MAX_Y - tube - 4 && dir[1] > 0) dir[1] = -dir[1];
-            if (Math.hypot(px - x, pz - z) > MAX_REACH - 40) {
+            if (Distance.planar(px - x, pz - z) > MAX_REACH - 40) {
                 dir = normalize(add(dir, new double[] { (x - px) * 0.01, 0, (z - pz) * 0.01 }));
             }
             px += dir[0] * STEP;
@@ -221,7 +265,7 @@ public final class ArcPaths {
             points[i * 3 + 1] = py;
             points[i * 3 + 2] = pz;
         }
-        return new Path(points, tube);
+        return new Path(points, tube, cutoff);
     }
 
     /** Segments of the paths that come within reach of the horizontal box, skipping those keep rejects. */
@@ -231,16 +275,17 @@ public final class ArcPaths {
     }
 
     /**
-     * As above, with a shared test that depends on the segment alone. Its answers are kept on the path for as long as
-     * the same filter instance is passed, so neighbouring chunks do not repeat it.
+     * As above, with a shared ARCS weight that depends on the segment alone and narrows the tubes across the border.
+     * Its answers are kept on the path for as long as the same instance is passed, so neighbouring chunks do not
+     * repeat it.
      */
     public static Segments segmentsNear(List<Path> paths, double minX, double maxX, double minZ, double maxZ,
-        SegmentFilter shared, SegmentFilter keep) {
+        SegmentWeight shared, SegmentFilter keep) {
         double[] data = new double[64 * 7];
         int n = 0;
         for (Path path : paths) {
             double[] p = path.points;
-            byte[] answers = shared == null ? null : path.memoFor(shared).answers;
+            float[] answers = shared == null ? null : path.memoFor(shared).answers;
             for (int i = 0; i + 5 < p.length; i += 3) {
                 double lo = Math.min(p[i], p[i + 3]) - path.tube, hi = Math.max(p[i], p[i + 3]) + path.tube;
                 if (hi < minX || lo > maxX) continue;
@@ -248,15 +293,17 @@ public final class ArcPaths {
                 hi = Math.max(p[i + 2], p[i + 5]) + path.tube;
                 if (hi < minZ || lo > maxZ) continue;
                 double mx = (p[i] + p[i + 3]) / 2, my = (p[i + 1] + p[i + 4]) / 2, mz = (p[i + 2] + p[i + 5]) / 2;
+                double tube = path.tube;
                 if (answers != null) {
                     int k = i / 3;
-                    if (answers[k] == 0) answers[k] = shared.keep(mx, my, mz) ? (byte) 1 : (byte) 2;
-                    if (answers[k] == 2) continue;
+                    if (Float.isNaN(answers[k])) answers[k] = (float) shared.weight(mx, my, mz);
+                    tube = path.tubeAt(answers[k]);
+                    if (tube <= 0) continue;
                 }
                 if (!keep.keep(mx, my, mz)) continue;
                 if ((n + 1) * 7 > data.length) data = Arrays.copyOf(data, data.length * 2);
                 System.arraycopy(p, i, data, n * 7, 6);
-                data[n * 7 + 6] = path.tube;
+                data[n * 7 + 6] = tube;
                 n++;
             }
         }

@@ -66,7 +66,7 @@ final class MemorySink implements BlockSink {
 
     @Override
     public void place(int x, int y, int z, EndBlock block) {
-        if (isAir(x, y, z)) blocks[index(x, y, z)] = block;
+        if (isAir(x, y, z)) set(x, y, z, block);
     }
 
     @Override
