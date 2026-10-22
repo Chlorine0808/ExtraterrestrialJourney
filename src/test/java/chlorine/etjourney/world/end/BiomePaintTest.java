@@ -9,6 +9,7 @@ import java.util.Set;
 
 import org.junit.jupiter.api.Test;
 
+import chlorine.etjourney.world.end.feature.Canyons;
 import chlorine.etjourney.world.end.feature.EndBiome;
 import chlorine.etjourney.world.end.feature.ZoneIslands;
 import chlorine.etjourney.world.end.modifier.EndBlock;
@@ -65,6 +66,37 @@ class BiomePaintTest {
         assertTrue(tops[0] > 500, "only " + tops[0] + " tops");
         // Sinkholes cut after the paint and may leave a few bare floors.
         assertTrue(tops[1] > tops[0] * 0.97, tops[1] + " of " + tops[0] + " tops painted");
+    }
+
+    /** Canyons are cut before the paint, so their floors and walls wear the biome too. */
+    @Test
+    void canyonFloorsArePainted() {
+        TerrainSampler sampler = ZoneIslandPaintTest.SAMPLER;
+        int tops = 0, bare = 0;
+        String where = "";
+        for (int step = 0; step < 40000 && tops < 300; step++) {
+            int cx = 80 + (step % 200 - 100) * 8, cz = (step / 200 - 100) * 8;
+            double cxm = cx * 16 + 8, czm = cz * 16 + 8;
+            if (sampler.styleWeight("SLOT_CANYONS", cxm, czm) < 0.75 || sampler.land(cxm, czm) <= 0) continue;
+            ChunkPlan plan = new ChunkPlan(sampler, cx, cz, (a, b) -> Collections.emptyList());
+            MemorySink[] halves = ZoneIslandPaintTest.generate(cx, cz);
+            for (int x = cx * 16; x < cx * 16 + 16; x++) {
+                for (int z = cz * 16; z < cz * 16 + 16; z++) {
+                    if (Canyons.depth(SEED, x, z) <= 0) continue;
+                    if (ZoneIslands.ownerAt(plan.zoneIslands(), x, z, 1.6) != null) continue;
+                    for (int y = 254; y >= 0; y--) {
+                        EndBlock b = get(halves, x, y, z);
+                        if (b == null || get(halves, x, y + 1, z) != null) continue;
+                        // Clouds and structures placed into the cut later are not ground.
+                        if (plan.densityAt(x, y, z) <= 0) continue;
+                        tops++;
+                        if (!BIOME_BLOCKS.contains(b) && bare++ == 0) where = x + "," + y + "," + z + " " + b;
+                    }
+                }
+            }
+        }
+        assertTrue(tops >= 300, "only " + tops + " canyon tops");
+        assertEquals(0, bare, bare + " of " + tops + " canyon tops bare, first " + where);
     }
 
     @Test

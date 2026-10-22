@@ -171,7 +171,8 @@ public final class FeatureModifiers {
 
             @Override
             public int order() {
-                return 800;
+                // After the biome paint, which it paints over; shapes join by maximum, so their order is free.
+                return 815;
             }
 
             @Override
@@ -215,12 +216,13 @@ public final class FeatureModifiers {
     }
 
     /**
-     * Paints the top PAINT_DEPTH blocks of every run of rock with the column's biome. It runs before zone islands,
-     * which paint over their own rock, and before anything placed block by block (islets, structures, clouds), so
-     * those stay bare. Rock that carries on above the sink is measured on the density, so both halves agree.
+     * Paints the top PAINT_DEPTH blocks of every run of rock with the column's biome. It runs after sinkholes and
+     * canyons, so their floors and walls are painted too; before zone islands, which paint over their own rock; and
+     * before lake water and anything placed block by block (islets, structures, clouds), so those stay bare. Rock that
+     * carries on above the sink is measured on the density, so both halves agree.
      */
     public static Modifier biomes() {
-        return blockModifier(795, (area, view, sink) -> forEachColumn(sink, (x, z) -> {
+        return blockModifier(814, (area, view, sink) -> forEachColumn(sink, (x, z) -> {
             EndBiome biome = EndBiome.at(area.seed, x, z);
             int depth = 0;
             while (depth < PAINT_DEPTH && sink.maxY() + depth <= 255 && view.densityAt(x, sink.maxY() + depth, z) > 0)
@@ -262,7 +264,7 @@ public final class FeatureModifiers {
 
     /** Floods every column inside a lake's flat ring whose ground ended up below the water level. */
     public static Modifier lakeWater() {
-        return blockModifier(815, (area, view, sink) -> {
+        return blockModifier(817, (area, view, sink) -> {
             List<Lakes.Lake> lakes = view.lakes();
             if (lakes.isEmpty()) return;
             forEachColumn(sink, (x, z) -> {
