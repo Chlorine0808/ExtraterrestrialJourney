@@ -8,6 +8,7 @@ import java.util.function.IntPredicate;
 
 import chlorine.etjourney.world.end.feature.ArcPaths;
 import chlorine.etjourney.world.end.feature.Column;
+import chlorine.etjourney.world.end.feature.EndBiome;
 import chlorine.etjourney.world.end.feature.Enoki;
 import chlorine.etjourney.world.end.feature.Holes;
 import chlorine.etjourney.world.end.feature.Islets;
@@ -56,7 +57,7 @@ public final class FeatureModifiers {
      */
     public static List<Modifier> core() {
         List<Modifier> all = new ArrayList<>(
-            Arrays.asList(faces(), zoneIslands(), holes(), lakeWater(), shoals(), arcs(), islets()));
+            Arrays.asList(faces(), biomes(), zoneIslands(), holes(), lakeWater(), shoals(), arcs(), islets()));
         int order = 850;
         for (Structure.Kind<? extends Structure> kind : Structures.kinds())
             all.add(StructureModifiers.of(kind, order++));
@@ -211,6 +212,28 @@ public final class FeatureModifiers {
                 });
             }
         };
+    }
+
+    /**
+     * Paints the top PAINT_DEPTH blocks of every run of rock with the column's biome. It runs before zone islands,
+     * which paint over their own rock, and before anything placed block by block (islets, structures, clouds), so
+     * those stay bare. Rock that carries on above the sink is measured on the density, so both halves agree.
+     */
+    public static Modifier biomes() {
+        return blockModifier(795, (area, view, sink) -> forEachColumn(sink, (x, z) -> {
+            EndBiome biome = EndBiome.at(area.seed, x, z);
+            int depth = 0;
+            while (depth < PAINT_DEPTH && sink.maxY() + depth <= 255 && view.densityAt(x, sink.maxY() + depth, z) > 0)
+                depth++;
+            for (int y = sink.maxY() - 1; y >= sink.minY(); y--) {
+                if (sink.isAir(x, y, z)) {
+                    depth = 0;
+                    continue;
+                }
+                if (depth < PAINT_DEPTH) sink.set(x, y, z, depth == 0 ? biome.top : biome.fill);
+                depth++;
+            }
+        }));
     }
 
     /**
