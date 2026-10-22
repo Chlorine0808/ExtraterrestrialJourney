@@ -19,6 +19,7 @@ import javax.imageio.ImageIO;
 
 import org.junit.jupiter.api.Test;
 
+import chlorine.etjourney.world.end.feature.EndBiome;
 import chlorine.etjourney.world.end.feature.Zone;
 import chlorine.etjourney.world.end.modifier.EndBlock;
 
@@ -27,11 +28,15 @@ class ZoneBlockTableTest {
     private static final Path ASSETS = Paths.get("src/main/resources/assets/etjourney");
 
     @Test
-    void coversEveryZoneTopAndFillOnly() {
+    void coversEveryZoneAndBiomeTopAndFillOnly() {
         Set<EndBlock> expected = EnumSet.noneOf(EndBlock.class);
         for (Zone zone : Zone.values()) {
             expected.add(zone.top);
             expected.add(zone.fill);
+        }
+        for (EndBiome biome : EndBiome.values()) {
+            expected.add(biome.top);
+            expected.add(biome.fill);
         }
         Set<EndBlock> bound = EnumSet.noneOf(EndBlock.class);
         for (ZoneBlockTable.Entry e : ZoneBlockTable.ENTRIES) assertTrue(bound.add(e.kind), "twice: " + e.kind);

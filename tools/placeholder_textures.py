@@ -1,4 +1,4 @@
-"""Generate placeholder 16x16 block textures for the four End zones."""
+"""Generate placeholder 16x16 block textures for the End zones and biomes."""
 import math
 import random
 import zlib
@@ -15,6 +15,11 @@ ZONES = {
     'vortex': ('turf', (40, 170, 160), (62, 78, 70)),
     'nebula': ('moss', (140, 80, 180), (96, 62, 118)),
     'stardust': ('crust', (196, 218, 240), (150, 166, 196)),
+    # biomes of the continent
+    'grove': ('moss', (92, 140, 70), (78, 66, 52)),
+    'highland': ('crust', (200, 198, 188), (176, 150, 104)),
+    'mycelia': ('turf', (120, 82, 96), (60, 52, 62)),
+    'amber': ('crust', (226, 140, 40), (170, 108, 46)),
 }
 
 
@@ -67,6 +72,14 @@ def surface_pixel(zone, rng, x, y, crack_cells=frozenset()):
         return noise(rng, shade(color, 1.35)[:3], 0.08) if wave > 0.75 else noise(rng, color, 0.12)
     if zone == 'nebula':
         return noise(rng, (232, 130, 196), 0.1) if rng.random() < 0.14 else noise(rng, color, 0.18)
+    if zone == 'grove':
+        return noise(rng, (60, 98, 46), 0.1) if rng.random() < 0.25 else noise(rng, color, 0.15)
+    if zone == 'highland':
+        return noise(rng, (150, 148, 140), 0.1) if (x, y) in crack_cells else noise(rng, color, 0.06)
+    if zone == 'mycelia':
+        return noise(rng, (190, 170, 180), 0.08) if rng.random() < 0.08 else noise(rng, color, 0.15)
+    if zone == 'amber':
+        return noise(rng, (255, 200, 90), 0.06) if rng.random() < 0.1 else noise(rng, color, 0.1)
     # stardust: rare bright star grains
     return (255, 255, 255, 255) if rng.random() < 0.05 else noise(rng, color, 0.08)
 
