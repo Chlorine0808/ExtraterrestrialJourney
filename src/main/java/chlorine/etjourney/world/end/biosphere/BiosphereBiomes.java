@@ -65,6 +65,18 @@ public final class BiosphereBiomes {
     }
 
     /**
+     * Clears the End's rain. A world without sky never updates it, but takes the overworld's rain as it loads and
+     * keeps it; with rainy biomes in its columns that would bring rain, snow and lightning to the balls.
+     */
+    @SubscribeEvent
+    public void onWorldLoad(WorldEvent.Load event) {
+        World world = event.world;
+        if (!ETJConfig.biomeColors || world.isRemote || world.provider.dimensionId != END) return;
+        world.setRainStrength(0);
+        world.setThunderStrength(0);
+    }
+
+    /**
      * Stops spawns in a column given a sample's biome but outside the ball, where its spawn list would bring, say,
      * zombies onto the End land below. The list is the biome's own, so it is cancelled rather than edited.
      */
