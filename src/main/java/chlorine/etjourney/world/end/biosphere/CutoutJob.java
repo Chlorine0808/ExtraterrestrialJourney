@@ -94,8 +94,12 @@ final class CutoutJob {
             kind = kinds[kindIndex];
             world = SampleWorlds.world(kind);
             if (world == null) continue;
-            WorldServer w = world;
-            point = BiosphereSource.point(seed, ball, kind, (x, z) -> SampleWorlds.isWater(w, x, z), (x, z) -> true);
+            point = SampleWorlds.point(seed, ball, kind, world);
+            if (point == null) {
+                // The blacklist leaves this world no point; nothing was loaded, so just try the other one.
+                world = null;
+                continue;
+            }
             chunks = CutoutMaker.chunks(ball, point);
             nextChunk = 0;
             cut = null;

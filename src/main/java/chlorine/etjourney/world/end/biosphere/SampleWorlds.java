@@ -15,6 +15,7 @@ import net.minecraftforge.common.MinecraftForge;
 
 import chlorine.etjourney.core.config.ETJConfig;
 import chlorine.etjourney.core.util.ModLog;
+import chlorine.etjourney.world.end.feature.Biosphere;
 import chlorine.etjourney.world.end.feature.BiosphereSource;
 
 /** The hidden dimensions biosphere cut-outs are generated in. */
@@ -82,12 +83,40 @@ public final class SampleWorlds {
         return w;
     }
 
-    /** The first kind, of the ball's own and its stand-in, whose sample dimension loads; null when neither does. */
-    public static BiosphereSource.Kind usable(BiosphereSource.Kind kind) {
-        for (BiosphereSource.Kind k : BiosphereSource.order(kind)) {
-            if (world(k) != null) return k;
+    /** Where a ball's terrain is cut from: the kind of world, the loaded world and the point in it. */
+    public static final class Site {
+
+        public final BiosphereSource.Kind kind;
+        public final WorldServer world;
+        public final int[] point;
+
+        Site(BiosphereSource.Kind kind, WorldServer world, int[] point) {
+            this.kind = kind;
+            this.world = world;
+            this.point = point;
+        }
+    }
+
+    /**
+     * The first of the ball's own kind and its stand-in whose world loads and holds a point the blacklist allows;
+     * null when neither does, and the ball is then left out.
+     */
+    public static Site site(long seed, Biosphere b) {
+        for (BiosphereSource.Kind k : BiosphereSource.order(BiosphereSource.kind(seed, b))) {
+            WorldServer w = world(k);
+            if (w == null) continue;
+            int[] p = point(seed, b, k, w);
+            if (p != null) return new Site(k, w, p);
         }
         return null;
+    }
+
+    /** The point a ball is cut around in sample world w, or null when the blacklist allows none there. */
+    static int[] point(long seed, Biosphere b, BiosphereSource.Kind kind, WorldServer w) {
+        int[] p = BiosphereSource
+            .point(seed, b, kind, (x, z) -> isWater(w, x, z), (x, z) -> BiomeExclusions.allowed(w, x, z, b.radius));
+        if (p == null) BiomeExclusions.noPoint(kind);
+        return p;
     }
 
     /**
