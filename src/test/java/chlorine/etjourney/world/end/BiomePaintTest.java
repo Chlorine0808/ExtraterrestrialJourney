@@ -111,14 +111,6 @@ class BiomePaintTest {
         assertEquals(0, bare, bare + " of " + tops + " canyon tops bare, first " + where);
     }
 
-    /**
-     * Roughened faces add and clear rock just above Y 128 that the lower half cannot see, as it counts the surface
-     * from the density; the three blocks under the seam are left out of the depth checks.
-     */
-    private static boolean belowSeam(int y) {
-        return y >= 125 && y < 128;
-    }
-
     @Test
     void paintIsOnlySkinDeep() {
         int[] painted = new int[1], deep = new int[1];
@@ -133,8 +125,7 @@ class BiomePaintTest {
                     if (above == null || above == EndBlock.WATER) open = true;
                     else if (!BIOME_BLOCKS.contains(above)) break;
                 }
-                if (!open && !belowSeam(y) && deep[0]++ == 0)
-                    System.out.println("paint deep inside at " + x + "," + y + "," + z);
+                if (!open && deep[0]++ == 0) System.out.println("paint deep inside at " + x + "," + y + "," + z);
             }
         });
         assertTrue(painted[0] > 1000, "only " + painted[0] + " painted");
@@ -154,7 +145,7 @@ class BiomePaintTest {
                     EndBlock below = get(halves, x, y - down, z);
                     if (below == null) break;
                     checked[0]++;
-                    if (below != biome.fill && !belowSeam(y - down) && wrong[0]++ == 0)
+                    if (below != biome.fill && wrong[0]++ == 0)
                         System.out.println("unfilled at " + x + "," + (y - down) + "," + z + ": " + below);
                 }
             }

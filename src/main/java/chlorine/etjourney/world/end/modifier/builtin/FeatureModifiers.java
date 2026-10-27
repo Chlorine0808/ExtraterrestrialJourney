@@ -43,6 +43,9 @@ public final class FeatureModifiers {
     /** Footprint reach, in island radii, over which a zone island's surface is repainted. */
     private static final double PAINT_REACH = 1.3;
     private static final int PAINT_DEPTH = 3;
+    private static final int PAINT_ORDER = 814, ORE_ORDER = 816;
+    /** The top of the generator's half; Y 128 up is written by the tall pass. */
+    private static final int LOWER_TOP = 128;
     /**
      * How far outside the island's own grid density a block may lie and still be painted: over void near land the
      * terrain grid sits above the island's floor, which lifts the rim by a few blocks.
@@ -220,24 +223,43 @@ public final class FeatureModifiers {
      * Paints the top PAINT_DEPTH blocks of every run of rock with the column's biome. It runs after sinkholes and
      * canyons, so their floors and walls are painted too; before zone islands, which paint over their own rock; and
      * before lake water and anything placed block by block (islets, structures, clouds), so those stay bare. Rock that
-     * carries on above the sink is measured on the density, so both halves agree.
+     * carries on above the sink is read from the upper half's blocks, so both halves agree.
      */
     public static Modifier biomes() {
-        return blockModifier(814, (area, view, sink) -> forEachColumn(sink, (x, z) -> {
-            EndBiome biome = biomeAt(area, view, x, z);
-            if (biome == null) return;
-            int depth = 0;
-            while (depth < PAINT_DEPTH && sink.maxY() + depth <= 255 && view.densityAt(x, sink.maxY() + depth, z) > 0)
-                depth++;
-            for (int y = sink.maxY() - 1; y >= sink.minY(); y--) {
-                if (sink.isAir(x, y, z)) {
-                    depth = 0;
-                    continue;
-                }
-                if (depth < PAINT_DEPTH) sink.set(x, y, z, depth == 0 ? biome.top : biome.fill);
-                depth++;
+        return blockModifier(PAINT_ORDER, (area, view, sink) -> {
+            BlockSink above = above(view, sink, PAINT_ORDER);
+            forEachColumn(sink, (x, z) -> paintBiome(area, view, sink, above, x, z));
+        });
+    }
+
+    private static void paintBiome(ChunkArea area, TerrainView view, BlockSink sink, BlockSink above, int x, int z) {
+        EndBiome biome = biomeAt(area, view, x, z);
+        if (biome == null) return;
+        int depth = 0;
+        while (depth < PAINT_DEPTH && solidAbove(view, sink, above, x, sink.maxY() + depth, z)) depth++;
+        for (int y = sink.maxY() - 1; y >= sink.minY(); y--) {
+            if (sink.isAir(x, y, z)) {
+                depth = 0;
+                continue;
             }
-        }));
+            if (depth < PAINT_DEPTH) sink.set(x, y, z, depth == 0 ? biome.top : biome.fill);
+            depth++;
+        }
+    }
+
+    /**
+     * What the lower half needs to see above Y 127: the upper half's blocks as they stand before the given pass,
+     * since faces, sinkholes and canyons change the rock there; null for any other sink.
+     */
+    private static BlockSink above(TerrainView view, BlockSink sink, int order) {
+        return sink.maxY() == LOWER_TOP ? view.upperBefore(order) : null;
+    }
+
+    /** Whether rock stands at (x, y, z) above the sink; past the world top there is none. */
+    private static boolean solidAbove(TerrainView view, BlockSink sink, BlockSink above, int x, int y, int z) {
+        if (y > 255) return false;
+        if (sink.maxY() == LOWER_TOP) return above != null && !above.isAir(x, y, z);
+        return view.densityAt(x, y, z) > 0;
     }
 
     /** The column's biome; styles without a continent (arcs, islets, shoals) stay bare. */
@@ -255,7 +277,7 @@ public final class FeatureModifiers {
      * surface block: its depth is at least one.
      */
     public static Modifier ores() {
-        return blockModifier(816, (area, view, sink) -> {
+        return blockModifier(ORE_ORDER, (area, view, sink) -> {
             int ox = sink.originX(), oz = sink.originZ(), minY = sink.minY(), height = sink.maxY() - minY;
             int[] depth = oreDepths(view, sink);
             EndBiome[] biomes = new EndBiome[256];
@@ -295,14 +317,14 @@ public final class FeatureModifiers {
 
     /** Each block's depth below the surface of its run of rock, -1 for air, by column then height. */
     private static int[] oreDepths(TerrainView view, BlockSink sink) {
+        BlockSink above = above(view, sink, ORE_ORDER);
         int minY = sink.minY(), height = sink.maxY() - minY;
         int[] depth = new int[256 * height];
         for (int lx = 0; lx < 16; lx++) {
             for (int lz = 0; lz < 16; lz++) {
                 int x = sink.originX() + lx, z = sink.originZ() + lz, base = (lx * 16 + lz) * height;
                 int d = -1;
-                while (d + 1 < ORE_DEPTH_CAP && sink.maxY() + d + 1 <= 255
-                    && view.densityAt(x, sink.maxY() + d + 1, z) > 0) d++;
+                while (d + 1 < ORE_DEPTH_CAP && solidAbove(view, sink, above, x, sink.maxY() + d + 1, z)) d++;
                 for (int y = sink.maxY() - 1; y >= minY; y--) {
                     d = sink.isAir(x, y, z) ? -1 : Math.min(d + 1, ORE_DEPTH_CAP);
                     depth[base + y - minY] = d;
