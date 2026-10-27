@@ -3,7 +3,6 @@ package chlorine.etjourney.world.end.debug;
 import chlorine.etjourney.world.end.TerrainSampler;
 import chlorine.etjourney.world.end.feature.Continent;
 import chlorine.etjourney.world.end.feature.EndBiome;
-import chlorine.etjourney.world.end.feature.Mountains;
 
 /** Nearest-target searches for the debug commands: true Euclidean nearest within a radius. */
 final class EndSearch {
@@ -56,15 +55,7 @@ final class EndSearch {
             Continent.Seed s = Continent.seedAt(seed, cx, cz);
             // The continent's own draw is cached and cheap; land and the column's biome are checked only after it.
             if (s == null || EndBiome.ofContinentOf(seed, s) != target || sampler.land(s.x, s.z) <= LAND) return null;
-            EndBiome here = EndBiome.at(
-                seed,
-                Continent.seedsNear(seed, s.x, s.z, Continent.warpReach()),
-                Mountains.near(seed, s.x, s.z, 0),
-                s.x,
-                s.z,
-                sampler.weights(s.x, s.z)
-                    .voidShare());
-            return here == target ? new double[] { s.x, s.z } : null;
+            return sampler.biome(s.x, s.z) == target ? new double[] { s.x, s.z } : null;
         });
     }
 

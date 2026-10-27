@@ -8,6 +8,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import chlorine.etjourney.world.end.feature.ArcPaths;
 import chlorine.etjourney.world.end.feature.Continent;
+import chlorine.etjourney.world.end.feature.EndBiome;
 import chlorine.etjourney.world.end.feature.Holes;
 import chlorine.etjourney.world.end.feature.Islets;
 import chlorine.etjourney.world.end.feature.Lakes;
@@ -81,6 +82,17 @@ public final class TerrainSampler {
     /** Land height without reservations. */
     public double land(double x, double z) {
         return Land.height(seed, x, z, 0, weights(x, z).voidShare());
+    }
+
+    /** The biome the column wears, or null for bare ground. */
+    public EndBiome biome(double x, double z) {
+        return EndBiome.at(
+            seed,
+            Continent.seedsNear(seed, x, z, Continent.warpReach()),
+            Mountains.near(seed, x, z, 0),
+            x,
+            z,
+            weights(x, z).voidShare());
     }
 
     /** A column with continents, mountains (unless left out) and styles, but no lakes or features. */
