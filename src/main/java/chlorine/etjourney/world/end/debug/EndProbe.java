@@ -230,6 +230,8 @@ public final class EndProbe {
             + " of "
             + covered
             + ", stray "
-            + stray;
+            + stray
+            + ", excluded "
+            + excluded;
     }
 }
