@@ -68,6 +68,21 @@ public final class Continent {
         return new Seed(sx, sz, falloff);
     }
 
+    /** Grid cell of a seed along one axis. */
+    public static int cellOf(double coordinate) {
+        return (int) Math.floor(coordinate / SEED_CELL);
+    }
+
+    /** Blocks from a seed to its land's rim (height 0), before warp and coast jitter. */
+    public static double rimRadius(Seed s) {
+        return 100 / s.falloff * 8;
+    }
+
+    /** Grid cells that can hold a seed whose rim reaches a given seed's rim. */
+    public static int neighbourCells() {
+        return (int) Math.ceil(2 * 100 / MIN_FALLOFF * 8 / SEED_CELL);
+    }
+
     /** Height from the seeds alone: 0 at a rim, up to MAX_HEIGHT inside, negative over the void. */
     public static double rawHeight(List<Seed> seeds, double x, double z) {
         double best = -100;
