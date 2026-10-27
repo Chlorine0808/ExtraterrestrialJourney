@@ -92,6 +92,20 @@ public final class Continent {
         return Math.min(MAX_HEIGHT, best);
     }
 
+    /** The seed whose land rises highest at (x, z), or null without seeds. */
+    public static Seed highest(List<Seed> seeds, double x, double z) {
+        Seed owner = null;
+        double best = Double.NEGATIVE_INFINITY;
+        for (Seed s : seeds) {
+            double h = 100 - Distance.planar(x - s.x, z - s.z) / 8 * s.falloff;
+            if (h > best) {
+                best = h;
+                owner = s;
+            }
+        }
+        return owner;
+    }
+
     /** The frame continent outlines and mountain footprints are measured in. */
     public static double[] warped(long seed, double x, double z) {
         return Warp.warp(seed ^ WARP_SALT, x, z, WARP, WARP_SCALE);

@@ -26,12 +26,19 @@ public final class Mountains {
     public static final class Mountain {
 
         public final double x, z, peak, radius;
+        /** The continent seed whose land the mountain stands on. */
+        public final Continent.Seed anchor;
 
         Mountain(double x, double z, double peak) {
+            this(x, z, peak, null);
+        }
+
+        Mountain(double x, double z, double peak, Continent.Seed anchor) {
             this.x = x;
             this.z = z;
             this.peak = peak;
             this.radius = radiusFor(peak);
+            this.anchor = anchor;
         }
     }
 
@@ -64,19 +71,22 @@ public final class Mountains {
         if (Hash.hash01(s, cx, cz) > CHANCE) return null;
         double mx = (cx + Hash.hash01(s + 1, cx, cz)) * CELL;
         double mz = (cz + Hash.hash01(s + 2, cx, cz)) * CELL;
-        if (Continent.rawHeight(Continent.seedsNear(seed, mx, mz, 0), mx, mz) < ANCHOR_HEIGHT) return null;
+        List<Continent.Seed> seeds = Continent.seedsNear(seed, mx, mz, 0);
+        if (Continent.rawHeight(seeds, mx, mz) < ANCHOR_HEIGHT) return null;
         // Cubing a uniform roll makes low peaks common and tall ones rare.
         double u = Hash.hash01(s + 3, cx, cz);
-        return new Mountain(mx, mz, MIN_PEAK + (MAX_PEAK - MIN_PEAK) * u * u * u);
+        return new Mountain(mx, mz, MIN_PEAK + (MAX_PEAK - MIN_PEAK) * u * u * u, Continent.highest(seeds, mx, mz));
     }
 
     /** Land a mountain spreads under its foothills, measured at warped coordinates (wx, wz). */
     public static double footLand(List<Mountain> mountains, double wx, double wz) {
         double best = -100;
-        for (Mountain m : mountains) {
-            best = Math.max(best, Math.min(100, (m.radius - Distance.planar(wx - m.x, wz - m.z)) * FOOT_SLOPE));
-        }
+        for (Mountain m : mountains) best = Math.max(best, footLand(m, wx, wz));
         return best;
+    }
+
+    public static double footLand(Mountain m, double wx, double wz) {
+        return Math.min(100, (m.radius - Distance.planar(wx - m.x, wz - m.z)) * FOOT_SLOPE);
     }
 
     /** Height of the tallest mountain over (wx, wz), before ridges and interior fading. */

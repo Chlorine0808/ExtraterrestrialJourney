@@ -224,7 +224,7 @@ public final class FeatureModifiers {
      */
     public static Modifier biomes() {
         return blockModifier(814, (area, view, sink) -> forEachColumn(sink, (x, z) -> {
-            EndBiome biome = EndBiome.at(area.seed, view.seeds(), x, z);
+            EndBiome biome = EndBiome.at(area.seed, view.seeds(), view.mountains(), x, z);
             if (biome == null) return;
             int depth = 0;
             while (depth < PAINT_DEPTH && sink.maxY() + depth <= 255 && view.densityAt(x, sink.maxY() + depth, z) > 0)
@@ -270,7 +270,7 @@ public final class FeatureModifiers {
                             if (d < ore.minDepth || d > ore.maxDepth) return;
                             if (ore.biome != null) {
                                 if (!biomeKnown[column]) {
-                                    biomes[column] = EndBiome.at(area.seed, view.seeds(), x, z);
+                                    biomes[column] = EndBiome.at(area.seed, view.seeds(), view.mountains(), x, z);
                                     biomeKnown[column] = true;
                                 }
                                 if (biomes[column] != ore.biome) return;

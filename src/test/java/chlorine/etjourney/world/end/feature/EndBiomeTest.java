@@ -3,8 +3,10 @@ package chlorine.etjourney.world.end.feature;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
@@ -58,6 +60,24 @@ class EndBiomeTest {
         }
         assertTrue(landSteps > 1000, "only " + landSteps + " steps on land");
         assertTrue(changes <= landSteps / 200, changes + " changes in " + landSteps + " steps on land");
+    }
+
+    /** Where a mountain's feet rise above the continents, they wear the biome of the continent it stands on. */
+    @Test
+    void mountainFeetWearTheirContinentsBiome() {
+        int cases = 0;
+        for (Mountains.Mountain m : Mountains.near(SEED, 3000, 0, 2500)) {
+            EndBiome own = EndBiome.ofContinent(SEED, ContinentIds.of(SEED, m.anchor));
+            for (int k = 0; k < 8; k++) {
+                double wx = m.x + Math.cos(k * Math.PI / 4) * m.radius * 0.85;
+                double wz = m.z + Math.sin(k * Math.PI / 4) * m.radius * 0.85;
+                List<Continent.Seed> seeds = Continent.seedsNear(SEED, wx, wz, 0);
+                if (Mountains.footLand(m, wx, wz) <= Continent.rawHeight(seeds, wx, wz)) continue;
+                cases++;
+                assertEquals(own, EndBiome.atWarped(SEED, seeds, Collections.singletonList(m), wx, wz));
+            }
+        }
+        assertTrue(cases > 20, "only " + cases + " feet above the continents");
     }
 
     @Test

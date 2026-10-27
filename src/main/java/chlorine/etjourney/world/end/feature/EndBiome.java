@@ -3,7 +3,6 @@ package chlorine.etjourney.world.end.feature;
 import java.util.List;
 
 import chlorine.etjourney.world.end.modifier.EndBlock;
-import chlorine.etjourney.world.end.noise.Distance;
 import chlorine.etjourney.world.end.noise.Hash;
 
 /** Surface looks of the continents: each continent draws one biome, or none and stays bare end stone. */
@@ -25,24 +24,33 @@ public enum EndBiome {
         this.fill = fill;
     }
 
-    /** The biome of the continent whose land rises highest at (x, z), or null for bare ground. */
-    public static EndBiome at(long seed, List<Continent.Seed> seeds, double x, double z) {
+    /**
+     * The biome of the continent whose land rises highest at (x, z), or null for bare ground. Where a mountain's feet
+     * rise higher, the column belongs to the continent the mountain stands on.
+     */
+    public static EndBiome at(long seed, List<Continent.Seed> seeds, List<Mountains.Mountain> mountains, double x,
+        double z) {
         double[] w = Continent.warped(seed, x, z);
-        Continent.Seed owner = null;
-        double best = Double.NEGATIVE_INFINITY;
-        for (Continent.Seed s : seeds) {
-            double h = 100 - Distance.planar(w[0] - s.x, w[1] - s.z) / 8 * s.falloff;
-            if (h > best) {
-                best = h;
-                owner = s;
+        return atWarped(seed, seeds, mountains, w[0], w[1]);
+    }
+
+    /** Convenience for one column: looks up the seeds and mountains itself. */
+    public static EndBiome at(long seed, double x, double z) {
+        return at(seed, Continent.seedsNear(seed, x, z, Continent.warpReach()), Mountains.near(seed, x, z, 0), x, z);
+    }
+
+    static EndBiome atWarped(long seed, List<Continent.Seed> seeds, List<Mountains.Mountain> mountains, double wx,
+        double wz) {
+        Continent.Seed owner = Continent.highest(seeds, wx, wz);
+        double best = Continent.rawHeight(seeds, wx, wz);
+        for (Mountains.Mountain m : mountains) {
+            double foot = Mountains.footLand(m, wx, wz);
+            if (foot > best && m.anchor != null) {
+                best = foot;
+                owner = m.anchor;
             }
         }
         return owner == null ? null : ofContinent(seed, ContinentIds.of(seed, owner));
-    }
-
-    /** Convenience for one column: looks up the seeds itself. */
-    public static EndBiome at(long seed, double x, double z) {
-        return at(seed, Continent.seedsNear(seed, x, z, Continent.warpReach()), x, z);
     }
 
     static EndBiome ofContinent(long seed, long id) {
