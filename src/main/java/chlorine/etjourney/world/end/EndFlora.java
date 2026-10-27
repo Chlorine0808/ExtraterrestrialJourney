@@ -1,6 +1,7 @@
 package chlorine.etjourney.world.end;
 
 import java.util.Random;
+import java.util.concurrent.atomic.AtomicLong;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
@@ -22,11 +23,18 @@ public final class EndFlora implements IWorldGenerator {
     /** Farthest a block of the window lies from its centre, rounded up. */
     private static final int WINDOW_REACH = 12;
     private static final EndBiome[] BIOMES = EndBiome.values();
+    private static final AtomicLong NANOS = new AtomicLong(), WINDOWS = new AtomicLong();
 
     private boolean warned;
 
     public static void register() {
         GameRegistry.registerWorldGenerator(new EndFlora(), 5);
+    }
+
+    /** Average microseconds per planted window, and the number of windows, for the probe. */
+    public static long[] stats() {
+        long windows = WINDOWS.get();
+        return new long[] { windows == 0 ? 0 : NANOS.get() / windows / 1000, windows };
     }
 
     /** Which of the four chunks of chunk (chunkX, chunkZ)'s window holds (x, z): x step 2, z step 1; -1 outside. */
@@ -41,6 +49,7 @@ public final class EndFlora implements IWorldGenerator {
         if (world.isRemote || world.provider.dimensionId != END) return;
         int ox = chunkX * 16 + 8, oz = chunkZ * 16 + 8;
         if (Distance.planar(ox + 8, oz + 8) < EndTerrain.TERRAIN_START - WINDOW_REACH) return;
+        long start = System.nanoTime();
         try {
             plant(random, chunkX, chunkZ, world);
         } catch (RuntimeException e) {
@@ -49,6 +58,8 @@ public final class EndFlora implements IWorldGenerator {
                 ModLog.LOG.warn("End plants failed at chunk {},{}; later failures stay quiet", chunkX, chunkZ, e);
             warned = true;
         }
+        NANOS.addAndGet(System.nanoTime() - start);
+        WINDOWS.incrementAndGet();
     }
 
     private static void plant(Random random, int chunkX, int chunkZ, World world) {
