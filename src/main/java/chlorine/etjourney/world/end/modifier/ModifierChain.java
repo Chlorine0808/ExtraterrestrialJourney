@@ -40,7 +40,13 @@ public final class ModifierChain {
     }
 
     public void blocks(ChunkArea area, BlockSink sink, ToDoubleFunction<Modifier> weightOf) {
+        blocksBefore(area, sink, weightOf, Integer.MAX_VALUE);
+    }
+
+    /** The block passes of modifiers ordered before the given order. */
+    public void blocksBefore(ChunkArea area, BlockSink sink, ToDoubleFunction<Modifier> weightOf, int order) {
         for (Modifier modifier : modifiers) {
+            if (modifier.order() >= order) break;
             double weight = weightOf.applyAsDouble(modifier);
             if (weight > 0) modifier.blocks(area, sink, weight);
         }
