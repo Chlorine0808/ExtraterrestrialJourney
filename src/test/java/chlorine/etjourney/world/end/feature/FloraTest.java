@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.EnumSet;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -130,6 +131,65 @@ class FloraTest {
             assertTrue(perWindow.get(biome) >= perWindow.get(EndBiome.HIGHLAND), biome + " " + perWindow);
         }
         assertTrue(perWindow.get(EndBiome.HIGHLAND) > 5, "highland " + perWindow);
+    }
+
+    /** A column from a map of Y to biome surface; any Y listed in solid is a block that is neither air nor surface. */
+    private static Flora.Column column(int top, Map<Integer, EndBiome> surfaces, Set<Integer> solid) {
+        return new Flora.Column() {
+
+            @Override
+            public int top() {
+                return top;
+            }
+
+            @Override
+            public EndBiome surfaceAt(int y) {
+                return surfaces.get(y);
+            }
+
+            @Override
+            public boolean isAir(int y) {
+                return !surfaces.containsKey(y) && !solid.contains(y);
+            }
+        };
+    }
+
+    @Test
+    void scanFindsEveryOpenSurfaceTopFirst() {
+        Map<Integer, EndBiome> surfaces = new HashMap<>();
+        surfaces.put(120, EndBiome.GROVE);
+        surfaces.put(80, EndBiome.AMBER);
+        surfaces.put(40, EndBiome.GROVE);
+        // Water over the lowest surface: no plant there.
+        Set<Integer> solid = new HashSet<>();
+        solid.add(41);
+        int[] ys = new int[Flora.MAX_SURFACES];
+        EndBiome[] biomes = new EndBiome[Flora.MAX_SURFACES];
+        int n = Flora.scan(column(200, surfaces, solid), ys, biomes);
+        assertEquals(2, n);
+        assertEquals(120, ys[0]);
+        assertEquals(EndBiome.GROVE, biomes[0]);
+        assertEquals(80, ys[1]);
+        assertEquals(EndBiome.AMBER, biomes[1]);
+    }
+
+    @Test
+    void scanSkipsTheBuildLimitAndStopsWhenFull() {
+        Map<Integer, EndBiome> surfaces = new HashMap<>();
+        surfaces.put(255, EndBiome.GROVE);
+        for (int y = 0; y < 200; y += 2) surfaces.put(y, EndBiome.MYCELIA);
+        int[] ys = new int[Flora.MAX_SURFACES];
+        EndBiome[] biomes = new EndBiome[Flora.MAX_SURFACES];
+        int n = Flora.scan(column(255, surfaces, new HashSet<>()), ys, biomes);
+        assertEquals(Flora.MAX_SURFACES, n);
+        assertEquals(198, ys[0]);
+    }
+
+    @Test
+    void scanOfAnEmptyColumnFindsNothing() {
+        int[] ys = new int[Flora.MAX_SURFACES];
+        EndBiome[] biomes = new EndBiome[Flora.MAX_SURFACES];
+        assertEquals(0, Flora.scan(column(-1, new HashMap<>(), new HashSet<>()), ys, biomes));
     }
 
     @Test

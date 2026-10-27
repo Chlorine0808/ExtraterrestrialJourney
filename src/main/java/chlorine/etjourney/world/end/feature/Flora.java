@@ -48,6 +48,31 @@ public enum Flora {
         int surfaces(int x, int z, int[] ys, EndBiome[] biomes);
     }
 
+    /** The blocks of one world column, as far as finding biome surfaces needs. */
+    public interface Column {
+
+        /** Highest Y that may hold a block, or below 0 for an empty column. */
+        int top();
+
+        /** The biome whose surface block lies at y, or null. */
+        EndBiome surfaceAt(int y);
+
+        boolean isAir(int y);
+    }
+
+    /** Collects a column's biome surfaces with air above, top first, into ys and biomes; returns how many. */
+    public static int scan(Column column, int[] ys, EndBiome[] biomes) {
+        int n = 0;
+        // Y 255 is skipped: a plant needs the block above it.
+        for (int y = Math.min(254, column.top()); y >= 0 && n < ys.length && n < biomes.length; y--) {
+            EndBiome biome = column.surfaceAt(y);
+            if (biome == null || !column.isAir(y + 1)) continue;
+            ys[n] = y;
+            biomes[n++] = biome;
+        }
+        return n;
+    }
+
     public interface Planter {
 
         /** Sets a plant at (x, y, z), the air block just above its surface. */
