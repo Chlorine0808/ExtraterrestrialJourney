@@ -72,8 +72,9 @@ public final class BiosphereBiomes {
     public void onWorldLoad(WorldEvent.Load event) {
         World world = event.world;
         if (!ETJConfig.biomeColors || world.isRemote || world.provider.dimensionId != END) return;
-        world.setRainStrength(0);
-        world.setThunderStrength(0);
+        // The fields, not setRainStrength and setThunderStrength: those exist on the client only.
+        world.prevRainingStrength = world.rainingStrength = 0;
+        world.prevThunderingStrength = world.thunderingStrength = 0;
     }
 
     /**
