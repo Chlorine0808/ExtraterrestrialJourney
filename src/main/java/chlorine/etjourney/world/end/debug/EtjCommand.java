@@ -20,6 +20,7 @@ import chlorine.etjourney.world.end.TerrainSampler;
 import chlorine.etjourney.world.end.biosphere.SampleWorlds;
 import chlorine.etjourney.world.end.feature.Biosphere;
 import chlorine.etjourney.world.end.feature.BiosphereSource;
+import chlorine.etjourney.world.end.feature.EndBiome;
 import chlorine.etjourney.world.end.feature.Holes;
 import chlorine.etjourney.world.end.feature.Lakes;
 import chlorine.etjourney.world.end.feature.Mountains;
@@ -48,7 +49,7 @@ public final class EtjCommand extends CommandBase {
 
     @Override
     public String getCommandUsage(ICommandSender sender) {
-        return "/etj look [range] | /etj end <here|styles|style <name>|style <name> pure|mix [a] [b] [c]|mountain [minTopY]|lake|hole|valley|zone <name>|heeisland|destitute>";
+        return "/etj look [range] | /etj end <here|styles|style <name>|style <name> pure|mix [a] [b] [c]|mountain [minTopY]|lake|hole|valley|zone <name>|biome <name>|heeisland|destitute>";
     }
 
     @Override
@@ -109,6 +110,9 @@ public final class EtjCommand extends CommandBase {
                 break;
             case "zone":
                 zone(player, sampler, arg);
+                break;
+            case "biome":
+                biome(player, sampler, arg);
                 break;
             case "heeisland":
                 hee(player, seed);
@@ -308,6 +312,19 @@ public final class EtjCommand extends CommandBase {
         });
         if (hit == null) say(player, "No " + target + " island within " + EndSearch.RADIUS + " blocks");
         else teleport(player, hit[0], hit[2], hit[1], target + " island");
+    }
+
+    private static void biome(EntityPlayerMP player, TerrainSampler sampler, String name) {
+        EndBiome wanted = null;
+        for (EndBiome b : EndBiome.values()) if (b.name()
+            .equalsIgnoreCase(String.valueOf(name))) wanted = b;
+        if (wanted == null) {
+            say(player, "Biomes: " + Arrays.toString(EndBiome.values()));
+            return;
+        }
+        double[] hit = EndSearch.nearestBiome(sampler, wanted, player.posX, player.posZ);
+        if (hit == null) say(player, "No " + wanted + " within " + EndSearch.RADIUS + " blocks");
+        else teleport(player, hit[0], sampler.bareColumn(hit[0], hit[1], true).top + 3, hit[1], wanted.name());
     }
 
     private static void hee(EntityPlayerMP player, long seed) {

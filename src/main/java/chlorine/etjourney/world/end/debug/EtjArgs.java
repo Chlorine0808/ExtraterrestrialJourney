@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+import chlorine.etjourney.world.end.feature.EndBiome;
 import chlorine.etjourney.world.end.region.Style;
 import chlorine.etjourney.world.end.region.StyleKind;
 
@@ -21,6 +22,7 @@ final class EtjArgs {
         "hole",
         "valley",
         "zone",
+        "biome",
         "heeisland",
         "destitute");
     /** Heights /etj look keeps the player between. */
@@ -45,9 +47,17 @@ final class EtjArgs {
                 return args.length <= 2 + MIX ? matching(styles, last) : Collections.<String>emptyList();
             case "zone":
                 return args.length == 3 ? matching(zones, last) : Collections.<String>emptyList();
+            case "biome":
+                return args.length == 3 ? matching(biomes(), last) : Collections.<String>emptyList();
             default:
                 return Collections.emptyList();
         }
+    }
+
+    private static List<String> biomes() {
+        List<String> out = new ArrayList<>();
+        for (EndBiome b : EndBiome.values()) out.add(b.name());
+        return out;
     }
 
     private static List<String> matching(List<String> words, String prefix) {

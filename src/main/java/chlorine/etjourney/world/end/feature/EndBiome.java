@@ -61,6 +61,11 @@ public enum EndBiome {
         return owner == null ? null : ofContinent(seed, ContinentIds.of(seed, owner));
     }
 
+    /** The biome drawn for the continent a seed belongs to, before mountains and void styles. */
+    public static EndBiome ofContinentOf(long seed, Continent.Seed s) {
+        return ofContinent(seed, ContinentIds.of(seed, s));
+    }
+
     static EndBiome ofContinent(long seed, long id) {
         double roll = Hash.hash01(seed ^ SALT, (int) (id >> 32), (int) id);
         if (roll < BARE_SHARE) return null;

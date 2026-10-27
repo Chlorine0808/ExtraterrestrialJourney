@@ -17,7 +17,7 @@ import chlorine.etjourney.world.end.noise.Warp;
 public final class Continent {
 
     public static final double MAX_HEIGHT = 80;
-    private static final int SEED_CELL = 16;
+    public static final int SEED_CELL = 16;
     /** Cells searched beyond the range: a seed still raises the height above -100 up to 200 / 14 * 8 blocks away. */
     private static final int SEARCH_CELLS = 8;
     private static final double SEED_RING = 1024;

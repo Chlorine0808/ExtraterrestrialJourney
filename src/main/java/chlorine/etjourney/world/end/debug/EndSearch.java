@@ -1,10 +1,17 @@
 package chlorine.etjourney.world.end.debug;
 
+import chlorine.etjourney.world.end.TerrainSampler;
+import chlorine.etjourney.world.end.feature.Continent;
+import chlorine.etjourney.world.end.feature.EndBiome;
+import chlorine.etjourney.world.end.feature.Mountains;
+
 /** Nearest-target searches for the debug commands: true Euclidean nearest within a radius. */
 final class EndSearch {
 
     static final int RADIUS = 8192;
     private static final int STEP = 16;
+    /** Land height a biome search wants under its hit, so it lands well inside a continent. */
+    private static final double LAND = 10;
 
     private EndSearch() {}
 
@@ -40,6 +47,25 @@ final class EndSearch {
             }
         }
         return best;
+    }
+
+    /** Nearest continent seed standing on land that wears the biome, as {x, z}, within RADIUS. */
+    static double[] nearestBiome(TerrainSampler sampler, EndBiome target, double ox, double oz) {
+        long seed = sampler.seed();
+        return nearestInCells(Continent.SEED_CELL, ox, oz, (cx, cz) -> {
+            Continent.Seed s = Continent.seedAt(seed, cx, cz);
+            // The continent's own draw is cached and cheap; land and the column's biome are checked only after it.
+            if (s == null || EndBiome.ofContinentOf(seed, s) != target || sampler.land(s.x, s.z) <= LAND) return null;
+            EndBiome here = EndBiome.at(
+                seed,
+                Continent.seedsNear(seed, s.x, s.z, Continent.warpReach()),
+                Mountains.near(seed, s.x, s.z, 0),
+                s.x,
+                s.z,
+                sampler.weights(s.x, s.z)
+                    .voidShare());
+            return here == target ? new double[] { s.x, s.z } : null;
+        });
     }
 
     /** Nearest sampled point (every STEP blocks) passing the test within RADIUS. */

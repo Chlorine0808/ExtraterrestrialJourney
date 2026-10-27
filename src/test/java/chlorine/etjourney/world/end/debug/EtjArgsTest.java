@@ -52,6 +52,13 @@ class EtjArgsTest {
     }
 
     @Test
+    void completesBiomes() {
+        assertTrue(complete("end", "").contains("biome"));
+        assertEquals(Collections.singletonList("GROVE"), complete("end", "biome", "gr"));
+        assertEquals(Collections.emptyList(), complete("end", "biome", "GROVE", ""));
+    }
+
+    @Test
     void completesZones() {
         assertEquals(Collections.singletonList("VORTEX"), complete("end", "zone", "v"));
     }
