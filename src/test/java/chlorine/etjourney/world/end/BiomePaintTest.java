@@ -163,6 +163,31 @@ class BiomePaintTest {
         assertEquals(0, wrong[0], wrong[0] + " of " + checked[0] + " unfilled");
     }
 
+    /** Styles without a continent (arcs, islets, shoals) are left bare, along with what continent rock remains. */
+    @Test
+    void voidStylesStayBare() {
+        int solid = 0;
+        for (int step = 0; step < 3000 && solid < 300; step++) {
+            int cx = (5000 + step % 60 * 23) >> 4, cz = (step / 60 * 29 - 700) >> 4;
+            ChunkPlan plan = new ChunkPlan(ZoneIslandPaintTest.SAMPLER, cx, cz, (a, b) -> Collections.emptyList());
+            if (plan.voidShare(cx * 16 + 8, cz * 16 + 8) < 0.3) continue;
+            MemorySink[] halves = null;
+            for (int x = cx * 16; x < cx * 16 + 16; x++) {
+                for (int z = cz * 16; z < cz * 16 + 16; z++) {
+                    if (plan.voidShare(x, z) <= 0.5 || EndBiome.at(SEED, x, z) == null) continue;
+                    if (halves == null) halves = ZoneIslandPaintTest.generate(cx, cz);
+                    for (int y = 0; y < 256; y++) {
+                        EndBlock b = get(halves, x, y, z);
+                        if (b == null || plan.densityAt(x, y, z) <= 0) continue;
+                        solid++;
+                        assertTrue(!BIOME_BLOCKS.contains(b), "painted void style at " + x + "," + y + "," + z);
+                    }
+                }
+            }
+        }
+        assertTrue(solid >= 300, "only " + solid + " solid blocks under void styles");
+    }
+
     @Test
     void cloudsAndStructuresAboveTheGroundStayBare() {
         int above = 0;

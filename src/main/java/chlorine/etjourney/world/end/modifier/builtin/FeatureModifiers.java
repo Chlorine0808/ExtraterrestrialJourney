@@ -224,7 +224,7 @@ public final class FeatureModifiers {
      */
     public static Modifier biomes() {
         return blockModifier(814, (area, view, sink) -> forEachColumn(sink, (x, z) -> {
-            EndBiome biome = EndBiome.at(area.seed, view.seeds(), view.mountains(), x, z);
+            EndBiome biome = biomeAt(area, view, x, z);
             if (biome == null) return;
             int depth = 0;
             while (depth < PAINT_DEPTH && sink.maxY() + depth <= 255 && view.densityAt(x, sink.maxY() + depth, z) > 0)
@@ -238,6 +238,12 @@ public final class FeatureModifiers {
                 depth++;
             }
         }));
+    }
+
+    /** The column's biome; styles without a continent (arcs, islets, shoals) stay bare. */
+    private static EndBiome biomeAt(ChunkArea area, TerrainView view, int x, int z) {
+        if (view.voidShare(x, z) > 0.5) return null;
+        return EndBiome.at(area.seed, view.seeds(), view.mountains(), x, z);
     }
 
     /** How far up past the sink the rock is counted on the density for ore depths; deeper counts as this deep. */
@@ -270,7 +276,7 @@ public final class FeatureModifiers {
                             if (d < ore.minDepth || d > ore.maxDepth) return;
                             if (ore.biome != null) {
                                 if (!biomeKnown[column]) {
-                                    biomes[column] = EndBiome.at(area.seed, view.seeds(), view.mountains(), x, z);
+                                    biomes[column] = biomeAt(area, view, x, z);
                                     biomeKnown[column] = true;
                                 }
                                 if (biomes[column] != ore.biome) return;
