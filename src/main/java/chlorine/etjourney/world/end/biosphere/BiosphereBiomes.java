@@ -11,6 +11,7 @@ import net.minecraft.world.chunk.IChunkProvider;
 import net.minecraftforge.common.DimensionManager;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.world.ChunkEvent;
+import net.minecraftforge.event.world.WorldEvent;
 
 import chlorine.etjourney.core.config.ETJConfig;
 import chlorine.etjourney.core.util.ModLog;
@@ -61,6 +62,40 @@ public final class BiosphereBiomes {
             ModLog.LOG
                 .warn("Biosphere biomes for chunk {},{} could not be written", chunk.xPosition, chunk.zPosition, t);
         }
+    }
+
+    /**
+     * Stops spawns in a column given a sample's biome but outside the ball, where its spawn list would bring, say,
+     * zombies onto the End land below. The list is the biome's own, so it is cancelled rather than edited.
+     */
+    @SubscribeEvent
+    public void onPotentialSpawns(WorldEvent.PotentialSpawns event) {
+        World world = event.world;
+        if (!ETJConfig.biomeColors || world.isRemote || world.provider.dimensionId != END) return;
+        try {
+            BiomeGenBase own = world.getWorldChunkManager()
+                .getBiomeGenAt(event.x, event.z);
+            if (world.getBiomeGenForCoords(event.x, event.z) == own) return;
+            Long seed = EndTerrain.seed();
+            if (seed == null || insideBall(seed, event.x, event.y, event.z)) return;
+            event.setCanceled(true);
+        } catch (Throwable t) {
+            // Spawning goes on as it would have; a crash here would take the server down every tick.
+            SampleWorlds.rethrowFatal(t);
+        }
+    }
+
+    private static boolean insideBall(long seed, int x, int y, int z) {
+        for (Biosphere b : Biosphere.KIND.near(
+            seed,
+            x + 0.5,
+            z + 0.5,
+            0,
+            EndTerrain.sampler(seed)
+                .structureProbe())) {
+            if (b.part(x, y, z) == Biosphere.Part.INSIDE) return true;
+        }
+        return false;
     }
 
     private void paint(WorldServer end, Chunk chunk, long seed) {
