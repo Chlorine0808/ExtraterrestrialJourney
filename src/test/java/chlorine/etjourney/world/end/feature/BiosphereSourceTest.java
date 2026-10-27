@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import org.junit.jupiter.api.Test;
@@ -130,5 +131,26 @@ class BiosphereSourceTest {
             assertNotNull(p);
             assertFalse(p[0] == first[0] && p[1] == first[1]);
         }
+    }
+
+    /** A 5 x 5 area of biome IDs, row by row with x fastest, all 1 but for one column set to 9. */
+    private static int[] areaWith(int x, int z) {
+        int[] ids = new int[25];
+        Arrays.fill(ids, 1);
+        ids[z * 5 + x] = 9;
+        return ids;
+    }
+
+    @Test
+    void anExcludedColumnInsideTheBallRulesTheFootprintOut() {
+        assertFalse(BiosphereSource.clear(areaWith(2, 2), 5, 2, id -> id == 9));
+        assertFalse(BiosphereSource.clear(areaWith(4, 2), 5, 2, id -> id == 9));
+        assertTrue(BiosphereSource.clear(areaWith(2, 2), 5, 2, id -> id == 8));
+    }
+
+    @Test
+    void columnsOutsideTheBallDoNotCount() {
+        // The corner lies 2.8 blocks from the centre, beyond the radius of 2.
+        assertTrue(BiosphereSource.clear(areaWith(0, 0), 5, 2, id -> id == 9));
     }
 }

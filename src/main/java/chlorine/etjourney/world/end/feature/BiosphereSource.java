@@ -1,5 +1,7 @@
 package chlorine.etjourney.world.end.feature;
 
+import java.util.function.IntPredicate;
+
 import chlorine.etjourney.world.end.noise.Hash;
 
 /** Where a biosphere's terrain comes from: the kind of world and the point around which it is cut. */
@@ -64,5 +66,20 @@ public final class BiosphereSource {
             last = p;
         }
         return last;
+    }
+
+    /**
+     * Whether no column within radius of the centre of a size x size area of biome IDs (row by row, x fastest) is
+     * excluded.
+     */
+    public static boolean clear(int[] ids, int size, double radius, IntPredicate excluded) {
+        double c = (size - 1) / 2.0;
+        for (int j = 0; j < size; j++) {
+            for (int i = 0; i < size; i++) {
+                if ((i - c) * (i - c) + (j - c) * (j - c) <= radius * radius && excluded.test(ids[j * size + i]))
+                    return false;
+            }
+        }
+        return true;
     }
 }
