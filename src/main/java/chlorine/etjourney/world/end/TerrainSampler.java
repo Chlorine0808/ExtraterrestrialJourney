@@ -44,6 +44,19 @@ public final class TerrainSampler {
     private final ModifierChain chain;
     private final Map<Point, StyleWeights> weightCache = new ConcurrentHashMap<>();
     private final ArcPaths.SegmentWeight arcGround = (x, y, z) -> nearZoneIsland(x, y, z) ? 0 : arcProbe().weight(x, z);
+    private final ArcPaths.Ground arcLand = new ArcPaths.Ground() {
+
+        @Override
+        public double[] span(double x, double z) {
+            ColumnState c = bareColumn(x, z, true);
+            return c.land <= 0 ? null : new double[] { c.bottom, c.top };
+        }
+
+        @Override
+        public EndBiome biome(double x, double z) {
+            return TerrainSampler.this.biome(x, z);
+        }
+    };
     private final Map<Modifier, Style> owners = new ConcurrentHashMap<>();
 
     public TerrainSampler(long seed, RegionPicker picker) {
@@ -242,6 +255,11 @@ public final class TerrainSampler {
     /** ARCS weight for arc segments, 0 near zone islands; one instance, so paths can keep its answers. */
     public ArcPaths.SegmentWeight arcGround() {
         return arcGround;
+    }
+
+    /** The bare land under arc tubes and its biome; one instance, so paths can keep the biome they found. */
+    public ArcPaths.Ground arcLand() {
+        return arcLand;
     }
 
     public ArcPaths.Probe arcProbe() {

@@ -105,6 +105,7 @@ public final class ChunkPlan implements TerrainView {
             area.originZ() - 8 - ARC_PAD,
             area.originZ() + 24 + ARC_PAD,
             sampler.arcGround(),
+            sampler.arcLand(),
             (x, y, z) -> Reservations.clear(reserved, x, y - ARC_REACH, z));
     }
 
