@@ -128,6 +128,11 @@ public final class SampleWorlds {
         if (t instanceof VirtualMachineError && !(t instanceof StackOverflowError)) throw (VirtualMachineError) t;
     }
 
+    /** Whether the config keeps the biome with this ID out of biospheres. */
+    public static boolean excluded(int biomeId) {
+        return BiomeExclusions.excludes(biomeId);
+    }
+
     public static boolean isSample(World w) {
         int dim = w.provider.dimensionId;
         return dim == ETJConfig.sampleDimension || dim == ETJConfig.netherSampleDimension;

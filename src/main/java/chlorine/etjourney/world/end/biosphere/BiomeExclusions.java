@@ -52,6 +52,12 @@ final class BiomeExclusions {
         return BiosphereSource.clear(ids, size, radius, id -> id >= 0 && id < excluded.length && excluded[id]);
     }
 
+    /** Whether the config keeps the biome with this ID out of biospheres. */
+    static boolean excludes(int id) {
+        boolean[] excluded = table();
+        return excluded != null && id >= 0 && id < excluded.length && excluded[id];
+    }
+
     /** Logs once per kind, while the server runs, that the blacklist left a ball no point in that world. */
     static synchronized void noPoint(BiosphereSource.Kind kind) {
         if (WARNED.add(kind)) ModLog.LOG.warn(
@@ -80,6 +86,10 @@ final class BiomeExclusions {
             .getActiveModList()) mods.add(mod.getModId());
         for (String entry : list.unmatched(ids, names, mods))
             ModLog.LOG.warn("Biosphere blacklist: {} matches nothing loaded and is ignored", entry);
+        List<String> kept = new ArrayList<>();
+        for (BiomeGenBase b : biomes) if (b != null && b.biomeID >= 0 && b.biomeID < out.length && out[b.biomeID])
+            kept.add(b.biomeID + " " + b.biomeName);
+        ModLog.LOG.info("Biosphere blacklist keeps {} biomes out: {}", kept.size(), kept);
         return out;
     }
 
