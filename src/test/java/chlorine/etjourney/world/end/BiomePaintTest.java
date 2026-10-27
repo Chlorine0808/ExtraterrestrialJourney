@@ -70,6 +70,7 @@ class BiomePaintTest {
             for (int y = 254; y >= 0; y--) {
                 EndBlock b = get(halves, x, y, z);
                 if (b == null || get(halves, x, y + 1, z) != null || plan.densityAt(x, y, z) <= 0) continue;
+                if (ArcPaintTest.isTube(plan, x, y, z)) continue;
                 tops[0]++;
                 EndBiome biome = EndBiome.at(SEED, x, z);
                 if (b == (biome == null ? EndBlock.STONE : biome.top)) tops[1]++;

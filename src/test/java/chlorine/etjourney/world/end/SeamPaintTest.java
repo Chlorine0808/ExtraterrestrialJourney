@@ -57,7 +57,8 @@ class SeamPaintTest {
                     int depth = 0;
                     for (int y = 160; y >= 118; y--) {
                         EndBlock b = get(halves, y, x, z);
-                        if (!ROCK.contains(b)) {
+                        // Tubes are made of their own path's fill, and the ground under them is a surface.
+                        if (!ROCK.contains(b) || ArcPaintTest.isTube(plan, x, y, z)) {
                             depth = 0;
                             continue;
                         }

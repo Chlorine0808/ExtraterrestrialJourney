@@ -44,6 +44,8 @@ public final class FeatureModifiers {
     private static final double PAINT_REACH = 1.3;
     private static final int PAINT_DEPTH = 3;
     private static final int PAINT_ORDER = 814, ORE_ORDER = 816;
+    /** How far outside a tube's exact surface a block still counts as part of the tube. */
+    private static final double TUBE_SLACK = 3;
     /** The top of the generator's half; Y 128 up is written by the tall pass. */
     private static final int LOWER_TOP = 128;
     /**
@@ -228,13 +230,20 @@ public final class FeatureModifiers {
     public static Modifier biomes() {
         return blockModifier(PAINT_ORDER, (area, view, sink) -> {
             BlockSink above = above(view, sink, PAINT_ORDER);
-            forEachColumn(sink, (x, z) -> paintBiome(area, view, sink, above, x, z));
+            ArcPaths.Segments arcs = view.arcs()
+                .isEmpty() ? null : view.arcs();
+            forEachColumn(sink, (x, z) -> paintBiome(area, view, sink, above, arcs, x, z));
         });
     }
 
-    private static void paintBiome(ChunkArea area, TerrainView view, BlockSink sink, BlockSink above, int x, int z) {
+    /**
+     * Paints one column. Arc tubes are not ground: they are made all through of the fill of the ground their path
+     * touches, or left stone, and the ground under them counts as a surface.
+     */
+    private static void paintBiome(ChunkArea area, TerrainView view, BlockSink sink, BlockSink above,
+        ArcPaths.Segments arcs, int x, int z) {
         EndBiome biome = biomeAt(area, view, x, z);
-        if (biome == null) return;
+        if (biome == null && arcs == null) return;
         int depth = 0;
         while (depth < PAINT_DEPTH && solidAbove(view, sink, above, x, sink.maxY() + depth, z)) depth++;
         for (int y = sink.maxY() - 1; y >= sink.minY(); y--) {
@@ -242,9 +251,24 @@ public final class FeatureModifiers {
                 depth = 0;
                 continue;
             }
-            if (depth < PAINT_DEPTH) sink.set(x, y, z, depth == 0 ? biome.top : biome.fill);
+            if (arcs != null && isTube(view, sink, arcs, x, y, z)) {
+                EndBiome tube = ArcPaths.biomeAt(arcs, x, y, z);
+                if (tube != null) sink.set(x, y, z, tube.fill);
+                depth = 0;
+                continue;
+            }
+            if (biome != null && depth < PAINT_DEPTH) sink.set(x, y, z, depth == 0 ? biome.top : biome.fill);
             depth++;
         }
+    }
+
+    /** Rock that stands only through an arc tube, not through the terrain around it. */
+    private static boolean isTube(TerrainView view, BlockSink sink, ArcPaths.Segments arcs, int x, int y, int z) {
+        boolean upper = y >= LOWER_TOP;
+        double terrain = DensityField
+            .at(view.densityField(upper, false), x - sink.originX(), y - (upper ? LOWER_TOP : 0), z - sink.originZ());
+        // The blocks follow the interpolated grid, so a tube's outer blocks may lie just outside its exact surface.
+        return terrain <= 0 && ArcPaths.density(arcs, x, y, z) > -TUBE_SLACK;
     }
 
     /**
