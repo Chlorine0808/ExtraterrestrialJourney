@@ -44,22 +44,28 @@ public final class Continent {
 
     public static List<Seed> seedsNear(long seed, double x, double z, double range) {
         List<Seed> out = new ArrayList<>();
-        long s = seed ^ SALT;
         int c0x = (int) Math.floor((x - range) / SEED_CELL) - SEARCH_CELLS;
         int c1x = (int) Math.floor((x + range) / SEED_CELL) + SEARCH_CELLS;
         int c0z = (int) Math.floor((z - range) / SEED_CELL) - SEARCH_CELLS;
         int c1z = (int) Math.floor((z + range) / SEED_CELL) + SEARCH_CELLS;
         for (int cx = c0x; cx <= c1x; cx++) {
             for (int cz = c0z; cz <= c1z; cz++) {
-                double sx = cx * SEED_CELL + 8, sz = cz * SEED_CELL + 8;
-                if (sx * sx + sz * sz <= SEED_RING * SEED_RING) continue;
-                double cluster = 0.7 * ValueNoise.mask(s + 1, sx, sz, 160) + 0.3 * ValueNoise.mask(s + 2, sx, sz, 48);
-                if (cluster > SEED_THRESHOLD + 0.25 * Hash.hash01(s + 3, cx, cz) - 0.125) continue;
-                double falloff = MIN_FALLOFF + Hash.hash01(s + 4, cx, cz) * (MAX_FALLOFF - MIN_FALLOFF);
-                out.add(new Seed(sx, sz, falloff));
+                Seed found = seedAt(seed, cx, cz);
+                if (found != null) out.add(found);
             }
         }
         return out;
+    }
+
+    /** The seed in grid cell (cx, cz), or null where the clustering noise leaves the cell empty. */
+    public static Seed seedAt(long seed, int cx, int cz) {
+        long s = seed ^ SALT;
+        double sx = cx * SEED_CELL + 8, sz = cz * SEED_CELL + 8;
+        if (sx * sx + sz * sz <= SEED_RING * SEED_RING) return null;
+        double cluster = 0.7 * ValueNoise.mask(s + 1, sx, sz, 160) + 0.3 * ValueNoise.mask(s + 2, sx, sz, 48);
+        if (cluster > SEED_THRESHOLD + 0.25 * Hash.hash01(s + 3, cx, cz) - 0.125) return null;
+        double falloff = MIN_FALLOFF + Hash.hash01(s + 4, cx, cz) * (MAX_FALLOFF - MIN_FALLOFF);
+        return new Seed(sx, sz, falloff);
     }
 
     /** Height from the seeds alone: 0 at a rim, up to MAX_HEIGHT inside, negative over the void. */
