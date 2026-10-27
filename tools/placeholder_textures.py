@@ -1,4 +1,4 @@
-"""Generate placeholder 16x16 block textures for the End zones, biomes, ores and plants."""
+"""Generate placeholder 16x16 textures for the End zones, biomes, ores, plants and ore drops."""
 import math
 import random
 import zlib
@@ -203,10 +203,47 @@ def plant(name):
     return img
 
 
+ITEM_OUT = OUT.parent / 'items'
+
+# ore drop item -> (shape, colour)
+ITEMS = {
+    'raw_ender_gold': ('lump', ORES['ender_gold_ore']),
+    'raw_ender_platinum': ('lump', ORES['ender_platinum_ore']),
+    'raw_sakura_gold': ('lump', ORES['sakura_gold_ore']),
+    'raw_golden_palladium': ('lump', ORES['golden_palladium_ore']),
+    'drift_shard': ('shard', ORES['drift_ore']),
+    'ascended_crystal': ('gem', ORES['ascended_crystal_ore']),
+    # lifted from the ore grain so the gem is not lost against dark slots
+    'black_quartz': ('gem', (70, 62, 84)),
+}
+
+
+def item(name):
+    rng = rng_for(name)
+    shape, color = ITEMS[name]
+    if shape == 'lump':
+        cells = {(x, y) for x in range(3, 13) for y in range(4, 13)
+                 if (x - 7.5) ** 2 / 25 + (y - 8.5) ** 2 / 18 + rng.uniform(-0.25, 0.1) <= 1}
+    elif shape == 'gem':
+        cells = {(x, y) for x in range(SIZE) for y in range(2, 15) if abs(x - 7.5) + abs(y - 8) * 0.8 <= 6}
+    else:  # shard: a thin diagonal splinter
+        cells = {(x, y) for x in range(SIZE) for y in range(2, 14) if abs(x - (15 - y)) <= 1.5}
+    img = Image.new('RGBA', (SIZE, SIZE), (0, 0, 0, 0))
+    for x, y in sorted(cells):
+        # dark rim where a neighbour is missing, lit from the top left inside
+        edge = any((x + dx, y + dy) not in cells for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1)))
+        light = 1.25 - 0.025 * (x + y)
+        img.putpixel((x, y), shade(color, 0.5) if edge else noise(rng, shade(color, light)[:3], 0.06))
+    return img
+
+
 def main():
     OUT.mkdir(parents=True, exist_ok=True)
+    ITEM_OUT.mkdir(parents=True, exist_ok=True)
     for name in PLANTS:
         plant(name).save(OUT / f'{name}.png')
+    for name in ITEMS:
+        item(name).save(ITEM_OUT / f'{name}.png')
     for zone, (surface, _, _) in ZONES.items():
         top(zone).save(OUT / f'{zone}_{surface}_top.png')
         side(zone).save(OUT / f'{zone}_{surface}_side.png')
