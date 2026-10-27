@@ -27,6 +27,16 @@ public enum EndBlock {
     DRIFT_ORE,
     ASCENDED_CRYSTAL,
     BLACK_QUARTZ,
+    /** Plants set on the biome surfaces at populate time. */
+    GROVE_GRASS,
+    GROVE_FERN,
+    GROVE_BLOOM,
+    HIGHLAND_TUFT,
+    HIGHLAND_THISTLE,
+    MYCELIA_SPROUT,
+    GLOWCAP,
+    AMBER_REED,
+    AMBER_BULB,
     /** Links of hanging and sky chains. */
     CHAIN,
     /** Shells of biospheres. */
