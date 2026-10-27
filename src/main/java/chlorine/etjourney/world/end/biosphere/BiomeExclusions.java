@@ -1,5 +1,7 @@
 package chlorine.etjourney.world.end.biosphere;
 
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.HashMap;
@@ -14,6 +16,7 @@ import net.minecraft.world.biome.BiomeGenBase;
 import chlorine.etjourney.core.config.ETJConfig;
 import chlorine.etjourney.core.util.ModLog;
 import chlorine.etjourney.world.end.feature.BiomeBlacklist;
+import chlorine.etjourney.world.end.feature.BiomeOwner;
 import chlorine.etjourney.world.end.feature.BiosphereSource;
 import cpw.mods.fml.common.Loader;
 import cpw.mods.fml.common.ModContainer;
@@ -70,6 +73,7 @@ final class BiomeExclusions {
         BiomeBlacklist list = new BiomeBlacklist(ETJConfig.excludedBiomes, ETJConfig.excludedMods);
         if (list.isEmpty()) return new boolean[0];
         Map<String, String> owners = owners();
+        Set<Integer> vanilla = vanillaIds();
         BiomeGenBase[] biomes = BiomeGenBase.getBiomeGenArray();
         boolean[] out = new boolean[biomes.length];
         List<Integer> ids = new ArrayList<>();
@@ -78,7 +82,15 @@ final class BiomeExclusions {
             if (b == null || b.biomeID < 0 || b.biomeID >= out.length) continue;
             ids.add(b.biomeID);
             names.add(b.biomeName);
-            out[b.biomeID] = list.excludes(b.biomeID, b.biomeName, owner(owners, b));
+            out[b.biomeID] = list.excludes(
+                b.biomeID,
+                b.biomeName,
+                BiomeOwner.of(
+                    b.biomeID,
+                    b.getClass()
+                        .getName(),
+                    vanilla,
+                    owners));
         }
         Set<String> mods = new HashSet<>(owners.values());
         mods.add("minecraft");
@@ -108,12 +120,23 @@ final class BiomeExclusions {
         return out;
     }
 
-    /** The mod a biome's class belongs to: "minecraft" for vanilla, null when no loaded mod owns its package. */
-    private static String owner(Map<String, String> owners, BiomeGenBase b) {
-        String name = b.getClass()
-            .getName();
-        if (name.startsWith("net.minecraft.")) return "minecraft";
-        int dot = name.lastIndexOf('.');
-        return dot < 0 ? null : owners.get(name.substring(0, dot));
+    /**
+     * The IDs vanilla registers itself, from BiomeGenBase's static biome fields: read by type, so it works under any
+     * mapping, and by ID, so a mod that swaps in its own instance leaves the ID vanilla's.
+     */
+    private static Set<Integer> vanillaIds() {
+        Set<Integer> out = new HashSet<>();
+        for (Field f : BiomeGenBase.class.getDeclaredFields()) {
+            if (!Modifier.isStatic(f.getModifiers()) || !BiomeGenBase.class.isAssignableFrom(f.getType())) continue;
+            try {
+                f.setAccessible(true);
+                BiomeGenBase b = (BiomeGenBase) f.get(null);
+                if (b != null) out.add(b.biomeID);
+            } catch (Throwable t) {
+                // A field that cannot be read leaves its biome to its class.
+                SampleWorlds.rethrowFatal(t);
+            }
+        }
+        return out;
     }
 }
