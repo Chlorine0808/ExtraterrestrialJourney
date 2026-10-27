@@ -262,10 +262,8 @@ public final class FeatureModifiers {
         return view.densityAt(x, y, z) > 0;
     }
 
-    /** The column's biome; styles without a continent (arcs, islets, shoals) stay bare. */
     private static EndBiome biomeAt(ChunkArea area, TerrainView view, int x, int z) {
-        if (view.voidShare(x, z) > 0.5) return null;
-        return EndBiome.at(area.seed, view.seeds(), view.mountains(), x, z);
+        return EndBiome.at(area.seed, view.seeds(), view.mountains(), x, z, view.voidShare(x, z));
     }
 
     /** How far up past the sink the rock is counted on the density for ore depths; deeper counts as this deep. */

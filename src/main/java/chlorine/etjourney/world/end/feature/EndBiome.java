@@ -14,6 +14,8 @@ public enum EndBiome {
     AMBER(EndBlock.AMBER_TOP, EndBlock.AMBER_FILL);
 
     private static final double BARE_SHARE = 0.5;
+    /** Styles without a continent (arcs, islets, shoals) holding more of the base weight than this stay bare. */
+    private static final double VOID_LIMIT = 0.5;
     private static final long SALT = 0x5D1E7A3C29B4F086L;
     private static final EndBiome[] ALL = values();
 
@@ -32,6 +34,12 @@ public enum EndBiome {
         double z) {
         double[] w = Continent.warped(seed, x, z);
         return atWarped(seed, seeds, mountains, w[0], w[1]);
+    }
+
+    /** The biome the column wears given the base weight of styles without a continent there. */
+    public static EndBiome at(long seed, List<Continent.Seed> seeds, List<Mountains.Mountain> mountains, double x,
+        double z, double voidShare) {
+        return voidShare > VOID_LIMIT ? null : at(seed, seeds, mountains, x, z);
     }
 
     /** Convenience for one column: looks up the seeds and mountains itself. */
