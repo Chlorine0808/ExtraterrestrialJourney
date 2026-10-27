@@ -17,6 +17,12 @@ public final class BiosphereSource {
         boolean at(int x, int z);
     }
 
+    /** Whether a ball cut around (x, z) holds no biome the config keeps out. */
+    public interface Allowed {
+
+        boolean at(int x, int z);
+    }
+
     /** Shares of balls cut from the Nether, and of the others cut from a cave. */
     public static final double NETHER_SHARE = 0.15, CAVE_SHARE = 0.10;
     /** Share of surface balls that keep their first point even on water. */
@@ -40,18 +46,23 @@ public final class BiosphereSource {
         return new Kind[] { kind, kind == Kind.NETHER ? Kind.SURFACE : Kind.NETHER };
     }
 
-    /** The point, {x, z}, the ball's terrain is cut around; surface balls mostly try until one is not water. */
-    public static int[] point(long seed, Biosphere b, Kind kind, Water water) {
+    /**
+     * The point, {x, z}, the ball's terrain is cut around: the first candidate the blacklist allows, where surface
+     * balls mostly also want one that is not water. Null when the blacklist allows none.
+     */
+    public static int[] point(long seed, Biosphere b, Kind kind, Water water, Allowed allowed) {
         long s = seed ^ SALT;
         int cx = (int) Math.floor(b.centreX), cz = (int) Math.floor(b.centreZ);
         boolean anyWater = kind != Kind.SURFACE || Hash.hash01(s + 2, cx, cz) < WATER_SHARE;
         int spread = kind == Kind.NETHER ? SPREAD / 8 : SPREAD;
-        int[] p = null;
+        int[] last = null;
         for (int t = 0; t < TRIES; t++) {
-            p = new int[] { (int) ((Hash.hash01(s + 3 + 2L * t, cx, cz) * 2 - 1) * spread),
+            int[] p = new int[] { (int) ((Hash.hash01(s + 3 + 2L * t, cx, cz) * 2 - 1) * spread),
                 (int) ((Hash.hash01(s + 4 + 2L * t, cx, cz) * 2 - 1) * spread) };
+            if (!allowed.at(p[0], p[1])) continue;
             if (anyWater || !water.at(p[0], p[1])) return p;
+            last = p;
         }
-        return p;
+        return last;
     }
 }

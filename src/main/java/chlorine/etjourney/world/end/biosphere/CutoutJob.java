@@ -95,7 +95,7 @@ final class CutoutJob {
             world = SampleWorlds.world(kind);
             if (world == null) continue;
             WorldServer w = world;
-            point = BiosphereSource.point(seed, ball, kind, (x, z) -> SampleWorlds.isWater(w, x, z));
+            point = BiosphereSource.point(seed, ball, kind, (x, z) -> SampleWorlds.isWater(w, x, z), (x, z) -> true);
             chunks = CutoutMaker.chunks(ball, point);
             nextChunk = 0;
             cut = null;

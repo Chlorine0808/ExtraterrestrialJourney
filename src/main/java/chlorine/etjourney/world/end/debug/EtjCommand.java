@@ -146,7 +146,8 @@ public final class EtjCommand extends CommandBase {
                 continue;
             }
             WorldServer w = SampleWorlds.world(kind);
-            int[] p = BiosphereSource.point(sampler.seed(), b, kind, (x, z) -> SampleWorlds.isWater(w, x, z));
+            int[] p = BiosphereSource
+                .point(sampler.seed(), b, kind, (x, z) -> SampleWorlds.isWater(w, x, z), (x, z) -> true);
             say(player, EtjArgs.biosphereLine(kind.name(), p[0], p[1]));
         }
     }
