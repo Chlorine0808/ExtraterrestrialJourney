@@ -10,6 +10,7 @@ import java.util.List;
 
 import org.junit.jupiter.api.Test;
 
+import chlorine.etjourney.world.end.feature.EndBiome;
 import chlorine.etjourney.world.end.region.Styles;
 
 /** Tab completion follows the /etj end grammar, and the style listing names every style with its kind. */
@@ -107,6 +108,12 @@ class EtjArgsTest {
     @Test
     void aBiosphereLineNamesItsKindAndSamplePoint() {
         assertEquals("Biosphere: SURFACE from 4196,-84154", EtjArgs.biosphereLine("SURFACE", 4196, -84154));
+    }
+
+    @Test
+    void aBiomeLineSaysNoneForBareGround() {
+        assertEquals("Biome here: GROVE", EtjArgs.biomeLine(EndBiome.GROVE));
+        assertEquals("Biome here: none", EtjArgs.biomeLine(null));
     }
 
     /** Vanilla ray tracing gives up after 200 block boundaries, so a long look is traced in short pieces. */

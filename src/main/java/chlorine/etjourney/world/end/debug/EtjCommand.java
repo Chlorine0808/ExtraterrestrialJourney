@@ -141,6 +141,7 @@ public final class EtjCommand extends CommandBase {
                 .append('%');
         }
         say(player, out.toString());
+        say(player, EtjArgs.biomeLine(sampler.biome(player.posX, player.posZ)));
         // Biospheres over this column; the sample point is found from the biome map alone.
         for (Biosphere b : Biosphere.KIND.near(sampler.seed(), player.posX, player.posZ, 0, sampler.structureProbe())) {
             // The kind actually used: the other world stands in when the ball's own cannot be loaded.

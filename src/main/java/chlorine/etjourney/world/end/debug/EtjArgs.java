@@ -100,6 +100,10 @@ final class EtjArgs {
     }
 
     /** What /etj end here says about a biosphere: where its terrain comes from. */
+    static String biomeLine(EndBiome biome) {
+        return "Biome here: " + (biome == null ? "none" : biome.name());
+    }
+
     static String biosphereLine(String kind, int x, int z) {
         return "Biosphere: " + kind + " from " + x + "," + z;
     }
