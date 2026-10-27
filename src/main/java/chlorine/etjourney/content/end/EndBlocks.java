@@ -15,8 +15,9 @@ public final class EndBlocks {
             EndPalette.bind(entry.kind, block, 0);
         }
         for (OreBlockTable.Entry entry : OreBlockTable.ENTRIES) {
-            GameRegistry.registerItem(new MaterialItem(entry.drop), entry.drop);
-            OreBlock block = new OreBlock(entry);
+            MaterialItem drop = new MaterialItem(entry.drop);
+            GameRegistry.registerItem(drop, entry.drop);
+            OreBlock block = new OreBlock(entry, drop);
             GameRegistry.registerBlock(block, entry.name);
             EndPalette.bind(entry.kind, block, 0);
         }
