@@ -57,6 +57,16 @@ public final class ArcPaths {
         }
     }
 
+    /** The land under the tubes, supplied by the engine, so a tube can take the biome of the ground it touches. */
+    public interface Ground {
+
+        /** Bottom and top of the land at (x, z), or null over the void. */
+        double[] span(double x, double z);
+
+        /** The biome the ground at (x, z) wears, or null for bare ground. */
+        EndBiome biome(double x, double z);
+    }
+
     /** One path: its points (x, y, z triples), tube radius and cutoff, with a horizontal bounding box. */
     public static final class Path {
 
@@ -67,6 +77,8 @@ public final class ArcPaths {
         final double minX, maxX, minZ, maxZ;
         /** Answers of the last shared weight, per segment; NaN when not yet asked. */
         private volatile Memo memo;
+        /** The biome found for the last ground asked. */
+        private volatile GroundMemo groundMemo;
 
         /** A path that keeps its full tube wherever the ARCS weight is above 0. */
         Path(double[] points, double tube) {
@@ -114,6 +126,46 @@ public final class ArcPaths {
         }
     }
 
+    private static final class GroundMemo {
+
+        final Ground ground;
+        final EndBiome biome;
+
+        GroundMemo(Ground ground, EndBiome biome) {
+            this.ground = ground;
+            this.biome = biome;
+        }
+    }
+
+    /**
+     * The biome a path's tubes are made of: that of the ground its tube touches at the most points, or null when it
+     * touches none or mostly bare ground. Kept on the path for as long as the same ground is passed.
+     */
+    public static EndBiome groundBiome(Path path, Ground ground) {
+        GroundMemo m = path.groundMemo;
+        if (m != null && m.ground == ground) return m.biome;
+        int[] votes = new int[EndBiome.values().length];
+        int bare = 0;
+        double[] p = path.points;
+        for (int i = 0; i < p.length; i += 3) {
+            double[] span = ground.span(p[i], p[i + 2]);
+            if (span == null || p[i + 1] - path.tube > span[1] || p[i + 1] + path.tube < span[0]) continue;
+            EndBiome b = ground.biome(p[i], p[i + 2]);
+            if (b == null) bare++;
+            else votes[b.ordinal()]++;
+        }
+        EndBiome best = null;
+        int most = bare;
+        for (EndBiome b : EndBiome.values()) {
+            if (votes[b.ordinal()] > most) {
+                most = votes[b.ordinal()];
+                best = b;
+            }
+        }
+        path.groundMemo = new GroundMemo(ground, best);
+        return best;
+    }
+
     private static final class Memo {
 
         final SegmentWeight filter;
@@ -130,10 +182,17 @@ public final class ArcPaths {
 
         final double[] data;
         final int count;
+        /** The biome of each segment's path, or null when no ground was given. */
+        final EndBiome[] biomes;
 
         Segments(double[] data, int count) {
+            this(data, count, null);
+        }
+
+        Segments(double[] data, int count, EndBiome[] biomes) {
             this.data = data;
             this.count = count;
+            this.biomes = biomes;
         }
 
         /** Lowest point a tube reaches, or 0 when there are no segments. */
@@ -161,6 +220,7 @@ public final class ArcPaths {
         /** The segments that reach the box, the only ones that can add density inside it. */
         public Segments within(double minX, double maxX, double minZ, double maxZ) {
             double[] out = new double[count * 7];
+            EndBiome[] kept = biomes == null ? null : new EndBiome[count];
             int n = 0;
             for (int k = 0; k < count; k++) {
                 int o = k * 7;
@@ -170,9 +230,10 @@ public final class ArcPaths {
                 if (Math.max(data[o + 2], data[o + 5]) + pad < minZ || Math.min(data[o + 2], data[o + 5]) - pad > maxZ)
                     continue;
                 System.arraycopy(data, o, out, n * 7, 7);
+                if (kept != null) kept[n] = biomes[k];
                 n++;
             }
-            return new Segments(out, n);
+            return new Segments(out, n, kept);
         }
     }
 
@@ -281,7 +342,14 @@ public final class ArcPaths {
      */
     public static Segments segmentsNear(List<Path> paths, double minX, double maxX, double minZ, double maxZ,
         SegmentWeight shared, SegmentFilter keep) {
+        return segmentsNear(paths, minX, maxX, minZ, maxZ, shared, null, keep);
+    }
+
+    /** As above, with each segment carrying the biome its path takes from the ground, when a ground is given. */
+    public static Segments segmentsNear(List<Path> paths, double minX, double maxX, double minZ, double maxZ,
+        SegmentWeight shared, Ground ground, SegmentFilter keep) {
         double[] data = new double[64 * 7];
+        EndBiome[] biomes = ground == null ? null : new EndBiome[64];
         int n = 0;
         for (Path path : paths) {
             double[] p = path.points;
@@ -304,10 +372,14 @@ public final class ArcPaths {
                 if ((n + 1) * 7 > data.length) data = Arrays.copyOf(data, data.length * 2);
                 System.arraycopy(p, i, data, n * 7, 6);
                 data[n * 7 + 6] = tube;
+                if (biomes != null) {
+                    if (n >= biomes.length) biomes = Arrays.copyOf(biomes, biomes.length * 2);
+                    biomes[n] = groundBiome(path, ground);
+                }
                 n++;
             }
         }
-        return new Segments(data, n);
+        return new Segments(data, n, biomes);
     }
 
     /**
@@ -316,18 +388,36 @@ public final class ArcPaths {
      */
     public static double density(Segments segments, double x, double y, double z) {
         double best = Double.NEGATIVE_INFINITY;
-        double[] d = segments.data;
         for (int k = 0; k < segments.count; k++) {
-            int o = k * 7;
-            double ax = d[o], ay = d[o + 1], az = d[o + 2];
-            double ex = d[o + 3] - ax, ey = d[o + 4] - ay, ez = d[o + 5] - az;
-            double t = ((x - ax) * ex + (y - ay) * ey + (z - az) * ez) / (ex * ex + ey * ey + ez * ez + 1e-9);
-            t = Math.max(0, Math.min(1, t));
-            double qx = ax + ex * t - x, qy = ay + ey * t - y, qz = az + ez * t - z;
-            double v = d[o + 6] - Math.sqrt(qx * qx + qy * qy + qz * qz);
+            double v = segmentDensity(segments.data, k, x, y, z);
             if (v >= -REACH) best = Math.max(best, v);
         }
         return best;
+    }
+
+    /** The biome of the tube nearest to its surface at a point, or null when its path is bare or none is near. */
+    public static EndBiome biomeAt(Segments segments, double x, double y, double z) {
+        if (segments.biomes == null) return null;
+        double best = -REACH;
+        EndBiome biome = null;
+        for (int k = 0; k < segments.count; k++) {
+            double v = segmentDensity(segments.data, k, x, y, z);
+            if (v > best) {
+                best = v;
+                biome = segments.biomes[k];
+            }
+        }
+        return biome;
+    }
+
+    private static double segmentDensity(double[] d, int k, double x, double y, double z) {
+        int o = k * 7;
+        double ax = d[o], ay = d[o + 1], az = d[o + 2];
+        double ex = d[o + 3] - ax, ey = d[o + 4] - ay, ez = d[o + 5] - az;
+        double t = ((x - ax) * ex + (y - ay) * ey + (z - az) * ez) / (ex * ex + ey * ey + ez * ez + 1e-9);
+        t = Math.max(0, Math.min(1, t));
+        double qx = ax + ex * t - x, qy = ay + ey * t - y, qz = az + ez * t - z;
+        return d[o + 6] - Math.sqrt(qx * qx + qy * qy + qz * qz);
     }
 
     /** Rodrigues' rotation of v about the unit axis k. */
