@@ -224,7 +224,8 @@ public final class FeatureModifiers {
      */
     public static Modifier biomes() {
         return blockModifier(814, (area, view, sink) -> forEachColumn(sink, (x, z) -> {
-            EndBiome biome = EndBiome.at(area.seed, x, z);
+            EndBiome biome = EndBiome.at(area.seed, view.seeds(), x, z);
+            if (biome == null) return;
             int depth = 0;
             while (depth < PAINT_DEPTH && sink.maxY() + depth <= 255 && view.densityAt(x, sink.maxY() + depth, z) > 0)
                 depth++;
@@ -252,6 +253,7 @@ public final class FeatureModifiers {
             int ox = sink.originX(), oz = sink.originZ(), minY = sink.minY(), height = sink.maxY() - minY;
             int[] depth = oreDepths(view, sink);
             EndBiome[] biomes = new EndBiome[256];
+            boolean[] biomeKnown = new boolean[256];
             Boolean[] offIslands = new Boolean[256];
             for (Ore ore : Ore.values()) {
                 int y0 = Math.max(minY, ore.minY), y1 = Math.min(sink.maxY() - 1, ore.maxY);
@@ -267,7 +269,10 @@ public final class FeatureModifiers {
                             int d = depth[column * height + y - minY];
                             if (d < ore.minDepth || d > ore.maxDepth) return;
                             if (ore.biome != null) {
-                                if (biomes[column] == null) biomes[column] = EndBiome.at(area.seed, x, z);
+                                if (!biomeKnown[column]) {
+                                    biomes[column] = EndBiome.at(area.seed, view.seeds(), x, z);
+                                    biomeKnown[column] = true;
+                                }
                                 if (biomes[column] != ore.biome) return;
                                 if (offIslands[column] == null)
                                     offIslands[column] = ZoneIslands.ownerAt(view.zoneIslands(), x, z, PAINT_REACH)
