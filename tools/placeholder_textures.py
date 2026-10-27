@@ -1,4 +1,4 @@
-"""Generate placeholder 16x16 block textures for the End zones, biomes and ores."""
+"""Generate placeholder 16x16 block textures for the End zones, biomes, ores and plants."""
 import math
 import random
 import zlib
@@ -135,8 +135,78 @@ def ore(name):
     return img
 
 
+# plant -> (shape, stem or blade colour, head colour)
+PLANTS = {
+    'grove_grass': ('blades', (110, 170, 80), None),
+    'grove_fern': ('fern', (70, 140, 70), None),
+    'grove_bloom': ('flower', (80, 130, 60), (245, 160, 190)),
+    'highland_tuft': ('blades', (190, 180, 120), None),
+    'highland_thistle': ('flower', (140, 150, 110), (170, 110, 200)),
+    'mycelia_sprout': ('blades', (170, 120, 150), None),
+    'glowcap': ('mushroom', (200, 190, 170), (120, 230, 210)),
+    'amber_reed': ('blades', (220, 150, 60), None),
+    'amber_bulb': ('bulb', (160, 100, 40), (255, 190, 60)),
+}
+
+
+def put(img, x, y, color):
+    # plants are drawn crossed, so pixels off the sheet or in its top corners are dropped
+    if 0 <= x < SIZE and 0 <= y < SIZE and (x, y) not in ((0, 0), (SIZE - 1, 0)):
+        img.putpixel((x, y), color)
+
+
+def stem(img, rng, x, height, color):
+    for i in range(height):
+        put(img, x, SIZE - 1 - i, noise(rng, color, 0.1))
+
+
+def plant(name):
+    rng = rng_for(name)
+    shape, body, head = PLANTS[name]
+    img = Image.new('RGBA', (SIZE, SIZE), (0, 0, 0, 0))
+    if shape == 'blades':
+        for _ in range(7):
+            x, lean = rng.randrange(2, 14), rng.choice((-1, 0, 1))
+            height = rng.randint(5, 13)
+            for i in range(height):
+                # darker at the root, lighter at the tip
+                put(img, x + lean * (i // 4), SIZE - 1 - i, shade(body, 0.7 + 0.5 * i / height))
+    elif shape == 'fern':
+        stem(img, rng, 8, 13, shade(body, 0.8)[:3])
+        for i in range(2, 13, 2):
+            reach = max(1, (13 - i) // 2)
+            for d in range(1, reach + 1):
+                put(img, 8 - d, SIZE - 1 - i + d // 2, noise(rng, body, 0.1))
+                put(img, 8 + d, SIZE - 2 - i + d // 2, noise(rng, body, 0.1))
+    elif shape == 'flower':
+        for x, height in ((5, 8), (10, 10)):
+            stem(img, rng, x, height, body)
+            top = SIZE - 1 - height
+            for dx, dy in ((0, 0), (-1, 0), (1, 0), (0, -1), (0, 1), (-1, -1), (1, -1)):
+                put(img, x + dx, top + dy, noise(rng, head, 0.08))
+            put(img, x, top, shade(head, 0.6))
+    elif shape == 'mushroom':
+        for x, height, width in ((5, 5, 2), (10, 8, 3)):
+            stem(img, rng, x, height, body)
+            top = SIZE - 1 - height
+            for dx in range(-width, width + 1):
+                put(img, x + dx, top, noise(rng, head, 0.1))
+                if abs(dx) < width:
+                    put(img, x + dx, top - 1, shade(head, 1.15))
+    else:  # bulb on a short stem
+        stem(img, rng, 8, 7, body)
+        for dx in range(-2, 3):
+            for dy in range(-2, 3):
+                if dx * dx + dy * dy <= 5:
+                    put(img, 8 + dx, 6 + dy, noise(rng, head, 0.06))
+        put(img, 7, 5, (255, 240, 200, 255))
+    return img
+
+
 def main():
     OUT.mkdir(parents=True, exist_ok=True)
+    for name in PLANTS:
+        plant(name).save(OUT / f'{name}.png')
     for zone, (surface, _, _) in ZONES.items():
         top(zone).save(OUT / f'{zone}_{surface}_top.png')
         side(zone).save(OUT / f'{zone}_{surface}_side.png')
