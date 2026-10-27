@@ -27,8 +27,8 @@ public enum EndBiome {
     }
 
     /**
-     * The biome of the continent whose land rises highest at (x, z), or null for bare ground. Where a mountain's feet
-     * rise higher, the column belongs to the continent the mountain stands on.
+     * The biome of the continent whose land rises highest at (x, z), or null for bare ground. Inside a mountain's
+     * radius the column belongs to the continent under its peak instead, so the mountain reads as one piece.
      */
     public static EndBiome at(long seed, List<Continent.Seed> seeds, List<Mountains.Mountain> mountains, double x,
         double z) {
@@ -50,11 +50,11 @@ public enum EndBiome {
     static EndBiome atWarped(long seed, List<Continent.Seed> seeds, List<Mountains.Mountain> mountains, double wx,
         double wz) {
         Continent.Seed owner = Continent.highest(seeds, wx, wz);
-        double best = Continent.rawHeight(seeds, wx, wz);
+        double tallest = 0;
         for (Mountains.Mountain m : mountains) {
-            double foot = Mountains.footLand(m, wx, wz);
-            if (foot > best && m.anchor != null) {
-                best = foot;
+            double rise = Mountains.rise(m, wx, wz);
+            if (rise > tallest && m.anchor != null) {
+                tallest = rise;
                 owner = m.anchor;
             }
         }

@@ -92,10 +92,13 @@ public final class Mountains {
     /** Height of the tallest mountain over (wx, wz), before ridges and interior fading. */
     public static double rise(List<Mountain> mountains, double wx, double wz) {
         double best = 0;
-        for (Mountain m : mountains) {
-            double t = Distance.planar(wx - m.x, wz - m.z) / m.radius;
-            if (t < 1) best = Math.max(best, m.peak * Math.pow(1 - t, 1.6));
-        }
+        for (Mountain m : mountains) best = Math.max(best, rise(m, wx, wz));
         return best;
+    }
+
+    /** Height one mountain adds over (wx, wz); zero outside its radius. */
+    public static double rise(Mountain m, double wx, double wz) {
+        double t = Distance.planar(wx - m.x, wz - m.z) / m.radius;
+        return t < 1 ? m.peak * Math.pow(1 - t, 1.6) : 0;
     }
 }

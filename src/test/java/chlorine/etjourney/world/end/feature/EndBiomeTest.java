@@ -62,22 +62,52 @@ class EndBiomeTest {
         assertTrue(changes <= landSteps / 200, changes + " changes in " + landSteps + " steps on land");
     }
 
-    /** Where a mountain's feet rise above the continents, they wear the biome of the continent it stands on. */
-    @Test
-    void mountainFeetWearTheirContinentsBiome() {
-        int cases = 0;
+    private interface MountainPoint {
+
+        void at(Mountains.Mountain m, double t, double wx, double wz, List<Continent.Seed> seeds);
+    }
+
+    /** Points around mountains at a share t of their radius, one mountain at a time. */
+    private static void aroundMountains(double[] shares, MountainPoint check) {
         for (Mountains.Mountain m : Mountains.near(SEED, 3000, 0, 2500)) {
-            EndBiome own = EndBiome.ofContinent(SEED, ContinentIds.of(SEED, m.anchor));
-            for (int k = 0; k < 8; k++) {
-                double wx = m.x + Math.cos(k * Math.PI / 4) * m.radius * 0.85;
-                double wz = m.z + Math.sin(k * Math.PI / 4) * m.radius * 0.85;
-                List<Continent.Seed> seeds = Continent.seedsNear(SEED, wx, wz, 0);
-                if (Mountains.footLand(m, wx, wz) <= Continent.rawHeight(seeds, wx, wz)) continue;
-                cases++;
-                assertEquals(own, EndBiome.atWarped(SEED, seeds, Collections.singletonList(m), wx, wz));
+            for (double t : shares) {
+                for (int k = 0; k < 16; k++) {
+                    double wx = m.x + Math.cos(k * Math.PI / 8) * m.radius * t;
+                    double wz = m.z + Math.sin(k * Math.PI / 8) * m.radius * t;
+                    check.at(m, t, wx, wz, Continent.seedsNear(SEED, wx, wz, 0));
+                }
             }
         }
-        assertTrue(cases > 20, "only " + cases + " feet above the continents");
+    }
+
+    private static EndBiome own(Continent.Seed s) {
+        return EndBiome.ofContinent(SEED, ContinentIds.of(SEED, s));
+    }
+
+    /** A mountain reads as one piece: all of its body wears the biome of the continent under its peak. */
+    @Test
+    void mountainBodyWearsItsContinentsBiome() {
+        int[] onOther = new int[1];
+        aroundMountains(new double[] { 0.3, 0.6, 0.9 }, (m, t, wx, wz, seeds) -> {
+            Continent.Seed land = Continent.highest(seeds, wx, wz);
+            if (land != null && ContinentIds.of(SEED, land) != ContinentIds.of(SEED, m.anchor)) onOther[0]++;
+            assertEquals(own(m.anchor), EndBiome.atWarped(SEED, seeds, Collections.singletonList(m), wx, wz));
+        });
+        assertTrue(onOther[0] > 5, "only " + onOther[0] + " body points over another continent");
+    }
+
+    /** Outside mountain bodies a continent keeps its biome on all the land it could raise. */
+    @Test
+    void continentLandOutsideMountainsKeepsItsBiome() {
+        int[] cases = new int[1];
+        aroundMountains(new double[] { 1.1, 1.3 }, (m, t, wx, wz, seeds) -> {
+            if (Continent.rawHeight(seeds, wx, wz) <= 0) return;
+            Continent.Seed land = Continent.highest(seeds, wx, wz);
+            if (ContinentIds.of(SEED, land) == ContinentIds.of(SEED, m.anchor)) return;
+            cases[0]++;
+            assertEquals(own(land), EndBiome.atWarped(SEED, seeds, Collections.singletonList(m), wx, wz));
+        });
+        assertTrue(cases[0] > 5, "only " + cases[0] + " feet on another continent");
     }
 
     @Test
