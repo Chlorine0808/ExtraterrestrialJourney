@@ -19,6 +19,7 @@ import chlorine.etjourney.world.end.modifier.BlockSink;
 import chlorine.etjourney.world.end.modifier.ChunkArea;
 import chlorine.etjourney.world.end.modifier.ColumnState;
 import chlorine.etjourney.world.end.modifier.DensityField;
+import chlorine.etjourney.world.end.modifier.EndBlock;
 import chlorine.etjourney.world.end.modifier.Modifier;
 import chlorine.etjourney.world.end.modifier.ModifierChain;
 import chlorine.etjourney.world.end.modifier.Shape;
@@ -66,6 +67,9 @@ public final class ChunkPlan implements TerrainView {
     private volatile double[] ringNodes;
     /** Density grids by half and shapes, built on first use. */
     private final double[][] fields = new double[4][];
+    /** Blocks above Y 127 by the order they were taken before; NOTHING_ABOVE stands for null. */
+    private final Map<Integer, BlockSink> upper = new ConcurrentHashMap<>();
+    private static final BlockSink NOTHING_ABOVE = new SeamSink(0, 0);
 
     public ChunkPlan(TerrainSampler sampler, int chunkX, int chunkZ, ReservedLookup reservedLookup) {
         this.sampler = sampler;
@@ -190,6 +194,21 @@ public final class ChunkPlan implements TerrainView {
 
     public void blocks(BlockSink sink) {
         chain.blocks(area, sink, this::chunkWeight);
+    }
+
+    @Override
+    public BlockSink upperBefore(int order) {
+        BlockSink found = upper.computeIfAbsent(order, o -> {
+            if (!TallPass.needed(this)) return NOTHING_ABOVE;
+            SeamSink seam = new SeamSink(area.chunkX, area.chunkZ);
+            int ox = area.originX(), oz = area.originZ();
+            TallPass.forEachSolid(
+                TallPass.upperField(this),
+                (lx, y, lz) -> { if (y < seam.maxY()) seam.set(ox + lx, y, oz + lz, EndBlock.STONE); });
+            chain.blocksBefore(area, seam, this::chunkWeight, o);
+            return seam;
+        });
+        return found == NOTHING_ABOVE ? null : found;
     }
 
     /** A modifier's strongest weight over the chunk's corners and centre: chunk-wide passes run if it is present. */

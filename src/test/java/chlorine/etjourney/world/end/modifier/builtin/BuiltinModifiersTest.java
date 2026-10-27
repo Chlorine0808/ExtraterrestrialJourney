@@ -18,6 +18,7 @@ import chlorine.etjourney.world.end.feature.Mountains;
 import chlorine.etjourney.world.end.feature.Shoals;
 import chlorine.etjourney.world.end.feature.StructureProbe;
 import chlorine.etjourney.world.end.feature.ZoneIslands;
+import chlorine.etjourney.world.end.modifier.BlockSink;
 import chlorine.etjourney.world.end.modifier.ChunkArea;
 import chlorine.etjourney.world.end.modifier.ColumnState;
 import chlorine.etjourney.world.end.modifier.Layer;
@@ -102,6 +103,11 @@ class BuiltinModifiersTest {
 
             @Override
             public StructureProbe structures() {
+                return null;
+            }
+
+            @Override
+            public BlockSink upperBefore(int order) {
                 return null;
             }
 

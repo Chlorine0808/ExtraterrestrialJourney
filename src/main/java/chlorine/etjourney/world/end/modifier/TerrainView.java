@@ -63,6 +63,12 @@ public interface TerrainView {
      */
     double densityAt(int x, int y, int z);
 
+    /**
+     * Blocks from Y 128 up, as the upper half holds them before the modifier of the given order runs, for a pass in
+     * the lower half that must see past Y 127; null when nothing stands above Y 127. Only for block passes.
+     */
+    BlockSink upperBefore(int order);
+
     /** Terrain answers for placing free-standing structures; the same for every chunk. */
     StructureProbe structures();
 }

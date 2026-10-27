@@ -16,6 +16,7 @@ import chlorine.etjourney.world.end.feature.Mountains;
 import chlorine.etjourney.world.end.feature.Shoals;
 import chlorine.etjourney.world.end.feature.StructureProbe;
 import chlorine.etjourney.world.end.feature.ZoneIslands;
+import chlorine.etjourney.world.end.modifier.BlockSink;
 import chlorine.etjourney.world.end.modifier.ChunkArea;
 import chlorine.etjourney.world.end.modifier.ColumnState;
 import chlorine.etjourney.world.end.modifier.Modifier;
@@ -354,6 +355,11 @@ public final class TerrainSampler {
         @Override
         public StructureProbe structures() {
             return structureProbe();
+        }
+
+        @Override
+        public BlockSink upperBefore(int order) {
+            throw new UnsupportedOperationException("block passes need a chunk plan");
         }
 
         @Override
