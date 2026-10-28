@@ -235,12 +235,12 @@ public final class ShootServer {
     }
 
     /**
-     * Feet height in column (x, z), from 48 below y to 24 above it, that stands on ground (not a tree crown) with
-     * air at the feet and the head, the one nearest y; NaN when there is none.
+     * Feet height in column (x, z) that stands on ground (not a tree crown) with air at the feet and the head, the
+     * one nearest y; NaN when there is none.
      */
     public static double floor(int x, double y, int z) {
         WorldServer end = end();
-        int lo = Math.max(1, (int) Math.floor(y) - 48), hi = Math.min(254, (int) Math.floor(y) + 24);
+        int lo = 1, hi = 254;
         double[] feet = new double[hi - lo + 1];
         for (int at = lo; at <= hi; at++) {
             Block below = end.getBlock(x, at - 1, z);
