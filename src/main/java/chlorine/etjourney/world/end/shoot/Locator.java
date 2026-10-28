@@ -18,7 +18,8 @@ import chlorine.etjourney.world.end.feature.Mountains;
 final class Locator {
 
     private static final double LAND = 10;
-    private static final double CONTINENT_SIZE = 96, MOUNTAIN_SIZE = 64;
+    /** Scene sizes; an arc touch is framed with the stretch of tube that comes down to the ground. */
+    private static final double CONTINENT_SIZE = 96, MOUNTAIN_SIZE = 64, ARC_SCENE_SIZE = 64;
 
     private final TerrainSampler sampler;
 
@@ -90,7 +91,8 @@ final class Locator {
                     for (int k = 0; k < paths.size() && out.size() < count; k++) {
                         ArcPaths.Path path = paths.get(k);
                         double[] p = ArcPaths.touchPoint(path, sampler.arcLand(), sampler.arcProbe());
-                        if (p != null) out.add(new Target("arc", p[0], p[1], p[2], path.tube, cellKey(cx, cz) + k));
+                        if (p != null)
+                            out.add(new Target("arc", p[0], p[1], p[2], ARC_SCENE_SIZE, cellKey(cx, cz) + k));
                     }
                 }
             }

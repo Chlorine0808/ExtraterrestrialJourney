@@ -60,7 +60,17 @@ class LocatorTest {
         double[] span = SAMPLER.arcLand()
             .span(t.x, t.z);
         assertNotNull(span);
-        assertTrue(t.y + t.size >= span[0] && t.y - t.size <= span[1]); // size is the tube radius
+        double tube = 12; // the widest tube radius
+        assertTrue(t.y + tube >= span[0] && t.y - tube <= span[1]);
+    }
+
+    @Test
+    void arcTouchIsFramedWideEnoughToShowWhereTheTubeLands() {
+        // Framed by the tube alone, the aerial camera stood 48 blocks off, inside the tubes and the ground they
+        // reach (20261029-034306, 36: buried twice and blocked once).
+        Target t = LOCATOR.arcTouches(3000, 0, 1)
+            .get(0);
+        assertTrue(Framing.subjectDistance(t) >= 150);
     }
 
     @Test
