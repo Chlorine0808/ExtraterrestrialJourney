@@ -28,6 +28,8 @@ import net.minecraft.world.storage.WorldInfo;
 import net.minecraftforge.client.event.EntityViewRenderEvent;
 import net.minecraftforge.common.MinecraftForge;
 
+import org.lwjgl.opengl.GL11;
+
 import chlorine.etjourney.core.util.ModLog;
 import chlorine.etjourney.world.end.EndTerrain;
 import chlorine.etjourney.world.end.TerrainSampler;
@@ -49,6 +51,8 @@ public final class ShootHarness {
     private static final int JOIN_TICKS = 20;
     /** Client ticks to wait in the End before reporting, so the new world has been set up and drawn. */
     private static final int ARRIVE_TICKS = 40;
+    /** Fog start while shooting, beyond any render distance. */
+    private static final float FOG_FAR = 4096;
 
     private enum Stage {
         MENU,
@@ -140,12 +144,15 @@ public final class ShootHarness {
         inEnd = true;
     }
 
-    /** Clears the fog while shooting so far terrain is not washed out. */
+    /**
+     * Pushes the linear fog out of reach while shooting, so far terrain is not washed out. Angelica also stops
+     * drawing chunks beyond the fog end, so cancelling the fog density alone left only the nearest terrain.
+     */
     @SubscribeEvent
-    public void onFogDensity(EntityViewRenderEvent.FogDensity event) {
+    public void onRenderFog(EntityViewRenderEvent.RenderFogEvent event) {
         if (stage == Stage.MENU) return;
-        event.density = 0.0001F;
-        event.setCanceled(true);
+        GL11.glFogf(GL11.GL_FOG_START, FOG_FAR);
+        GL11.glFogf(GL11.GL_FOG_END, FOG_FAR * 2);
     }
 
     /** Server thread: the expanded shots, each with its first camera so the report can show where it stands. */
