@@ -2,11 +2,17 @@ package chlorine.etjourney.world.end.debug.shoot;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -23,7 +29,13 @@ import net.minecraftforge.client.event.EntityViewRenderEvent;
 import net.minecraftforge.common.MinecraftForge;
 
 import chlorine.etjourney.core.util.ModLog;
+import chlorine.etjourney.world.end.EndTerrain;
+import chlorine.etjourney.world.end.TerrainSampler;
+import chlorine.etjourney.world.end.shoot.PlannedShot;
+import chlorine.etjourney.world.end.shoot.Report;
 import chlorine.etjourney.world.end.shoot.ShotList;
+import chlorine.etjourney.world.end.shoot.ShotPlanner;
+import chlorine.etjourney.world.end.shoot.ShotRecord;
 import chlorine.etjourney.world.end.shoot.WorldPlan;
 import cpw.mods.fml.common.FMLCommonHandler;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
@@ -41,7 +53,8 @@ public final class ShootHarness {
     private enum Stage {
         MENU,
         JOINING,
-        ARRIVED
+        ARRIVED,
+        PLANNING
     }
 
     private final ShotList list;
@@ -50,6 +63,7 @@ public final class ShootHarness {
     /** Set on the server thread once the player stands in the End, flying with night vision. */
     private volatile boolean inEnd;
     private boolean sentToEnd;
+    private CompletableFuture<List<ShotRecord>> plan;
 
     private ShootHarness(ShotList list) {
         this.list = list;
@@ -73,6 +87,7 @@ public final class ShootHarness {
             .bus()
             .register(harness);
         MinecraftForge.EVENT_BUS.register(harness);
+        ShootServer.register();
     }
 
     @SubscribeEvent
@@ -97,8 +112,12 @@ public final class ShootHarness {
                     "[shoot] in the End, framebuffer {}x{}",
                     mc.getFramebuffer().framebufferWidth,
                     mc.getFramebuffer().framebufferHeight);
-                // Task 8 continues from here; for now the run ends on arrival.
-                mc.shutdown();
+                plan = ShootServer.submit(this::planRecords);
+                stage = Stage.PLANNING;
+                break;
+            case PLANNING:
+                if (!plan.isDone()) return;
+                finishPlanning(mc);
                 break;
         }
     }
@@ -127,6 +146,67 @@ public final class ShootHarness {
         if (stage == Stage.MENU) return;
         event.density = 0.0001F;
         event.setCanceled(true);
+    }
+
+    /** Server thread: the expanded shots, each with its first camera so the report can show where it stands. */
+    private List<ShotRecord> planRecords() {
+        TerrainSampler sampler = EndTerrain.sampler(ShootServer.seed(list));
+        List<ShotRecord> records = new ArrayList<>();
+        for (PlannedShot s : ShootServer.expand(list)) {
+            ShotRecord r = new ShotRecord(s);
+            r.camera = ShotPlanner.firstCamera(s, sampler::biome);
+            records.add(r);
+        }
+        return records;
+    }
+
+    private void finishPlanning(Minecraft mc) {
+        List<ShotRecord> records;
+        try {
+            records = plan.join();
+        } catch (RuntimeException e) {
+            ModLog.LOG.error("[shoot] expanding the shot list failed", e);
+            mc.shutdown();
+            return;
+        }
+        ModLog.LOG.info("[shoot] {} planned shots", records.size());
+        if (list.dryRun) {
+            String stamp = new SimpleDateFormat("yyyyMMdd-HHmmss", Locale.ROOT).format(new Date());
+            Path index = writeReport(mc, stamp, "End 撮影 " + stamp + "（dry-run）", records);
+            ModLog.LOG.info("[shoot] dry run written to {}", index);
+        }
+        // Task 9 takes the shots here; until then every run ends after planning.
+        mc.shutdown();
+    }
+
+    private Path writeReport(Minecraft mc, String stamp, String title, List<ShotRecord> records) {
+        Path dir = new File(mc.mcDataDir, "etj-shots").toPath()
+            .resolve(stamp);
+        Path index = dir.resolve("index.html")
+            .toAbsolutePath();
+        try {
+            Files.createDirectories(dir);
+            Files.write(
+                index,
+                Report.html(title, list.errors, records, settings())
+                    .getBytes(StandardCharsets.UTF_8));
+        } catch (IOException e) {
+            throw new IllegalStateException("cannot write " + index, e);
+        }
+        return index;
+    }
+
+    private String settings() {
+        return String.format(
+            Locale.ROOT,
+            "seed %d / %s / origin %.0f %.0f / render-distance %d / sphere-candidates %d%s",
+            list.seed,
+            list.worldType,
+            list.originX,
+            list.originZ,
+            list.renderDistance,
+            list.sphereCandidates,
+            list.dryRun ? " / dry-run" : "");
     }
 
     private void applySettings(GameSettings s) {
