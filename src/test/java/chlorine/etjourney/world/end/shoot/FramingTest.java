@@ -78,4 +78,12 @@ class FramingTest {
         assertFalse(Framing.clear(5, 0, View.GROUND));
         assertTrue(Framing.clear(30, 0, View.INSIDE));
     }
+
+    @Test
+    void groundViewMustMeetTheGroundAhead() {
+        // 20261029-034306, 08: the camera stood on a ledge down a cliff and looked along it into the void.
+        assertTrue(Framing.seesGround(12));
+        assertFalse(Framing.seesGround(Double.NaN));
+        assertFalse(Framing.seesGround(200));
+    }
 }

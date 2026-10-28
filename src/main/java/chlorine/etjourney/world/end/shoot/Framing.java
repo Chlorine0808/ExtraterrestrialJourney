@@ -13,6 +13,8 @@ public final class Framing {
     public static final double EYE = 1.62;
     private static final double AERIAL_PITCH = 35, OUTSIDE_PITCH = 20, GROUND_PITCH = 8;
     private static final int GROUND_NEAR = 16, GROUND_FAR = 96, GROUND_STEP = 8;
+    /** Blocks within which a ground view, looking down at its pitch, must meet the ground. */
+    public static final int GROUND_SIGHT = 64;
 
     public interface BiomeAt {
 
@@ -60,6 +62,11 @@ public final class Framing {
         if (view == View.AERIAL || view == View.OUTSIDE)
             return hitDistance >= subjectDistance - Math.max(8, 0.15 * subjectDistance);
         return hitDistance >= 12;
+    }
+
+    /** Whether a ground view's look at its pitch met the ground (hitDistance, NaN for none) rather than the void. */
+    public static boolean seesGround(double hitDistance) {
+        return !Double.isNaN(hitDistance) && hitDistance <= GROUND_SIGHT;
     }
 
     private static float turn(int attempt) {
