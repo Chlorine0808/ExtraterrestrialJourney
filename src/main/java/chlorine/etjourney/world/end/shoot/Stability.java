@@ -1,19 +1,19 @@
 package chlorine.etjourney.world.end.shoot;
 
 /** Decides that rendering has settled once consecutive thumbnails stop changing. */
-final class Stability {
+public final class Stability {
 
     private final int needed;
     private final double tolerance;
     private int[] previous;
     private int quiet;
 
-    Stability(int needed, double tolerance) {
+    public Stability(int needed, double tolerance) {
         this.needed = needed;
         this.tolerance = tolerance;
     }
 
-    boolean offer(int[] thumb) {
+    public boolean offer(int[] thumb) {
         if (previous != null && previous.length == thumb.length) {
             long sum = 0;
             for (int i = 0; i < thumb.length; i++) {
@@ -31,7 +31,7 @@ final class Stability {
     }
 
     /** Box-averages the image down to tw x th (each thumbnail pixel covers a block of source pixels). */
-    static int[] thumbnail(int[] argb, int w, int h, int tw, int th) {
+    public static int[] thumbnail(int[] argb, int w, int h, int tw, int th) {
         int[] out = new int[tw * th];
         for (int ty = 0; ty < th; ty++) {
             int y0 = ty * h / th, y1 = Math.max(y0 + 1, (ty + 1) * h / th);

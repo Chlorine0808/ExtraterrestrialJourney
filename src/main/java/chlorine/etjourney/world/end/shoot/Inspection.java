@@ -17,7 +17,7 @@ public final class Inspection {
 
     private Inspection() {}
 
-    static Fault inspect(int[] argb, int w, int h) {
+    public static Fault inspect(int[] argb, int w, int h) {
         if (w < MIN_WIDTH || h < MIN_HEIGHT) return Fault.SMALL;
         int[] all = new int[512], centre = new int[512];
         int nAll = 0, nCentre = 0;

@@ -9,8 +9,8 @@ import chlorine.etjourney.world.end.feature.EndBiome;
 /** Chooses camera placements for a target and how each retry differs from the last. */
 public final class Framing {
 
-    static final int MAX_ATTEMPTS = 3;
-    static final double EYE = 1.62;
+    public static final int MAX_ATTEMPTS = 3;
+    public static final double EYE = 1.62;
     private static final double AERIAL_PITCH = 35, OUTSIDE_PITCH = 20, GROUND_PITCH = 8;
     private static final int GROUND_NEAR = 16, GROUND_FAR = 96, GROUND_STEP = 8;
 
@@ -21,20 +21,20 @@ public final class Framing {
 
     private Framing() {}
 
-    static double subjectDistance(Target t) {
+    public static double subjectDistance(Target t) {
         return Math.max(48, Math.min(400, t.size * 2.5));
     }
 
-    static Camera aerial(Target t, int attempt) {
+    public static Camera aerial(Target t, int attempt) {
         return looking(t, subjectDistance(t) * Math.pow(1.25, attempt), turn(attempt), (float) AERIAL_PITCH);
     }
 
-    static Camera outside(Target ball, int attempt) {
+    public static Camera outside(Target ball, int attempt) {
         return looking(ball, ball.size * 2.6, turn(attempt), (float) OUTSIDE_PITCH);
     }
 
     /** The eight compass yaws, those whose forward line crosses most of the wanted biome first. */
-    static List<Float> groundYaws(BiomeAt biomes, double x, double z, EndBiome want) {
+    public static List<Float> groundYaws(BiomeAt biomes, double x, double z, EndBiome want) {
         List<Float> yaws = new ArrayList<>();
         int[] hits = new int[8];
         for (int i = 0; i < 8; i++) {
@@ -50,12 +50,12 @@ public final class Framing {
         return yaws;
     }
 
-    static Camera ground(double x, double groundTop, double z, float yaw) {
+    public static Camera ground(double x, double groundTop, double z, float yaw) {
         return new Camera(x, groundTop, z, yaw, (float) GROUND_PITCH);
     }
 
     /** Whether a view whose ray hit at hitDistance (NaN when it hit nothing) is not blocked in front of its subject. */
-    static boolean clear(double hitDistance, double subjectDistance, View view) {
+    public static boolean clear(double hitDistance, double subjectDistance, View view) {
         if (Double.isNaN(hitDistance)) return true;
         if (view == View.AERIAL || view == View.OUTSIDE)
             return hitDistance >= subjectDistance - Math.max(8, 0.15 * subjectDistance);
