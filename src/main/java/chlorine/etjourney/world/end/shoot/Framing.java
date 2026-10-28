@@ -15,6 +15,8 @@ public final class Framing {
     public static final double EYE = 1.62;
     private static final double AERIAL_PITCH = 35, STEEP_PITCH = 60, OUTSIDE_PITCH = 20, GROUND_PITCH = 8;
     private static final int GROUND_NEAR = 16, GROUND_FAR = 96, GROUND_STEP = 8;
+    /** Farthest ground from the expected top that still counts as the continent's, not a pad in the void. */
+    public static final double GROUND_REACH = 64;
     /** How far the second ground spot stands from the target, along the best look. */
     public static final double GROUND_SHIFT = 24;
 
@@ -69,11 +71,14 @@ public final class Framing {
         return cols;
     }
 
-    /** Index of the floor (NaN for none) nearest wantY, the earlier on a tie; -1 when there is none. */
+    /**
+     * Index of the floor (NaN for none) nearest wantY within GROUND_REACH, the earlier on a tie; -1 when there is
+     * none.
+     */
     public static int pickGround(double wantY, double[] floors) {
         int best = -1;
         for (int i = 0; i < floors.length; i++) {
-            if (Double.isNaN(floors[i])) continue;
+            if (Double.isNaN(floors[i]) || Math.abs(floors[i] - wantY) > GROUND_REACH) continue;
             if (best < 0 || Math.abs(floors[i] - wantY) < Math.abs(floors[best] - wantY)) best = i;
         }
         return best;

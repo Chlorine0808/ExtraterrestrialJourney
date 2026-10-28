@@ -123,4 +123,12 @@ class FramingTest {
         assertEquals(2, Framing.pickGround(57, new double[] { 20, 80, 60 }));
         assertEquals(0, Framing.pickGround(57, new double[] { 55, 59 })); // a tie keeps the earlier
     }
+
+    @Test
+    void groundFarFromTheExpectedTopIsNotTheContinent() {
+        // 20261029-045518, 06: with the whole column searched, the nearest "ground" in every highland column was an
+        // obsidian pad in the void 123 blocks under the expected top, and the camera stood on it.
+        assertEquals(-1, Framing.pickGround(146, new double[] { 23, 146 - Framing.GROUND_REACH - 1 }));
+        assertEquals(1, Framing.pickGround(146, new double[] { 23, 146 - Framing.GROUND_REACH }));
+    }
 }
