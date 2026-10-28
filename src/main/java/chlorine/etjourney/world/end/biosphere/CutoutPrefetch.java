@@ -20,7 +20,7 @@ import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import cpw.mods.fml.common.gameevent.TickEvent;
 
 /** Cuts the biospheres ahead of the players in the End, a few milliseconds a tick, so populate finds them ready. */
-final class CutoutPrefetch {
+public final class CutoutPrefetch {
 
     private static final int END = 1;
     /** Time a tick may spend on the job in hand. */
