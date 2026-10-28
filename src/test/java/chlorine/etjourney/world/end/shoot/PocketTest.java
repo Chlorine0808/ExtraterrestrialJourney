@@ -3,6 +3,7 @@ package chlorine.etjourney.world.end.shoot;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.Arrays;
 import java.util.List;
 
 import org.junit.jupiter.api.Test;
@@ -37,7 +38,7 @@ class PocketTest {
 
     @Test
     void spreadSkipsNearDuplicateSpots() {
-        List<Camera> ranked = java.util.Arrays.asList(
+        List<Camera> ranked = Arrays.asList(
             new Camera(0.5, 11, 0.5, 0, 10),
             new Camera(1.5, 11, 0.5, 0, 10),
             new Camera(12.5, 11, 0.5, 0, 10),
@@ -52,7 +53,7 @@ class PocketTest {
 
     @Test
     void spreadReturnsFewerWhenAllSpotsAreClose() {
-        List<Camera> ranked = java.util.Arrays.asList(new Camera(0.5, 11, 0.5, 0, 10), new Camera(1.5, 11, 0.5, 0, 10));
+        List<Camera> ranked = Arrays.asList(new Camera(0.5, 11, 0.5, 0, 10), new Camera(1.5, 11, 0.5, 0, 10));
         assertEquals(
             1,
             Pocket.spread(ranked, 3, 8)
