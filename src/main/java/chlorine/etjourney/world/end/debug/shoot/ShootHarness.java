@@ -38,6 +38,7 @@ import chlorine.etjourney.world.end.shoot.Report;
 import chlorine.etjourney.world.end.shoot.ShotList;
 import chlorine.etjourney.world.end.shoot.ShotPlanner;
 import chlorine.etjourney.world.end.shoot.ShotRecord;
+import chlorine.etjourney.world.end.shoot.Watchdog;
 import chlorine.etjourney.world.end.shoot.WorldPlan;
 import cpw.mods.fml.common.FMLCommonHandler;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
@@ -53,12 +54,16 @@ public final class ShootHarness {
     private static final int ARRIVE_TICKS = 40;
     /** Fog start while shooting, beyond any render distance. */
     private static final float FOG_FAR = 4096;
+    /** How long the run may go without a step forward before it gives up: at least this, or settle + margin. */
+    private static final long STALL_MS = 10 * 60_000L, STALL_MARGIN_MS = 5 * 60_000L;
 
     private enum Stage {
         MENU,
         JOINING,
         ARRIVED,
-        PLANNING
+        PLANNING,
+        SHOOTING,
+        DONE
     }
 
     private final ShotList list;
@@ -68,9 +73,16 @@ public final class ShootHarness {
     private volatile boolean inEnd;
     private boolean sentToEnd;
     private CompletableFuture<List<ShotRecord>> plan;
+    private final long started = System.currentTimeMillis();
+    private final Watchdog watchdog;
+    private List<ShotRecord> records;
+    private String stamp;
+    private ShotTaker taker;
 
     private ShootHarness(ShotList list) {
         this.list = list;
+        long stall = Math.max(STALL_MS, list.settleSeconds * 1000L + STALL_MARGIN_MS);
+        this.watchdog = new Watchdog(stall, started);
     }
 
     /** Starts the run and registers every event handler, only when etj.shoot is set. */
@@ -96,8 +108,52 @@ public final class ShootHarness {
 
     @SubscribeEvent
     public void onClientTick(TickEvent.ClientTickEvent event) {
-        if (event.phase != TickEvent.Phase.END) return;
+        if (event.phase != TickEvent.Phase.END || stage == Stage.DONE) return;
         Minecraft mc = Minecraft.getMinecraft();
+        long now = System.currentTimeMillis();
+        if (watchdog.expired(now)) {
+            giveUp(mc, "watchdog: " + stage);
+            return;
+        }
+        if (now - started > list.budgetMinutes * 60_000L) {
+            giveUp(mc, "budget of " + list.budgetMinutes + " minutes spent at " + stage);
+            return;
+        }
+        if (stage.compareTo(Stage.ARRIVED) >= 0 && mc.theWorld == null) {
+            giveUp(mc, "watchdog: the world closed at " + stage);
+            return;
+        }
+        Stage before = stage;
+        try {
+            clientTick(mc);
+        } catch (RuntimeException e) {
+            ModLog.LOG.error("[shoot] stopped at {}", stage, e);
+            giveUp(mc, "error at " + stage + ": " + e);
+            return;
+        }
+        if (stage != before) watchdog.progress(now);
+    }
+
+    private void clientTick(Minecraft mc) {
+        // A pausing screen (the game menu opens when the window loses focus) stops the server and its jobs.
+        if (stage != Stage.MENU && mc.theWorld != null
+            && mc.currentScreen != null
+            && mc.currentScreen.doesGuiPauseGame()) {
+            ModLog.LOG.info(
+                "[shoot] closing {}",
+                mc.currentScreen.getClass()
+                    .getName());
+            mc.displayGuiScreen(null);
+        }
+        // Moving or resizing the window shrinks the framebuffer back to the window; grow it again.
+        if (stage.compareTo(Stage.ARRIVED) >= 0
+            && (mc.getFramebuffer().framebufferWidth != WIDTH || mc.getFramebuffer().framebufferHeight != HEIGHT)) {
+            ModLog.LOG.info(
+                "[shoot] framebuffer {}x{}, enlarging",
+                mc.getFramebuffer().framebufferWidth,
+                mc.getFramebuffer().framebufferHeight);
+            ShootCapture.enlarge(mc, WIDTH, HEIGHT);
+        }
         switch (stage) {
             case MENU:
                 if (!(mc.currentScreen instanceof GuiMainMenu)) return;
@@ -123,7 +179,21 @@ public final class ShootHarness {
                 if (!plan.isDone()) return;
                 finishPlanning(mc);
                 break;
+            case SHOOTING:
+                taker.tick(mc);
+                if (taker.finished()) finish(mc);
+                break;
+            default:
+                break;
         }
+    }
+
+    @SubscribeEvent
+    public void onRenderTick(TickEvent.RenderTickEvent event) {
+        if (stage != Stage.SHOOTING) return;
+        Minecraft mc = Minecraft.getMinecraft();
+        if (event.phase == TickEvent.Phase.START) taker.holdView(mc);
+        else taker.afterFrame(mc);
     }
 
     @SubscribeEvent
@@ -173,24 +243,67 @@ public final class ShootHarness {
             records = plan.join();
         } catch (RuntimeException e) {
             ModLog.LOG.error("[shoot] expanding the shot list failed", e);
+            stage = Stage.DONE;
             mc.shutdown();
             return;
         }
         ModLog.LOG.info("[shoot] {} planned shots", records.size());
+        this.records = records;
+        stamp = new SimpleDateFormat("yyyyMMdd-HHmmss", Locale.ROOT).format(new Date());
         if (list.dryRun) {
-            String stamp = new SimpleDateFormat("yyyyMMdd-HHmmss", Locale.ROOT).format(new Date());
-            Path index = writeReport(mc, stamp, "End 撮影 " + stamp + "（dry-run）", records);
+            Path index = writeReport(mc);
             ModLog.LOG.info("[shoot] dry run written to {}", index);
+            stage = Stage.DONE;
+            mc.shutdown();
+            return;
         }
-        // Task 9 takes the shots here; until then every run ends after planning.
+        Path dir = runDir(mc);
+        try {
+            Files.createDirectories(dir);
+        } catch (IOException e) {
+            throw new IllegalStateException("cannot create " + dir, e);
+        }
+        writeReport(mc);
+        taker = new ShotTaker(
+            list,
+            records,
+            dir,
+            () -> watchdog.progress(System.currentTimeMillis()),
+            () -> writeReport(mc));
+        stage = Stage.SHOOTING;
+    }
+
+    /** Every shot is done: the report is final, so say where it is and close the game. */
+    private void finish(Minecraft mc) {
+        Path index = writeReport(mc);
+        ModLog.LOG.info("[shoot] done {}", index);
+        stage = Stage.DONE;
         mc.shutdown();
     }
 
-    private Path writeReport(Minecraft mc, String stamp, String title, List<ShotRecord> records) {
-        Path dir = new File(mc.mcDataDir, "etj-shots").toPath()
+    /** Ends a stalled or overdue run: marks what is left as out of time, writes what there is, closes the game. */
+    private void giveUp(Minecraft mc, String why) {
+        ModLog.LOG.error("[shoot] {}", why);
+        stage = Stage.DONE;
+        try {
+            if (taker != null) taker.timeUp();
+            if (records != null) ModLog.LOG.info("[shoot] done {}", writeReport(mc));
+        } catch (RuntimeException e) {
+            ModLog.LOG.error("[shoot] cannot write the report", e);
+        }
+        mc.shutdown();
+    }
+
+    private Path runDir(Minecraft mc) {
+        return new File(mc.mcDataDir, "etj-shots").toPath()
             .resolve(stamp);
+    }
+
+    private Path writeReport(Minecraft mc) {
+        Path dir = runDir(mc);
         Path index = dir.resolve("index.html")
             .toAbsolutePath();
+        String title = "End 撮影 " + stamp + (list.dryRun ? "（dry-run）" : "");
         try {
             Files.createDirectories(dir);
             Files.write(
