@@ -76,6 +76,12 @@ public final class Biosphere extends Structure {
         return d > radius - 1 ? Part.GLASS : Part.INSIDE;
     }
 
+    /** Whether column (x, z) holds some of the inside: tried at the two blocks whose centres lie nearest y. */
+    public boolean coversColumn(int x, int z) {
+        int below = (int) Math.floor(y - 0.5);
+        return part(x, below, z) == Part.INSIDE || part(x, below + 1, z) == Part.INSIDE;
+    }
+
     /**
      * Whether the populate window of chunk (chunkX, chunkZ), 16 x 16 from 8 blocks into it, meets the ball and
      * finds it: populate looks for balls within WINDOW_REACH plus their footprint of the window's centre.

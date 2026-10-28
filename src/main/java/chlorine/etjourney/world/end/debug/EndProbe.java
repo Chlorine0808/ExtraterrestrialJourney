@@ -217,7 +217,7 @@ public final class EndProbe {
                         }
                     }
                     ModLog.LOG.info(
-                        "[probe] biosphere {},{},{} r={} {}: {} ms, glass {}, filled {} of {} -> {}",
+                        "[probe] biosphere {},{},{} r={} {}: {} ms, glass {}, filled {} of {} -> {}; {}",
                         (int) b.centreX,
                         (int) b.y,
                         (int) b.centreZ,
@@ -227,7 +227,8 @@ public final class EndProbe {
                         glass,
                         solid,
                         inside,
-                        counts);
+                        counts,
+                        biomes(end, seed, b));
                 }
             }
         }
@@ -246,6 +247,45 @@ public final class EndProbe {
                 w.loadedEntityList.size(),
                 w.loadedTileEntityList.size());
         }
+        ModLog.LOG.info("[probe] End rain strength {}", end.getRainStrength(1));
         ModLog.LOG.info("[probe] biospheres done");
+    }
+
+    /**
+     * How the ball's columns match its sample's biome map: the site, the covered columns holding the sample's
+     * biome, and the columns around the ball holding something other than the End's own biome.
+     */
+    private static String biomes(WorldServer end, long seed, Biosphere b) {
+        SampleWorlds.Site site = SampleWorlds.site(seed, b);
+        if (site == null) return "no site";
+        int cx = (int) Math.floor(b.centreX), cz = (int) Math.floor(b.centreZ);
+        int covered = 0, matched = 0, stray = 0, excluded = 0;
+        for (int x = (int) Math.floor(b.minX()) - 2; x <= (int) Math.ceil(b.maxX()) + 2; x++) {
+            for (int z = (int) Math.floor(b.minZ()) - 2; z <= (int) Math.ceil(b.maxZ()) + 2; z++) {
+                int here = end.getBiomeGenForCoords(x, z).biomeID;
+                if (!b.coversColumn(x, z)) {
+                    if (here != end.getWorldChunkManager()
+                        .getBiomeGenAt(x, z).biomeID) stray++;
+                    continue;
+                }
+                covered++;
+                if (SampleWorlds.excluded(here)) excluded++;
+                if (here == site.world.getWorldChunkManager()
+                    .getBiomeGenAt(site.point[0] + x - cx, site.point[1] + z - cz).biomeID) matched++;
+            }
+        }
+        return "site " + site.kind
+            + " "
+            + site.point[0]
+            + ","
+            + site.point[1]
+            + ", biomes "
+            + matched
+            + " of "
+            + covered
+            + ", stray "
+            + stray
+            + ", excluded "
+            + excluded;
     }
 }

@@ -195,4 +195,20 @@ class BiosphereTest {
             }
         }
     }
+
+    /** The columns given the sample's biomes are exactly those holding some of the inside. */
+    @Test
+    void coveredColumnsAreThoseWithInside() {
+        for (Biosphere b : new Biosphere[] { new Biosphere(100.3, -50.7, 120.4, 30.6, 1),
+            new Biosphere(-7, 8, 99.5, 28, 2) }) {
+            for (int x = (int) Math.floor(b.minX()) - 1; x <= Math.ceil(b.maxX()) + 1; x++) {
+                for (int z = (int) Math.floor(b.minZ()) - 1; z <= Math.ceil(b.maxZ()) + 1; z++) {
+                    boolean inside = false;
+                    for (int y = (int) Math.floor(b.minY()); y <= Math.ceil(b.maxY()); y++)
+                        inside |= b.part(x, y, z) == Biosphere.Part.INSIDE;
+                    assertEquals(inside, b.coversColumn(x, z), x + "," + z);
+                }
+            }
+        }
+    }
 }

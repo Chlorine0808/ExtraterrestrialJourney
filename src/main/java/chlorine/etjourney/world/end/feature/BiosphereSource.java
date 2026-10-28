@@ -1,5 +1,7 @@
 package chlorine.etjourney.world.end.feature;
 
+import java.util.function.IntPredicate;
+
 import chlorine.etjourney.world.end.noise.Hash;
 
 /** Where a biosphere's terrain comes from: the kind of world and the point around which it is cut. */
@@ -13,6 +15,12 @@ public final class BiosphereSource {
 
     /** Whether the biome map puts an ocean, a river or a beach at (x, z). */
     public interface Water {
+
+        boolean at(int x, int z);
+    }
+
+    /** Whether a ball cut around (x, z) holds no biome the config keeps out. */
+    public interface Allowed {
 
         boolean at(int x, int z);
     }
@@ -40,18 +48,38 @@ public final class BiosphereSource {
         return new Kind[] { kind, kind == Kind.NETHER ? Kind.SURFACE : Kind.NETHER };
     }
 
-    /** The point, {x, z}, the ball's terrain is cut around; surface balls mostly try until one is not water. */
-    public static int[] point(long seed, Biosphere b, Kind kind, Water water) {
+    /**
+     * The point, {x, z}, the ball's terrain is cut around: the first candidate the blacklist allows, where surface
+     * balls mostly also want one that is not water. Null when the blacklist allows none.
+     */
+    public static int[] point(long seed, Biosphere b, Kind kind, Water water, Allowed allowed) {
         long s = seed ^ SALT;
         int cx = (int) Math.floor(b.centreX), cz = (int) Math.floor(b.centreZ);
         boolean anyWater = kind != Kind.SURFACE || Hash.hash01(s + 2, cx, cz) < WATER_SHARE;
         int spread = kind == Kind.NETHER ? SPREAD / 8 : SPREAD;
-        int[] p = null;
+        int[] last = null;
         for (int t = 0; t < TRIES; t++) {
-            p = new int[] { (int) ((Hash.hash01(s + 3 + 2L * t, cx, cz) * 2 - 1) * spread),
+            int[] p = new int[] { (int) ((Hash.hash01(s + 3 + 2L * t, cx, cz) * 2 - 1) * spread),
                 (int) ((Hash.hash01(s + 4 + 2L * t, cx, cz) * 2 - 1) * spread) };
+            if (!allowed.at(p[0], p[1])) continue;
             if (anyWater || !water.at(p[0], p[1])) return p;
+            last = p;
         }
-        return p;
+        return last;
+    }
+
+    /**
+     * Whether no column within radius of the centre of a size x size area of biome IDs (row by row, x fastest) is
+     * excluded.
+     */
+    public static boolean clear(int[] ids, int size, double radius, IntPredicate excluded) {
+        double c = (size - 1) / 2.0;
+        for (int j = 0; j < size; j++) {
+            for (int i = 0; i < size; i++) {
+                if ((i - c) * (i - c) + (j - c) * (j - c) <= radius * radius && excluded.test(ids[j * size + i]))
+                    return false;
+            }
+        }
+        return true;
     }
 }

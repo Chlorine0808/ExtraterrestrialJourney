@@ -1,10 +1,13 @@
 package chlorine.etjourney.world.end.feature;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import org.junit.jupiter.api.Test;
@@ -13,6 +16,7 @@ import org.junit.jupiter.api.Test;
 class BiosphereSourceTest {
 
     private static final long SEED = 41L;
+    private static final BiosphereSource.Allowed ANY = (x, z) -> true;
 
     private static List<Biosphere> balls(int n) {
         List<Biosphere> out = new ArrayList<>();
@@ -40,8 +44,8 @@ class BiosphereSourceTest {
         Biosphere b = balls(1).get(0);
         BiosphereSource.Water dry = (x, z) -> false;
         assertArrayEquals(
-            BiosphereSource.point(SEED, b, BiosphereSource.Kind.SURFACE, dry),
-            BiosphereSource.point(SEED, b, BiosphereSource.Kind.SURFACE, dry));
+            BiosphereSource.point(SEED, b, BiosphereSource.Kind.SURFACE, dry, ANY),
+            BiosphereSource.point(SEED, b, BiosphereSource.Kind.SURFACE, dry, ANY));
     }
 
     @Test
@@ -50,7 +54,7 @@ class BiosphereSourceTest {
         BiosphereSource.Water water = (x, z) -> x < 0;
         int wet = 0, n = 0;
         for (Biosphere b : balls(2000)) {
-            int[] p = BiosphereSource.point(SEED, b, BiosphereSource.Kind.SURFACE, water);
+            int[] p = BiosphereSource.point(SEED, b, BiosphereSource.Kind.SURFACE, water, ANY);
             n++;
             if (water.at(p[0], p[1])) wet++;
         }
@@ -61,14 +65,14 @@ class BiosphereSourceTest {
 
     @Test
     void allWaterStillGivesAPoint() {
-        int[] p = BiosphereSource.point(SEED, balls(1).get(0), BiosphereSource.Kind.SURFACE, (x, z) -> true);
+        int[] p = BiosphereSource.point(SEED, balls(1).get(0), BiosphereSource.Kind.SURFACE, (x, z) -> true, ANY);
         assertNotNull(p);
     }
 
     @Test
     void netherPointsStayAnEighthAsFar() {
         for (Biosphere b : balls(500)) {
-            int[] p = BiosphereSource.point(SEED, b, BiosphereSource.Kind.NETHER, (x, z) -> false);
+            int[] p = BiosphereSource.point(SEED, b, BiosphereSource.Kind.NETHER, (x, z) -> false, ANY);
             assertTrue(Math.abs(p[0]) <= BiosphereSource.SPREAD / 8 && Math.abs(p[1]) <= BiosphereSource.SPREAD / 8);
         }
     }
@@ -85,5 +89,68 @@ class BiosphereSourceTest {
         assertArrayEquals(
             new BiosphereSource.Kind[] { BiosphereSource.Kind.CAVE, BiosphereSource.Kind.NETHER },
             BiosphereSource.order(BiosphereSource.Kind.CAVE));
+    }
+
+    /** A point whose biomes the config keeps out is skipped for the next candidate. */
+    @Test
+    void excludedPointsAreSkipped() {
+        BiosphereSource.Allowed east = (x, z) -> x >= 0;
+        for (Biosphere b : balls(300)) {
+            for (BiosphereSource.Kind kind : BiosphereSource.Kind.values()) {
+                int[] p = BiosphereSource.point(SEED, b, kind, (x, z) -> false, east);
+                if (p != null) assertTrue(p[0] >= 0, kind + " " + p[0]);
+            }
+        }
+    }
+
+    @Test
+    void anAllowedPointBeatsTheWaterCheck() {
+        // Land only where it is excluded: the ball takes allowed water rather than excluded land.
+        BiosphereSource.Allowed east = (x, z) -> x >= 0;
+        BiosphereSource.Water eastIsWater = (x, z) -> x >= 0;
+        for (Biosphere b : balls(300)) {
+            int[] p = BiosphereSource.point(SEED, b, BiosphereSource.Kind.SURFACE, eastIsWater, east);
+            if (p != null) assertTrue(p[0] >= 0);
+        }
+    }
+
+    /** With everything kept out there is no point, and the ball is then left out rather than crashing. */
+    @Test
+    void everythingExcludedGivesNoPoint() {
+        for (BiosphereSource.Kind kind : BiosphereSource.Kind.values()) {
+            assertNull(BiosphereSource.point(SEED, balls(1).get(0), kind, (x, z) -> false, (x, z) -> false));
+        }
+    }
+
+    @Test
+    void anExcludedFirstPointMovesToAnother() {
+        for (Biosphere b : balls(200)) {
+            int[] first = BiosphereSource.point(SEED, b, BiosphereSource.Kind.CAVE, (x, z) -> false, ANY);
+            BiosphereSource.Allowed notFirst = (x, z) -> x != first[0] || z != first[1];
+            int[] p = BiosphereSource.point(SEED, b, BiosphereSource.Kind.CAVE, (x, z) -> false, notFirst);
+            assertNotNull(p);
+            assertFalse(p[0] == first[0] && p[1] == first[1]);
+        }
+    }
+
+    /** A 5 x 5 area of biome IDs, row by row with x fastest, all 1 but for one column set to 9. */
+    private static int[] areaWith(int x, int z) {
+        int[] ids = new int[25];
+        Arrays.fill(ids, 1);
+        ids[z * 5 + x] = 9;
+        return ids;
+    }
+
+    @Test
+    void anExcludedColumnInsideTheBallRulesTheFootprintOut() {
+        assertFalse(BiosphereSource.clear(areaWith(2, 2), 5, 2, id -> id == 9));
+        assertFalse(BiosphereSource.clear(areaWith(4, 2), 5, 2, id -> id == 9));
+        assertTrue(BiosphereSource.clear(areaWith(2, 2), 5, 2, id -> id == 8));
+    }
+
+    @Test
+    void columnsOutsideTheBallDoNotCount() {
+        // The corner lies 2.8 blocks from the centre, beyond the radius of 2.
+        assertTrue(BiosphereSource.clear(areaWith(0, 0), 5, 2, id -> id == 9));
     }
 }

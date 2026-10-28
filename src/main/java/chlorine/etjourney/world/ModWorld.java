@@ -4,6 +4,7 @@ import chlorine.etjourney.core.util.ModLog;
 import chlorine.etjourney.world.end.EndFlora;
 import chlorine.etjourney.world.end.EndTerrain;
 import chlorine.etjourney.world.end.VoidFalls;
+import chlorine.etjourney.world.end.biosphere.BiosphereBiomes;
 import chlorine.etjourney.world.end.biosphere.BiosphereTransplant;
 import chlorine.etjourney.world.end.debug.EndProbe;
 import chlorine.etjourney.world.end.debug.EtjCommand;
@@ -28,6 +29,7 @@ public final class ModWorld {
         VoidFalls.register();
         EndFlora.register();
         BiosphereTransplant.register();
+        BiosphereBiomes.register();
         ModLog.LOG.debug("world: init");
     }
 }

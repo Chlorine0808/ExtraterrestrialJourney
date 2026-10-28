@@ -19,7 +19,6 @@ import chlorine.etjourney.world.end.EndTerrain;
 import chlorine.etjourney.world.end.TerrainSampler;
 import chlorine.etjourney.world.end.biosphere.SampleWorlds;
 import chlorine.etjourney.world.end.feature.Biosphere;
-import chlorine.etjourney.world.end.feature.BiosphereSource;
 import chlorine.etjourney.world.end.feature.EndBiome;
 import chlorine.etjourney.world.end.feature.Holes;
 import chlorine.etjourney.world.end.feature.Lakes;
@@ -144,15 +143,14 @@ public final class EtjCommand extends CommandBase {
         say(player, EtjArgs.biomeLine(sampler.biome(player.posX, player.posZ)));
         // Biospheres over this column; the sample point is found from the biome map alone.
         for (Biosphere b : Biosphere.KIND.near(sampler.seed(), player.posX, player.posZ, 0, sampler.structureProbe())) {
-            // The kind actually used: the other world stands in when the ball's own cannot be loaded.
-            BiosphereSource.Kind kind = SampleWorlds.usable(BiosphereSource.kind(sampler.seed(), b));
-            if (kind == null) {
-                say(player, "Biosphere: no sample world could be loaded");
+            // The site actually used: the other world stands in when the ball's own cannot be loaded or the
+            // blacklist allows no point there.
+            SampleWorlds.Site site = SampleWorlds.site(sampler.seed(), b);
+            if (site == null) {
+                say(player, "Biosphere: none (every candidate excluded or no sample world)");
                 continue;
             }
-            WorldServer w = SampleWorlds.world(kind);
-            int[] p = BiosphereSource.point(sampler.seed(), b, kind, (x, z) -> SampleWorlds.isWater(w, x, z));
-            say(player, EtjArgs.biosphereLine(kind.name(), p[0], p[1]));
+            say(player, EtjArgs.biosphereLine(site.kind.name(), site.point[0], site.point[1]));
         }
     }
 
