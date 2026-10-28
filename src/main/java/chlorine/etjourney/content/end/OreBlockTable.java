@@ -6,7 +6,7 @@ import java.util.List;
 
 import chlorine.etjourney.world.end.modifier.EndBlock;
 
-/** Registry names of the End ores and gems, with the hardness and pickaxe level each one asks for. */
+/** Registry names of the End ores and gems, the hardness and pickaxe level of each, and the item it drops. */
 final class OreBlockTable {
 
     static final class Entry {
@@ -15,25 +15,31 @@ final class OreBlockTable {
         final EndBlock kind;
         final float hardness;
         final int harvestLevel;
+        /** Registry name of the dropped item, and how many drop before Fortune. */
+        final String drop;
+        final int minDrops, maxDrops;
 
-        Entry(String name, EndBlock kind, float hardness, int harvestLevel) {
+        Entry(String name, EndBlock kind, float hardness, int harvestLevel, String drop, int minDrops, int maxDrops) {
             this.name = name;
             this.kind = kind;
             this.hardness = hardness;
             this.harvestLevel = harvestLevel;
+            this.drop = drop;
+            this.minDrops = minDrops;
+            this.maxDrops = maxDrops;
         }
     }
 
     // Vanilla pickaxe levels stand in until the mod has tools of its own.
     static final List<Entry> ENTRIES = Collections.unmodifiableList(
         Arrays.asList(
-            new Entry("ender_gold_ore", EndBlock.ENDER_GOLD_ORE, 3.0F, 1),
-            new Entry("ender_platinum_ore", EndBlock.ENDER_PLATINUM_ORE, 3.0F, 2),
-            new Entry("sakura_gold_ore", EndBlock.SAKURA_GOLD_ORE, 3.0F, 2),
-            new Entry("golden_palladium_ore", EndBlock.GOLDEN_PALLADIUM_ORE, 3.0F, 2),
-            new Entry("drift_ore", EndBlock.DRIFT_ORE, 3.0F, 2),
-            new Entry("ascended_crystal_ore", EndBlock.ASCENDED_CRYSTAL, 4.0F, 2),
-            new Entry("black_quartz_ore", EndBlock.BLACK_QUARTZ, 4.0F, 2)));
+            new Entry("ender_gold_ore", EndBlock.ENDER_GOLD_ORE, 3.0F, 1, "raw_ender_gold", 1, 1),
+            new Entry("ender_platinum_ore", EndBlock.ENDER_PLATINUM_ORE, 3.0F, 2, "raw_ender_platinum", 1, 1),
+            new Entry("sakura_gold_ore", EndBlock.SAKURA_GOLD_ORE, 3.0F, 2, "raw_sakura_gold", 1, 1),
+            new Entry("golden_palladium_ore", EndBlock.GOLDEN_PALLADIUM_ORE, 3.0F, 2, "raw_golden_palladium", 1, 1),
+            new Entry("drift_ore", EndBlock.DRIFT_ORE, 3.0F, 2, "drift_shard", 1, 2),
+            new Entry("ascended_crystal_ore", EndBlock.ASCENDED_CRYSTAL, 4.0F, 2, "ascended_crystal", 1, 1),
+            new Entry("black_quartz_ore", EndBlock.BLACK_QUARTZ, 4.0F, 2, "black_quartz", 1, 1)));
 
     private OreBlockTable() {}
 }

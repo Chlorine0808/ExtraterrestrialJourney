@@ -11,6 +11,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.EnumSet;
+import java.util.HashSet;
 import java.util.Set;
 
 import javax.imageio.ImageIO;
@@ -45,6 +46,26 @@ class OreBlockTableTest {
     }
 
     @Test
+    void everyOreDropsItsOwnItem() {
+        Set<String> drops = new HashSet<>();
+        for (OreBlockTable.Entry e : OreBlockTable.ENTRIES) {
+            assertTrue(drops.add(e.drop), "shared drop: " + e.drop);
+            assertTrue(e.minDrops >= 1 && e.maxDrops >= e.minDrops, e.name);
+        }
+    }
+
+    @Test
+    void everyDropTextureIsA16By16Png() throws IOException {
+        for (OreBlockTable.Entry e : OreBlockTable.ENTRIES) {
+            Path png = ASSETS.resolve("textures/items/" + e.drop + ".png");
+            BufferedImage image = ImageIO.read(png.toFile());
+            assertNotNull(image, png.toString());
+            assertEquals(16, image.getWidth(), e.drop);
+            assertEquals(16, image.getHeight(), e.drop);
+        }
+    }
+
+    @Test
     void everyBlockIsNamedInBothLanguages() throws IOException {
         for (String lang : new String[] { "en_US", "ja_JP" }) {
             String text = new String(
@@ -52,6 +73,7 @@ class OreBlockTableTest {
                 StandardCharsets.UTF_8);
             for (OreBlockTable.Entry e : OreBlockTable.ENTRIES) {
                 assertTrue(text.contains("tile.etjourney." + e.name + ".name="), lang + ": " + e.name);
+                assertTrue(text.contains("item.etjourney." + e.drop + ".name="), lang + ": " + e.drop);
             }
         }
     }

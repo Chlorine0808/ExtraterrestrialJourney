@@ -1,6 +1,7 @@
 package chlorine.etjourney.world.end.debug;
 
 import java.io.File;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -10,16 +11,20 @@ import net.minecraft.world.WorldServer;
 import net.minecraftforge.common.DimensionManager;
 
 import chlorine.etjourney.core.util.ModLog;
+import chlorine.etjourney.world.end.EndFlora;
+import chlorine.etjourney.world.end.EndPalette;
 import chlorine.etjourney.world.end.EndTerrain;
 import chlorine.etjourney.world.end.TerrainSampler;
 import chlorine.etjourney.world.end.biosphere.SampleWorlds;
 import chlorine.etjourney.world.end.feature.Biosphere;
 import chlorine.etjourney.world.end.feature.BiosphereSource;
+import chlorine.etjourney.world.end.feature.EndBiome;
+import chlorine.etjourney.world.end.feature.Flora;
 import chlorine.etjourney.world.end.region.Style;
 
 /**
  * Headless measurements of the End terrain, run at server start only when a file named etj-endscan exists in the
- * server directory: generation time, unpopulated chunks, land coverage, surface heights and style shares.
+ * server directory: generation time, unpopulated chunks, land coverage, surface heights, plants and style shares.
  */
 public final class EndProbe {
 
@@ -62,6 +67,7 @@ public final class EndProbe {
             density[0],
             density[1]);
         surfaces(end);
+        plants(end);
         styles(EndTerrain.sampler(seed));
     }
 
@@ -95,6 +101,54 @@ public final class EndProbe {
             columns,
             histogram,
             highest);
+    }
+
+    /** Plants per open biome surface over every fourth column, plants off their own biome, and populate time. */
+    private static void plants(WorldServer end) {
+        Map<Block, Flora> plants = new HashMap<>();
+        for (Flora f : Flora.values()) if (EndPalette.isBound(f.block)) plants.put(EndPalette.block(f.block), f);
+        Map<Block, EndBiome> tops = new HashMap<>();
+        for (EndBiome b : EndBiome.values()) if (EndPalette.isBound(b.top)) tops.put(EndPalette.block(b.top), b);
+        int[] open = new int[EndBiome.values().length], planted = new int[open.length];
+        int[] counts = new int[Flora.values().length];
+        int stray = 0;
+        for (int x = (CX0 + 1) * 16; x < CX1 * 16; x += 4) {
+            for (int z = (CZ0 + 1) * 16; z < CZ1 * 16; z += 4) {
+                Block above = end.getBlock(x, 255, z);
+                for (int y = 254; y > 0; y--) {
+                    Block block = end.getBlock(x, y, z);
+                    Flora plant = plants.get(above);
+                    EndBiome biome = tops.get(block);
+                    if (biome != null && (above == Blocks.air || plant != null)) open[biome.ordinal()]++;
+                    if (plant != null) {
+                        counts[plant.ordinal()]++;
+                        if (biome == plant.biome) planted[biome.ordinal()]++;
+                        else stray++;
+                    }
+                    above = block;
+                }
+            }
+        }
+        StringBuilder out = new StringBuilder();
+        for (EndBiome b : EndBiome.values()) {
+            out.append(' ')
+                .append(b)
+                .append(':')
+                .append(planted[b.ordinal()])
+                .append('/')
+                .append(open[b.ordinal()]);
+        }
+        for (Flora f : Flora.values()) out.append(' ')
+            .append(f)
+            .append('=')
+            .append(counts[f.ordinal()]);
+        long[] stats = EndFlora.stats();
+        ModLog.LOG.info(
+            "[probe] plants per open surface:{}; off their biome {}; populate avg {} us over {} windows",
+            out,
+            stray,
+            stats[0],
+            stats[1]);
     }
 
     private static void styles(TerrainSampler sampler) {

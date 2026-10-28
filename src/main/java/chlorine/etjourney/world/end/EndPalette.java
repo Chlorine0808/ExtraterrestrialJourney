@@ -20,6 +20,11 @@ public final class EndPalette {
         META.bind(kind, meta);
     }
 
+    /** Whether content bound a block of its own to the kind, rather than leaving the vanilla stand-in. */
+    public static boolean isBound(EndBlock kind) {
+        return BLOCKS.get(kind) != null;
+    }
+
     public static Block block(EndBlock kind) {
         Block bound = BLOCKS.get(kind);
         return bound != null ? bound : standIn(kind);
