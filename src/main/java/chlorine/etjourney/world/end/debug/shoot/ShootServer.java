@@ -9,6 +9,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.function.Supplier;
 
+import net.minecraft.block.Block;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.MovingObjectPosition;
@@ -182,7 +183,7 @@ public final class ShootServer {
         public final int x0, y0, z0, x1, y1, z1;
         /** Air blocks inside, and all blocks inside. */
         public final int air, inside;
-        private final boolean[] cells;
+        private final boolean[] cells, crowns;
 
         BallGrid(Biosphere b, WorldServer end) {
             x0 = (int) Math.floor(b.centreX - b.radius);
@@ -192,13 +193,18 @@ public final class ShootServer {
             y1 = (int) Math.floor(b.y + b.radius);
             z1 = (int) Math.floor(b.centreZ + b.radius);
             cells = new boolean[(x1 - x0 + 1) * (y1 - y0 + 1) * (z1 - z0 + 1)];
+            crowns = new boolean[cells.length];
             int nAir = 0, nInside = 0;
             for (int x = x0; x <= x1; x++) {
                 for (int y = y0; y <= y1; y++) {
                     for (int z = z0; z <= z1; z++) {
                         if (b.part(x, y, z) != Biosphere.Part.INSIDE) continue;
                         nInside++;
-                        if (!end.isAirBlock(x, y, z)) continue;
+                        if (!end.isAirBlock(x, y, z)) {
+                            Block block = end.getBlock(x, y, z);
+                            crowns[index(x, y, z)] = block.isLeaves(end, x, y, z) || block.isWood(end, x, y, z);
+                            continue;
+                        }
                         nAir++;
                         cells[index(x, y, z)] = true;
                     }
@@ -212,6 +218,12 @@ public final class ShootServer {
         public boolean air(int x, int y, int z) {
             if (x < x0 || x > x1 || y < y0 || y > y1 || z < z0 || z > z1) return false;
             return cells[index(x, y, z)];
+        }
+
+        @Override
+        public boolean canopy(int x, int y, int z) {
+            if (x < x0 || x > x1 || y < y0 || y > y1 || z < z0 || z > z1) return false;
+            return crowns[index(x, y, z)];
         }
 
         private int index(int x, int y, int z) {

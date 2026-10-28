@@ -28,6 +28,26 @@ class PocketTest {
     }
 
     @Test
+    void treeTopsAreNotStandingSpots() {
+        // Ground at y 10, and a canopy of leaves at y 20 over x < 20 that is more open than the ground below it.
+        Pocket.Grid g = new Pocket.Grid() {
+
+            @Override
+            public boolean air(int x, int y, int z) {
+                return y > 10 && !canopy(x, y, z);
+            }
+
+            @Override
+            public boolean canopy(int x, int y, int z) {
+                return y == 20 && x < 20;
+            }
+        };
+        List<Camera> spots = Pocket.rank(g, 0, 0, 0, 40, 40, 40, 20, 20, 200);
+        assertTrue(!spots.isEmpty());
+        for (Camera c : spots) assertEquals(11, c.y, 0);
+    }
+
+    @Test
     void yawFacesTheLongestOpenDirection() {
         // A corridor along +z (yaw 0): air only where x == 5 and y > 10.
         List<Camera> spots = Pocket.rank((x, y, z) -> y > 10 && x == 5, 0, 0, 0, 10, 40, 60, 5, 5, 200);

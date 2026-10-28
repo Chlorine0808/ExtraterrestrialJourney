@@ -10,6 +10,11 @@ public final class Pocket {
     public interface Grid {
 
         boolean air(int x, int y, int z);
+
+        /** Whether the block is part of a tree crown, which is no ground to stand on. */
+        default boolean canopy(int x, int y, int z) {
+            return false;
+        }
     }
 
     static final int MIN_OPEN = 40, REACH = 24;
@@ -82,7 +87,8 @@ public final class Pocket {
     }
 
     private static boolean standable(Grid g, int x, int y, int z, int x0, int y0, int z0, int x1, int y1, int z1) {
-        return !g.air(x, y - 1, z) && g.air(x, y, z)
+        return !g.air(x, y - 1, z) && !g.canopy(x, y - 1, z)
+            && g.air(x, y, z)
             && inside(x, y + 1, z, x0, y0, z0, x1, y1, z1)
             && g.air(x, y + 1, z);
     }
