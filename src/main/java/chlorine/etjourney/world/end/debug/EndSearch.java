@@ -5,16 +5,16 @@ import chlorine.etjourney.world.end.feature.Continent;
 import chlorine.etjourney.world.end.feature.EndBiome;
 
 /** Nearest-target searches for the debug commands: true Euclidean nearest within a radius. */
-final class EndSearch {
+public final class EndSearch {
 
-    static final int RADIUS = 8192;
+    public static final int RADIUS = 8192;
     private static final int STEP = 16;
     /** Land height a biome search wants under its hit, so it lands well inside a continent. */
     private static final double LAND = 10;
 
     private EndSearch() {}
 
-    interface CellProbe {
+    public interface CellProbe {
 
         /** The cell's target as {x, z, extra...}, or null. */
         double[] at(int cx, int cz);
@@ -26,7 +26,7 @@ final class EndSearch {
     }
 
     /** Nearest cell target within RADIUS; a target must stay inside its cell. */
-    static double[] nearestInCells(int cell, double ox, double oz, CellProbe probe) {
+    public static double[] nearestInCells(int cell, double ox, double oz, CellProbe probe) {
         int ocx = (int) Math.floor(ox / cell), ocz = (int) Math.floor(oz / cell);
         double[] best = null;
         double bestDistance = Double.MAX_VALUE;
