@@ -7,14 +7,14 @@ import chlorine.etjourney.world.end.debug.EtjArgs;
 import chlorine.etjourney.world.end.feature.EndBiome;
 
 /** Chooses camera placements for a target and how each retry differs from the last. */
-final class Framing {
+public final class Framing {
 
     static final int MAX_ATTEMPTS = 3;
     static final double EYE = 1.62;
     private static final double AERIAL_PITCH = 35, OUTSIDE_PITCH = 20, GROUND_PITCH = 8;
     private static final int GROUND_NEAR = 16, GROUND_FAR = 96, GROUND_STEP = 8;
 
-    interface BiomeAt {
+    public interface BiomeAt {
 
         EndBiome at(double x, double z);
     }
