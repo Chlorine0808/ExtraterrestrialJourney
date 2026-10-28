@@ -408,18 +408,32 @@ final class ShotTaker {
         return p;
     }
 
-    /** Three looks from the target's column, then three from a column further into the biome. */
+    /**
+     * Three looks from the column near the target whose ground lies nearest its expected top, then three from a
+     * column further into the biome. Columns of another biome or with no ground are left out.
+     */
     private static void ground(TerrainSampler sampler, Target t, EndBiome biome, Plan p) {
-        float best = Framing.groundYaws(sampler::biome, t.x, t.z, biome)
+        List<double[]> cols = new ArrayList<>();
+        for (double[] c : Framing.groundColumns(t.x, t.z)) if (sampler.biome(c[0], c[1]) == biome) cols.add(c);
+        double[] floors = new double[cols.size()];
+        for (int i = 0; i < floors.length; i++) floors[i] = floorAt(cols.get(i)[0], t.y, cols.get(i)[1]);
+        int at = Framing.pickGround(t.y, floors);
+        if (at < 0) return;
+        double[] col = cols.get(at);
+        float best = Framing.groundYaws(sampler::biome, col[0], col[1], biome)
             .get(0);
-        for (double[] spot : Framing.groundSpots(t.x, t.z, best)) {
-            ShootServer.ensure(spot[0], spot[1], 1, Integer.MAX_VALUE);
-            int x = (int) Math.floor(spot[0]), z = (int) Math.floor(spot[1]);
-            int y = ShootServer.standY(x, t.y, z);
-            List<Float> yaws = Framing.groundYaws(sampler::biome, x + 0.5, z + 0.5, biome);
-            for (int i = 0; i < Framing.MAX_ATTEMPTS; i++)
-                p.cameras.add(Framing.ground(x + 0.5, y, z + 0.5, yaws.get(i)));
+        for (double[] spot : Framing.groundSpots(col[0], col[1], best)) {
+            double y = floorAt(spot[0], t.y, spot[1]);
+            if (Double.isNaN(y)) continue;
+            double x = Math.floor(spot[0]) + 0.5, z = Math.floor(spot[1]) + 0.5;
+            List<Float> yaws = Framing.groundYaws(sampler::biome, x, z, biome);
+            for (int i = 0; i < Framing.MAX_ATTEMPTS; i++) p.cameras.add(Framing.ground(x, y, z, yaws.get(i)));
         }
+    }
+
+    private static double floorAt(double x, double y, double z) {
+        ShootServer.ensure(x, z, 1, Integer.MAX_VALUE);
+        return ShootServer.floor((int) Math.floor(x), y, (int) Math.floor(z));
     }
 
     private static void inside(TerrainSampler sampler, Target t, Plan p) {

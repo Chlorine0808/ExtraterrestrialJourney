@@ -52,6 +52,29 @@ public final class Framing {
         return yaws;
     }
 
+    /** Columns {x, z} to look for ground in: the target's own, then rings 8 and 16 blocks out in 8 directions. */
+    public static List<double[]> groundColumns(double x, double z) {
+        List<double[]> cols = new ArrayList<>();
+        cols.add(new double[] { x, z });
+        for (int r = 8; r <= 16; r += 8) {
+            for (int i = 0; i < 8; i++) {
+                double[] d = EtjArgs.lookDirection(i * 45f, 0);
+                cols.add(new double[] { x + d[0] * r, z + d[2] * r });
+            }
+        }
+        return cols;
+    }
+
+    /** Index of the floor (NaN for none) nearest wantY, the earlier on a tie; -1 when there is none. */
+    public static int pickGround(double wantY, double[] floors) {
+        int best = -1;
+        for (int i = 0; i < floors.length; i++) {
+            if (Double.isNaN(floors[i])) continue;
+            if (best < 0 || Math.abs(floors[i] - wantY) < Math.abs(floors[best] - wantY)) best = i;
+        }
+        return best;
+    }
+
     /** Columns {x, z} to stand a ground view on: the target's own, then one further along the best look. */
     public static List<double[]> groundSpots(double x, double z, float bestYaw) {
         double[] d = EtjArgs.lookDirection(bestYaw, 0);

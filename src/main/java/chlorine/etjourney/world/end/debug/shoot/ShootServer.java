@@ -25,6 +25,7 @@ import chlorine.etjourney.world.end.debug.EtjArgs;
 import chlorine.etjourney.world.end.feature.Biosphere;
 import chlorine.etjourney.world.end.feature.BiosphereSource;
 import chlorine.etjourney.world.end.modifier.builtin.StructureModifiers;
+import chlorine.etjourney.world.end.shoot.Framing;
 import chlorine.etjourney.world.end.shoot.PlannedShot;
 import chlorine.etjourney.world.end.shoot.Pocket;
 import chlorine.etjourney.world.end.shoot.ShotList;
@@ -231,16 +232,22 @@ public final class ShootServer {
         }
     }
 
-    /** Feet height near y in column (x, z) with air at feet and head: down onto the ground, or up out of it. */
-    public static int standY(int x, double y, int z) {
+    /**
+     * Feet height in column (x, z), from 48 below y to 24 above it, that stands on ground (not a tree crown) with
+     * air at the feet and the head, the one nearest y; NaN when there is none.
+     */
+    public static double floor(int x, double y, int z) {
         WorldServer end = end();
-        int at = (int) Math.floor(y);
-        if (end.isAirBlock(x, at, z)) {
-            for (int i = 0; i < 24 && at > 1 && end.isAirBlock(x, at - 1, z); i++) at--;
-            return at;
+        int lo = Math.max(1, (int) Math.floor(y) - 48), hi = Math.min(254, (int) Math.floor(y) + 24);
+        double[] feet = new double[hi - lo + 1];
+        for (int at = lo; at <= hi; at++) {
+            Block below = end.getBlock(x, at - 1, z);
+            boolean ground = !end.isAirBlock(x, at - 1, z) && !below.isLeaves(end, x, at - 1, z)
+                && !below.isWood(end, x, at - 1, z);
+            feet[at - lo] = ground && end.isAirBlock(x, at, z) && end.isAirBlock(x, at + 1, z) ? at : Double.NaN;
         }
-        for (int i = 0; i < 48 && !(end.isAirBlock(x, at, z) && end.isAirBlock(x, at + 1, z)); i++) at++;
-        return at;
+        int i = Framing.pickGround(y, feet);
+        return i < 0 ? Double.NaN : feet[i];
     }
 
     /** Whether the block at (x, y, z) is air. */

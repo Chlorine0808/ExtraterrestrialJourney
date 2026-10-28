@@ -89,4 +89,22 @@ class FramingTest {
         assertEquals(10 + Framing.GROUND_SHIFT, spots.get(1)[0], 1e-9); // yaw 270 faces +X
         assertEquals(20, spots.get(1)[1], 1e-9);
     }
+
+    @Test
+    void groundColumnsStartAtTheTargetAndRingIt() {
+        List<double[]> cols = Framing.groundColumns(100, 200);
+        assertArrayEquals(new double[] { 100, 200 }, cols.get(0), 1e-9);
+        assertEquals(17, cols.size());
+        for (double[] c : cols) assertTrue(Math.hypot(c[0] - 100, c[1] - 200) <= 16 + 1e-9);
+    }
+
+    @Test
+    void groundIsTheFloorNearestTheExpectedTop() {
+        // 20261029-034306, 06/08/12: with no floor within 24 blocks under the expected top, the camera was left
+        // floating in the air (08 beside a cliff, looking into the void). Columns without a floor are NaN.
+        assertEquals(-1, Framing.pickGround(57, new double[] { Double.NaN, Double.NaN }));
+        assertEquals(1, Framing.pickGround(57, new double[] { Double.NaN, 50, 70 }));
+        assertEquals(2, Framing.pickGround(57, new double[] { 20, 80, 60 }));
+        assertEquals(0, Framing.pickGround(57, new double[] { 55, 59 })); // a tie keeps the earlier
+    }
 }
