@@ -393,7 +393,7 @@ final class ShotTaker {
         }
         switch (s.view) {
             case AERIAL:
-                for (int i = 0; i < Framing.MAX_ATTEMPTS; i++) p.cameras.add(Framing.aerial(t, i));
+                for (int i = 0; i < Framing.AERIAL_ATTEMPTS; i++) p.cameras.add(Framing.aerial(t, i));
                 break;
             case OUTSIDE:
                 for (int i = 0; i < Framing.MAX_ATTEMPTS; i++) p.cameras.add(Framing.outside(t, i));

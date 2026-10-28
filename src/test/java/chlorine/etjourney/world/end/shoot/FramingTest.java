@@ -36,6 +36,22 @@ class FramingTest {
     }
 
     @Test
+    void lateAerialTriesLookDownSteeplyBetweenTheEarlierOnes() {
+        // 20261029-040906, 36 (ARCS touch): the three 35-degree tries were blocked by tubes 92 and 112 blocks out
+        // and buried. Steeper looks clear what stands around the subject.
+        Target t = new Target("t", 0, 80, 0, 64, 0);
+        assertEquals(6, Framing.AERIAL_ATTEMPTS);
+        for (int i = 3; i < Framing.AERIAL_ATTEMPTS; i++) {
+            Camera c = Framing.aerial(t, i);
+            assertEquals(60, c.pitch, 1e-6);
+            assertEquals(45, Math.floorMod((int) c.yaw, 90));
+            double[] d = EtjArgs.lookDirection(c.yaw, c.pitch);
+            double k = Framing.subjectDistance(t);
+            assertEquals(t.y, c.y + Framing.EYE + d[1] * k, 0.5);
+        }
+    }
+
+    @Test
     void distanceStaysWithinLimits() {
         assertEquals(48, Framing.subjectDistance(new Target("s", 0, 0, 0, 4, 0)), 1e-9);
         assertEquals(400, Framing.subjectDistance(new Target("l", 0, 0, 0, 1000, 0)), 1e-9);

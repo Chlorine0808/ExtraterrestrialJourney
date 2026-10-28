@@ -10,8 +10,10 @@ import chlorine.etjourney.world.end.feature.EndBiome;
 public final class Framing {
 
     public static final int MAX_ATTEMPTS = 3;
+    /** Aerial tries: three at the usual pitch, then three steep ones between their headings. */
+    public static final int AERIAL_ATTEMPTS = 6;
     public static final double EYE = 1.62;
-    private static final double AERIAL_PITCH = 35, OUTSIDE_PITCH = 20, GROUND_PITCH = 8;
+    private static final double AERIAL_PITCH = 35, STEEP_PITCH = 60, OUTSIDE_PITCH = 20, GROUND_PITCH = 8;
     private static final int GROUND_NEAR = 16, GROUND_FAR = 96, GROUND_STEP = 8;
     /** How far the second ground spot stands from the target, along the best look. */
     public static final double GROUND_SHIFT = 24;
@@ -28,6 +30,8 @@ public final class Framing {
     }
 
     public static Camera aerial(Target t, int attempt) {
+        if (attempt >= MAX_ATTEMPTS)
+            return looking(t, subjectDistance(t), turn(attempt - MAX_ATTEMPTS) + 45f, (float) STEEP_PITCH);
         return looking(t, subjectDistance(t) * Math.pow(1.25, attempt), turn(attempt), (float) AERIAL_PITCH);
     }
 
