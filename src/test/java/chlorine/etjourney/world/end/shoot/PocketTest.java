@@ -34,17 +34,38 @@ class PocketTest {
 
             @Override
             public boolean air(int x, int y, int z) {
-                return y > 10 && !canopy(x, y, z);
+                return y > 10 && !noFooting(x, y, z);
             }
 
             @Override
-            public boolean canopy(int x, int y, int z) {
+            public boolean noFooting(int x, int y, int z) {
                 return y == 20 && x < 20;
             }
         };
         List<Camera> spots = Pocket.rank(g, 0, 0, 0, 40, 40, 40, 20, 20, 200);
         assertTrue(!spots.isEmpty());
         for (Camera c : spots) assertEquals(11, c.y, 0);
+    }
+
+    @Test
+    void lavaIsNoGround() {
+        // 20261029-040906, 34 (nether ball 2, inside): the camera stood on a lava sea, whose animation kept the
+        // thumbnails from ever settling, so the shot timed out. Lava fills y <= 10 for x < 30; rock elsewhere.
+        Pocket.Grid g = new Pocket.Grid() {
+
+            @Override
+            public boolean air(int x, int y, int z) {
+                return y > 10;
+            }
+
+            @Override
+            public boolean noFooting(int x, int y, int z) {
+                return y <= 10 && x < 30;
+            }
+        };
+        List<Camera> spots = Pocket.rank(g, 0, 0, 0, 40, 40, 40, 20, 20, 200);
+        assertTrue(!spots.isEmpty());
+        for (Camera c : spots) assertTrue(c.x >= 30, "stood on lava at x " + c.x);
     }
 
     @Test
