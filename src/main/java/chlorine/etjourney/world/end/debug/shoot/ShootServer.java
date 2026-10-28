@@ -1,18 +1,29 @@
 package chlorine.etjourney.world.end.debug.shoot;
 
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Queue;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.function.Supplier;
 
+import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.util.MovingObjectPosition;
+import net.minecraft.util.Vec3;
 import net.minecraft.world.WorldServer;
 import net.minecraftforge.common.DimensionManager;
 
 import chlorine.etjourney.world.end.EndTerrain;
+import chlorine.etjourney.world.end.TerrainSampler;
 import chlorine.etjourney.world.end.biosphere.SampleWorlds;
+import chlorine.etjourney.world.end.debug.EtjArgs;
+import chlorine.etjourney.world.end.feature.Biosphere;
 import chlorine.etjourney.world.end.feature.BiosphereSource;
 import chlorine.etjourney.world.end.shoot.PlannedShot;
+import chlorine.etjourney.world.end.shoot.Pocket;
 import chlorine.etjourney.world.end.shoot.ShotList;
 import chlorine.etjourney.world.end.shoot.ShotPlanner;
 import cpw.mods.fml.common.FMLCommonHandler;
@@ -23,7 +34,11 @@ import cpw.mods.fml.common.gameevent.TickEvent;
 public final class ShootServer {
 
     private static final int END = 1;
+    /** Blocks per ray trace piece; rayTraceBlocks gives up after 200 block steps. */
+    private static final int RAY_STEP = 48;
     private static final Queue<Runnable> JOBS = new ConcurrentLinkedQueue<>();
+    /** Chunks this run loaded with no player near, packed as cx << 32 | cz; released after each shot. */
+    private static final Set<Long> FORCED = new HashSet<>();
     private static boolean registered;
 
     private ShootServer() {}
@@ -87,5 +102,143 @@ public final class ShootServer {
             }
         }
         return true;
+    }
+
+    /** The End, or null before it is loaded. Server thread only, like everything below. */
+    static WorldServer end() {
+        return DimensionManager.getWorld(END);
+    }
+
+    /** The first player on the server, or null. */
+    static EntityPlayerMP player() {
+        List<?> players = MinecraftServer.getServer()
+            .getConfigurationManager().playerEntityList;
+        return players.isEmpty() ? null : (EntityPlayerMP) players.get(0);
+    }
+
+    /**
+     * Loads up to budget missing End chunks within radius + 1 chunks of (x, z), so that those within radius get
+     * populated even when no player is near, and says whether they all are ready.
+     */
+    public static boolean ensure(double x, double z, int radius, int budget) {
+        WorldServer end = end();
+        if (end == null) return false;
+        int ccx = (int) Math.floor(x) >> 4, ccz = (int) Math.floor(z) >> 4;
+        for (int cx = ccx - radius - 1; cx <= ccx + radius + 1 && budget > 0; cx++) {
+            for (int cz = ccz - radius - 1; cz <= ccz + radius + 1 && budget > 0; cz++) {
+                if (end.theChunkProviderServer.chunkExists(cx, cz)) continue;
+                end.theChunkProviderServer.loadChunk(cx, cz);
+                FORCED.add((long) cx << 32 | (cz & 0xFFFFFFFFL));
+                budget--;
+            }
+        }
+        return ready(x, z, radius);
+    }
+
+    /** Queues for unloading the chunks ensure loaded that lie beyond view chunks of the player. */
+    public static void release(int view) {
+        WorldServer end = end();
+        EntityPlayerMP p = player();
+        if (end == null || p == null) return;
+        int pcx = (int) Math.floor(p.posX) >> 4, pcz = (int) Math.floor(p.posZ) >> 4;
+        for (Iterator<Long> it = FORCED.iterator(); it.hasNext();) {
+            long key = it.next();
+            int cx = (int) (key >> 32), cz = (int) key;
+            if (Math.max(Math.abs(cx - pcx), Math.abs(cz - pcz)) <= view + 1) continue;
+            end.theChunkProviderServer.unloadChunksIfNotNearSpawn(cx, cz);
+            it.remove();
+        }
+    }
+
+    /** The ball a biosphere target was made from, found again by its key, or null. */
+    public static Biosphere ball(TerrainSampler sampler, double x, double z, long key) {
+        for (Biosphere b : Biosphere.KIND.near(sampler.seed(), x, z, 0, sampler.structureProbe())) {
+            if (b.key() == key) return b;
+        }
+        return null;
+    }
+
+    /** The air inside the ball, read once from the End; outside the box and every non-INSIDE block is solid. */
+    public static BallGrid grid(Biosphere b) {
+        return new BallGrid(b, end());
+    }
+
+    /** A snapshot of a ball's inside air, with how much of the inside is air. */
+    public static final class BallGrid implements Pocket.Grid {
+
+        public final int x0, y0, z0, x1, y1, z1;
+        /** Air blocks inside, and all blocks inside. */
+        public final int air, inside;
+        private final boolean[] cells;
+
+        BallGrid(Biosphere b, WorldServer end) {
+            x0 = (int) Math.floor(b.centreX - b.radius);
+            y0 = (int) Math.floor(b.y - b.radius);
+            z0 = (int) Math.floor(b.centreZ - b.radius);
+            x1 = (int) Math.floor(b.centreX + b.radius);
+            y1 = (int) Math.floor(b.y + b.radius);
+            z1 = (int) Math.floor(b.centreZ + b.radius);
+            cells = new boolean[(x1 - x0 + 1) * (y1 - y0 + 1) * (z1 - z0 + 1)];
+            int nAir = 0, nInside = 0;
+            for (int x = x0; x <= x1; x++) {
+                for (int y = y0; y <= y1; y++) {
+                    for (int z = z0; z <= z1; z++) {
+                        if (b.part(x, y, z) != Biosphere.Part.INSIDE) continue;
+                        nInside++;
+                        if (!end.isAirBlock(x, y, z)) continue;
+                        nAir++;
+                        cells[index(x, y, z)] = true;
+                    }
+                }
+            }
+            air = nAir;
+            inside = nInside;
+        }
+
+        @Override
+        public boolean air(int x, int y, int z) {
+            if (x < x0 || x > x1 || y < y0 || y > y1 || z < z0 || z > z1) return false;
+            return cells[index(x, y, z)];
+        }
+
+        private int index(int x, int y, int z) {
+            return ((x - x0) * (y1 - y0 + 1) + (y - y0)) * (z1 - z0 + 1) + (z - z0);
+        }
+    }
+
+    /** Feet height near y in column (x, z) with air at feet and head: down onto the ground, or up out of it. */
+    public static int standY(int x, double y, int z) {
+        WorldServer end = end();
+        int at = (int) Math.floor(y);
+        if (end.isAirBlock(x, at, z)) {
+            for (int i = 0; i < 24 && at > 1 && end.isAirBlock(x, at - 1, z); i++) at--;
+            return at;
+        }
+        for (int i = 0; i < 48 && !(end.isAirBlock(x, at, z) && end.isAirBlock(x, at + 1, z)); i++) at++;
+        return at;
+    }
+
+    /** Whether the block at (x, y, z) is air. */
+    public static boolean air(double x, double y, double z) {
+        return end().isAirBlock((int) Math.floor(x), (int) Math.floor(y), (int) Math.floor(z));
+    }
+
+    /**
+     * Distance from eye along dir to the first block with a collision box within range, or NaN when there is none.
+     * The look is traced in pieces because one trace stops after 200 block steps.
+     */
+    public static double firstHit(double[] eye, double[] dir, int range) {
+        WorldServer end = end();
+        for (double[] s : EtjArgs.lookSegments(eye, dir, range, RAY_STEP)) {
+            Vec3 from = Vec3.createVectorHelper(s[0], s[1], s[2]);
+            Vec3 to = Vec3.createVectorHelper(s[3], s[4], s[5]);
+            MovingObjectPosition hit = end.func_147447_a(from, to, false, true, false);
+            if (hit != null && hit.hitVec != null) {
+                double dx = hit.hitVec.xCoord - eye[0], dy = hit.hitVec.yCoord - eye[1];
+                double dz = hit.hitVec.zCoord - eye[2];
+                return Math.sqrt(dx * dx + dy * dy + dz * dz);
+            }
+        }
+        return Double.NaN;
     }
 }
