@@ -18,6 +18,7 @@ import net.minecraft.world.chunk.IChunkProvider;
 import chlorine.etjourney.world.end.EndTerrain;
 import chlorine.etjourney.world.end.TerrainSampler;
 import chlorine.etjourney.world.end.biosphere.SampleWorlds;
+import chlorine.etjourney.world.end.debug.shoot.CameraPlacement;
 import chlorine.etjourney.world.end.feature.Biosphere;
 import chlorine.etjourney.world.end.feature.EndBiome;
 import chlorine.etjourney.world.end.feature.Holes;
@@ -33,6 +34,7 @@ import chlorine.etjourney.world.end.region.Styles;
 import chlorine.etjourney.world.end.reserve.Area;
 import chlorine.etjourney.world.end.reserve.PredictedIslands;
 import chlorine.etjourney.world.end.reserve.Reservations;
+import chlorine.etjourney.world.end.shoot.Camera;
 
 /** /etj end ...: inspect the End terrain and teleport to the nearest example of a feature. */
 public final class EtjCommand extends CommandBase {
@@ -48,7 +50,7 @@ public final class EtjCommand extends CommandBase {
 
     @Override
     public String getCommandUsage(ICommandSender sender) {
-        return "/etj look [range] | /etj end <here|styles|style <name>|style <name> pure|mix [a] [b] [c]|mountain [minTopY]|lake|hole|valley|zone <name>|biome <name>|heeisland|destitute>";
+        return "/etj look [range] | /etj end <here|styles|style <name>|style <name> pure|mix [a] [b] [c]|mountain [minTopY]|lake|hole|valley|zone <name>|biome <name>|heeisland|destitute|cam <x> <y> <z> <yaw> <pitch>>";
     }
 
     @Override
@@ -75,6 +77,10 @@ public final class EtjCommand extends CommandBase {
             return;
         }
         EntityPlayerMP player = getCommandSenderAsPlayer(sender);
+        if (args[1].equals("cam")) {
+            cam(player, args);
+            return;
+        }
         if (player.dimension != END) {
             player.travelToDimension(END);
             say(player, "Moved to the End; run the command again");
@@ -122,6 +128,37 @@ public final class EtjCommand extends CommandBase {
             default:
                 say(sender, "Usage: " + getCommandUsage(sender));
         }
+    }
+
+    /**
+     * Reproduces a screenshot: moves to the End first if needed, then places the player flying with night vision at
+     * the position and view angles, all in this one call.
+     */
+    private static void cam(EntityPlayerMP player, String[] args) {
+        if (args.length != 7) {
+            say(player, "Usage: /etj end cam <x> <y> <z> <yaw> <pitch>");
+            return;
+        }
+        Camera camera = new Camera(
+            parseDouble(player, args[2]),
+            parseDouble(player, args[3]),
+            parseDouble(player, args[4]),
+            (float) parseDouble(player, args[5]),
+            (float) parseDouble(player, args[6]));
+        CameraPlacement.toEnd(player);
+        CameraPlacement.prepare(player);
+        CameraPlacement.place(player, camera);
+        say(
+            player,
+            "cam at " + (int) camera.x
+                + " "
+                + (int) camera.y
+                + " "
+                + (int) camera.z
+                + " yaw "
+                + camera.yaw
+                + " pitch "
+                + camera.pitch);
     }
 
     private static void here(EntityPlayerMP player, TerrainSampler sampler) {

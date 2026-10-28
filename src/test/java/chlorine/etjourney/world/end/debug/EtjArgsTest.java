@@ -37,6 +37,11 @@ class EtjArgsTest {
     }
 
     @Test
+    void completesCam() {
+        assertTrue(complete("end", "c").contains("cam"));
+    }
+
+    @Test
     void completesStyleNamesIgnoringCase() {
         assertEquals(Arrays.asList("SPIRES", "SLOT_CANYONS"), complete("end", "style", "s"));
     }

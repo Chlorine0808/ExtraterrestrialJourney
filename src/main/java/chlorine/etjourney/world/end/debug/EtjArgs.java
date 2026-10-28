@@ -24,7 +24,8 @@ public final class EtjArgs {
         "zone",
         "biome",
         "heeisland",
-        "destitute");
+        "destitute",
+        "cam");
     /** Heights /etj look keeps the player between. */
     static final double MIN_Y = 0, MAX_Y = 270;
     /** Most styles mix accepts: a base and two overlays. */
