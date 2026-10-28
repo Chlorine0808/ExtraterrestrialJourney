@@ -16,8 +16,6 @@ import chlorine.etjourney.world.end.feature.EndBiome;
 public final class ShotList {
 
     public static final long DEFAULT_SEED = 7037748451318983361L;
-    /** Sphere class names until SphereClass exists. */
-    private static final List<String> SPHERE_CLASSES = Arrays.asList("SURFACE", "WATER", "CAVE", "NETHER");
     private static final List<View> GROUND_VIEWS = Arrays.asList(View.AERIAL, View.GROUND);
     private static final List<View> SPHERE_VIEWS = Arrays.asList(View.OUTSIDE, View.INSIDE);
     private static final int DEFAULT_MOUNTAIN_TOP = 150;
@@ -143,8 +141,12 @@ public final class ShotList {
                 } catch (IllegalArgumentException e) {
                     throw new IllegalArgumentException("unknown biome '" + arg + "'");
                 }
-            } else if (!SPHERE_CLASSES.contains(arg)) {
-                throw new IllegalArgumentException("unknown sphere class '" + arg + "'");
+            } else {
+                try {
+                    SphereClass.valueOf(arg);
+                } catch (IllegalArgumentException e) {
+                    throw new IllegalArgumentException("unknown sphere class '" + arg + "'");
+                }
             }
         } else if (what == ShotSpec.What.AT) {
             if (t.length < next + 3) throw new IllegalArgumentException("at needs x y z");
