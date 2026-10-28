@@ -166,6 +166,21 @@ public final class ArcPaths {
         return best;
     }
 
+    /**
+     * The first point of a path whose tube overlaps the ground's span and keeps a tube at that point's ARCS weight, as
+     * {x, y, z}, or null when there is none. Read-only; overlaps as groundBiome does.
+     */
+    public static double[] touchPoint(Path path, Ground ground, Probe probe) {
+        double[] p = path.points;
+        for (int i = 0; i < p.length; i += 3) {
+            double[] span = ground.span(p[i], p[i + 2]);
+            if (span == null || p[i + 1] - path.tube > span[1] || p[i + 1] + path.tube < span[0]) continue;
+            if (path.tubeAt(probe.weight(p[i], p[i + 2])) <= 0) continue;
+            return new double[] { p[i], p[i + 1], p[i + 2] };
+        }
+        return null;
+    }
+
     private static final class Memo {
 
         final SegmentWeight filter;
