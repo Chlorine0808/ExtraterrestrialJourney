@@ -5,9 +5,9 @@ import java.util.Comparator;
 import java.util.List;
 
 /** Ranks standing spots inside a hollow by how far the air runs in 8 directions at eye height. */
-final class Pocket {
+public final class Pocket {
 
-    interface Grid {
+    public interface Grid {
 
         boolean air(int x, int y, int z);
     }
@@ -22,7 +22,8 @@ final class Pocket {
 
     private Pocket() {}
 
-    static List<Camera> rank(Grid g, int x0, int y0, int z0, int x1, int y1, int z1, double cx, double cz, int limit) {
+    public static List<Camera> rank(Grid g, int x0, int y0, int z0, int x1, int y1, int z1, double cx, double cz,
+        int limit) {
         List<Spot> found = new ArrayList<>();
         for (int x = x0; x <= x1; x++) {
             for (int y = y0 + 1; y <= y1; y++) {
@@ -58,6 +59,22 @@ final class Pocket {
         List<Camera> out = new ArrayList<>();
         for (int i = 0; i < found.size() && i < limit; i++) out.add(found.get(i).cam);
         return out;
+    }
+
+    /** Up to n of the ranked spots, best first, skipping any within gap blocks of one already taken. */
+    public static List<Camera> spread(List<Camera> ranked, int n, double gap) {
+        List<Camera> out = new ArrayList<>();
+        for (Camera c : ranked) {
+            if (out.size() >= n) break;
+            boolean near = false;
+            for (Camera o : out) near |= Math.sqrt(sq(c.x - o.x) + sq(c.y - o.y) + sq(c.z - o.z)) < gap;
+            if (!near) out.add(c);
+        }
+        return out;
+    }
+
+    private static double sq(double v) {
+        return v * v;
     }
 
     private static boolean inside(int x, int y, int z, int x0, int y0, int z0, int x1, int y1, int z1) {

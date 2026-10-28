@@ -34,4 +34,28 @@ class PocketTest {
         Camera c = spots.get(0);
         assertTrue(c.yaw == 0f || c.yaw == 180f);
     }
+
+    @Test
+    void spreadSkipsNearDuplicateSpots() {
+        List<Camera> ranked = java.util.Arrays.asList(
+            new Camera(0.5, 11, 0.5, 0, 10),
+            new Camera(1.5, 11, 0.5, 0, 10),
+            new Camera(12.5, 11, 0.5, 0, 10),
+            new Camera(13.5, 11, 0.5, 0, 10),
+            new Camera(0.5, 11, 20.5, 0, 10));
+        List<Camera> picked = Pocket.spread(ranked, 3, 8);
+        assertEquals(3, picked.size());
+        assertEquals(0.5, picked.get(0).x, 0);
+        assertEquals(12.5, picked.get(1).x, 0);
+        assertEquals(20.5, picked.get(2).z, 0);
+    }
+
+    @Test
+    void spreadReturnsFewerWhenAllSpotsAreClose() {
+        List<Camera> ranked = java.util.Arrays.asList(new Camera(0.5, 11, 0.5, 0, 10), new Camera(1.5, 11, 0.5, 0, 10));
+        assertEquals(
+            1,
+            Pocket.spread(ranked, 3, 8)
+                .size());
+    }
 }
