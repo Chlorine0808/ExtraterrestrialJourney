@@ -34,6 +34,29 @@ public final class ShootCapture {
         }
     }
 
+    /** Angelica's terrain renderer, looked up by name so the mod is not a compile dependency. */
+    private static final String CELERITAS = "com.gtnewhorizons.angelica.rendering.celeritas.CeleritasWorldRenderer";
+
+    /**
+     * Whether every visible chunk section has been built into meshes. Angelica builds them in the background, so
+     * a frame can be steady while most of the terrain is still missing; without Angelica this is always true.
+     */
+    public static boolean terrainBuilt() {
+        try {
+            Object renderer = Class.forName(CELERITAS)
+                .getMethod("getInstanceOrNull")
+                .invoke(null);
+            if (renderer == null) return true;
+            return (Boolean) renderer.getClass()
+                .getMethod("isTerrainRenderComplete")
+                .invoke(renderer);
+        } catch (ClassNotFoundException e) {
+            return true;
+        } catch (ReflectiveOperationException e) {
+            throw new IllegalStateException("cannot ask Angelica whether terrain is built", e);
+        }
+    }
+
     /**
      * The game framebuffer as ARGB rows from the top, framebufferWidth by framebufferHeight. Reads the colour
      * texture the way ScreenShotHelper does, so the image is not limited to the window.
