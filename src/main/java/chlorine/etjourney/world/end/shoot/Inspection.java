@@ -1,11 +1,11 @@
 package chlorine.etjourney.world.end.shoot;
 
 /** Rejects screenshots that are too small, one flat colour, empty in the centre, or too dark. */
-final class Inspection {
+public final class Inspection {
 
     static final int MIN_WIDTH = 1920, MIN_HEIGHT = 1080;
 
-    enum Fault {
+    public enum Fault {
         NONE,
         SMALL,
         UNIFORM,
