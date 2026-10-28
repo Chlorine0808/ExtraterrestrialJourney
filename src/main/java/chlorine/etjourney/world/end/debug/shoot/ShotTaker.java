@@ -64,6 +64,8 @@ final class ShotTaker {
 
         final List<Camera> cameras = new ArrayList<>();
         String note, biome, styles;
+        /** The point the cameras look at: the target, raised out of the ground for aerial views. */
+        Target aim;
     }
 
     private final ShotList list;
@@ -182,7 +184,8 @@ final class ShotTaker {
                 if (System.currentTimeMillis() - placedAt < MIN_WAIT_MS || !clientReady(mc)) return;
                 Camera c = cam;
                 PlannedShot s = rec.shot;
-                pending = ShootServer.submit(() -> viewProblem(c, s));
+                Target aim = plan.aim;
+                pending = ShootServer.submit(() -> viewProblem(c, s, aim));
                 phase = Phase.CHECKING;
                 progress.run();
                 break;
@@ -380,6 +383,7 @@ final class ShotTaker {
         TerrainSampler sampler = EndTerrain.sampler(ShootServer.seed(list));
         Target t = s.target;
         Plan p = new Plan();
+        p.aim = t;
         EndBiome biome = sampler.biome(t.x, t.z);
         p.biome = biome == null ? "なし" : biome.name();
         Map<String, Double> weights = new LinkedHashMap<>();
@@ -393,7 +397,11 @@ final class ShotTaker {
         }
         switch (s.view) {
             case AERIAL:
-                for (int i = 0; i < Framing.AERIAL_ATTEMPTS; i++) p.cameras.add(Framing.aerial(t, i));
+                // A target under the ground (an arc touch is a point of the tube, often inside the land) can only
+                // be seen through the ground; aim at the first air above it instead.
+                ShootServer.ensure(t.x, t.z, 1, Integer.MAX_VALUE);
+                p.aim = new Target(t.label, t.x, ShootServer.airAbove(t.x, t.y, t.z), t.z, t.size, t.key);
+                for (int i = 0; i < Framing.AERIAL_ATTEMPTS; i++) p.cameras.add(Framing.aerial(p.aim, i));
                 break;
             case OUTSIDE:
                 for (int i = 0; i < Framing.MAX_ATTEMPTS; i++) p.cameras.add(Framing.outside(t, i));
@@ -452,12 +460,11 @@ final class ShotTaker {
      * Server thread: why camera c cannot see the subject of s, or null when it can. Views that stand at their
      * subject are traced level, since a slightly lowered look meets flat ground within a dozen blocks.
      */
-    private static String viewProblem(Camera c, PlannedShot s) {
+    private static String viewProblem(Camera c, PlannedShot s, Target t) {
         if (s.fixed != null) return null;
         double eyeY = c.y + Framing.EYE;
         if (!ShootServer.air(c.x, c.y, c.z) || !ShootServer.air(c.x, eyeY, c.z)) return "カメラがブロックに埋まっている";
         double[] eye = { c.x, eyeY, c.z };
-        Target t = s.target;
         double[] dir;
         int range;
         double subject;

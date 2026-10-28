@@ -252,6 +252,15 @@ public final class ShootServer {
         return i < 0 ? Double.NaN : feet[i];
     }
 
+    /** y when the block there is air, else the bottom of the first air above it (at most 255). */
+    public static double airAbove(double x, double y, double z) {
+        WorldServer end = end();
+        int bx = (int) Math.floor(x), bz = (int) Math.floor(z), at = (int) Math.floor(y);
+        if (end.isAirBlock(bx, at, bz)) return y;
+        while (at < 255 && !end.isAirBlock(bx, at, bz)) at++;
+        return at;
+    }
+
     /** Whether the block at (x, y, z) is air. */
     public static boolean air(double x, double y, double z) {
         return end().isAirBlock((int) Math.floor(x), (int) Math.floor(y), (int) Math.floor(z));
