@@ -10,7 +10,7 @@ import chlorine.etjourney.world.end.region.Style;
 import chlorine.etjourney.world.end.region.StyleKind;
 
 /** Tab completion and the style listing of /etj end, kept apart from Minecraft so they can be tested. */
-final class EtjArgs {
+public final class EtjArgs {
 
     static final List<String> SUBCOMMANDS = Arrays.asList(
         "here",
@@ -88,7 +88,7 @@ final class EtjArgs {
     }
 
     /** Unit vector of a view at yaw and pitch in degrees, as Minecraft measures them (yaw 0 faces +Z). */
-    static double[] lookDirection(double yaw, double pitch) {
+    public static double[] lookDirection(double yaw, double pitch) {
         double y = Math.toRadians(yaw), p = Math.toRadians(pitch);
         return new double[] { -Math.sin(y) * Math.cos(p), -Math.sin(p), Math.cos(y) * Math.cos(p) };
     }
@@ -109,7 +109,7 @@ final class EtjArgs {
     }
 
     /** The look from eye along dir, range blocks long, as joined pieces {x0, y0, z0, x1, y1, z1} of at most step. */
-    static List<double[]> lookSegments(double[] eye, double[] dir, int range, int step) {
+    public static List<double[]> lookSegments(double[] eye, double[] dir, int range, int step) {
         List<double[]> out = new ArrayList<>();
         for (int from = 0; from < range; from += step) {
             int to = Math.min(range, from + step);
