@@ -22,6 +22,20 @@ export GRADLE_USER_HOME="/c/gradle-home"
 
 `build/libs/` に出力された jar（`-dev` や `-sources` が付かないもの）を，Minecraft の `mods` フォルダに入れる．開発中は `./gradlew runClient` で開発用クライアントを起動できる．
 
+### End の自動撮影
+
+開発用クライアントに撮影リストを渡すと，End の地形を自動で撮影する．
+
+```powershell
+.\gradlew.bat runClient "-PetjShoot=shots/2026-10-28-end.txt"
+```
+
+- 撮影リストは `shots/` に置く．書式は `shots/2026-10-28-end.txt` の先頭のコメントにある．
+- クライアントは 1920×1080 で起動し，クリエイティブのワールド `etj-shoot` を作るか読み込んで（シードが違えば作り直し，同じなら End だけ生成し直す），End へ飛んで撮影する．
+- 結果は `run/client/etj-shots/<yyyyMMdd-HHmmss>/` に HTML と画像で出る．
+- `-PetjShoot` を付けなければ何も起きない．イベントの登録もしない．
+- 撮った場所は `/etj end cam <x> <y> <z> <yaw> <pitch>` で再現できる．End に居なければ End へ送ってから，飛行と暗視を付けてその位置と向きに置く．
+
 ## ライセンス
 
 MIT License，Copyright (c) 2026 Chlorine0808．
