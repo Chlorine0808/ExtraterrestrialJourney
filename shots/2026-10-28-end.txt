@@ -11,7 +11,7 @@ seed 7037748451318983361
 world-type DEFAULT
 origin 3000 0
 render-distance 24
-sphere-candidates 120
+sphere-candidates 240
 shot biome GROVE count=2 views=aerial,ground
 shot biome HIGHLAND count=2 views=aerial,ground
 shot biome MYCELIA count=2 views=aerial,ground
