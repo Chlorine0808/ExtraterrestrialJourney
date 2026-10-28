@@ -14,6 +14,7 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.util.Vec3;
 import net.minecraft.world.WorldServer;
+import net.minecraft.world.chunk.IChunkProvider;
 import net.minecraftforge.common.DimensionManager;
 
 import chlorine.etjourney.world.end.EndTerrain;
@@ -22,6 +23,7 @@ import chlorine.etjourney.world.end.biosphere.SampleWorlds;
 import chlorine.etjourney.world.end.debug.EtjArgs;
 import chlorine.etjourney.world.end.feature.Biosphere;
 import chlorine.etjourney.world.end.feature.BiosphereSource;
+import chlorine.etjourney.world.end.modifier.builtin.StructureModifiers;
 import chlorine.etjourney.world.end.shoot.PlannedShot;
 import chlorine.etjourney.world.end.shoot.Pocket;
 import chlorine.etjourney.world.end.shoot.ShotList;
@@ -75,13 +77,24 @@ public final class ShootServer {
     /** The planned shots of the list on this world's seed; call on the server thread (sample worlds load). */
     public static List<PlannedShot> expand(ShotList list) {
         long seed = seed(list);
+        WorldServer end = end();
         return ShotPlanner.expand(list, EndTerrain.sampler(seed), b -> {
+            // A ball that gives way to a reserved island (HEE) is never built; it would leave an empty frame.
+            if (!stands(end, seed, b)) return null;
             SampleWorlds.Site s = SampleWorlds.site(seed, b);
             if (s == null) return null;
             int x = s.point[0], z = s.point[1];
             boolean water = s.kind == BiosphereSource.Kind.SURFACE && SampleWorlds.isWater(s.world, x, z);
             return new ShotPlanner.Site(s.kind, x, z, water);
         });
+    }
+
+    /** Whether the End builds ball b, as BiosphereTransplant decides it; true before the End is loaded. */
+    private static boolean stands(WorldServer end, long seed, Biosphere b) {
+        if (end == null) return true;
+        int cx = (int) Math.floor(b.centreX) >> 4, cz = (int) Math.floor(b.centreZ) >> 4;
+        IChunkProvider generator = end.theChunkProviderServer.currentChunkProvider;
+        return StructureModifiers.stands(EndTerrain.plan(generator, end, seed, cx, cz), b, Biosphere.KIND);
     }
 
     /** The world's seed, or the list's before the overworld is up. */
