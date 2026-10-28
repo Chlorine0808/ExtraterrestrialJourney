@@ -408,12 +408,18 @@ final class ShotTaker {
         return p;
     }
 
+    /** Three looks from the target's column, then three from a column further into the biome. */
     private static void ground(TerrainSampler sampler, Target t, EndBiome biome, Plan p) {
-        ShootServer.ensure(t.x, t.z, 1, Integer.MAX_VALUE);
-        int x = (int) Math.floor(t.x), z = (int) Math.floor(t.z);
-        int y = ShootServer.standY(x, t.y, z);
-        List<Float> yaws = Framing.groundYaws(sampler::biome, t.x, t.z, biome);
-        for (int i = 0; i < Framing.MAX_ATTEMPTS; i++) p.cameras.add(Framing.ground(x + 0.5, y, z + 0.5, yaws.get(i)));
+        float best = Framing.groundYaws(sampler::biome, t.x, t.z, biome)
+            .get(0);
+        for (double[] spot : Framing.groundSpots(t.x, t.z, best)) {
+            ShootServer.ensure(spot[0], spot[1], 1, Integer.MAX_VALUE);
+            int x = (int) Math.floor(spot[0]), z = (int) Math.floor(spot[1]);
+            int y = ShootServer.standY(x, t.y, z);
+            List<Float> yaws = Framing.groundYaws(sampler::biome, x + 0.5, z + 0.5, biome);
+            for (int i = 0; i < Framing.MAX_ATTEMPTS; i++)
+                p.cameras.add(Framing.ground(x + 0.5, y, z + 0.5, yaws.get(i)));
+        }
     }
 
     private static void inside(TerrainSampler sampler, Target t, Plan p) {

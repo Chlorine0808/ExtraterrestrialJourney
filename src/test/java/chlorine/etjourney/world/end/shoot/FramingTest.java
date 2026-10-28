@@ -86,4 +86,15 @@ class FramingTest {
         assertFalse(Framing.seesGround(Double.NaN));
         assertFalse(Framing.seesGround(200));
     }
+
+    @Test
+    void groundHasASecondSpotFurtherIntoTheBiome() {
+        // When every look from the target's own column fails (08 in 20261029-034306 stood on a cliff ledge),
+        // the next tries stand further along the best look, into the biome.
+        List<double[]> spots = Framing.groundSpots(10, 20, 270f);
+        assertEquals(2, spots.size());
+        assertArrayEquals(new double[] { 10, 20 }, spots.get(0), 1e-9);
+        assertEquals(10 + Framing.GROUND_SHIFT, spots.get(1)[0], 1e-9); // yaw 270 faces +X
+        assertEquals(20, spots.get(1)[1], 1e-9);
+    }
 }

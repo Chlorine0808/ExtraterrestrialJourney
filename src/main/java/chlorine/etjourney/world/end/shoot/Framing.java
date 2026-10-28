@@ -15,6 +15,8 @@ public final class Framing {
     private static final int GROUND_NEAR = 16, GROUND_FAR = 96, GROUND_STEP = 8;
     /** Blocks within which a ground view, looking down at its pitch, must meet the ground. */
     public static final int GROUND_SIGHT = 64;
+    /** How far the second ground spot stands from the target, along the best look. */
+    public static final double GROUND_SHIFT = 24;
 
     public interface BiomeAt {
 
@@ -50,6 +52,15 @@ public final class Framing {
                 ? hits[Math.round(b / 45f)] - hits[Math.round(a / 45f)]
                 : Float.compare(a, b));
         return yaws;
+    }
+
+    /** Columns {x, z} to stand a ground view on: the target's own, then one further along the best look. */
+    public static List<double[]> groundSpots(double x, double z, float bestYaw) {
+        double[] d = EtjArgs.lookDirection(bestYaw, 0);
+        List<double[]> spots = new ArrayList<>();
+        spots.add(new double[] { x, z });
+        spots.add(new double[] { x + d[0] * GROUND_SHIFT, z + d[2] * GROUND_SHIFT });
+        return spots;
     }
 
     public static Camera ground(double x, double groundTop, double z, float yaw) {
