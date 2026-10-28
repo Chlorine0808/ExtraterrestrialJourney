@@ -4,6 +4,8 @@ import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.Arrays;
+
 import org.junit.jupiter.api.Test;
 
 class StabilityTest {
@@ -23,7 +25,7 @@ class StabilityTest {
         Stability s = new Stability(3, 2.0);
         int[] a = new int[16];
         int[] b = new int[16];
-        java.util.Arrays.fill(b, 0xFF808080);
+        Arrays.fill(b, 0xFF808080);
         s.offer(a);
         s.offer(a);
         s.offer(a);
@@ -38,7 +40,7 @@ class StabilityTest {
         Stability s = new Stability(1, 2.0);
         int[] a = new int[4];
         int[] b = new int[4];
-        java.util.Arrays.fill(b, 0x00020202); // mean abs diff 2.0
+        Arrays.fill(b, 0x00020202); // mean abs diff 2.0
         s.offer(a);
         assertTrue(s.offer(b));
     }
