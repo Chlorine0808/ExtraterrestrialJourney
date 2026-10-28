@@ -114,6 +114,29 @@ public final class Report {
         return String.format(Locale.ROOT, "/etj end cam %.1f %.1f %.1f %.1f %.1f", c.x, c.y, c.z, c.yaw, c.pitch);
     }
 
+    /** Group words the planner uses, in English for file names. */
+    private static final String[][] WORDS = { { "地表の球", "surface ball" }, { "水の球", "water ball" },
+        { "洞窟の球", "cave ball" }, { "ネザーの球", "nether ball" }, { "大陸", "continent" }, { "接地", "touch" },
+        { "山", "mountain" }, { "指定位置", "at" } };
+
+    /** The image file name: NN-slug-view.png, where slug is the group in ASCII, and -fail before .png on failure. */
+    public static String imageName(PlannedShot s, boolean failed) {
+        String g = s.group;
+        for (String[] w : WORDS) g = g.replace(w[0], " " + w[1] + " ");
+        String slug = g.toLowerCase(Locale.ROOT)
+            .replaceAll("[^a-z0-9]+", "-")
+            .replaceAll("^-+|-+$", "");
+        if (slug.isEmpty()) slug = "shot";
+        return String.format(
+            Locale.ROOT,
+            "%02d-%s-%s%s.png",
+            s.index,
+            slug,
+            s.view.name()
+                .toLowerCase(Locale.ROOT),
+            failed ? "-fail" : "");
+    }
+
     /** Up to three styles with at least 1% weight, heaviest first, as "ARCS 60% / PLAINS 40%". */
     public static String styles(Map<String, Double> weights) {
         List<Map.Entry<String, Double>> es = new ArrayList<>();

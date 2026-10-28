@@ -103,4 +103,14 @@ class ReportTest {
         assertEquals("中央に何も写っていない", Report.reason(Inspection.Fault.EMPTY_CENTRE));
         assertEquals("暗すぎる", Report.reason(Inspection.Fault.DARK));
     }
+
+    @Test
+    void imageNamesAreNumberedAsciiSlugs() {
+        PlannedShot grove = new PlannedShot("GROVE 大陸 1", 3, View.AERIAL, null, null, null, null);
+        assertEquals("03-grove-continent-1-aerial.png", Report.imageName(grove, false));
+        PlannedShot cave = new PlannedShot("洞窟の球 2", 12, View.INSIDE, null, null, null, null);
+        assertEquals("12-cave-ball-2-inside-fail.png", Report.imageName(cave, true));
+        PlannedShot at = new PlannedShot("見晴らし台", 7, View.AERIAL, null, null, null, null);
+        assertEquals("07-shot-aerial.png", Report.imageName(at, false));
+    }
 }
