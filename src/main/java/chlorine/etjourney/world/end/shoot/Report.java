@@ -111,7 +111,7 @@ public final class Report {
     }
 
     public static String camCommand(Camera c) {
-        return String.format(Locale.ROOT, "/etj cam %.1f %.1f %.1f %.1f %.1f", c.x, c.y, c.z, c.yaw, c.pitch);
+        return String.format(Locale.ROOT, "/etj end cam %.1f %.1f %.1f %.1f %.1f", c.x, c.y, c.z, c.yaw, c.pitch);
     }
 
     /** Up to three styles with at least 1% weight, heaviest first, as "ARCS 60% / PLAINS 40%". */

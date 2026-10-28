@@ -42,7 +42,7 @@ class ReportTest {
         assertTrue(html.contains("<meta charset=\"utf-8\">"));
         assertTrue(html.contains("<img src=\"01-grove-aerial.png\""));
         assertTrue(html.contains("/tp Developer 3201.5 140.0 -12.3"));
-        assertTrue(html.contains("/etj cam 3201.5 140.0 -12.3 90.0 35.0"));
+        assertTrue(html.contains("/etj end cam 3201.5 140.0 -12.3 90.0 35.0"));
         assertTrue(html.contains("撮れた"));
         assertTrue(html.contains("<h2>Groves</h2>"));
         assertTrue(html.contains("site &lt;A&gt;"));
