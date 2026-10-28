@@ -460,10 +460,7 @@ final class ShotTaker {
             subject = 0;
         }
         double hit = ShootServer.firstHit(eye, dir, range);
-        if (!Framing.clear(hit, subject, s.view)) return String.format(Locale.ROOT, "視界がふさがれている（%.0f ブロック先）", hit);
-        if (s.view == View.GROUND && !Framing
-            .seesGround(ShootServer.firstHit(eye, EtjArgs.lookDirection(c.yaw, c.pitch), Framing.GROUND_SIGHT)))
-            return "地面が見えない（虚空を向いている）";
-        return null;
+        if (Framing.clear(hit, subject, s.view)) return null;
+        return String.format(Locale.ROOT, "視界がふさがれている（%.0f ブロック先）", hit);
     }
 }

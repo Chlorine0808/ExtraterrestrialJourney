@@ -80,14 +80,6 @@ class FramingTest {
     }
 
     @Test
-    void groundViewMustMeetTheGroundAhead() {
-        // 20261029-034306, 08: the camera stood on a ledge down a cliff and looked along it into the void.
-        assertTrue(Framing.seesGround(12));
-        assertFalse(Framing.seesGround(Double.NaN));
-        assertFalse(Framing.seesGround(200));
-    }
-
-    @Test
     void groundHasASecondSpotFurtherIntoTheBiome() {
         // When every look from the target's own column fails (08 in 20261029-034306 stood on a cliff ledge),
         // the next tries stand further along the best look, into the biome.
