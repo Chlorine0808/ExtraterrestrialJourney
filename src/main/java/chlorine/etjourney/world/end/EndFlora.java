@@ -89,7 +89,7 @@ public final class EndFlora implements IWorldGenerator {
     }
 
     /** One column of a loaded chunk, telling biome surface blocks by the blocks content bound to them. */
-    private static final class ChunkColumn implements Flora.Column {
+    static final class ChunkColumn implements Flora.Column {
 
         private final Chunk chunk;
         private final int x, z;
