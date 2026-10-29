@@ -1,4 +1,4 @@
-"""Generate placeholder 16x16 textures for the End zones, biomes, ores, plants and ore drops."""
+"""Generate placeholder 16x16 textures for the End zones, biomes, ores, plants, large plants, crystals and drops."""
 import math
 import random
 import zlib
@@ -203,6 +203,127 @@ def plant(name):
     return img
 
 
+# log -> (bark colour, ring colour)
+LOGS = {
+    'grove_log': ((92, 66, 42), (156, 124, 84)),
+    'highland_log': ((148, 140, 126), (204, 194, 172)),
+    'mycelia_stem': ((196, 180, 166), (232, 218, 192)),
+    'amber_root': ((146, 88, 40), (224, 154, 62)),
+}
+
+# planks -> colour
+PLANKS = {
+    'grove_planks': (168, 134, 88),
+    'highland_planks': (190, 182, 160),
+    'mycelia_planks': (206, 176, 186),
+    'amber_planks': (214, 150, 70),
+}
+
+# opaque blocks of the large plants -> (base colour, fleck colour, fleck chance)
+FOLIAGE = {
+    'grove_leaves': ((64, 126, 56), (40, 92, 40), 0.3),
+    'grove_blossom': ((88, 140, 70), (248, 170, 198), 0.35),
+    'highland_leaves': ((118, 142, 104), (158, 170, 130), 0.25),
+    'mycelia_cap': ((148, 68, 108), (200, 130, 160), 0.15),
+    'mycelia_gill': ((120, 224, 204), (210, 255, 240), 0.2),
+    'amber_seed': ((250, 184, 58), (255, 232, 150), 0.2),
+    'amber_stem': ((176, 108, 48), (130, 76, 34), 0.25),
+}
+
+# crystal block -> (colour, facet colour)
+CRYSTALS = {
+    'crystal': ((150, 200, 255), (220, 240, 255)),
+    'budding_crystal': ((104, 140, 220), (170, 200, 250)),
+}
+
+# crystal bud -> (spike heights from the left, colour); the cluster is the largest
+BUDS = {
+    'crystal_bud_small': ((3, 4), (140, 190, 250)),
+    'crystal_bud_medium': ((6, 4, 7), (150, 200, 255)),
+    'crystal_bud_large': ((9, 6, 10, 7), (160, 208, 255)),
+    'crystal_cluster': ((13, 8, 11, 9, 12), (170, 215, 255)),
+}
+
+
+def log_side(name):
+    rng = rng_for(name + '_side')
+    bark = LOGS[name][0]
+    img = Image.new('RGBA', (SIZE, SIZE))
+    for x in range(SIZE):
+        column = 1 + rng.uniform(-0.18, 0.18)
+        for y in range(SIZE):
+            img.putpixel((x, y), noise(rng, shade(bark, column)[:3], 0.06))
+    return img
+
+
+def log_top(name):
+    rng = rng_for(name + '_top')
+    bark, ring = LOGS[name]
+    img = Image.new('RGBA', (SIZE, SIZE))
+    for y in range(SIZE):
+        for x in range(SIZE):
+            r = math.hypot(x - 7.5, y - 7.5)
+            if r > 6.8:
+                img.putpixel((x, y), noise(rng, bark, 0.06))
+            else:
+                img.putpixel((x, y), noise(rng, shade(ring, 0.85 if int(r) % 2 else 1.05)[:3], 0.04))
+    return img
+
+
+def planks(name):
+    rng = rng_for(name)
+    base = PLANKS[name]
+    img = Image.new('RGBA', (SIZE, SIZE))
+    for y in range(SIZE):
+        board = 1 + (0.08 if (y // 4) % 2 else -0.04)
+        for x in range(SIZE):
+            seam = y % 4 == 3
+            img.putpixel((x, y), shade(base, 0.72) if seam else noise(rng, shade(base, board)[:3], 0.05))
+    return img
+
+
+def foliage(name):
+    rng = rng_for(name)
+    base, fleck, chance = FOLIAGE[name]
+    img = Image.new('RGBA', (SIZE, SIZE))
+    for y in range(SIZE):
+        for x in range(SIZE):
+            img.putpixel((x, y), noise(rng, fleck if rng.random() < chance else base, 0.1))
+    return img
+
+
+def crystal(name):
+    rng = rng_for(name)
+    base, facet = CRYSTALS[name]
+    img = Image.new('RGBA', (SIZE, SIZE))
+    for y in range(SIZE):
+        for x in range(SIZE):
+            # diagonal facets
+            band = (x + y) % 8
+            img.putpixel((x, y), noise(rng, facet if band < 2 else base, 0.06))
+    if name == 'budding_crystal':
+        for _ in range(8):
+            img.putpixel((rng.randrange(SIZE), rng.randrange(SIZE)), (230, 250, 255, 255))
+    return img
+
+
+def bud(name):
+    rng = rng_for(name)
+    heights, color = BUDS[name]
+    img = Image.new('RGBA', (SIZE, SIZE), (0, 0, 0, 0))
+    step = SIZE // len(heights)
+    for i, height in enumerate(heights):
+        left = i * step + (step - 3) // 2
+        for dy in range(height):
+            # a spike narrowing towards its tip, lit from the left
+            wide = 3 if dy < height - 3 else 2 if dy < height - 1 else 1
+            for dx in range(wide):
+                x = left + dx + (3 - wide) // 2
+                light = 1.2 if dx == 0 else 0.9
+                put(img, x, SIZE - 1 - dy, noise(rng, shade(color, light)[:3], 0.05))
+    return img
+
+
 ITEM_OUT = OUT.parent / 'items'
 
 # ore drop item -> (shape, colour)
@@ -215,6 +336,7 @@ ITEMS = {
     'ascended_crystal': ('gem', ORES['ascended_crystal_ore']),
     # lifted from the ore grain so the gem is not lost against dark slots
     'black_quartz': ('gem', (70, 62, 84)),
+    'crystal_shard': ('shard', (150, 200, 255)),
 }
 
 
@@ -250,6 +372,17 @@ def main():
         rock(zone).save(OUT / f'{zone}_rock.png')
     for name in ORES:
         ore(name).save(OUT / f'{name}.png')
+    for name in LOGS:
+        log_side(name).save(OUT / f'{name}_side.png')
+        log_top(name).save(OUT / f'{name}_top.png')
+    for name in PLANKS:
+        planks(name).save(OUT / f'{name}.png')
+    for name in FOLIAGE:
+        foliage(name).save(OUT / f'{name}.png')
+    for name in CRYSTALS:
+        crystal(name).save(OUT / f'{name}.png')
+    for name in BUDS:
+        bud(name).save(OUT / f'{name}.png')
 
 
 if __name__ == '__main__':
