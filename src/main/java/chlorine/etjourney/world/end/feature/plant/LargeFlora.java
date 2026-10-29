@@ -47,14 +47,16 @@ public enum LargeFlora {
         int headroom(int x, int y, int z);
     }
 
-    /** Plants the window at (originX, originZ); every write stays within 8 blocks of the window. */
-    public static void plant(Random random, int originX, int originZ, Ground ground, PlantSink out) {
+    /** Plants the window at (originX, originZ), returning how many plants grew; writes stay within 8 blocks. */
+    public static int plant(Random random, int originX, int originZ, Ground ground, PlantSink out) {
         int[] ys = new int[Flora.MAX_SURFACES];
         EndBiome[] biomes = new EndBiome[Flora.MAX_SURFACES];
+        int grown = 0;
         for (LargeFlora row : ALL) {
             int count = (int) row.patches + (random.nextDouble() < row.patches % 1 ? 1 : 0);
-            for (int i = 0; i < count; i++) row.patch(random, originX, originZ, ground, ys, biomes, out);
+            for (int i = 0; i < count; i++) grown += row.patch(random, originX, originZ, ground, ys, biomes, out);
         }
+        return grown;
     }
 
     /** Whether a plant of this biome may grow on a surface of that biome (saplings, bone meal). */
@@ -62,10 +64,11 @@ public enum LargeFlora {
         return own == under;
     }
 
-    private void patch(Random random, int originX, int originZ, Ground ground, int[] ys, EndBiome[] biomes,
+    private int patch(Random random, int originX, int originZ, Ground ground, int[] ys, EndBiome[] biomes,
         PlantSink out) {
         int cx = random.nextInt(WINDOW), cz = random.nextInt(WINDOW);
-        if (!hasSurface(random, originX + cx, originZ + cz, ground, ys, biomes)) return;
+        if (!hasSurface(random, originX + cx, originZ + cz, ground, ys, biomes)) return 0;
+        int grown = 0;
         for (int t = 0; t < tries; t++) {
             int dx = tries == 1 ? cx : cx + random.nextInt(2 * SPREAD + 1) - SPREAD;
             int dz = tries == 1 ? cz : cz + random.nextInt(2 * SPREAD + 1) - SPREAD;
@@ -75,9 +78,13 @@ public enum LargeFlora {
             int y = ys[0] + 1;
             int headroom = ground.headroom(x, y, z);
             for (LargeFlora row = this; row != null; row = row.fallback()) {
-                if (row.grower.grow(random, x, y, z, headroom, out)) break;
+                if (row.grower.grow(random, x, y, z, headroom, out)) {
+                    grown++;
+                    break;
+                }
             }
         }
+        return grown;
     }
 
     /** Puts a random surface of this biome in the column at ys[0] (the Flora.pick idea); false if there is none. */
