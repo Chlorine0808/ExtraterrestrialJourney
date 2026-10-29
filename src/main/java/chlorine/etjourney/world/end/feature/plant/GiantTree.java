@@ -102,6 +102,12 @@ public final class GiantTree {
         clumps[branches] = clump(ax, base + top + 1, az, 7 + random.nextDouble() * 1.5);
     }
 
+    /** Whether the tree rooted at anchor can write any height from minY to maxY - 1. */
+    public static boolean reaches(double[] anchor, int minY, int maxY) {
+        int base = (int) Math.floor(anchor[1]);
+        return base - MAX_DROP - SINK < maxY && base + GiantTrees.HEIGHT > minY;
+    }
+
     /** A clump centred at (x, y, z), lowered so it ends below the tree's height. */
     private double[] clump(double x, double y, double z, double r) {
         return new double[] { x, Math.min(y, base + GiantTrees.HEIGHT - 1 - LEAF_SQUASH * r), z, r };

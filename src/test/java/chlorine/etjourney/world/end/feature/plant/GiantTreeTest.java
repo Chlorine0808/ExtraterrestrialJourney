@@ -137,6 +137,18 @@ class GiantTreeTest {
         }
     }
 
+    /** A sink whose heights the tree misses is left alone, so the pass need not build the tree for it. */
+    @Test
+    void reachesOnlyTheHeightsItDraws() {
+        double[] anchor = { 8, 100, 8 };
+        assertTrue(!GiantTree.reaches(anchor, 0, 64) && !GiantTree.reaches(anchor, 160, 256));
+        assertTrue(GiantTree.reaches(anchor, 0, 128) && GiantTree.reaches(anchor, 128, 256));
+        for (int minY = 0; minY < 256; minY += 16) {
+            if (GiantTree.reaches(anchor, minY, minY + 16)) continue;
+            assertTrue(new Drawn(5L, anchor, minY, minY + 16, 0.6).blocks.isEmpty(), "drew into " + minY);
+        }
+    }
+
     @Test
     void reportsBlockCount() {
         long logs = 0, leaves = 0;

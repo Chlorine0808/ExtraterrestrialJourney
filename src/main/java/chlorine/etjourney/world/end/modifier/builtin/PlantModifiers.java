@@ -42,7 +42,8 @@ public final class PlantModifiers {
 
     /**
      * The giant trees reaching the chunk, found from the continent seeds near it. A tree whose footprint touches a
-     * reserved area, or stands in its fade, as seen from its root's chunk, is left out.
+     * reserved area, or stands in its fade, as seen from its root's chunk, is left out; so is a tree outside the sink's
+     * heights.
      */
     public static Modifier giantTrees(int order) {
         return FeatureModifiers.blockModifier(order, (area, view, sink) -> {
@@ -60,6 +61,7 @@ public final class PlantModifiers {
                     if (!seen.add(ContinentIds.of(area.seed, s))) continue;
                     for (double[] a : GiantTrees.anchors(area.seed, s, view.structures())) {
                         if (Math.hypot(a[0] - cx, a[2] - cz) > REACH) continue;
+                        if (!GiantTree.reaches(a, sink.minY(), sink.maxY())) continue;
                         List<Area> reserved = view.reservedAt((int) Math.floor(a[0]) >> 4, (int) Math.floor(a[2]) >> 4);
                         if (blocked(reserved, a)) continue;
                         new GiantTree(area.seed, a, view.structures()).draw(sink);
