@@ -1,9 +1,18 @@
 package chlorine.etjourney.content.end;
 
+import java.util.HashMap;
+import java.util.Map;
+
+import net.minecraft.block.Block;
+import net.minecraft.item.ItemStack;
+
 import chlorine.etjourney.world.end.EndPalette;
 import cpw.mods.fml.common.registry.GameRegistry;
 
-/** Registers the End zone, biome, ore and plant blocks and the ore drops, and binds the blocks into the palette. */
+/**
+ * Registers the End zone, biome, ore, plant and large-plant blocks and the ore drops, and binds the blocks into the
+ * palette.
+ */
 public final class EndBlocks {
 
     private EndBlocks() {}
@@ -25,6 +34,29 @@ public final class EndBlocks {
             PlantBlock block = new PlantBlock(entry);
             GameRegistry.registerBlock(block, entry.name);
             EndPalette.bind(entry.kind, block, 0);
+        }
+        registerLargePlants();
+    }
+
+    private static void registerLargePlants() {
+        Map<String, Block> logs = new HashMap<>();
+        for (LargePlantBlockTable.Entry entry : LargePlantBlockTable.ENTRIES) {
+            Block block;
+            switch (entry.type) {
+                case LOG:
+                    block = new EndLogBlock(entry);
+                    logs.put(entry.name, block);
+                    break;
+                default:
+                    continue;
+            }
+            GameRegistry.registerBlock(block, entry.name);
+            EndPalette.bind(entry.kind, block, 0);
+        }
+        for (LargePlantBlockTable.Wood wood : LargePlantBlockTable.WOODS) {
+            Block planks = new EndPlanksBlock(wood.planks);
+            GameRegistry.registerBlock(planks, wood.planks);
+            GameRegistry.addShapelessRecipe(new ItemStack(planks, 4), new ItemStack(logs.get(wood.log)));
         }
     }
 }
