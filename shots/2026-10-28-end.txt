@@ -1,4 +1,4 @@
-# End screenshot shot list. Run with -Detj.shoot=<this file>.
+# End screenshot shot list. Run with .\gradlew.bat runClient "-PetjShoot=shots/<file>".
 # One item per line; '#' starts a comment.
 # Settings: key value
 #   seed, world-type, origin <x> <z>, render-distance, sphere-candidates,
