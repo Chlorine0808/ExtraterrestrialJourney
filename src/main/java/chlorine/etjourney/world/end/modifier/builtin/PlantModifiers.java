@@ -1,0 +1,51 @@
+package chlorine.etjourney.world.end.modifier.builtin;
+
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
+import chlorine.etjourney.world.end.feature.Continent;
+import chlorine.etjourney.world.end.feature.ContinentIds;
+import chlorine.etjourney.world.end.feature.plant.GiantTree;
+import chlorine.etjourney.world.end.feature.plant.GiantTrees;
+import chlorine.etjourney.world.end.modifier.Modifier;
+import chlorine.etjourney.world.end.reserve.Area;
+import chlorine.etjourney.world.end.reserve.Reservations;
+
+/** Block modifiers for plants too large for the populate window. */
+public final class PlantModifiers {
+
+    /** How far a tree's root may be from the chunk's centre and still reach the chunk. */
+    private static final int REACH = GiantTrees.FOOTPRINT + 12;
+
+    private PlantModifiers() {}
+
+    /**
+     * The giant trees reaching the chunk, found from the continent seeds near it. A tree whose footprint touches a
+     * reserved area, as seen from its root's chunk, is left out.
+     */
+    public static Modifier giantTrees(int order) {
+        return FeatureModifiers.blockModifier(order, (area, view, sink) -> {
+            double cx = sink.originX() + 8, cz = sink.originZ() + 8;
+            // A root is a seed of its continent, so the seeds within REACH find every tree that reaches the chunk.
+            int c0x = (int) Math.floor((cx - REACH) / Continent.SEED_CELL);
+            int c1x = (int) Math.floor((cx + REACH) / Continent.SEED_CELL);
+            int c0z = (int) Math.floor((cz - REACH) / Continent.SEED_CELL);
+            int c1z = (int) Math.floor((cz + REACH) / Continent.SEED_CELL);
+            Set<Long> seen = new HashSet<>();
+            for (int i = c0x; i <= c1x; i++) {
+                for (int j = c0z; j <= c1z; j++) {
+                    Continent.Seed s = Continent.seedAt(area.seed, i, j);
+                    if (s == null || Math.hypot(s.x - cx, s.z - cz) > REACH) continue;
+                    if (!seen.add(ContinentIds.of(area.seed, s))) continue;
+                    for (double[] a : GiantTrees.anchors(area.seed, s, view.structures())) {
+                        if (Math.hypot(a[0] - cx, a[2] - cz) > REACH) continue;
+                        List<Area> reserved = view.reservedAt((int) Math.floor(a[0]) >> 4, (int) Math.floor(a[2]) >> 4);
+                        if (Reservations.touches(reserved, a[0], a[2], GiantTrees.FOOTPRINT)) continue;
+                        new GiantTree(area.seed, a, view.structures()).draw(sink);
+                    }
+                }
+            }
+        });
+    }
+}
