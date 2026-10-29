@@ -12,6 +12,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.EnumSet;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -19,6 +20,7 @@ import javax.imageio.ImageIO;
 
 import org.junit.jupiter.api.Test;
 
+import chlorine.etjourney.world.end.feature.EndBiome;
 import chlorine.etjourney.world.end.modifier.EndBlock;
 
 class LargePlantBlockTableTest {
@@ -54,6 +56,17 @@ class LargePlantBlockTableTest {
     }
 
     @Test
+    void saplingsAreOnePerBiomeWithADistinctName() {
+        Set<String> names = new HashSet<>();
+        Set<EndBiome> biomes = EnumSet.noneOf(EndBiome.class);
+        for (LargePlantBlockTable.Sapling s : LargePlantBlockTable.SAPLINGS) {
+            assertTrue(names.add(s.name), "twice: " + s.name);
+            assertTrue(biomes.add(s.biome), "twice: " + s.biome);
+        }
+        assertEquals(2, LargePlantBlockTable.SAPLINGS.size());
+    }
+
+    @Test
     void lightStaysWithinTheBlockRange() {
         for (LargePlantBlockTable.Entry e : LargePlantBlockTable.ENTRIES) {
             assertTrue(e.light >= 0 && e.light <= 15, e.name);
@@ -73,6 +86,9 @@ class LargePlantBlockTableTest {
         }
         for (LargePlantBlockTable.Wood w : LargePlantBlockTable.WOODS)
             check("textures/blocks/" + w.planks + ".png", false);
+        // Saplings are drawn crossed, so their corners must be clear.
+        for (LargePlantBlockTable.Sapling s : LargePlantBlockTable.SAPLINGS)
+            check("textures/blocks/" + s.name + ".png", true);
         check("textures/items/" + LargePlantBlockTable.SHARD + ".png", false);
     }
 
@@ -92,6 +108,8 @@ class LargePlantBlockTableTest {
             keys.add("tile.etjourney." + e.name + ".name=");
         for (LargePlantBlockTable.Wood w : LargePlantBlockTable.WOODS)
             keys.add("tile.etjourney." + w.planks + ".name=");
+        for (LargePlantBlockTable.Sapling s : LargePlantBlockTable.SAPLINGS)
+            keys.add("tile.etjourney." + s.name + ".name=");
         keys.add("item.etjourney." + LargePlantBlockTable.SHARD + ".name=");
         for (String lang : new String[] { "en_US", "ja_JP" }) {
             String text = new String(

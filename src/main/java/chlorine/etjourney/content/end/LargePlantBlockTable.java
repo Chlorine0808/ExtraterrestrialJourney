@@ -4,6 +4,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+import chlorine.etjourney.world.end.feature.EndBiome;
 import chlorine.etjourney.world.end.modifier.EndBlock;
 
 /** Registry names of the large-plant and crystal blocks, how each behaves, and the light each gives. */
@@ -49,6 +50,20 @@ final class LargePlantBlockTable {
         }
     }
 
+    /** A sapling that stands on one biome's surface, and the leaves that may drop it. */
+    static final class Sapling {
+
+        final String name;
+        final EndBiome biome;
+        final List<EndBlock> droppedBy;
+
+        Sapling(String name, EndBiome biome, EndBlock... droppedBy) {
+            this.name = name;
+            this.biome = biome;
+            this.droppedBy = Collections.unmodifiableList(Arrays.asList(droppedBy));
+        }
+    }
+
     static final String SHARD = "crystal_shard";
 
     static final List<Entry> ENTRIES = Collections.unmodifiableList(
@@ -70,6 +85,11 @@ final class LargePlantBlockTable {
             new Entry("crystal_bud_medium", EndBlock.CRYSTAL_BUD_MEDIUM, Type.BUD, 2),
             new Entry("crystal_bud_large", EndBlock.CRYSTAL_BUD_LARGE, Type.BUD, 4),
             new Entry("crystal_cluster", EndBlock.CRYSTAL_CLUSTER, Type.BUD, 5)));
+
+    static final List<Sapling> SAPLINGS = Collections.unmodifiableList(
+        Arrays.asList(
+            new Sapling("grove_sapling", EndBiome.GROVE, EndBlock.GROVE_LEAVES, EndBlock.GROVE_BLOSSOM),
+            new Sapling("highland_sapling", EndBiome.HIGHLAND, EndBlock.HIGHLAND_LEAVES)));
 
     static final List<Wood> WOODS = Collections.unmodifiableList(
         Arrays.asList(

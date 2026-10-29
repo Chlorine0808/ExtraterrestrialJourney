@@ -203,6 +203,27 @@ def plant(name):
     return img
 
 
+# sapling -> (trunk colour, leaf colour)
+SAPLINGS = {
+    'grove_sapling': ((92, 66, 42), (64, 126, 56)),
+    'highland_sapling': ((148, 140, 126), (118, 142, 104)),
+}
+
+
+def sapling(name):
+    rng = rng_for(name)
+    trunk, leaf = SAPLINGS[name]
+    img = Image.new('RGBA', (SIZE, SIZE), (0, 0, 0, 0))
+    stem(img, rng, 8, 7, trunk)
+    # a round tuft of leaves on the stem, with a lighter fleck here and there
+    for dx in range(-4, 5):
+        for dy in range(-4, 5):
+            if dx * dx + dy * dy <= 14:
+                color = shade(leaf, 1.25) if rng.random() < 0.2 else noise(rng, leaf, 0.1)
+                put(img, 8 + dx, 5 + dy, color)
+    return img
+
+
 # log -> (bark colour, ring colour)
 LOGS = {
     'grove_log': ((92, 66, 42), (156, 124, 84)),
@@ -364,6 +385,8 @@ def main():
     ITEM_OUT.mkdir(parents=True, exist_ok=True)
     for name in PLANTS:
         plant(name).save(OUT / f'{name}.png')
+    for name in SAPLINGS:
+        sapling(name).save(OUT / f'{name}.png')
     for name in ITEMS:
         item(name).save(ITEM_OUT / f'{name}.png')
     for zone, (surface, _, _) in ZONES.items():
