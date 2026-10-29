@@ -76,6 +76,10 @@ final class ShotTaker {
 
     private int current = -1;
     private Phase phase = Phase.DONE;
+    /** Whether the current shot has been closed already; endShot runs once per shot. */
+    private boolean ended;
+    /** The first failure to write the report, which the harness turns into giving up. */
+    private RuntimeException reportFailure;
     private ShotRecord rec;
     private Plan plan;
     private int attempt;
@@ -214,6 +218,7 @@ final class ShotTaker {
         current++;
         if (finished()) return;
         rec = records.get(current);
+        ended = false;
         attempt = 0;
         cam = null;
         plan = null;
@@ -367,6 +372,8 @@ final class ShotTaker {
     }
 
     private void endShot() {
+        if (ended) return;
+        ended = true;
         phase = Phase.DONE;
         cam = null;
         lastImage = null;
@@ -374,8 +381,18 @@ final class ShotTaker {
             ShootServer.release(list.renderDistance);
             return null;
         });
-        rewrite.run();
+        try {
+            rewrite.run();
+        } catch (RuntimeException e) {
+            ModLog.LOG.error("[shoot] #{} report not written", rec.shot.index, e);
+            if (reportFailure == null) reportFailure = e;
+        }
         progress.run();
+    }
+
+    /** The first exception thrown while rewriting the report, or null. */
+    RuntimeException reportFailure() {
+        return reportFailure;
     }
 
     /** Server thread: the cameras to try for the shot, best first, and the biome and styles at its target. */
