@@ -25,7 +25,6 @@ final class EndSaplingBlock extends BlockBush implements IGrowable {
     private static final int STAGE = 8;
     private static final int GROW_ODDS = 7;
     private static final int GROVE_TREE_PERCENT = 75;
-    private static final int MAX_HEADROOM = 64;
 
     private final EndBiome biome;
 
@@ -61,19 +60,8 @@ final class EndSaplingBlock extends BlockBush implements IGrowable {
         }
     }
 
-    /** Replaces the sapling with its plant, or puts the sapling back when the plant does not fit. */
     private void grow(World world, Random random, int x, int y, int z) {
-        Grower grower = pickGrower(random);
-        int reach = grower.radius();
-        // Never pull in chunks that are not loaded: the crown would spill into them.
-        if (!world.checkChunksExist(x - reach, y, z - reach, x + reach, y, z + reach)) return;
-        int meta = world.getBlockMetadata(x, y, z);
-        world.setBlockToAir(x, y, z);
-        int headroom = 0;
-        while (headroom < MAX_HEADROOM && y + headroom < 255 && world.isAirBlock(x, y + headroom, z)) headroom++;
-        if (!grower.grow(random, x, y, z, headroom, new WorldPlantSink(world))) {
-            world.setBlock(x, y, z, this, meta, 3);
-        }
+        WorldPlantSink.growInPlace(world, random, x, y, z, pickGrower(random));
     }
 
     private Grower pickGrower(Random random) {
