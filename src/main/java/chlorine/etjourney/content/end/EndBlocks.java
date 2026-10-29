@@ -47,6 +47,12 @@ public final class EndBlocks {
                     block = new EndLogBlock(entry);
                     logs.put(entry.name, block);
                     break;
+                case LEAVES:
+                case GLOW_LEAVES:
+                    block = new EndLeavesBlock(entry);
+                    GameRegistry.registerBlock(block, EndLeavesBlock.Placed.class, entry.name);
+                    EndPalette.bind(entry.kind, block, 0);
+                    continue;
                 default:
                     continue;
             }
