@@ -53,6 +53,11 @@ public final class EndBlocks {
                     GameRegistry.registerBlock(block, EndLeavesBlock.Placed.class, entry.name);
                     EndPalette.bind(entry.kind, block, 0);
                     continue;
+                case CAP:
+                case GLOW:
+                case STEM:
+                    block = new EndCapBlock(entry);
+                    break;
                 default:
                     continue;
             }
