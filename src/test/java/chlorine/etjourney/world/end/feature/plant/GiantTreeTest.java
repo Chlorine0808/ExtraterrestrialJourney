@@ -137,6 +137,23 @@ class GiantTreeTest {
         }
     }
 
+    /** Leaves decay beyond 8 blocks of wood, measured per axis; every leaf and blossom lies within that. */
+    @Test
+    void leavesStayNearWood() {
+        int worst = 0;
+        for (Drawn t : trees()) {
+            for (Map.Entry<Long, EndBlock> e : t.blocks.entrySet()) {
+                if (e.getValue() == EndBlock.GROVE_LOG) continue;
+                int[] p = unpack(e.getKey());
+                int nearest = 0;
+                while (nearest <= 8 && !t.logWithin(p, nearest)) nearest++;
+                worst = Math.max(worst, nearest);
+                assertTrue(nearest <= 8, t + " has a leaf more than 8 from wood at " + p[0] + "," + p[1] + "," + p[2]);
+            }
+        }
+        System.out.println("giant tree: leaves at most " + worst + " from wood");
+    }
+
     /** A sink whose heights the tree misses is left alone, so the pass need not build the tree for it. */
     @Test
     void reachesOnlyTheHeightsItDraws() {
@@ -211,6 +228,22 @@ class GiantTreeTest {
 
         double ground(double x, double z) {
             return anchor[1] + slope * (z - anchor[2]);
+        }
+
+        /** Whether a log lies exactly r from p, measured per axis. */
+        boolean logWithin(int[] p, int r) {
+            for (int dx = -r; dx <= r; dx++) {
+                for (int dy = -r; dy <= r; dy++) {
+                    for (int dz = -r; dz <= r; dz++) {
+                        if (Math.max(Math.abs(dx), Math.max(Math.abs(dy), Math.abs(dz))) != r) continue;
+                        int y = p[1] + dy;
+                        if (y < 0 || y > 255) continue;
+                        long k = ((long) (p[0] + dx) << 40) ^ (((long) (p[2] + dz) & 0xFFFFFFL) << 16) ^ y;
+                        if (blocks.get(k) == EndBlock.GROVE_LOG) return true;
+                    }
+                }
+            }
+            return false;
         }
 
         double distance(int[] p) {
