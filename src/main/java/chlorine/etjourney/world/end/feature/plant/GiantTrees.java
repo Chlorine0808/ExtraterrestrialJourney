@@ -21,6 +21,7 @@ public final class GiantTrees {
     /** From the ground to the top of the branches. */
     public static final int HEIGHT = 56;
     static final int MIN_MEMBERS = 12;
+    static final double LEVEL_RADIUS = 16, LEVEL_RISE = 14;
     private static final int CANDIDATES = 32;
     private static final double SPACING = 80;
     private static final long COUNT_SALT = 0x2545F4914F6CDD1DL;
@@ -64,10 +65,20 @@ public final class GiantTrees {
             Continent.Seed s = Continent.seedAt(seed, ContinentIds.cellX(order[i]), ContinentIds.cellZ(order[i]));
             if (s == null || tooClose(out, s.x, s.z) || !insideGrove(seed, s.x, s.z)) continue;
             double ground = probe.ground(s.x, s.z);
-            if (ground <= -100 || ground + HEIGHT > 250) continue;
+            if (ground <= -100 || ground + HEIGHT > 250 || !level(probe, s.x, s.z, ground)) continue;
             out.add(new double[] { s.x, ground, s.z });
         }
         return out;
+    }
+
+    /** Whether the ground around the trunk is land within LEVEL_RISE of the root's: no cliff above, no void below. */
+    private static boolean level(StructureProbe probe, double x, double z, double ground) {
+        for (int k = 0; k < 8; k++) {
+            double angle = k * Math.PI / 4;
+            double g = probe.ground(x + LEVEL_RADIUS * Math.cos(angle), z + LEVEL_RADIUS * Math.sin(angle));
+            if (Math.abs(g - ground) > LEVEL_RISE) return false;
+        }
+        return true;
     }
 
     private static boolean tooClose(List<double[]> taken, double x, double z) {

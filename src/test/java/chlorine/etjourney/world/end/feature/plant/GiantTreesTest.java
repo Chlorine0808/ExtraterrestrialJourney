@@ -104,6 +104,25 @@ class GiantTreesTest {
         assertTrue(seen > 0);
     }
 
+    /** Around the trunk the ground is land and fairly level: no cliff above the root, no void below it. */
+    @Test
+    void anchorsStandOnLevelLand() {
+        int seen = 0;
+        for (Continent.Seed s : groves()) {
+            for (double[] a : GiantTrees.anchors(SEED, s, PROBE)) {
+                for (int k = 0; k < 8; k++) {
+                    double angle = k * Math.PI / 4;
+                    double x = a[0] + GiantTrees.LEVEL_RADIUS * Math.cos(angle);
+                    double z = a[2] + GiantTrees.LEVEL_RADIUS * Math.sin(angle);
+                    double g = PROBE.ground(x, z);
+                    assertTrue(Math.abs(g - a[1]) <= GiantTrees.LEVEL_RISE, "ground " + g + " near a root at " + a[1]);
+                }
+                seen++;
+            }
+        }
+        assertTrue(seen > 0);
+    }
+
     @Test
     void sameFromEveryMember() {
         int checked = 0;
