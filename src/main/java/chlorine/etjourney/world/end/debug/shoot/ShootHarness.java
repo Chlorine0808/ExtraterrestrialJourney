@@ -93,7 +93,10 @@ public final class ShootHarness {
         try {
             list = ShotList.read(Paths.get(path));
         } catch (IOException e) {
-            ModLog.LOG.error("[shoot] cannot read the shot list {}", path, e);
+            ModLog.LOG.error("[shoot] cannot read shot list: {}", path, e);
+            FMLCommonHandler.instance()
+                .bus()
+                .register(new MenuQuitter());
             return;
         }
         for (String error : list.errors) ModLog.LOG.warn("[shoot] {}", error);
@@ -104,6 +107,18 @@ public final class ShootHarness {
             .register(harness);
         MinecraftForge.EVENT_BUS.register(harness);
         ShootServer.register();
+    }
+
+    /** Used when the shot list cannot be read: closes the game once the main menu shows, so the run still ends. */
+    public static final class MenuQuitter {
+
+        @SubscribeEvent
+        public void onClientTick(TickEvent.ClientTickEvent event) {
+            Minecraft mc = Minecraft.getMinecraft();
+            if (event.phase != TickEvent.Phase.END || !(mc.currentScreen instanceof GuiMainMenu)) return;
+            ModLog.LOG.error("[shoot] giving up without a shot list");
+            mc.shutdown();
+        }
     }
 
     @SubscribeEvent
