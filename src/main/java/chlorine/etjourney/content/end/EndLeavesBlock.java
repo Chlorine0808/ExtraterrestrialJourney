@@ -141,9 +141,10 @@ final class EndLeavesBlock extends BlockLeaves {
     }
 
     /** Leaves a player sets down carry the placed bit, so they do not decay with the tree. */
-    static final class Placed extends ItemBlock {
+    public static final class Placed extends ItemBlock {
 
-        Placed(Block block) {
+        // Forge builds the item by reflection, so the class and its constructor must be public.
+        public Placed(Block block) {
             super(block);
         }
 
