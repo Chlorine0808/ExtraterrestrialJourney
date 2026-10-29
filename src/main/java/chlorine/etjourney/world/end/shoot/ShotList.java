@@ -38,6 +38,7 @@ public final class ShotList {
         ShotList list = new ShotList();
         for (int i = 0; i < lines.size(); i++) {
             String text = lines.get(i);
+            if (i == 0 && text.startsWith("﻿")) text = text.substring(1);
             int hash = text.indexOf('#');
             if (hash >= 0) text = text.substring(0, hash);
             text = text.trim();
@@ -92,7 +93,10 @@ public final class ShotList {
                 settleSeconds = Integer.parseInt(single(t));
                 break;
             case "dry-run":
-                dryRun = Boolean.parseBoolean(single(t));
+                String flag = single(t);
+                if (!flag.equals("true") && !flag.equals("false"))
+                    throw new IllegalArgumentException("dry-run must be true or false, got '" + flag + "'");
+                dryRun = Boolean.parseBoolean(flag);
                 break;
             default:
                 throw new IllegalArgumentException("unknown setting '" + t[0] + "'");

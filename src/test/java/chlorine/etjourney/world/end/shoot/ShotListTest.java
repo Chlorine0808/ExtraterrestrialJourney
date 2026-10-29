@@ -86,6 +86,23 @@ class ShotListTest {
     }
 
     @Test
+    void leadingByteOrderMarkIsIgnored() {
+        ShotList list = ShotList.parse(Arrays.asList("﻿seed 5", "shot bare"));
+        assertEquals(Collections.emptyList(), list.errors);
+        assertEquals(5L, list.seed);
+    }
+
+    @Test
+    void dryRunTakesOnlyTrueOrFalse() {
+        ShotList list = ShotList.parse(Arrays.asList("dry-run yes", "dry-run false"));
+        assertEquals(1, list.errors.size());
+        assertTrue(
+            list.errors.get(0)
+                .startsWith("line 1:"));
+        assertEquals(false, list.dryRun);
+    }
+
+    @Test
     void unknownSettingsAndShotKindsAreErrors() {
         ShotList list = ShotList.parse(Arrays.asList("bogus 1", "shot nothing", "shot biosphere LAVA"));
         assertEquals(3, list.errors.size());
