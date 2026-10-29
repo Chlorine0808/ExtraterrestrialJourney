@@ -1,5 +1,6 @@
 package chlorine.etjourney.world.end.feature.plant;
 
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -127,12 +128,14 @@ class GiantTreesTest {
     void sameFromEveryMember() {
         int checked = 0;
         for (Continent.Seed s : groves()) {
-            List<double[]> expected = GiantTrees.anchors(SEED, s, PROBE);
-            for (long k : ContinentIds.members(SEED, s)) {
+            List<double[]> expected = GiantTrees.compute(SEED, s, PROBE);
+            long[] members = ContinentIds.members(SEED, s);
+            for (int m = 0; m < members.length; m += Math.max(1, members.length / 25)) {
+                long k = members[m];
                 Continent.Seed other = Continent.seedAt(SEED, ContinentIds.cellX(k), ContinentIds.cellZ(k));
-                List<double[]> got = GiantTrees.anchors(SEED, other, PROBE);
+                List<double[]> got = GiantTrees.compute(SEED, other, PROBE);
                 assertEquals(expected.size(), got.size());
-                for (int i = 0; i < got.size(); i++) assertEquals(expected.get(i)[0], got.get(i)[0], 0);
+                for (int i = 0; i < got.size(); i++) assertArrayEquals(expected.get(i), got.get(i), 0);
             }
             if (!expected.isEmpty()) checked++;
             if (checked >= 3) break;

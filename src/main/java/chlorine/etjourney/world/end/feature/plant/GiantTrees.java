@@ -42,9 +42,14 @@ public final class GiantTrees {
         long id = ContinentIds.of(seed, member);
         List<double[]> cached = CACHE.get(id);
         if (cached != null) return cached;
-        List<double[]> out = Collections.unmodifiableList(choose(seed, id, member, probe));
+        List<double[]> out = compute(seed, member, probe);
         CACHE.put(id, out);
         return out;
+    }
+
+    /** The trees without the cache, so a test can ask each member afresh. */
+    static List<double[]> compute(long seed, Continent.Seed member, StructureProbe probe) {
+        return Collections.unmodifiableList(choose(seed, ContinentIds.of(seed, member), member, probe));
     }
 
     private static List<double[]> choose(long seed, long id, Continent.Seed member, StructureProbe probe) {
