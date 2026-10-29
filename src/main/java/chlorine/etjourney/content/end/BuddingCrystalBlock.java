@@ -27,7 +27,8 @@ final class BuddingCrystalBlock extends CrystalBlock {
         int face = random.nextInt(6);
         ForgeDirection side = ForgeDirection.getOrientation(face);
         int bx = x + side.offsetX, by = y + side.offsetY, bz = z + side.offsetZ;
-        if (by < 0 || by > 255) return;
+        // A random tick must not load the chunk across a border.
+        if (by < 0 || by > 255 || !world.blockExists(bx, by, bz)) return;
         Block there = world.getBlock(bx, by, bz);
         if (world.isAirBlock(bx, by, bz)) {
             setBud(world, bx, by, bz, CrystalGrowth.next(null), face);

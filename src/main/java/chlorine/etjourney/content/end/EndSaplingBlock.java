@@ -2,6 +2,7 @@ package chlorine.etjourney.content.end;
 
 import java.util.Random;
 
+import net.minecraft.block.Block;
 import net.minecraft.block.BlockBush;
 import net.minecraft.block.IGrowable;
 import net.minecraft.block.material.Material;
@@ -45,6 +46,11 @@ final class EndSaplingBlock extends BlockBush implements IGrowable {
     }
 
     @Override
+    protected boolean canPlaceBlockOn(Block block) {
+        return LargeFlora.growsOn(biome, EndPalette.biomeOfTop(block));
+    }
+
+    @Override
     public void updateTick(World world, int x, int y, int z, Random random) {
         if (world.isRemote) return;
         super.updateTick(world, x, y, z, random);
@@ -73,7 +79,8 @@ final class EndSaplingBlock extends BlockBush implements IGrowable {
 
     @Override
     public boolean func_149851_a(World world, int x, int y, int z, boolean isRemote) {
-        return true;
+        // Once the second stage is reached bone meal has nothing left to advance, as with vanilla saplings.
+        return (world.getBlockMetadata(x, y, z) & STAGE) == 0;
     }
 
     @Override
