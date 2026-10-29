@@ -79,8 +79,8 @@ final class EndSaplingBlock extends BlockBush implements IGrowable {
 
     @Override
     public boolean func_149851_a(World world, int x, int y, int z, boolean isRemote) {
-        // Once the second stage is reached bone meal has nothing left to advance, as with vanilla saplings.
-        return (world.getBlockMetadata(x, y, z) & STAGE) == 0;
+        // Always true, as in vanilla: the first bone meal sets the stage bit and the next one grows the plant.
+        return true;
     }
 
     @Override
