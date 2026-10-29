@@ -3,6 +3,7 @@ package chlorine.etjourney.world.end;
 import net.minecraft.block.Block;
 import net.minecraft.init.Blocks;
 
+import chlorine.etjourney.world.end.feature.EndBiome;
 import chlorine.etjourney.world.end.modifier.EndBlock;
 import chlorine.etjourney.world.end.modifier.KindTable;
 
@@ -25,12 +26,20 @@ public final class EndPalette {
         return BLOCKS.get(kind) != null;
     }
 
+    /** The biome whose surface block this is, or null when it is no biome surface. */
+    public static EndBiome biomeOfTop(Block block) {
+        for (EndBiome biome : EndBiome.values()) {
+            if (isBound(biome.top) && block(biome.top) == block) return biome;
+        }
+        return null;
+    }
+
     public static Block block(EndBlock kind) {
         Block bound = BLOCKS.get(kind);
         return bound != null ? bound : standIn(kind);
     }
 
-    static int meta(EndBlock kind) {
+    public static int meta(EndBlock kind) {
         Integer bound = META.get(kind);
         return bound != null ? bound : standInMeta(kind);
     }

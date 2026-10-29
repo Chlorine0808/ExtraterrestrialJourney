@@ -4,9 +4,11 @@ import java.util.HashMap;
 import java.util.Map;
 
 import net.minecraft.block.Block;
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 
 import chlorine.etjourney.world.end.EndPalette;
+import chlorine.etjourney.world.end.modifier.EndBlock;
 import cpw.mods.fml.common.registry.GameRegistry;
 
 /**
@@ -42,6 +44,13 @@ public final class EndBlocks {
         Map<String, Block> logs = new HashMap<>();
         MaterialItem shard = new MaterialItem(LargePlantBlockTable.SHARD);
         GameRegistry.registerItem(shard, LargePlantBlockTable.SHARD);
+        // Saplings come first so the leaves can be told what they drop.
+        Map<EndBlock, Item> saplings = new HashMap<>();
+        for (LargePlantBlockTable.Sapling sapling : LargePlantBlockTable.SAPLINGS) {
+            Block block = new EndSaplingBlock(sapling);
+            GameRegistry.registerBlock(block, sapling.name);
+            for (EndBlock leaves : sapling.droppedBy) saplings.put(leaves, Item.getItemFromBlock(block));
+        }
         for (LargePlantBlockTable.Entry entry : LargePlantBlockTable.ENTRIES) {
             Block block;
             switch (entry.type) {
@@ -51,7 +60,9 @@ public final class EndBlocks {
                     break;
                 case LEAVES:
                 case GLOW_LEAVES:
-                    block = new EndLeavesBlock(entry);
+                    EndLeavesBlock leaves = new EndLeavesBlock(entry);
+                    leaves.setSapling(saplings.get(entry.kind));
+                    block = leaves;
                     GameRegistry.registerBlock(block, EndLeavesBlock.Placed.class, entry.name);
                     EndPalette.bind(entry.kind, block, 0);
                     continue;
