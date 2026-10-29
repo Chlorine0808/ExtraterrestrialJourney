@@ -18,11 +18,31 @@ public final class PlantModifiers {
     /** How far a tree's root may be from the chunk's centre and still reach the chunk. */
     private static final int REACH = GiantTrees.FOOTPRINT + 12;
 
+    /** Distances from the root at which the footprint is checked against reserved fades: the foot and the root tips. */
+    private static final double[] FADE_RADII = { 14, GiantTrees.FOOTPRINT };
+
     private PlantModifiers() {}
 
     /**
+     * On a reserved island, or with any of the footprint on ground an island's fade lowers: the tree reads the ground
+     * without the fade, so its trunk and roots would float there.
+     */
+    static boolean blocked(List<Area> reserved, double[] a) {
+        if (Reservations.touches(reserved, a[0], a[2], GiantTrees.FOOTPRINT)) return true;
+        if (Reservations.suppression(reserved, a[0], a[2]) > 0.1) return true;
+        for (double r : FADE_RADII) {
+            for (int k = 0; k < 8; k++) {
+                double angle = k * Math.PI / 4;
+                if (Reservations.suppression(reserved, a[0] + r * Math.cos(angle), a[2] + r * Math.sin(angle)) > 0.1)
+                    return true;
+            }
+        }
+        return false;
+    }
+
+    /**
      * The giant trees reaching the chunk, found from the continent seeds near it. A tree whose footprint touches a
-     * reserved area, as seen from its root's chunk, is left out.
+     * reserved area, or stands in its fade, as seen from its root's chunk, is left out.
      */
     public static Modifier giantTrees(int order) {
         return FeatureModifiers.blockModifier(order, (area, view, sink) -> {
@@ -41,7 +61,7 @@ public final class PlantModifiers {
                     for (double[] a : GiantTrees.anchors(area.seed, s, view.structures())) {
                         if (Math.hypot(a[0] - cx, a[2] - cz) > REACH) continue;
                         List<Area> reserved = view.reservedAt((int) Math.floor(a[0]) >> 4, (int) Math.floor(a[2]) >> 4);
-                        if (Reservations.touches(reserved, a[0], a[2], GiantTrees.FOOTPRINT)) continue;
+                        if (blocked(reserved, a)) continue;
                         new GiantTree(area.seed, a, view.structures()).draw(sink);
                     }
                 }

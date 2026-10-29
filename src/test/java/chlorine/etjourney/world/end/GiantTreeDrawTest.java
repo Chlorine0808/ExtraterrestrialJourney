@@ -18,6 +18,7 @@ import chlorine.etjourney.world.end.modifier.EndBlock;
 import chlorine.etjourney.world.end.region.RegionPicker;
 import chlorine.etjourney.world.end.region.Styles;
 import chlorine.etjourney.world.end.reserve.Area;
+import chlorine.etjourney.world.end.reserve.Reservations;
 
 /**
  * A giant tree drawn by the block pass in real chunks: both halves of a column and neighbouring chunks agree, the
@@ -278,5 +279,20 @@ class GiantTreeDrawTest {
             .blocks(sink);
         assertTrue(!hasLog(sink::get, CX + 1, CZ), "tree drawn on reserved ground");
         assertTrue(hasLog(drawn(CX + 1, CZ), CX + 1, CZ), "the tree does not reach the chunk without the reservation");
+    }
+
+    /**
+     * An area beside the tree, not touching its footprint, whose fade ring lowers the ground under the roots on that
+     * side: the probe does not see the fade, so the roots would float, and the tree is left out.
+     */
+    @Test
+    void notInAReservedFade() {
+        double radius = 8, x = ANCHOR[0] + GiantTrees.FOOTPRINT + 1.2 * radius + 2;
+        List<Area> reserved = Collections.singletonList(new Area("test", x, ANCHOR[2], radius));
+        assertTrue(!Reservations.touches(reserved, ANCHOR[0], ANCHOR[2], GiantTrees.FOOTPRINT));
+        MemorySink sink = new MemorySink(CX - 1, CZ, 0, 256);
+        new ChunkPlan(SAMPLER, CX - 1, CZ, (a, b) -> reserved).blocks(sink);
+        assertTrue(!hasLog(sink::get, CX - 1, CZ), "tree drawn beside a reserved area");
+        assertTrue(hasLog(drawn(CX - 1, CZ), CX - 1, CZ), "the tree does not reach the chunk without the reservation");
     }
 }
