@@ -6,6 +6,7 @@ import java.util.Random;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockLeaves;
+import net.minecraft.client.renderer.texture.IIconRegister;
 import net.minecraft.init.Blocks;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemBlock;
@@ -109,6 +110,12 @@ final class EndLeavesBlock extends BlockLeaves {
         // The vanilla leaves get their graphics level from the options screen; follow it.
         setGraphicsLevel(!Blocks.leaves.isOpaqueCube());
         return super.shouldSideBeRendered(world, x, y, z, side);
+    }
+
+    @Override
+    @SideOnly(Side.CLIENT)
+    public void registerBlockIcons(IIconRegister register) {
+        blockIcon = register.registerIcon(getTextureName());
     }
 
     @Override
