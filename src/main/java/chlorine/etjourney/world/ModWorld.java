@@ -2,6 +2,7 @@ package chlorine.etjourney.world;
 
 import chlorine.etjourney.core.util.ModLog;
 import chlorine.etjourney.world.end.EndFlora;
+import chlorine.etjourney.world.end.EndLargeFlora;
 import chlorine.etjourney.world.end.EndTerrain;
 import chlorine.etjourney.world.end.VoidFalls;
 import chlorine.etjourney.world.end.biosphere.BiosphereBiomes;
@@ -27,6 +28,7 @@ public final class ModWorld {
 
     public static void init() {
         VoidFalls.register();
+        EndLargeFlora.register();
         EndFlora.register();
         BiosphereTransplant.register();
         BiosphereBiomes.register();
