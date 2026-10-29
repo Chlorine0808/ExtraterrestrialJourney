@@ -11,6 +11,7 @@ tasks.test {
 // absolute path lands on the JVM command line.
 tasks.named<JavaExec>("runClient") {
     providers.gradleProperty("etjShoot").orNull?.let {
+        if (!file(it).isFile) throw GradleException("-PetjShoot: shot list not found: ${file(it)}")
         systemProperty("etj.shoot", file(it).toRelativeString(workingDir))
         args("--width", "1920", "--height", "1080")
     }
