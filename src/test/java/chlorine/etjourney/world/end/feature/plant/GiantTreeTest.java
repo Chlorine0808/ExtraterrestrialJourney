@@ -9,6 +9,7 @@ import java.util.Map;
 
 import org.junit.jupiter.api.Test;
 
+import chlorine.etjourney.world.end.feature.StructureProbe;
 import chlorine.etjourney.world.end.modifier.BlockSink;
 import chlorine.etjourney.world.end.modifier.EndBlock;
 
@@ -25,7 +26,7 @@ class GiantTreeTest {
         List<Drawn> out = new ArrayList<>();
         for (int i = 0; i < 12; i++) {
             double x = 16 * (i * 7 - 40) + 8, z = 16 * (i * 3 - 17) + 8;
-            out.add(new Drawn(1000L + i * 7919L, new double[] { x, GROUND + (i % 3) * 0.4, z }, 0, 256));
+            out.add(new Drawn(1000L + i * 7919L, new double[] { x, GROUND + (i % 3) * 0.4, z }, 0, 256, 0));
         }
         return out;
     }
@@ -85,12 +86,42 @@ class GiantTreeTest {
                 int[] p = unpack(k);
                 assertTrue(t.distance(p) <= GiantTrees.FOOTPRINT, t + " reaches " + t.distance(p));
                 assertTrue(p[1] < t.base + GiantTrees.HEIGHT, t + " reaches up to " + p[1]);
-                assertTrue(p[1] >= t.base - 16, t + " reaches down to " + p[1]);
+                assertTrue(p[1] >= t.base - GiantTree.MAX_DROP - GiantTree.SINK, t + " reaches down to " + p[1]);
             }
         }
         // A tree crossing Y 128 drawn into either half stays inside it (the test sink throws otherwise).
-        new Drawn(5L, new double[] { 8, 100, 8 }, 0, 128);
-        new Drawn(5L, new double[] { 8, 100, 8 }, 128, 256);
+        new Drawn(5L, new double[] { 8, 100, 8 }, 0, 128, 0);
+        new Drawn(5L, new double[] { 8, 100, 8 }, 128, 256, 0);
+    }
+
+    /**
+     * On a slope the probe's ground falls well below the root's: the trunk still carries on below the local ground
+     * on the low side, and the far roots still touch it.
+     */
+    @Test
+    void followsSlopedGround() {
+        for (int i = 0; i < 6; i++) {
+            Drawn t = new Drawn(77L + i, new double[] { 8 + 32 * i, GROUND, 8 }, 0, 256, 0.6);
+            Map<Long, Integer> lowest = new HashMap<>();
+            for (Map.Entry<Long, EndBlock> e : t.blocks.entrySet()) {
+                if (e.getValue() != EndBlock.GROVE_LOG) continue;
+                int[] p = unpack(e.getKey());
+                lowest.merge(((long) p[0] << 32) ^ (p[2] & 0xFFFFFFFFL), p[1], Math::min);
+            }
+            int trunk = 0, roots = 0;
+            for (Map.Entry<Long, Integer> e : lowest.entrySet()) {
+                int x = (int) (e.getKey() >> 32), z = (int) (long) e.getKey();
+                double d = t.distance(new int[] { x, 0, z }), ground = t.ground(x + 0.5, z + 0.5);
+                if (d <= 11) {
+                    trunk++;
+                    assertTrue(e.getValue() < ground - 2, t + " trunk ends at " + e.getValue() + " over " + ground);
+                } else if (d >= 18) {
+                    roots++;
+                    assertTrue(e.getValue() <= ground + 1, t + " root floats at " + e.getValue() + " over " + ground);
+                }
+            }
+            assertTrue(trunk > 100 && roots > 10, t + ": " + trunk + " trunk and " + roots + " root columns");
+        }
     }
 
     @Test
@@ -133,17 +164,41 @@ class GiantTreeTest {
         final int base;
         final Map<Long, EndBlock> blocks = new HashMap<>();
 
-        Drawn(long seed, double[] anchor, int minY, int maxY) {
+        final double slope;
+
+        /** The ground falls by slope blocks per block towards negative z, level with the root at the root. */
+        Drawn(long seed, double[] anchor, int minY, int maxY, double slope) {
             this.seed = seed;
             this.anchor = anchor;
+            this.slope = slope;
             this.base = (int) Math.floor(anchor[1]);
-            GiantTree tree = new GiantTree(seed, anchor);
+            GiantTree tree = new GiantTree(seed, anchor, new StructureProbe() {
+
+                @Override
+                public double weight(String style, double x, double z) {
+                    return 0;
+                }
+
+                @Override
+                public double land(double x, double z) {
+                    return 1;
+                }
+
+                @Override
+                public double ground(double x, double z) {
+                    return Drawn.this.ground(x, z);
+                }
+            });
             int reach = GiantTrees.FOOTPRINT + 16;
             int c0x = (int) Math.floor((anchor[0] - reach) / 16), c1x = (int) Math.floor((anchor[0] + reach) / 16);
             int c0z = (int) Math.floor((anchor[2] - reach) / 16), c1z = (int) Math.floor((anchor[2] + reach) / 16);
             for (int cx = c0x; cx <= c1x; cx++) {
                 for (int cz = c0z; cz <= c1z; cz++) tree.draw(new Sink(cx * 16, cz * 16, minY, maxY));
             }
+        }
+
+        double ground(double x, double z) {
+            return anchor[1] + slope * (z - anchor[2]);
         }
 
         double distance(int[] p) {
