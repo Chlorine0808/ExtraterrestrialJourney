@@ -69,6 +69,8 @@ public final class ShootHarness {
     private final ShotList list;
     private Stage stage = Stage.MENU;
     private int arrivedTicks;
+    /** The stage in which the framebuffer size was last logged, so a stuck size logs once per stage. */
+    private Stage enlargeLoggedAt;
     /** Set on the server thread once the player stands in the End, flying with night vision. */
     private volatile boolean inEnd;
     private boolean sentToEnd;
@@ -163,10 +165,13 @@ public final class ShootHarness {
         // Moving or resizing the window shrinks the framebuffer back to the window; grow it again.
         if (stage.compareTo(Stage.ARRIVED) >= 0
             && (mc.getFramebuffer().framebufferWidth != WIDTH || mc.getFramebuffer().framebufferHeight != HEIGHT)) {
-            ModLog.LOG.info(
-                "[shoot] framebuffer {}x{}, enlarging",
-                mc.getFramebuffer().framebufferWidth,
-                mc.getFramebuffer().framebufferHeight);
+            if (enlargeLoggedAt != stage) {
+                enlargeLoggedAt = stage;
+                ModLog.LOG.info(
+                    "[shoot] framebuffer {}x{}, enlarging",
+                    mc.getFramebuffer().framebufferWidth,
+                    mc.getFramebuffer().framebufferHeight);
+            }
             ShootCapture.enlarge(mc, WIDTH, HEIGHT);
         }
         switch (stage) {
@@ -196,6 +201,10 @@ public final class ShootHarness {
                 break;
             case SHOOTING:
                 taker.tick(mc);
+                if (taker.reportFailure() != null) {
+                    giveUp(mc, "cannot write the report: " + taker.reportFailure());
+                    return;
+                }
                 if (taker.finished()) finish(mc);
                 break;
             default:
