@@ -1,12 +1,16 @@
 package chlorine.etjourney.world.end.feature;
 
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 
 import org.junit.jupiter.api.Test;
 
@@ -60,5 +64,47 @@ class ContinentIdsTest {
         for (Continent.Seed s : sample()) {
             if (overlap(first, s)) assertEquals(ContinentIds.compute(SEED, first), ContinentIds.compute(SEED, s));
         }
+    }
+
+    /** Every member must list the same seeds, and each listed seed must belong to the same continent. */
+    @Test
+    void membersAreTheSameFromEverySeedOfAContinent() {
+        long seed = 77L;
+        Map<Long, List<Continent.Seed>> byId = new TreeMap<>();
+        for (Continent.Seed s : Continent.seedsNear(seed, 3000, 0, 400))
+            byId.computeIfAbsent(ContinentIds.of(seed, s), k -> new ArrayList<>())
+                .add(s);
+        List<Continent.Seed> group = byId.values()
+            .stream()
+            .filter(g -> g.size() >= 2)
+            .findFirst()
+            .orElseThrow(() -> new AssertionError("no continent with two seeds near (3000, 0)"));
+        Continent.Seed s1 = group.get(0), s2 = group.get(1);
+        assertTrue(key(s1) != key(s2));
+
+        long[] a = ContinentIds.members(seed, s1), b = ContinentIds.members(seed, s2);
+        assertArrayEquals(sorted(a), sorted(b));
+        assertTrue(contains(a, key(s1)) && contains(a, key(s2)));
+        for (long k : a) {
+            assertEquals(
+                ContinentIds.of(seed, s1),
+                ContinentIds.of(seed, Continent.seedAt(seed, ContinentIds.cellX(k), ContinentIds.cellZ(k))));
+        }
+    }
+
+    private static long key(Continent.Seed s) {
+        long cx = Continent.cellOf(s.x), cz = Continent.cellOf(s.z);
+        return (cx << 32) ^ (cz & 0xFFFFFFFFL);
+    }
+
+    private static long[] sorted(long[] a) {
+        long[] c = a.clone();
+        Arrays.sort(c);
+        return c;
+    }
+
+    private static boolean contains(long[] a, long k) {
+        for (long v : a) if (v == k) return true;
+        return false;
     }
 }
