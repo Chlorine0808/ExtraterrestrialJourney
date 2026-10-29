@@ -40,6 +40,8 @@ public final class EndBlocks {
 
     private static void registerLargePlants() {
         Map<String, Block> logs = new HashMap<>();
+        MaterialItem shard = new MaterialItem(LargePlantBlockTable.SHARD);
+        GameRegistry.registerItem(shard, LargePlantBlockTable.SHARD);
         for (LargePlantBlockTable.Entry entry : LargePlantBlockTable.ENTRIES) {
             Block block;
             switch (entry.type) {
@@ -58,6 +60,18 @@ public final class EndBlocks {
                 case STEM:
                     block = new EndCapBlock(entry);
                     break;
+                case CRYSTAL:
+                    block = new CrystalBlock(entry);
+                    break;
+                case BUDDING:
+                    block = new BuddingCrystalBlock(entry);
+                    break;
+                case BUD:
+                    block = new CrystalBudBlock(entry, shard);
+                    // Generation sets buds pointing up.
+                    GameRegistry.registerBlock(block, entry.name);
+                    EndPalette.bind(entry.kind, block, 1);
+                    continue;
                 default:
                     continue;
             }
