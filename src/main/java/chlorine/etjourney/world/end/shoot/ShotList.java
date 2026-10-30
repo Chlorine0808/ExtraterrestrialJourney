@@ -11,6 +11,8 @@ import java.util.List;
 import java.util.Locale;
 
 import chlorine.etjourney.world.end.feature.EndBiome;
+import chlorine.etjourney.world.end.region.Style;
+import chlorine.etjourney.world.end.region.Styles;
 
 /** A parsed screenshot shot list: settings plus shot specs. Bad lines go to {@link #errors}; the rest still parses. */
 public final class ShotList {
@@ -127,6 +129,9 @@ public final class ShotList {
             case "arc-touch":
                 what = ShotSpec.What.ARC_TOUCH;
                 break;
+            case "giant-tree":
+                what = ShotSpec.What.GIANT_TREE;
+                break;
             case "at":
                 what = ShotSpec.What.AT;
                 break;
@@ -162,6 +167,7 @@ public final class ShotList {
         int count = 1;
         int minTop = what == ShotSpec.What.MOUNTAIN ? DEFAULT_MOUNTAIN_TOP : 0;
         String label = null;
+        String style = null;
         List<View> views = allowedViews(what);
         for (; next < t.length; next++) {
             int eq = t[next].indexOf('=');
@@ -186,6 +192,12 @@ public final class ShotList {
                 case "pitch":
                     at = withAngle(at, 4, value);
                     break;
+                case "style":
+                    if (what != ShotSpec.What.BIOME && what != ShotSpec.What.BARE)
+                        throw new IllegalArgumentException("style is for biome and bare");
+                    if (!isStyle(value)) throw new IllegalArgumentException("unknown style '" + value + "'");
+                    style = value;
+                    break;
                 case "label":
                     label = value;
                     break;
@@ -193,7 +205,12 @@ public final class ShotList {
                     throw new IllegalArgumentException("unknown key '" + key + "'");
             }
         }
-        specs.add(new ShotSpec(what, arg, count, views, minTop, at, label, line));
+        specs.add(new ShotSpec(what, arg, count, views, minTop, at, label, style, line));
+    }
+
+    private static boolean isStyle(String name) {
+        for (Style s : Styles.all()) if (s.name.equals(name)) return true;
+        return false;
     }
 
     private static double[] withAngle(double[] at, int index, String value) {

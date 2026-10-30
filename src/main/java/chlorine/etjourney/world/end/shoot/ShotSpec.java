@@ -11,6 +11,7 @@ public final class ShotSpec {
         BIOSPHERE,
         MOUNTAIN,
         ARC_TOUCH,
+        GIANT_TREE,
         AT
     }
 
@@ -23,10 +24,13 @@ public final class ShotSpec {
     /** {x, y, z, yaw, pitch} for AT only, else null. */
     public final double[] at;
     public final String label;
+    /** Terrain style the continent point must be dominated by (biome and bare only), or null. */
+    public final String style;
     /** 1-based line number in the list file. */
     public final int line;
 
-    ShotSpec(What what, String arg, int count, List<View> views, int minTop, double[] at, String label, int line) {
+    ShotSpec(What what, String arg, int count, List<View> views, int minTop, double[] at, String label, String style,
+        int line) {
         this.what = what;
         this.arg = arg;
         this.count = count;
@@ -34,6 +38,7 @@ public final class ShotSpec {
         this.minTop = minTop;
         this.at = at;
         this.label = label;
+        this.style = style;
         this.line = line;
     }
 }
