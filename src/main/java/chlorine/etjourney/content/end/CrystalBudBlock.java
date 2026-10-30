@@ -130,7 +130,8 @@ final class CrystalBudBlock extends Block {
     @Override
     public void onNeighborBlockChange(World world, int x, int y, int z, Block neighbour) {
         if (canBlockStay(world, x, y, z)) return;
-        world.setBlockToAir(x, y, z);
+        // Break it as a player would, so a cluster still drops its shard.
+        world.func_147480_a(x, y, z, true);
     }
 
     @Override
