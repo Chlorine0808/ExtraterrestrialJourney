@@ -1,0 +1,24 @@
+# End screenshot shot list. Run with .\gradlew.bat runClient "-PetjShoot=shots/<file>".
+# One item per line; '#' starts a comment.
+# Settings: key value
+#   seed, world-type, origin <x> <z>, render-distance, sphere-candidates,
+#   budget-minutes (default 480), settle-seconds (default 240), dry-run (true|false)
+# Shots: shot <what> [arg] key=value...
+#   what: biome <EndBiome>, bare, biosphere <SURFACE|WATER|CAVE|NETHER>, mountain, arc-touch, giant-tree, at <x> <y> <z>
+#   keys: count=N (default 1), views=a,b (default: all allowed), min-top=Y (mountain), style=<STYLE> (biome, bare), yaw=, pitch=, label= (at)
+#   views: aerial,ground for biome/bare/mountain/arc-touch/giant-tree; outside,inside for biosphere; none for at
+#   style=LAYERED keeps only continents whose chosen point is at least 0.6 LAYERED (tiers with trees between).
+#   giant-tree: the tree nearest the origin of each grove continent, one per continent.
+seed 7037748451318983361
+world-type DEFAULT
+origin 3000 0
+render-distance 24
+sphere-candidates 10
+shot giant-tree count=3 views=aerial,ground
+shot biome GROVE count=2 views=aerial,ground
+shot biome GROVE style=LAYERED count=2 views=aerial,ground
+shot biome MYCELIA count=2 views=aerial,ground
+shot biome MYCELIA style=LAYERED count=1 views=ground
+shot biome AMBER count=2 views=aerial,ground
+shot biome HIGHLAND count=2 views=aerial,ground
+budget-minutes 120

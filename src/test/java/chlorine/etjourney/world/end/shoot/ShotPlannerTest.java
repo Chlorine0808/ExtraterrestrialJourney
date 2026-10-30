@@ -144,4 +144,15 @@ class ShotPlannerTest {
         assertNotNull(t);
         assertTrue(SAMPLER.styleWeight("LAYERED", t.x, t.z) >= 0.6);
     }
+
+    @Test
+    void largePlantsListFindsATargetForEveryShot() throws java.io.IOException {
+        ShotList l = ShotList.read(java.nio.file.Paths.get("shots/2026-10-30-large-plants.txt"));
+        assertEquals(java.util.Collections.emptyList(), l.errors);
+        List<PlannedShot> shots = ShotPlanner.expand(l, SAMPLER, BY_KEY);
+        assertEquals(3 * 2 + 2 * 2 + 2 * 2 + 2 * 2 + 1 + 2 * 2 + 2 * 2, shots.size());
+        for (PlannedShot s : shots) {
+            assertNotNull(s.target, s.group);
+        }
+    }
 }
