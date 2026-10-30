@@ -134,6 +134,11 @@ public enum LargeFlora {
         return y >= 0;
     }
 
+    /** The name of the row tried when this one does not fit, or null. */
+    String fallbackName() {
+        return fallback;
+    }
+
     private LargeFlora fallback() {
         return fallback == null ? null : valueOf(fallback);
     }

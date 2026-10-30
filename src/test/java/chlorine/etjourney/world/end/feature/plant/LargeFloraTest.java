@@ -78,6 +78,16 @@ class LargeFloraTest {
         }
     }
 
+    /** A fallback names another row of the same biome, so valueOf never throws while a window is planted. */
+    @Test
+    void everyFallbackIsARowOfItsBiome() {
+        for (LargeFlora row : LargeFlora.values()) {
+            String name = row.fallbackName();
+            if (name == null) continue;
+            assertEquals(row.biome, LargeFlora.valueOf(name).biome, row + " falls back to " + name);
+        }
+    }
+
     @Test
     void standsOnlyOnItsBiome() {
         Set<EndBlock> grove = blocksOn(EndBiome.GROVE), highland = blocksOn(EndBiome.HIGHLAND);
