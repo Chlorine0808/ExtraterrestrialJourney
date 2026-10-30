@@ -96,11 +96,11 @@ class GroveTreeTest {
         Voxels v = new Voxels();
         assertFalse(GroveShrub.INSTANCE.grow(new Random(1), X, Y, Z, 1, v));
         assertTrue(v.isEmpty());
+        // Three blocks of air fit the lowest shrub, a stem and a bush top below the third.
         for (int seed = 0; seed < 100; seed++) {
             Voxels w = new Voxels();
-            if (GroveShrub.INSTANCE.grow(new Random(seed), X, Y, Z, 3, w)) {
-                assertTrue(w.height(Y) < 3, "seed " + seed);
-            }
+            assertTrue(GroveShrub.INSTANCE.grow(new Random(seed), X, Y, Z, 3, w), "seed " + seed);
+            assertTrue(w.height(Y) < 3, "seed " + seed);
         }
     }
 }
