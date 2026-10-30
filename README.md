@@ -30,7 +30,7 @@ export GRADLE_USER_HOME="/c/gradle-home"
 .\gradlew.bat runClient "-PetjShoot=shots/2026-10-28-end.txt"
 ```
 
-- 撮影リストは `shots/` に置く．書式は `shots/2026-10-28-end.txt` の先頭のコメントにある．
+- 撮影リストは `shots/` に置く．`shots/` は git で追跡しない．書式は `src/test/resources/shots/2026-10-28-end.txt` の先頭のコメントにある．
 - クライアントは 1920×1080 で起動し，クリエイティブのワールド `etj-shoot` を作るか読み込んで（シードが違えば作り直し，同じなら End だけ生成し直す），End へ飛んで撮影する．
 - 結果は `run/client/etj-shots/<yyyyMMdd-HHmmss>/` に HTML と画像で出る．
 - HTML は 1 件撮るごとに書き直す．全件が終わるとログに `[shoot] done <index.html のパス>` を出してクライアントを閉じる．10 分（または `settle-seconds` + 5 分）何も進まないか `budget-minutes` を超えたときも，残りを「時間切れ」にして書き出し，閉じる．撮影の計画に入る前に諦めた場合（撮影リストが読めない，ワールドが開けないなど）は HTML が作られず，理由はログにだけ残る．

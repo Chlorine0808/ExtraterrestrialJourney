@@ -39,3 +39,5 @@ layout.json
 AGENTS.md
 CLAUDE.md
 /docs/
+/shots/
+/tools/
