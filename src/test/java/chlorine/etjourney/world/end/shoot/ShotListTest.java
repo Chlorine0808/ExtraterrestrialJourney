@@ -17,7 +17,7 @@ class ShotListTest {
 
     @Test
     void tonightsListParsesWithoutErrors() throws IOException {
-        ShotList list = ShotList.read(Paths.get("shots/2026-10-28-end.txt"));
+        ShotList list = ShotList.read(Paths.get("src/test/resources/shots/2026-10-28-end.txt"));
         assertEquals(Collections.emptyList(), list.errors);
         assertEquals(7037748451318983361L, list.seed);
         assertEquals(4 + 1 + 4 + 1 + 1, list.specs.size()); // biomes, bare, sphere classes, mountain, arc

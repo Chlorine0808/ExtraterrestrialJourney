@@ -1,0 +1,26 @@
+# End screenshot shot list. Run with .\gradlew.bat runClient "-PetjShoot=shots/<file>".
+# One item per line; '#' starts a comment.
+# Settings: key value
+#   seed, world-type, origin <x> <z>, render-distance, sphere-candidates,
+#   budget-minutes (default 480), settle-seconds (default 240), dry-run (true|false)
+# Shots: shot <what> [arg] key=value...
+#   what: biome <EndBiome>, bare, biosphere <SURFACE|WATER|CAVE|NETHER>, mountain, arc-touch, at <x> <y> <z>
+#   keys: count=N (default 1), views=a,b (default: all allowed), min-top=Y (mountain), yaw=, pitch=, label= (at)
+#   views: aerial,ground for biome/bare/mountain/arc-touch; outside,inside for biosphere; none for at
+seed 7037748451318983361
+world-type DEFAULT
+origin 3000 0
+render-distance 24
+sphere-candidates 240
+shot biome GROVE count=2 views=aerial,ground
+shot biome HIGHLAND count=2 views=aerial,ground
+shot biome MYCELIA count=2 views=aerial,ground
+shot biome AMBER count=2 views=aerial,ground
+shot bare count=1 views=aerial,ground
+shot biosphere SURFACE count=2 views=outside,inside
+shot biosphere WATER count=2 views=outside,inside
+shot biosphere CAVE count=2 views=outside,inside
+shot biosphere NETHER count=2 views=outside,inside
+shot mountain min-top=150 count=1 views=aerial
+shot arc-touch count=1 views=aerial
+# shot at 3200 120 -40 yaw=45 pitch=30 label=example
