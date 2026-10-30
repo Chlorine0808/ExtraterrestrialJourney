@@ -10,17 +10,34 @@ import chlorine.etjourney.world.end.modifier.EndBlock;
 /** Registry names of the large-plant and crystal blocks, how each behaves, and the light each gives. */
 final class LargePlantBlockTable {
 
+    /** How a block behaves; wood and leaves also carry their ore dictionary name and vanilla fire rates. */
     enum Type {
-        LOG,
-        LEAVES,
+
+        LOG("logWood", 5, 5),
+        LEAVES("treeLeaves", 30, 60),
         /** Leaves that shine. */
-        GLOW_LEAVES,
+        GLOW_LEAVES("treeLeaves", 30, 60),
         CAP,
         GLOW,
         STEM,
         CRYSTAL,
         BUDDING,
-        BUD
+        BUD;
+
+        /** Ore dictionary name, or null. */
+        final String oreName;
+        /** Fire spread and flammability as BlockFire.setFireInfo takes them; 0 does not burn. */
+        final int fireSpread, flammability;
+
+        Type() {
+            this(null, 0, 0);
+        }
+
+        Type(String oreName, int fireSpread, int flammability) {
+            this.oreName = oreName;
+            this.fireSpread = fireSpread;
+            this.flammability = flammability;
+        }
     }
 
     static final class Entry {
@@ -65,6 +82,8 @@ final class LargePlantBlockTable {
     }
 
     static final String SHARD = "crystal_shard";
+    static final String PLANKS_ORE = "plankWood";
+    static final int PLANKS_FIRE_SPREAD = 5, PLANKS_FLAMMABILITY = 20;
 
     static final List<Entry> ENTRIES = Collections.unmodifiableList(
         Arrays.asList(

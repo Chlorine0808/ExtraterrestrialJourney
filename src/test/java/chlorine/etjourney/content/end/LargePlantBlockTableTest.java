@@ -11,6 +11,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.List;
@@ -64,6 +65,32 @@ class LargePlantBlockTableTest {
             assertTrue(biomes.add(s.biome), "twice: " + s.biome);
         }
         assertEquals(2, LargePlantBlockTable.SAPLINGS.size());
+    }
+
+    /** Logs, planks and leaves join the ore dictionary and catch fire with the vanilla wood's spread and burn rates. */
+    @Test
+    void woodIsSharedAndBurnsLikeVanilla() {
+        Set<String> logs = new HashSet<>(), leaves = new HashSet<>();
+        for (LargePlantBlockTable.Entry e : LargePlantBlockTable.ENTRIES) {
+            LargePlantBlockTable.Type t = e.type;
+            if ("logWood".equals(t.oreName)) {
+                logs.add(e.name);
+                assertEquals(5, t.fireSpread);
+                assertEquals(5, t.flammability);
+            } else if ("treeLeaves".equals(t.oreName)) {
+                leaves.add(e.name);
+                assertEquals(30, t.fireSpread);
+                assertEquals(60, t.flammability);
+            } else {
+                assertEquals(null, t.oreName, e.name);
+                assertEquals(0, t.flammability, e.name);
+            }
+        }
+        assertEquals(new HashSet<>(Arrays.asList("grove_log", "highland_log", "mycelia_stem", "amber_root")), logs);
+        assertEquals(new HashSet<>(Arrays.asList("grove_leaves", "grove_blossom", "highland_leaves")), leaves);
+        assertEquals("plankWood", LargePlantBlockTable.PLANKS_ORE);
+        assertEquals(5, LargePlantBlockTable.PLANKS_FIRE_SPREAD);
+        assertEquals(20, LargePlantBlockTable.PLANKS_FLAMMABILITY);
     }
 
     @Test
