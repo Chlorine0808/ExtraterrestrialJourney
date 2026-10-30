@@ -53,13 +53,16 @@ public final class ShotPlanner {
             switch (spec.what) {
                 case BIOME:
                     EndBiome biome = EndBiome.valueOf(spec.arg);
-                    add(out, spec, biome.name() + " 大陸", locator.continents(biome, ox, oz, spec.count));
+                    add(out, spec, biome.name() + " 大陸", locator.continents(biome, spec.style, ox, oz, spec.count));
                     break;
                 case BARE:
-                    add(out, spec, "bare 大陸", locator.continents(null, ox, oz, spec.count));
+                    add(out, spec, "bare 大陸", locator.continents(null, spec.style, ox, oz, spec.count));
                     break;
                 case MOUNTAIN:
                     add(out, spec, "山", locator.mountains(spec.minTop, ox, oz, spec.count));
+                    break;
+                case GIANT_TREE:
+                    add(out, spec, "巨木", locator.giantTrees(ox, oz, spec.count));
                     break;
                 case ARC_TOUCH:
                     add(out, spec, "ARCS 接地", locator.arcTouches(ox, oz, spec.count));

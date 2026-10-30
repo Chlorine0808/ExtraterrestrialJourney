@@ -13,6 +13,7 @@ import chlorine.etjourney.world.end.feature.Continent;
 import chlorine.etjourney.world.end.feature.ContinentIds;
 import chlorine.etjourney.world.end.feature.EndBiome;
 import chlorine.etjourney.world.end.feature.Mountains;
+import chlorine.etjourney.world.end.feature.plant.GiantTrees;
 
 /** Finds screenshot targets from the seed alone, nearest first; a search that comes up short returns fewer. */
 final class Locator {
@@ -21,14 +22,26 @@ final class Locator {
     /** Scene sizes; an arc touch is framed with the stretch of tube that comes down to the ground. */
     private static final double CONTINENT_SIZE = 96, MOUNTAIN_SIZE = 64, ARC_SCENE_SIZE = 64;
 
+    /** Style weight at a continent point from which the style counts as dominant there. */
+    private static final double STYLE_DOMINANT = 0.6;
+    /** A giant tree is 56 high with a 26-block reach, so this scene size puts the camera 200 blocks off. */
+    private static final double TREE_SIZE = 80;
+
     private final TerrainSampler sampler;
 
     Locator(TerrainSampler sampler) {
         this.sampler = sampler;
     }
 
-    /** Continents wearing the biome (null for bare), each from a different continent, nearest first. */
     List<Target> continents(EndBiome biome, double ox, double oz, int count) {
+        return continents(biome, null, ox, oz, count);
+    }
+
+    /**
+     * Continents wearing the biome (null for bare), each from a different continent, nearest first. With a style,
+     * only those whose chosen point is at least STYLE_DOMINANT that style.
+     */
+    List<Target> continents(EndBiome biome, String style, double ox, double oz, int count) {
         long seed = sampler.seed();
         Set<Long> chosen = new HashSet<>();
         List<Target> out = new ArrayList<>();
@@ -39,6 +52,7 @@ final class Locator {
                 if (s == null || EndBiome.ofContinentOf(seed, s) != biome || sampler.land(s.x, s.z) <= LAND)
                     return null;
                 if (sampler.biome(s.x, s.z) != biome) return null;
+                if (style != null && sampler.styleWeight(style, s.x, s.z) < STYLE_DOMINANT) return null;
                 long id = ContinentIds.of(seed, s);
                 return chosen.contains(id) ? null : new double[] { s.x, s.z, Double.longBitsToDouble(id) };
             });
@@ -53,6 +67,33 @@ final class Locator {
                     hit[1],
                     CONTINENT_SIZE,
                     id));
+        }
+        return out;
+    }
+
+    /** The giant tree nearest the origin of each grove continent, continents nearest first. */
+    List<Target> giantTrees(double ox, double oz, int count) {
+        long seed = sampler.seed();
+        Set<Long> chosen = new HashSet<>();
+        List<Target> out = new ArrayList<>();
+        for (int i = 0; i < count; i++) {
+            double[] hit = EndSearch.nearestInCells(Continent.SEED_CELL, ox, oz, (cx, cz) -> {
+                Continent.Seed s = Continent.seedAt(seed, cx, cz);
+                // Only groves grow trees; this is cheap, the continent id is a flood fill.
+                if (s == null || EndBiome.ofContinentOf(seed, s) != EndBiome.GROVE) return null;
+                long id = ContinentIds.of(seed, s);
+                if (chosen.contains(id)) return null;
+                double[] best = null;
+                for (double[] a : GiantTrees.anchors(seed, s, sampler.structureProbe()))
+                    if (best == null || Math.hypot(a[0] - ox, a[2] - oz) < Math.hypot(best[0] - ox, best[2] - oz))
+                        best = a;
+                return best == null ? null : new double[] { best[0], best[1], best[2], Double.longBitsToDouble(id) };
+            });
+            if (hit == null) break;
+            long id = Double.doubleToRawLongBits(hit[3]);
+            chosen.add(id);
+            // y is the ground at the root: the ground view looks for a floor near it, the aerial one centres on it.
+            out.add(new Target("巨木", hit[0], hit[1], hit[2], TREE_SIZE, id));
         }
         return out;
     }

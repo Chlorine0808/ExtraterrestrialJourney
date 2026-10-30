@@ -123,4 +123,25 @@ class ShotPlannerTest {
         assertEquals(t.y, ground.y, 1e-9);
         assertNull(ShotPlanner.firstCamera(new PlannedShot("g", 1, View.AERIAL, null, null, null, "none"), null));
     }
+
+    @Test
+    void giantTreeLineGivesOneAerialAndOneGroundShotPerTree() {
+        List<PlannedShot> shots = ShotPlanner
+            .expand(list("shot giant-tree count=2 views=aerial,ground"), SAMPLER, BY_KEY);
+        assertEquals(4, shots.size());
+        assertEquals("巨木 1", shots.get(0).group);
+        assertEquals(View.GROUND, shots.get(1).view);
+        assertEquals("巨木 2", shots.get(2).group);
+        for (PlannedShot s : shots) assertNotNull(s.target);
+    }
+
+    @Test
+    void styledBiomeLineKeepsToThatStyle() {
+        List<PlannedShot> shots = ShotPlanner
+            .expand(list("shot biome GROVE style=LAYERED count=1 views=aerial"), SAMPLER, BY_KEY);
+        assertEquals(1, shots.size());
+        Target t = shots.get(0).target;
+        assertNotNull(t);
+        assertTrue(SAMPLER.styleWeight("LAYERED", t.x, t.z) >= 0.6);
+    }
 }
