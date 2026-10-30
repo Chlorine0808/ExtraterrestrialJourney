@@ -4,7 +4,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.ArrayList;
 import java.util.EnumSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 import java.util.function.BiFunction;
@@ -153,6 +156,31 @@ class LargeFloraTest {
         Voxels b = window(7, 0, 0, uniform(EndBiome.GROVE, 255));
         assertFalse(a.isEmpty());
         assertEquals(a.cells, b.cells);
+    }
+
+    /** The tall stems stand around the lightroots: none in a window without one, each a few blocks from its seeds. */
+    @Test
+    void stemsStandAroundALightroot() {
+        int stems = 0;
+        for (long seed = 0; seed < 300; seed++) {
+            Voxels out = window(seed, 0, 0, uniform(EndBiome.AMBER, 255));
+            List<int[]> seeds = new ArrayList<>();
+            boolean root = false;
+            for (Map.Entry<Long, EndBlock> e : out.cells.entrySet()) {
+                if (e.getValue() == EndBlock.AMBER_SEED) seeds.add(LeafReach.voxel(e.getKey()));
+                root |= e.getValue() == EndBlock.AMBER_ROOT;
+            }
+            for (Map.Entry<Long, EndBlock> e : out.cells.entrySet()) {
+                if (e.getValue() != EndBlock.AMBER_STEM) continue;
+                stems++;
+                assertTrue(root, "seed " + seed + ": a stem without a lightroot");
+                int[] p = LeafReach.voxel(e.getKey());
+                boolean near = false;
+                for (int[] q : seeds) near |= Math.max(Math.abs(p[0] - q[0]), Math.abs(p[2] - q[2])) <= 8;
+                assertTrue(near, "seed " + seed + ": a stem far from the seeds at " + p[0] + "," + p[2]);
+            }
+        }
+        assertTrue(stems > 0);
     }
 
     @Test
