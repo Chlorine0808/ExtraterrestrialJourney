@@ -26,6 +26,7 @@ import chlorine.etjourney.world.end.feature.ContinentIds;
 import chlorine.etjourney.world.end.feature.EndBiome;
 import chlorine.etjourney.world.end.feature.Flora;
 import chlorine.etjourney.world.end.feature.plant.GiantTrees;
+import chlorine.etjourney.world.end.modifier.builtin.PlantModifiers;
 import chlorine.etjourney.world.end.region.Style;
 
 /**
@@ -180,14 +181,18 @@ public final class EndProbe {
                 }
             }
         }
+        long[] stats = PlantModifiers.giantTreeStats();
         ModLog.LOG.info(
-            "[probe] giant trees rooted in the scanned area (chunks {}..{} x {}..{}): {} from {} continents",
+            "[probe] giant trees rooted in the scanned area (chunks {}..{} x {}..{}): {} from {} continents; "
+                + "modifier avg {} us over {} sinks",
             CX0,
             CX1,
             CZ0,
             CZ1,
             trees.size(),
-            continents.size());
+            continents.size(),
+            stats[0],
+            stats[1]);
     }
 
     private static void styles(TerrainSampler sampler) {

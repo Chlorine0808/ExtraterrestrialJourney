@@ -3,12 +3,16 @@ package chlorine.etjourney.world.end.modifier.builtin;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicLong;
 
 import chlorine.etjourney.world.end.feature.Continent;
 import chlorine.etjourney.world.end.feature.ContinentIds;
 import chlorine.etjourney.world.end.feature.plant.GiantTree;
 import chlorine.etjourney.world.end.feature.plant.GiantTrees;
+import chlorine.etjourney.world.end.modifier.BlockSink;
+import chlorine.etjourney.world.end.modifier.ChunkArea;
 import chlorine.etjourney.world.end.modifier.Modifier;
+import chlorine.etjourney.world.end.modifier.TerrainView;
 import chlorine.etjourney.world.end.reserve.Area;
 import chlorine.etjourney.world.end.reserve.Reservations;
 
@@ -21,7 +25,15 @@ public final class PlantModifiers {
     /** Distances from the root at which the footprint is checked against reserved fades: the foot and the root tips. */
     private static final double[] FADE_RADII = { 14, GiantTrees.FOOTPRINT };
 
+    private static final AtomicLong NANOS = new AtomicLong(), PASSES = new AtomicLong();
+
     private PlantModifiers() {}
+
+    /** Average microseconds the giant-tree modifier spends per sink, and the number of sinks, for the probe. */
+    public static long[] giantTreeStats() {
+        long passes = PASSES.get();
+        return new long[] { passes == 0 ? 0 : NANOS.get() / passes / 1000, passes };
+    }
 
     /**
      * On a reserved island, or with any of the footprint on ground an island's fade lowers: the tree reads the ground
@@ -47,27 +59,37 @@ public final class PlantModifiers {
      */
     public static Modifier giantTrees(int order) {
         return FeatureModifiers.blockModifier(order, (area, view, sink) -> {
-            double cx = sink.originX() + 8, cz = sink.originZ() + 8;
-            // A root is a seed of its continent, so the seeds within REACH find every tree that reaches the chunk.
-            int c0x = (int) Math.floor((cx - REACH) / Continent.SEED_CELL);
-            int c1x = (int) Math.floor((cx + REACH) / Continent.SEED_CELL);
-            int c0z = (int) Math.floor((cz - REACH) / Continent.SEED_CELL);
-            int c1z = (int) Math.floor((cz + REACH) / Continent.SEED_CELL);
-            Set<Long> seen = new HashSet<>();
-            for (int i = c0x; i <= c1x; i++) {
-                for (int j = c0z; j <= c1z; j++) {
-                    Continent.Seed s = Continent.seedAt(area.seed, i, j);
-                    if (s == null || Math.hypot(s.x - cx, s.z - cz) > REACH) continue;
-                    if (!seen.add(ContinentIds.of(area.seed, s))) continue;
-                    for (double[] a : GiantTrees.anchors(area.seed, s, view.structures())) {
-                        if (Math.hypot(a[0] - cx, a[2] - cz) > REACH) continue;
-                        if (!GiantTree.reaches(a, sink.minY(), sink.maxY())) continue;
-                        List<Area> reserved = view.reservedAt((int) Math.floor(a[0]) >> 4, (int) Math.floor(a[2]) >> 4);
-                        if (blocked(reserved, a)) continue;
-                        new GiantTree(area.seed, a, view.structures()).draw(sink);
-                    }
-                }
+            long start = System.nanoTime();
+            try {
+                drawGiantTrees(area, view, sink);
+            } finally {
+                NANOS.addAndGet(System.nanoTime() - start);
+                PASSES.incrementAndGet();
             }
         });
+    }
+
+    private static void drawGiantTrees(ChunkArea area, TerrainView view, BlockSink sink) {
+        double cx = sink.originX() + 8, cz = sink.originZ() + 8;
+        // A root is a seed of its continent, so the seeds within REACH find every tree that reaches the chunk.
+        int c0x = (int) Math.floor((cx - REACH) / Continent.SEED_CELL);
+        int c1x = (int) Math.floor((cx + REACH) / Continent.SEED_CELL);
+        int c0z = (int) Math.floor((cz - REACH) / Continent.SEED_CELL);
+        int c1z = (int) Math.floor((cz + REACH) / Continent.SEED_CELL);
+        Set<Long> seen = new HashSet<>();
+        for (int i = c0x; i <= c1x; i++) {
+            for (int j = c0z; j <= c1z; j++) {
+                Continent.Seed s = Continent.seedAt(area.seed, i, j);
+                if (s == null || Math.hypot(s.x - cx, s.z - cz) > REACH) continue;
+                if (!seen.add(ContinentIds.of(area.seed, s))) continue;
+                for (double[] a : GiantTrees.anchors(area.seed, s, view.structures())) {
+                    if (Math.hypot(a[0] - cx, a[2] - cz) > REACH) continue;
+                    if (!GiantTree.reaches(a, sink.minY(), sink.maxY())) continue;
+                    List<Area> reserved = view.reservedAt((int) Math.floor(a[0]) >> 4, (int) Math.floor(a[2]) >> 4);
+                    if (blocked(reserved, a)) continue;
+                    new GiantTree(area.seed, a, view.structures()).draw(sink);
+                }
+            }
+        }
     }
 }
