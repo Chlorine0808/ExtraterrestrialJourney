@@ -29,6 +29,8 @@ public final class GiantTree {
     private static final int TAPER = 12;
     private static final double TOP_RADIUS = 5;
     private static final double LEAF_SQUASH = 0.75;
+    /** How far in from its radius a clump's edge may be ragged, as a share of the radius. */
+    private static final double RAGGED = 0.18;
     /** Spacing of the points the local ground is sampled at, between which it is interpolated. */
     private static final int GROUND_STEP = 4;
     private static final int ROOT_POINTS = 6;
@@ -164,13 +166,33 @@ public final class GiantTree {
         }
         if (dy < top - 25) return null;
         for (double[] c : clumps) {
-            double ex = px - c[0], ey = (py - c[1]) / LEAF_SQUASH, ez = pz - c[2];
-            double r = c[3] * (1 - 0.18 * Hash.hash01(leafSeed + 1, x, y, z));
-            if (ex * ex + ey * ey + ez * ez <= r * r) {
+            if (inClump(c, x, y, z)) {
                 return Hash.hash01(leafSeed, x, y, z) < blossomShare ? EndBlock.GROVE_BLOSSOM : EndBlock.GROVE_LEAVES;
             }
         }
         return null;
+    }
+
+    /**
+     * Inside the clump's ragged edge, and joined to its solid core through cells that are inside too: stepping towards
+     * the centre must stay inside, so no leaf sits alone where it would decay at once.
+     */
+    private boolean inClump(double[] c, int x, int y, int z) {
+        double core = c[3] * (1 - RAGGED);
+        for (int step = 0; step < 8; step++) {
+            double ex = x + 0.5 - c[0], ey = (y + 0.5 - c[1]) / LEAF_SQUASH, ez = z + 0.5 - c[2];
+            double d2 = ex * ex + ey * ey + ez * ez;
+            if (d2 <= core * core) return true;
+            double r = c[3] * (1 - RAGGED * Hash.hash01(leafSeed + 1, x, y, z));
+            if (d2 > r * r) return false;
+            // One block along the axis that brings the cell nearest the centre.
+            double gainX = 2 * Math.abs(ex) - 1, gainZ = 2 * Math.abs(ez) - 1;
+            double gainY = (2 * Math.abs(ey) - 1 / LEAF_SQUASH) / LEAF_SQUASH;
+            if (gainX >= gainY && gainX >= gainZ) x -= (int) Math.signum(ex);
+            else if (gainZ >= gainY) z -= (int) Math.signum(ez);
+            else y -= (int) Math.signum(ey);
+        }
+        return false;
     }
 
     /** Trunk radius at height dy above the root and the given angle: ribbed, flared at the foot, tapered at the top. */
