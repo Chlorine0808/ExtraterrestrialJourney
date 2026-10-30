@@ -115,4 +115,38 @@ class ShotListTest {
         assertNull(ShotList.listPath("  "));
         assertEquals("a.txt", ShotList.listPath(" a.txt "));
     }
+
+    @Test
+    void giantTreeTakesCountAndViewsButNoName() {
+        ShotList list = ShotList.parse(Collections.singletonList("shot giant-tree count=3 views=aerial,ground"));
+        assertEquals(Collections.emptyList(), list.errors);
+        ShotSpec spec = list.specs.get(0);
+        assertEquals(ShotSpec.What.GIANT_TREE, spec.what);
+        assertEquals(3, spec.count);
+        assertEquals(Arrays.asList(View.AERIAL, View.GROUND), spec.views);
+        assertNull(spec.style);
+    }
+
+    @Test
+    void styleKeyIsKnownForBiomeAndBareOnly() {
+        ShotList list = ShotList.parse(
+            Arrays.asList(
+                "shot biome GROVE style=LAYERED",
+                "shot bare style=RANGES",
+                "shot biome GROVE style=NOPE",
+                "shot mountain style=LAYERED",
+                "shot giant-tree style=LAYERED"));
+        assertEquals("LAYERED", list.specs.get(0).style);
+        assertEquals("RANGES", list.specs.get(1).style);
+        assertEquals(2, list.specs.size());
+        assertEquals(3, list.errors.size());
+        assertTrue(
+            list.errors.get(0)
+                .contains("unknown style 'NOPE'"),
+            list.errors.get(0));
+        assertTrue(
+            list.errors.get(1)
+                .contains("style"),
+            list.errors.get(1));
+    }
 }

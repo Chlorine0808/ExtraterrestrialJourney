@@ -97,4 +97,28 @@ class LocatorTest {
             LOCATOR.mountains(400, 3000, 0, 1)
                 .isEmpty());
     }
+
+    @Test
+    void styledContinentsStandInThatStyle() {
+        List<Target> found = LOCATOR.continents(EndBiome.GROVE, "LAYERED", 3000, 0, 2);
+        assertEquals(2, found.size());
+        assertNotEquals(found.get(0).key, found.get(1).key);
+        for (Target t : found) {
+            assertEquals(EndBiome.GROVE, SAMPLER.biome(t.x, t.z));
+            assertTrue(SAMPLER.styleWeight("LAYERED", t.x, t.z) >= 0.6);
+        }
+    }
+
+    @Test
+    void giantTreesStandOnGroveRootsOneEach() {
+        List<Target> found = LOCATOR.giantTrees(3000, 0, 3);
+        assertEquals(3, found.size());
+        Set<Long> keys = new HashSet<>();
+        for (Target t : found) {
+            assertTrue(keys.add(t.key));
+            assertEquals(EndBiome.GROVE, SAMPLER.biome(t.x, t.z));
+            assertEquals("巨木", t.label);
+            assertEquals(80, t.size, 0);
+        }
+    }
 }

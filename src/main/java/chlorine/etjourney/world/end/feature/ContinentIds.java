@@ -19,6 +19,7 @@ public final class ContinentIds {
     private static final int MAX_SEEDS = 20000;
     private static final int LIMIT = 200000;
     private static final Map<Long, Long> IDS = new ConcurrentHashMap<>();
+    private static final Map<Long, long[]> MEMBERS = new ConcurrentHashMap<>();
     private static volatile long cachedSeed;
     private static volatile boolean seeded;
 
@@ -27,6 +28,7 @@ public final class ContinentIds {
     public static long of(long seed, Continent.Seed s) {
         if (!seeded || seed != cachedSeed) {
             IDS.clear();
+            MEMBERS.clear();
             cachedSeed = seed;
             seeded = true;
         }
@@ -34,9 +36,38 @@ public final class ContinentIds {
         if (id != null) return id;
         List<Long> members = new ArrayList<>();
         long found = fill(seed, s, members);
-        if (IDS.size() + members.size() > LIMIT) IDS.clear();
-        for (long m : members) IDS.put(m, found);
+        if (IDS.size() + members.size() > LIMIT) {
+            IDS.clear();
+            MEMBERS.clear();
+        }
+        long[] keys = new long[members.size()];
+        for (int i = 0; i < keys.length; i++) keys[i] = members.get(i);
+        for (long m : keys) {
+            IDS.put(m, found);
+            MEMBERS.put(m, keys);
+        }
         return found;
+    }
+
+    /** The keys of every seed of the continent that {@code s} belongs to; read the seeds back with cellX and cellZ. */
+    public static long[] members(long seed, Continent.Seed s) {
+        of(seed, s);
+        long[] keys = MEMBERS.get(key(s));
+        if (keys != null) return keys;
+        // The cache was cleared between the two calls.
+        List<Long> members = new ArrayList<>();
+        fill(seed, s, members);
+        long[] out = new long[members.size()];
+        for (int i = 0; i < out.length; i++) out[i] = members.get(i);
+        return out;
+    }
+
+    public static int cellX(long key) {
+        return (int) (key >> 32);
+    }
+
+    public static int cellZ(long key) {
+        return (int) key;
     }
 
     /** The id without the cache. */

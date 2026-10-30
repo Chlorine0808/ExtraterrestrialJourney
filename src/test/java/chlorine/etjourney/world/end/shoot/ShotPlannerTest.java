@@ -6,7 +6,10 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.io.IOException;
+import java.nio.file.Paths;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import org.junit.jupiter.api.Test;
@@ -122,5 +125,37 @@ class ShotPlannerTest {
         assertEquals(t.x, ground.x, 1e-9);
         assertEquals(t.y, ground.y, 1e-9);
         assertNull(ShotPlanner.firstCamera(new PlannedShot("g", 1, View.AERIAL, null, null, null, "none"), null));
+    }
+
+    @Test
+    void giantTreeLineGivesOneAerialAndOneGroundShotPerTree() {
+        List<PlannedShot> shots = ShotPlanner
+            .expand(list("shot giant-tree count=2 views=aerial,ground"), SAMPLER, BY_KEY);
+        assertEquals(4, shots.size());
+        assertEquals("巨木 1", shots.get(0).group);
+        assertEquals(View.GROUND, shots.get(1).view);
+        assertEquals("巨木 2", shots.get(2).group);
+        for (PlannedShot s : shots) assertNotNull(s.target);
+    }
+
+    @Test
+    void styledBiomeLineKeepsToThatStyle() {
+        List<PlannedShot> shots = ShotPlanner
+            .expand(list("shot biome GROVE style=LAYERED count=1 views=aerial"), SAMPLER, BY_KEY);
+        assertEquals(1, shots.size());
+        Target t = shots.get(0).target;
+        assertNotNull(t);
+        assertTrue(SAMPLER.styleWeight("LAYERED", t.x, t.z) >= 0.6);
+    }
+
+    @Test
+    void largePlantsListFindsATargetForEveryShot() throws IOException {
+        ShotList l = ShotList.read(Paths.get("src/test/resources/shots/2026-10-30-large-plants.txt"));
+        assertEquals(Collections.emptyList(), l.errors);
+        List<PlannedShot> shots = ShotPlanner.expand(l, SAMPLER, BY_KEY);
+        assertEquals(3 + 3 * 2 + 2 * 2 + 2 * 2 + 2 * 2 + 1 + 2 * 2 + 2 * 2, shots.size());
+        for (PlannedShot s : shots) {
+            assertNotNull(s.target, s.group);
+        }
     }
 }

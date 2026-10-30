@@ -2,8 +2,10 @@ package chlorine.etjourney.world.end.debug;
 
 import java.io.File;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Set;
 
 import net.minecraft.block.Block;
 import net.minecraft.init.Blocks;
@@ -12,14 +14,19 @@ import net.minecraftforge.common.DimensionManager;
 
 import chlorine.etjourney.core.util.ModLog;
 import chlorine.etjourney.world.end.EndFlora;
+import chlorine.etjourney.world.end.EndLargeFlora;
 import chlorine.etjourney.world.end.EndPalette;
 import chlorine.etjourney.world.end.EndTerrain;
 import chlorine.etjourney.world.end.TerrainSampler;
 import chlorine.etjourney.world.end.biosphere.SampleWorlds;
 import chlorine.etjourney.world.end.feature.Biosphere;
 import chlorine.etjourney.world.end.feature.BiosphereSource;
+import chlorine.etjourney.world.end.feature.Continent;
+import chlorine.etjourney.world.end.feature.ContinentIds;
 import chlorine.etjourney.world.end.feature.EndBiome;
 import chlorine.etjourney.world.end.feature.Flora;
+import chlorine.etjourney.world.end.feature.plant.GiantTrees;
+import chlorine.etjourney.world.end.modifier.builtin.PlantModifiers;
 import chlorine.etjourney.world.end.region.Style;
 
 /**
@@ -68,6 +75,7 @@ public final class EndProbe {
             density[1]);
         surfaces(end);
         plants(end);
+        giantTrees(seed);
         styles(EndTerrain.sampler(seed));
     }
 
@@ -147,6 +155,42 @@ public final class EndProbe {
             "[probe] plants per open surface:{}; off their biome {}; populate avg {} us over {} windows",
             out,
             stray,
+            stats[0],
+            stats[1]);
+        long[] large = EndLargeFlora.stats();
+        ModLog.LOG
+            .info("[probe] large plants populate avg {} us over {} windows; {} placed", large[0], large[1], large[2]);
+    }
+
+    /** Counts the giant trees rooted inside the scanned chunk area, found from the continent seeds there. */
+    private static void giantTrees(long seed) {
+        double x0 = CX0 * 16, x1 = CX1 * 16, z0 = CZ0 * 16, z1 = CZ1 * 16;
+        Set<Long> continents = new HashSet<>();
+        Set<String> trees = new HashSet<>();
+        for (int i = (int) Math.floor(x0 / Continent.SEED_CELL); i <= (int) Math.floor(x1 / Continent.SEED_CELL); i++) {
+            for (int j = (int) Math.floor(z0 / Continent.SEED_CELL); j
+                <= (int) Math.floor(z1 / Continent.SEED_CELL); j++) {
+                Continent.Seed s = Continent.seedAt(seed, i, j);
+                if (s == null || !continents.add(ContinentIds.of(seed, s))) continue;
+                for (double[] a : GiantTrees.anchors(
+                    seed,
+                    s,
+                    EndTerrain.sampler(seed)
+                        .structureProbe())) {
+                    if (a[0] >= x0 && a[0] < x1 && a[2] >= z0 && a[2] < z1) trees.add((int) a[0] + "," + (int) a[2]);
+                }
+            }
+        }
+        long[] stats = PlantModifiers.giantTreeStats();
+        ModLog.LOG.info(
+            "[probe] giant trees rooted in the scanned area (chunks {}..{} x {}..{}): {} from {} continents; "
+                + "modifier avg {} us over {} sinks",
+            CX0,
+            CX1,
+            CZ0,
+            CZ1,
+            trees.size(),
+            continents.size(),
             stats[0],
             stats[1]);
     }
