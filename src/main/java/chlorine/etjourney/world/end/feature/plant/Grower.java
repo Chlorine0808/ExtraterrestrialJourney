@@ -5,6 +5,9 @@ import java.util.Random;
 /** One kind of large plant. */
 public interface Grower {
 
+    /** Face steps through leaves within which every leaf a plant grows reaches its wood; farther leaves decay. */
+    int LEAF_REACH = 12;
+
     /** Horizontal reach of the plant from its base, in blocks. */
     int radius();
 

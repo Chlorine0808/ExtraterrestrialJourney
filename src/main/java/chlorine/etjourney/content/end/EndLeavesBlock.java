@@ -16,16 +16,18 @@ import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 
 import chlorine.etjourney.core.registry.RegistryNames;
+import chlorine.etjourney.world.end.feature.plant.Grower;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 
 /**
- * Leaves of a large plant: vanilla decay rules, but a leaf may be up to 8 steps from wood (vanilla allows 4) because
- * tree crowns reach 7. The sheets are untinted and opaque; the block turns opaque or not with the vanilla leaves.
+ * Leaves of a large plant: vanilla decay rules, but a leaf may be up to Grower.LEAF_REACH face steps from wood
+ * (vanilla allows 4) because the crowns are wider. The sheets are untinted and opaque; the block turns opaque or not
+ * with the vanilla leaves.
  */
 final class EndLeavesBlock extends BlockLeaves {
 
-    private static final int DECAY_RANGE = 8;
+    private static final int DECAY_RANGE = Grower.LEAF_REACH;
     private static final int PLAYER_PLACED = 4;
     private static final int CHECK_DECAY = 8;
     private static final int SAPLING_CHANCE = 20;
