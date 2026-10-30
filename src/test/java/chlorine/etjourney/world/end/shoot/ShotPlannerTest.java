@@ -153,7 +153,7 @@ class ShotPlannerTest {
         ShotList l = ShotList.read(Paths.get("shots/2026-10-30-large-plants.txt"));
         assertEquals(Collections.emptyList(), l.errors);
         List<PlannedShot> shots = ShotPlanner.expand(l, SAMPLER, BY_KEY);
-        assertEquals(3 * 2 + 2 * 2 + 2 * 2 + 2 * 2 + 1 + 2 * 2 + 2 * 2, shots.size());
+        assertEquals(3 + 3 * 2 + 2 * 2 + 2 * 2 + 2 * 2 + 1 + 2 * 2 + 2 * 2, shots.size());
         for (PlannedShot s : shots) {
             assertNotNull(s.target, s.group);
         }

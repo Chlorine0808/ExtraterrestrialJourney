@@ -14,7 +14,14 @@ world-type DEFAULT
 origin 3000 0
 render-distance 24
 sphere-candidates 10
-shot giant-tree count=3 views=aerial,ground
+shot giant-tree count=3 views=aerial
+# Ground views of the same three trees from 48 blocks south (yaw 180) and east (yaw 90), looking up at the trunk.
+shot at 3992 137 -968 yaw=180 pitch=-20 label=巨木1_南から
+shot at 4040 137 -1016 yaw=90 pitch=-20 label=巨木1_東から
+shot at 2600 39 1288 yaw=180 pitch=-20 label=巨木2_南から
+shot at 2648 39 1240 yaw=90 pitch=-20 label=巨木2_東から
+shot at 2520 107 -1208 yaw=180 pitch=-20 label=巨木3_南から
+shot at 2568 107 -1256 yaw=90 pitch=-20 label=巨木3_東から
 shot biome GROVE count=2 views=aerial,ground
 shot biome GROVE style=LAYERED count=2 views=aerial,ground
 shot biome MYCELIA count=2 views=aerial,ground
