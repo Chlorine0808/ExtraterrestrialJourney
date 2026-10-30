@@ -6,6 +6,8 @@ import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.item.Item;
+import net.minecraft.world.IBlockAccess;
+import net.minecraftforge.common.util.ForgeDirection;
 
 import chlorine.etjourney.core.registry.RegistryNames;
 
@@ -20,6 +22,12 @@ class CrystalBlock extends Block {
         setCreativeTab(CreativeTabs.tabBlock);
         setBlockName(RegistryNames.unlocalized(entry.name));
         setBlockTextureName(RegistryNames.texture(entry.name));
+    }
+
+    /** Glass is not opaque, so Forge would call every face open; buds need solid faces to stay on. */
+    @Override
+    public boolean isSideSolid(IBlockAccess world, int x, int y, int z, ForgeDirection side) {
+        return true;
     }
 
     @Override
