@@ -43,6 +43,17 @@ public final class EndLargeFlora implements IWorldGenerator {
         return y >= 1 && y <= 255 && EndFlora.chunkIndex(chunkX, chunkZ, x, z) >= 0;
     }
 
+    /** Mixed into the populate seed so the large plants do not draw the same numbers as EndFlora. */
+    private static final long SALT = 0x5DEECE66DL * 0x2545F4914F6CDD1DL;
+
+    /**
+     * The Random the large plants draw from. FML seeds every generator's Random the same way, so without the salt the
+     * first tree would land on EndFlora's first bloom patch.
+     */
+    static Random ownRandom(Random populate) {
+        return new Random(populate.nextLong() ^ SALT);
+    }
+
     @Override
     public void generate(Random random, int chunkX, int chunkZ, World world, IChunkProvider generator,
         IChunkProvider provider) {
@@ -51,7 +62,7 @@ public final class EndLargeFlora implements IWorldGenerator {
         if (Distance.planar(ox + 8, oz + 8) < EndTerrain.TERRAIN_START - WINDOW_REACH) return;
         long start = System.nanoTime();
         try {
-            PLANTS.addAndGet(plant(random, chunkX, chunkZ, world));
+            PLANTS.addAndGet(plant(ownRandom(random), chunkX, chunkZ, world));
         } catch (RuntimeException e) {
             // A last guard: plants must never take End generation down with them.
             if (!warned)
