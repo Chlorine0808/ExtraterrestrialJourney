@@ -6,7 +6,10 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.io.IOException;
+import java.nio.file.Paths;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import org.junit.jupiter.api.Test;
@@ -146,9 +149,9 @@ class ShotPlannerTest {
     }
 
     @Test
-    void largePlantsListFindsATargetForEveryShot() throws java.io.IOException {
-        ShotList l = ShotList.read(java.nio.file.Paths.get("shots/2026-10-30-large-plants.txt"));
-        assertEquals(java.util.Collections.emptyList(), l.errors);
+    void largePlantsListFindsATargetForEveryShot() throws IOException {
+        ShotList l = ShotList.read(Paths.get("shots/2026-10-30-large-plants.txt"));
+        assertEquals(Collections.emptyList(), l.errors);
         List<PlannedShot> shots = ShotPlanner.expand(l, SAMPLER, BY_KEY);
         assertEquals(3 * 2 + 2 * 2 + 2 * 2 + 2 * 2 + 1 + 2 * 2 + 2 * 2, shots.size());
         for (PlannedShot s : shots) {
