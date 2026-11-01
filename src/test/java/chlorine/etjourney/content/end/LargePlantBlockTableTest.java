@@ -40,6 +40,8 @@ class LargePlantBlockTableTest {
             EndBlock.MYCELIA_STEM,
             EndBlock.MYCELIA_CAP,
             EndBlock.MYCELIA_GILL,
+            EndBlock.MYCELIA_VINE,
+            EndBlock.MYCELIA_VINE_LAST,
             EndBlock.AMBER_ROOT,
             EndBlock.AMBER_SEED,
             EndBlock.AMBER_STEM,
@@ -54,6 +56,18 @@ class LargePlantBlockTableTest {
             assertTrue(bound.add(e.kind), "twice: " + e.kind);
         }
         assertEquals(expected, bound);
+    }
+
+    @Test
+    void furHangsAndGlows() {
+        int found = 0;
+        for (LargePlantBlockTable.Entry e : LargePlantBlockTable.ENTRIES) {
+            if (e.kind != EndBlock.MYCELIA_VINE && e.kind != EndBlock.MYCELIA_VINE_LAST) continue;
+            assertEquals(LargePlantBlockTable.Type.HANGING, e.type, e.name);
+            assertEquals(10, e.light, e.name);
+            found++;
+        }
+        assertEquals(2, found);
     }
 
     @Test
@@ -107,8 +121,10 @@ class LargePlantBlockTableTest {
                 check("textures/blocks/" + e.name + "_side.png", false);
                 check("textures/blocks/" + e.name + "_top.png", false);
             } else {
-                // Buds are drawn crossed, so their corners must be clear.
-                check("textures/blocks/" + e.name + ".png", e.type == LargePlantBlockTable.Type.BUD);
+                // Buds and fur are drawn crossed, so their corners must be clear.
+                check(
+                    "textures/blocks/" + e.name + ".png",
+                    e.type == LargePlantBlockTable.Type.BUD || e.type == LargePlantBlockTable.Type.HANGING);
             }
         }
         for (LargePlantBlockTable.Wood w : LargePlantBlockTable.WOODS)

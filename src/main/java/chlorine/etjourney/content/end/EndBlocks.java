@@ -86,6 +86,9 @@ public final class EndBlocks {
                     GameRegistry.registerBlock(block, entry.name);
                     EndPalette.bind(entry.kind, block, 1);
                     continue;
+                case HANGING:
+                    block = new EndHangingBlock(entry);
+                    break;
                 default:
                     continue;
             }
