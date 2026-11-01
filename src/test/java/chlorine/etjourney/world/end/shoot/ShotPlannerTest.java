@@ -16,6 +16,7 @@ import org.junit.jupiter.api.Test;
 
 import chlorine.etjourney.world.end.TerrainSampler;
 import chlorine.etjourney.world.end.feature.BiosphereSource;
+import chlorine.etjourney.world.end.feature.EndBiome;
 import chlorine.etjourney.world.end.region.RegionPicker;
 import chlorine.etjourney.world.end.region.Styles;
 
@@ -136,6 +137,24 @@ class ShotPlannerTest {
         assertEquals(View.GROUND, shots.get(1).view);
         assertEquals("巨木 2", shots.get(2).group);
         for (PlannedShot s : shots) assertNotNull(s.target);
+    }
+
+    @Test
+    void glowshroomTargetsSitOnMycelia() {
+        for (String size : new String[] { "NORMAL", "GIANT" }) {
+            List<PlannedShot> shots = ShotPlanner
+                .expand(list("shot glowshroom " + size + " count=2 views=aerial,ground"), SAMPLER, BY_KEY);
+            assertEquals(4, shots.size());
+            assertEquals(View.GROUND, shots.get(1).view);
+            assertNotNull(shots.get(1).fixed);
+            assertNull(shots.get(0).fixed);
+            for (PlannedShot s : shots) {
+                assertNotNull(s.target, size + " " + s.group);
+                assertEquals(EndBiome.MYCELIA, SAMPLER.biome(Math.floor(s.target.x), Math.floor(s.target.z)));
+                assertTrue(s.target.size > 0);
+            }
+            assertEquals(size.equals("GIANT") ? "Giant キノコ 1" : "通常のキノコ 1", shots.get(0).group);
+        }
     }
 
     @Test

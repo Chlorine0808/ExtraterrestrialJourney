@@ -1,6 +1,7 @@
 package chlorine.etjourney.world.end.shoot;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -13,7 +14,9 @@ import chlorine.etjourney.world.end.feature.Continent;
 import chlorine.etjourney.world.end.feature.ContinentIds;
 import chlorine.etjourney.world.end.feature.EndBiome;
 import chlorine.etjourney.world.end.feature.Mountains;
+import chlorine.etjourney.world.end.feature.StructureProbe;
 import chlorine.etjourney.world.end.feature.plant.GiantTrees;
+import chlorine.etjourney.world.end.feature.plant.Glowshrooms;
 
 /** Finds screenshot targets from the seed alone, nearest first; a search that comes up short returns fewer. */
 final class Locator {
@@ -26,6 +29,11 @@ final class Locator {
     private static final double STYLE_DOMINANT = 0.6;
     /** A giant tree is 56 high with a 26-block reach, so this scene size puts the camera 200 blocks off. */
     private static final double TREE_SIZE = 80;
+
+    /** Style weight below which the surface paint leaves a MYCELIA column to the glowshrooms. */
+    private static final double LAYERED_LIMIT = 0.05;
+    /** Normal-cell rings searched around a continent seed. */
+    private static final int NORMAL_RINGS = 6;
 
     private final TerrainSampler sampler;
 
@@ -96,6 +104,76 @@ final class Locator {
             out.add(new Target("巨木", hit[0], hit[1], hit[2], TREE_SIZE, id));
         }
         return out;
+    }
+
+    /**
+     * The glowshroom nearest the seed of each MYCELIA continent, continents nearest first. Cells around the seed
+     * are searched, so the shroom may stand a little off the continent's centre.
+     */
+    List<Target> glowshrooms(boolean giant, double ox, double oz, int count) {
+        long seed = sampler.seed();
+        Glowshrooms.Terrain terrain = glowshroomTerrain();
+        Set<Long> chosen = new HashSet<>();
+        List<Target> out = new ArrayList<>();
+        for (int i = 0; i < count; i++) {
+            double[] hit = EndSearch.nearestInCells(Continent.SEED_CELL, ox, oz, (cx, cz) -> {
+                Continent.Seed s = Continent.seedAt(seed, cx, cz);
+                if (s == null || EndBiome.ofContinentOf(seed, s) != EndBiome.MYCELIA) return null;
+                long id = ContinentIds.of(seed, s);
+                if (chosen.contains(id)) return null;
+                Glowshrooms.Anchor best = nearestShroom(giant, seed, s, terrain);
+                if (best == null) return null;
+                double size = (best.shape.maxX() - best.shape.minX()) * 2;
+                return new double[] { best.x, best.z, best.y, size, Double.longBitsToDouble(id) };
+            });
+            if (hit == null) break;
+            long id = Double.doubleToRawLongBits(hit[4]);
+            chosen.add(id);
+            out.add(new Target(giant ? "Giant キノコ" : "通常のキノコ", hit[0], hit[2], hit[1], hit[3], id));
+        }
+        return out;
+    }
+
+    private static Glowshrooms.Anchor nearestShroom(boolean giant, long seed, Continent.Seed s,
+        Glowshrooms.Terrain terrain) {
+        int cell = giant ? Glowshrooms.GIANT_CELL : Glowshrooms.NORMAL_CELL;
+        int rings = giant ? 1 : NORMAL_RINGS;
+        int scx = (int) Math.floor((double) s.x / cell), scz = (int) Math.floor((double) s.z / cell);
+        Glowshrooms.Anchor best = null;
+        for (int dx = -rings; dx <= rings; dx++) {
+            for (int dz = -rings; dz <= rings; dz++) {
+                List<Glowshrooms.Anchor> found;
+                if (giant) {
+                    Glowshrooms.Anchor a = Glowshrooms.giantIn(seed, scx + dx, scz + dz, terrain);
+                    found = a == null ? new ArrayList<>() : Collections.singletonList(a);
+                } else {
+                    found = Glowshrooms.normalIn(seed, scx + dx, scz + dz, terrain);
+                }
+                for (Glowshrooms.Anchor a : found)
+                    if (best == null || Math.hypot(a.x - s.x, a.z - s.z) < Math.hypot(best.x - s.x, best.z - s.z))
+                        best = a;
+            }
+        }
+        return best;
+    }
+
+    /** The terrain the glowshroom placement sees, built from the sampler as the production modifier builds it. */
+    private Glowshrooms.Terrain glowshroomTerrain() {
+        StructureProbe probe = sampler.structureProbe();
+        return new Glowshrooms.Terrain() {
+
+            @Override
+            public double ground(double x, double z) {
+                return probe.ground(x, z);
+            }
+
+            @Override
+            public boolean mycelia(double x, double z) {
+                int bx = (int) Math.floor(x), bz = (int) Math.floor(z);
+                return sampler.biome(bx, bz) == EndBiome.MYCELIA
+                    && sampler.styleWeight("LAYERED", bx, bz) < LAYERED_LIMIT;
+            }
+        };
     }
 
     /** Mountains whose top reaches minTop, nearest first. */

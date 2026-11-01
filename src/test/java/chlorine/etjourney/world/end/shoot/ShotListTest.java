@@ -128,6 +128,21 @@ class ShotListTest {
     }
 
     @Test
+    void parsesGlowshroom() {
+        ShotList list = ShotList.parse(
+            Arrays.asList(
+                "shot glowshroom NORMAL count=2 views=aerial,ground",
+                "shot glowshroom",
+                "shot glowshroom BIG"));
+        assertEquals(1, list.specs.size());
+        ShotSpec spec = list.specs.get(0);
+        assertEquals(ShotSpec.What.GLOWSHROOM, spec.what);
+        assertEquals("NORMAL", spec.arg);
+        assertEquals(2, spec.count);
+        assertEquals(2, list.errors.size());
+    }
+
+    @Test
     void styleKeyIsKnownForBiomeAndBareOnly() {
         ShotList list = ShotList.parse(
             Arrays.asList(
