@@ -8,6 +8,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
+import chlorine.etjourney.world.end.modifier.BlockSink;
+import chlorine.etjourney.world.end.modifier.EndBlock;
+
 /** Decides where the glowshrooms stand, per cell and from the seed alone, so any chunk can ask for its neighbours. */
 public final class Glowshrooms {
 
@@ -171,5 +174,64 @@ public final class Glowshrooms {
         Collections.sort(normals, byOrder);
         giants.addAll(normals);
         return giants;
+    }
+
+    /**
+     * Writes the anchors' cells that fall in the sink, in list order, into air only. A fur run is written only when
+     * every cell of it inside the sink is air, so any chunk reaches the same verdict on a run.
+     */
+    public static void draw(List<Anchor> anchors, BlockSink sink) {
+        for (Anchor a : anchors) {
+            final Run run = new Run(a, sink);
+            a.shape.forEach((dx, dy, dz, block) -> {
+                int x = a.x + dx, y = a.y + dy, z = a.z + dz;
+                if (block == EndBlock.MYCELIA_VINE || block == EndBlock.MYCELIA_VINE_LAST) {
+                    run.add(x, y, z, block);
+                    if (block == EndBlock.MYCELIA_VINE_LAST) run.flush();
+                } else {
+                    run.flush();
+                    if (inside(sink, x, y, z)) sink.place(x, y, z, block);
+                }
+            });
+            run.flush();
+        }
+    }
+
+    private static boolean inside(BlockSink s, int x, int y, int z) {
+        return x >= s.originX() && x < s.originX() + s.width()
+            && z >= s.originZ()
+            && z < s.originZ() + s.width()
+            && y >= s.minY()
+            && y < s.maxY();
+    }
+
+    /** The fur cells of one run, collected so the run can be judged whole. */
+    private static final class Run {
+
+        private final BlockSink sink;
+        private final int[] xs = new int[4], ys = new int[4], zs = new int[4];
+        private final EndBlock[] kinds = new EndBlock[4];
+        private int n;
+
+        Run(Anchor a, BlockSink sink) {
+            this.sink = sink;
+        }
+
+        void add(int x, int y, int z, EndBlock b) {
+            if (n == kinds.length) flush();
+            xs[n] = x;
+            ys[n] = y;
+            zs[n] = z;
+            kinds[n++] = b;
+        }
+
+        void flush() {
+            boolean clear = true;
+            for (int i = 0; i < n; i++)
+                if (inside(sink, xs[i], ys[i], zs[i]) && !sink.isAir(xs[i], ys[i], zs[i])) clear = false;
+            if (clear) for (int i = 0; i < n; i++)
+                if (inside(sink, xs[i], ys[i], zs[i])) sink.place(xs[i], ys[i], zs[i], kinds[i]);
+            n = 0;
+        }
     }
 }
