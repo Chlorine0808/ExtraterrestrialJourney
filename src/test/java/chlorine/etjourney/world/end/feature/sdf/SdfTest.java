@@ -98,11 +98,21 @@ class SdfTest {
 
     @Test
     void uniformScaleKeepsDistance() {
-        assertEquals(3, Sdf.sphere(2).scale(3).distance(9, 0, 0), EPS);
+        assertEquals(
+            3,
+            Sdf.sphere(2)
+                .scale(3)
+                .distance(9, 0, 0),
+            EPS);
     }
 
     @Test
     void roundGrows() {
-        assertEquals(0, Sdf.sphere(2).round(1.5).distance(3.5, 0, 0), EPS);
+        assertEquals(
+            0,
+            Sdf.sphere(2)
+                .round(1.5)
+                .distance(3.5, 0, 0),
+            EPS);
     }
 }
