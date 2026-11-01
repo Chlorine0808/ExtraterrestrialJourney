@@ -289,4 +289,112 @@ class GlowshroomsTest {
             assertTrue(b != EndBlock.MYCELIA_VINE && b != EndBlock.MYCELIA_VINE_LAST, "fur at depth " + k);
         }
     }
+
+    /** The first fur run of at least {@code min} cells: {dx, top dy, dz, length}; null when there is none. */
+    private static int[] furRun(Glowshroom shape, int min) {
+        final int[] found = { 0, 0, 0, 0 };
+        final int[] cur = { 0, 0, 0, 0 };
+        final boolean[] done = { false };
+        shape.forEach((dx, dy, dz, block) -> {
+            if (done[0]) return;
+            if (block == EndBlock.MYCELIA_VINE || block == EndBlock.MYCELIA_VINE_LAST) {
+                if (cur[3] == 0) {
+                    cur[0] = dx;
+                    cur[1] = dy;
+                    cur[2] = dz;
+                }
+                cur[3]++;
+                if (block == EndBlock.MYCELIA_VINE_LAST) {
+                    if (cur[3] >= min) {
+                        System.arraycopy(cur, 0, found, 0, 4);
+                        done[0] = true;
+                    }
+                    cur[3] = 0;
+                }
+            }
+        });
+        return done[0] ? found : null;
+    }
+
+    private static Glowshrooms.Anchor giantWithRun(int min) {
+        for (int cx = 1; cx < 8; cx++) {
+            Glowshrooms.Anchor g = Glowshrooms.giantIn(5L, cx, 0, flat(100));
+            if (g != null && furRun(g.shape, min) != null) return g;
+        }
+        return null;
+    }
+
+    @Test
+    void giantReachCoversTheShape() {
+        for (int cx = 1; cx < 5; cx++) {
+            Glowshrooms.Anchor g = Glowshrooms.giantIn(8L, cx, 0, flat(60));
+            if (g == null) continue;
+            final int[] max = { 0 };
+            g.shape.forEach((dx, dy, dz, b) -> max[0] = Math.max(max[0], Math.max(Math.abs(dx), Math.abs(dz))));
+            assertTrue(max[0] <= Glowshrooms.GIANT_REACH, "reach " + max[0]);
+        }
+    }
+
+    @Test
+    void giantAndNormalsJoinAcrossChunks() {
+        Glowshrooms.Terrain t = flat(60);
+        Glowshrooms.Anchor g = null;
+        for (int cx = 1; cx < 8 && g == null; cx++) g = Glowshrooms.giantIn(5L, cx, 0, t);
+        assertTrue(g != null);
+        int cx = g.x >> 4, cz = g.z >> 4;
+        assertEquals(onePiece(5L, cx, cz, t, 0, 256), perChunk(5L, cx, cz, t, 0, 256));
+    }
+
+    @Test
+    void furRunOnTheSplitIsCutTheSameInBothHalves() {
+        Glowshrooms.Anchor probe = giantWithRun(2);
+        assertTrue(probe != null);
+        int[] run = furRun(probe.shape, 2);
+        for (int shift = 0; shift <= 1; shift++) {
+            // The run's top cell lands on 128 (shift 0) or on 127 (shift 1).
+            int y = 128 - shift - run[1];
+            Glowshrooms.Terrain t = flat(y - 1);
+            Glowshrooms.Anchor g = null;
+            for (int cx = 1; cx < 8 && g == null; cx++) {
+                Glowshrooms.Anchor c = Glowshrooms.giantIn(5L, cx, 0, t);
+                if (c != null && c.x == probe.x && c.z == probe.z) g = c;
+            }
+            assertTrue(g != null && g.y == y, "anchor not reproduced");
+            int x = g.x + run[0], z = g.z + run[2];
+            List<Glowshrooms.Anchor> one = Collections.singletonList(g);
+            int ox = (g.x >> 4) * 16 - 64, oz = (g.z >> 4) * 16 - 64;
+            Map<Long, EndBlock> whole = new HashMap<>(), split = new HashMap<>();
+            // A rock under the run's lower part must not decide the upper part.
+            whole.put(MapSink.key(x, 127 - shift, z), EndBlock.STONE);
+            split.put(MapSink.key(x, 127 - shift, z), EndBlock.STONE);
+            Glowshrooms.draw(one, new MapSink(whole, ox, oz, 144, 0, 256));
+            Glowshrooms.draw(one, new MapSink(split, ox, oz, 144, 0, 128));
+            Glowshrooms.draw(one, new MapSink(split, ox, oz, 144, 128, 256));
+            assertEquals(whole, split);
+            EndBlock top = whole.get(MapSink.key(x, 128 - shift, z));
+            boolean fur = top == EndBlock.MYCELIA_VINE || top == EndBlock.MYCELIA_VINE_LAST;
+            // On 128 the run belongs to the upper half and is written; on 127 it belongs to the upper half too (its
+            // gill is at 128) and has no cell there.
+            assertEquals(shift == 0, fur);
+        }
+    }
+
+    @Test
+    void unplacedGillLeavesNoFur() {
+        Glowshrooms.Terrain t = flat(60);
+        Glowshrooms.Anchor a = null;
+        for (int cx = 1; cx < 8 && a == null; cx++) for (int cz = 0; cz < 8 && a == null; cz++)
+            for (Glowshrooms.Anchor c : Glowshrooms.normalIn(7L, cx, cz, t)) {
+                if (a == null && furRun(c.shape, 1) != null) a = c;
+            }
+        assertTrue(a != null);
+        int[] run = furRun(a.shape, 1);
+        int x = a.x + run[0], y = a.y + run[1], z = a.z + run[2];
+        Map<Long, EndBlock> cells = new HashMap<>();
+        cells.put(MapSink.key(x, y + 1, z), EndBlock.STONE);
+        Glowshrooms.draw(
+            Collections.singletonList(a),
+            new MapSink(cells, (x >> 4) * 16 - 64, (z >> 4) * 16 - 64, 144, 0, 256));
+        for (int k = 0; k <= 3; k++) assertTrue(cells.get(MapSink.key(x, y - k, z)) == null, "fur at " + k);
+    }
 }

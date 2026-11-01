@@ -3,10 +3,12 @@ package chlorine.etjourney.world.end.feature.plant;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.Set;
 
 import chlorine.etjourney.world.end.modifier.BlockSink;
 import chlorine.etjourney.world.end.modifier.EndBlock;
@@ -14,7 +16,11 @@ import chlorine.etjourney.world.end.modifier.EndBlock;
 /** Decides where the glowshrooms stand, per cell and from the seed alone, so any chunk can ask for its neighbours. */
 public final class Glowshrooms {
 
-    public static final int NORMAL_CELL = 16, GIANT_CELL = 256, GIANT_MARGIN = 64, GIANT_REACH = 72;
+    public static final int NORMAL_CELL = 16, GIANT_CELL = 256, GIANT_MARGIN = 64;
+    /** Fill bound of the largest Giant: ceil(22 * 3.5) + 2 = 79, rounded up. */
+    public static final int GIANT_REACH = 80;
+    /** The y at which the block passes split; a fur run never crosses it. */
+    private static final int SPLIT_Y = 128;
     private static final int NORMAL_NEIGHBOURS = 2;
     private static final long SALT = 0x3C6EF372FE94F82BL;
     private static final long GIANT_SALT = 0x5851F42D4C957F2DL;
@@ -177,24 +183,45 @@ public final class Glowshrooms {
     }
 
     /**
-     * Writes the anchors' cells that fall in the sink, in list order, into air only. A fur run is written only when
-     * every cell of it inside the sink is air, so any chunk reaches the same verdict on a run.
+     * Writes the anchors' cells that fall in the sink, in list order, into air only. A fur run belongs to the half
+     * (below or above {@code SPLIT_Y}) that holds its gill, and its cells in the other half are cut; it is written
+     * only when its gill was placed and every cell of it in the sink is air. So both halves, and any chunk, reach
+     * the same verdict.
      */
     public static void draw(List<Anchor> anchors, BlockSink sink) {
         for (Anchor a : anchors) {
-            final Run run = new Run(a, sink);
+            final Run run = new Run(sink);
+            final Set<Long> gills = new HashSet<>();
+            final boolean[] open = { false };
             a.shape.forEach((dx, dy, dz, block) -> {
                 int x = a.x + dx, y = a.y + dy, z = a.z + dz;
                 if (block == EndBlock.MYCELIA_VINE || block == EndBlock.MYCELIA_VINE_LAST) {
+                    if (!open[0]) {
+                        open[0] = true;
+                        run.start(y + 1, gills.contains(pack(dx, dy + 1, dz)));
+                    }
                     run.add(x, y, z, block);
-                    if (block == EndBlock.MYCELIA_VINE_LAST) run.flush();
+                    if (block == EndBlock.MYCELIA_VINE_LAST) {
+                        run.flush();
+                        open[0] = false;
+                    }
                 } else {
-                    run.flush();
-                    if (inside(sink, x, y, z)) sink.place(x, y, z, block);
+                    if (open[0]) {
+                        run.flush();
+                        open[0] = false;
+                    }
+                    if (inside(sink, x, y, z) && sink.isAir(x, y, z)) {
+                        sink.place(x, y, z, block);
+                        if (block == EndBlock.MYCELIA_GILL) gills.add(pack(dx, dy, dz));
+                    }
                 }
             });
             run.flush();
         }
+    }
+
+    private static long pack(int dx, int dy, int dz) {
+        return ((long) (dx + 256) << 20) | ((long) (dy + 512) << 10) | (dz + 256);
     }
 
     private static boolean inside(BlockSink s, int x, int y, int z) {
@@ -211,14 +238,21 @@ public final class Glowshrooms {
         private final BlockSink sink;
         private final int[] xs = new int[4], ys = new int[4], zs = new int[4];
         private final EndBlock[] kinds = new EndBlock[4];
-        private int n;
+        private int n, half;
+        private boolean gillPlaced;
 
-        Run(Anchor a, BlockSink sink) {
+        Run(BlockSink sink) {
             this.sink = sink;
         }
 
+        void start(int gillY, boolean placed) {
+            n = 0;
+            half = gillY / SPLIT_Y;
+            gillPlaced = placed;
+        }
+
         void add(int x, int y, int z, EndBlock b) {
-            if (n == kinds.length) flush();
+            if (y / SPLIT_Y != half || n == kinds.length) return;
             xs[n] = x;
             ys[n] = y;
             zs[n] = z;
@@ -226,8 +260,8 @@ public final class Glowshrooms {
         }
 
         void flush() {
-            boolean clear = true;
-            for (int i = 0; i < n; i++)
+            boolean clear = gillPlaced;
+            for (int i = 0; i < n && clear; i++)
                 if (inside(sink, xs[i], ys[i], zs[i]) && !sink.isAir(xs[i], ys[i], zs[i])) clear = false;
             if (clear) for (int i = 0; i < n; i++)
                 if (inside(sink, xs[i], ys[i], zs[i])) sink.place(xs[i], ys[i], zs[i], kinds[i]);
