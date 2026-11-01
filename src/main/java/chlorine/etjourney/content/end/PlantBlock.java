@@ -23,12 +23,12 @@ final class PlantBlock extends BlockBush implements IGrowable {
     private static final float MUSHROOM_CHANCE = 0.4F;
 
     private final boolean replaceable;
-    private final boolean glowcap;
+    private final boolean smallshroom;
 
     PlantBlock(PlantBlockTable.Entry entry) {
         super(Material.plants);
         this.replaceable = entry.replaceable;
-        this.glowcap = entry.kind == EndBlock.GLOWCAP;
+        this.smallshroom = entry.kind == EndBlock.MYCELIA_SMALLSHROOM;
         setHardness(0.0F);
         setStepSound(soundTypeGrass);
         setLightLevel(entry.light / 15.0F);
@@ -53,10 +53,10 @@ final class PlantBlock extends BlockBush implements IGrowable {
         return replaceable;
     }
 
-    /** Bone meal works on the glowcap only, and only on mycelia ground, like a vanilla mushroom. */
+    /** Bone meal works on the mycelia smallshroom only, and only on mycelia ground, like a vanilla mushroom. */
     @Override
     public boolean func_149851_a(World world, int x, int y, int z, boolean isRemote) {
-        return glowcap && LargeFlora.growsOn(EndBiome.MYCELIA, EndPalette.biomeOfTop(world.getBlock(x, y - 1, z)));
+        return smallshroom && LargeFlora.growsOn(EndBiome.MYCELIA, EndPalette.biomeOfTop(world.getBlock(x, y - 1, z)));
     }
 
     @Override

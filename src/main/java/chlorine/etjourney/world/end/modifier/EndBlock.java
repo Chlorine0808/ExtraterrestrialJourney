@@ -34,7 +34,7 @@ public enum EndBlock {
     HIGHLAND_TUFT,
     HIGHLAND_THISTLE,
     MYCELIA_SPROUT,
-    GLOWCAP,
+    MYCELIA_SMALLSHROOM,
     AMBER_REED,
     AMBER_BULB,
     /** Large plants and crystals. */

@@ -213,6 +213,6 @@ class FloraTest {
         }
         assertTrue(found > 0);
         assertTrue(clumped > found * 3 / 4, clumped + " of " + found + " blooms have a neighbour");
-        assertFalse(counts.containsKey(Flora.GLOWCAP), "a mycelia plant in the grove");
+        assertFalse(counts.containsKey(Flora.MYCELIA_SMALLSHROOM), "a mycelia plant in the grove");
     }
 }
