@@ -10,12 +10,13 @@ import chlorine.etjourney.world.end.feature.sdf.Spline;
 import chlorine.etjourney.world.end.modifier.EndBlock;
 import chlorine.etjourney.world.end.noise.ValueNoise;
 
-/** The MYCELIA giant mushrooms, shaped after BetterEnd's mossy glowshroom: flared roots, a bent stem, a wavy plate. */
+/**
+ * The small MYCELIA mushroom of the populate window, shaped after BetterEnd's mossy glowshroom: flared roots, a bent
+ * stem, a wavy plate.
+ */
 public enum GiantMushroom implements Grower {
 
-    SMALL(6, 9, 3, 2.0, 2.5, 0.8, 0.75, 1.4, 0.2),
-    MEDIUM(12, 18, 6, 4.0, 5.0, 1.2, 0.85, 2.4, 0.5),
-    LARGE(22, 30, 8, 5.8, 7.0, 1.7, 1.2, 3.4, 0.5);
+    SMALL(6, 9, 3, 2.0, 2.5, 0.8, 0.75, 1.4, 0.2);
 
     /** Half the cap's thickness: a floor, plus a share of the cap radius. */
     private static final double CAP_HALF = 0.8;
@@ -28,6 +29,8 @@ public enum GiantMushroom implements Grower {
     private static final int RIM_RAYS = 12;
     private static final double RIM_WAVE = 0.07;
     private static final int ROOT_RAYS = 5;
+    /** How close to the gill cone a cell must lie to be a gill. */
+    private static final double GILL_REACH = 0.5;
 
     private final int minHeight;
     private final int maxHeight;
@@ -81,42 +84,50 @@ public enum GiantMushroom implements Grower {
         // block lower for thickness, so the lifted rim does not break into steps.
         long seed = random.nextLong();
         double hx = top[0], hz = top[2];
+        double wave = random.nextDouble() * Math.PI * 2;
         Sdf plate = Sdf.cappedCone(half, stemTop + 0.5, cap);
-        Sdf capShape = plate.subtract(
-            plate.scale(2, 2, 2)
-                .translate(0, half * 3, 0));
-        capShape = capShape.union(capShape.translate(0, -1, 0))
-            .flatWave(RIM_RAYS, cap * RIM_WAVE, random.nextDouble() * Math.PI * 2)
-            .warp(p -> {
-                double d = Math.sqrt(p[0] * p[0] + p[2] * p[2]);
-                double n = ValueNoise.mask(seed, p[0] + hx, p[2] + hz, LIFT_NOISE_SCALE) * 2 - 1;
-                p[1] += d * (LIFT + n * LIFT_NOISE);
-            })
-            .translate(hx, capY, hz);
+        Sdf scoop = plate.scale(2, 2, 2)
+            .translate(0, half * 3, 0);
+        Sdf plateShape = plate.subtract(scoop);
+        plateShape = plateShape.union(plateShape.translate(0, -1, 0))
+            .flatWave(RIM_RAYS, cap * RIM_WAVE, wave);
+        // The gills are a separate cone without the wave, a block under the plate.
+        Sdf gillShape = Sdf.cappedCone(half, stemTop + 0.5, cap - 0.5)
+            .translate(0, -1, 0)
+            .subtract(scoop);
+        Sdf capShape = pose(plateShape, seed, hx, hz, capY);
+        Sdf gills = pose(gillShape, seed, hx, hz, capY);
 
-        Sdf shape = stem.smoothUnion(capShape, 1.2);
+        Sdf shape = stem.smoothUnion(capShape.union(gills), 1.2);
         int[] bounds = { -reach, 0, -reach, reach, height - 1, reach };
         Set<Long> cells = SdfFill.fill(shape, 0, 0, 0, bounds);
         if (cells.isEmpty()) return false;
         for (long c : cells) {
             int cx = SdfFill.x(c), cy = SdfFill.y(c), cz = SdfFill.z(c);
-            out.put(x + cx, y + cy, z + cz, block(c, cells, stem, capShape));
+            out.put(x + cx, y + cy, z + cz, block(c, cells, stem, capShape, gills));
         }
         return true;
     }
 
-    /** Stem outside the cap; under the cap, a cell open below is a gill. */
-    private static EndBlock block(long c, Set<Long> cells, Sdf stem, Sdf capShape) {
-        if (!isCap(c, stem, capShape)) return EndBlock.MYCELIA_STEM;
-        long above = SdfFill.offset(c, 0, 1, 0);
-        boolean capAbove = cells.contains(above) && isCap(above, stem, capShape);
-        boolean openBelow = !cells.contains(SdfFill.offset(c, 0, -1, 0));
-        return capAbove && openBelow ? EndBlock.MYCELIA_GILL : EndBlock.MYCELIA_CAP;
+    /** Lifts the rim as the plate does, then seats the part on the stem top. */
+    private static Sdf pose(Sdf part, long seed, double hx, double hz, double capY) {
+        return part.warp(p -> {
+            double d = Math.sqrt(p[0] * p[0] + p[2] * p[2]);
+            double n = ValueNoise.mask(seed, p[0] + hx, p[2] + hz, LIFT_NOISE_SCALE) * 2 - 1;
+            p[1] += d * (LIFT + n * LIFT_NOISE);
+        })
+            .translate(hx, capY, hz);
     }
 
-    private static boolean isCap(long c, Sdf stem, Sdf capShape) {
+    /**
+     * Stem unless the head is nearer; in the head, a cell within half a block of the gill cone is a gill, as long as
+     * a cell lies above it, so the top of the cap stays plain.
+     */
+    private static EndBlock block(long c, Set<Long> cells, Sdf stem, Sdf capShape, Sdf gills) {
         int x = SdfFill.x(c), y = SdfFill.y(c), z = SdfFill.z(c);
-        double d = capShape.distance(x, y, z);
-        return d < 0 || d < stem.distance(x, y, z);
+        double plate = capShape.distance(x, y, z), gill = gills.distance(x, y, z);
+        if (Math.min(plate, gill) >= 0 && stem.distance(x, y, z) <= Math.min(plate, gill)) return EndBlock.MYCELIA_STEM;
+        boolean covered = cells.contains(SdfFill.offset(c, 0, 1, 0));
+        return gill < GILL_REACH && covered ? EndBlock.MYCELIA_GILL : EndBlock.MYCELIA_CAP;
     }
 }

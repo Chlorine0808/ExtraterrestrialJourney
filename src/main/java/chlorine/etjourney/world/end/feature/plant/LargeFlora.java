@@ -10,8 +10,6 @@ public enum LargeFlora {
 
     GROVE_TREE(EndBiome.GROVE, GroveTree.INSTANCE, 2.5, 1, "GROVE_SHRUB"),
     GROVE_SHRUB(EndBiome.GROVE, GroveShrub.INSTANCE, 2.0, 3, null),
-    MYCELIA_LARGE(EndBiome.MYCELIA, GiantMushroom.LARGE, 0.4, 1, "MYCELIA_MEDIUM"),
-    MYCELIA_MEDIUM(EndBiome.MYCELIA, GiantMushroom.MEDIUM, 0.8, 1, "MYCELIA_SMALL"),
     MYCELIA_SMALL(EndBiome.MYCELIA, GiantMushroom.SMALL, 1.0, 2, null),
     AMBER_LIGHTROOT(EndBiome.AMBER, Lightroot.INSTANCE, 0.6, 1, null),
     HIGHLAND_CRYSTAL(EndBiome.HIGHLAND, CrystalCluster.INSTANCE, 0.3, 1, null),
