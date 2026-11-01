@@ -58,6 +58,16 @@ public interface Sdf {
         return (x, y, z) -> distance(x / sx, y / sy, z / sz);
     }
 
+    /** Scales the shape uniformly; unlike the per-axis form this keeps the distance exact. */
+    default Sdf scale(double s) {
+        return (x, y, z) -> distance(x / s, y / s, z / s) * s;
+    }
+
+    /** Grows the shape by {@code r} blocks all round. */
+    default Sdf round(double r) {
+        return (x, y, z) -> distance(x, y, z) - r;
+    }
+
     default Sdf union(Sdf other) {
         return (x, y, z) -> Math.min(distance(x, y, z), other.distance(x, y, z));
     }
