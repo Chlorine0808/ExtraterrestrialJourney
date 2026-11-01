@@ -27,7 +27,7 @@ public final class Glowshrooms {
     private static final long K1 = 0x9E3779B97F4A7C15L, K2 = 0xC2B2AE3D27D4EB4FL;
     private static final Object NONE = new Object();
     private static final Map<Key, Object> NORMALS = lru(512);
-    private static final Map<Key, Object> GIANTS = lru(32);
+    private static final Map<Key, Object> GIANTS = lru(8);
     private static long cachedSeed;
     private static boolean seeded;
 
@@ -190,6 +190,7 @@ public final class Glowshrooms {
      */
     public static void draw(List<Anchor> anchors, BlockSink sink) {
         for (Anchor a : anchors) {
+            if (!touches(a, sink)) continue;
             final Run run = new Run(sink);
             final Set<Long> gills = new HashSet<>();
             final boolean[] open = { false };
@@ -222,6 +223,15 @@ public final class Glowshrooms {
 
     private static long pack(int dx, int dy, int dz) {
         return ((long) (dx + 256) << 20) | ((long) (dy + 512) << 10) | (dz + 256);
+    }
+
+    /** Whether the anchor's bounding box meets the sink's volume. */
+    private static boolean touches(Anchor a, BlockSink s) {
+        return a.x + a.shape.maxX() >= s.originX() && a.x + a.shape.minX() < s.originX() + s.width()
+            && a.z + a.shape.maxZ() >= s.originZ()
+            && a.z + a.shape.minZ() < s.originZ() + s.width()
+            && a.y + a.shape.maxY() >= s.minY()
+            && a.y + a.shape.minY() < s.maxY();
     }
 
     private static boolean inside(BlockSink s, int x, int y, int z) {
