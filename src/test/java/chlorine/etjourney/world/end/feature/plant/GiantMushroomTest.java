@@ -4,13 +4,14 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.Map;
 import java.util.Random;
 
 import org.junit.jupiter.api.Test;
 
 import chlorine.etjourney.world.end.modifier.EndBlock;
 
-/** The MYCELIA giant mushrooms: three sizes with a stem, a gilled underside and a capped top. */
+/** The MYCELIA giant mushrooms: three sizes, each one piece, plain on top with gills lining the underside. */
 class GiantMushroomTest {
 
     private static final int X = 100, Y = 64, Z = -37;
@@ -29,8 +30,12 @@ class GiantMushroomTest {
         }
     }
 
+    private static boolean isCap(EndBlock b) {
+        return b == EndBlock.MYCELIA_CAP || b == EndBlock.MYCELIA_GILL;
+    }
+
     @Test
-    void gillsLineTheUnderside() {
+    void capLooksPlainFromAbove() {
         for (GiantMushroom size : GiantMushroom.values()) {
             for (int seed = 0; seed < 50; seed++) {
                 Voxels v = new Voxels();
@@ -38,21 +43,52 @@ class GiantMushroomTest {
                 int columns = 0;
                 for (int dx = -8; dx <= 8; dx++) {
                     for (int dz = -8; dz <= 8; dz++) {
-                        EndBlock lowest = null, highest = null;
+                        EndBlock highest = null;
                         for (int dy = 0; dy <= 31; dy++) {
                             EndBlock b = v.cells.get(Voxels.key(X + dx, Y + dy, Z + dz));
-                            if (b != EndBlock.MYCELIA_GILL && b != EndBlock.MYCELIA_CAP) continue;
-                            if (lowest == null) lowest = b;
-                            highest = b;
+                            if (b != null) highest = b;
                         }
-                        if (lowest == null) continue;
+                        if (!isCap(highest)) continue;
                         columns++;
-                        assertEquals(EndBlock.MYCELIA_GILL, lowest, size + " seed " + seed);
                         assertEquals(EndBlock.MYCELIA_CAP, highest, size + " seed " + seed);
                     }
                 }
                 assertTrue(columns > 0);
                 assertTrue(v.count(EndBlock.MYCELIA_STEM) > 0);
+            }
+        }
+    }
+
+    @Test
+    void gillsLineTheUnderside() {
+        for (GiantMushroom size : GiantMushroom.values()) {
+            for (int seed = 0; seed < 50; seed++) {
+                Voxels v = new Voxels();
+                size.grow(new Random(seed), X, Y, Z, 40, v);
+                assertTrue(v.count(EndBlock.MYCELIA_GILL) > 0, size + " seed " + seed);
+                for (Map.Entry<Long, EndBlock> e : v.cells.entrySet()) {
+                    long k = e.getKey();
+                    int x = Voxels.x(k), y = Voxels.y(k), z = Voxels.z(k);
+                    boolean airBelow = !v.cells.containsKey(Voxels.key(x, y - 1, z));
+                    boolean capAbove = isCap(v.cells.get(Voxels.key(x, y + 1, z)));
+                    if (e.getValue() == EndBlock.MYCELIA_GILL) {
+                        assertTrue(airBelow && capAbove, size + " seed " + seed + " gill at " + x + "," + y + "," + z);
+                    } else if (e.getValue() == EndBlock.MYCELIA_CAP && airBelow && capAbove) {
+                        throw new AssertionError(
+                            size + " seed " + seed + " bare underside at " + x + "," + y + "," + z);
+                    }
+                }
+            }
+        }
+    }
+
+    @Test
+    void holdsTogether() {
+        for (GiantMushroom size : GiantMushroom.values()) {
+            for (int seed = 0; seed < 50; seed++) {
+                Voxels v = new Voxels();
+                size.grow(new Random(seed), X, Y, Z, 40, v);
+                assertEquals(v.cells.size(), v.connected(X, Y, Z), size + " seed " + seed);
             }
         }
     }
