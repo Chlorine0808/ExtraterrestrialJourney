@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Test;
 
 import chlorine.etjourney.world.end.feature.StructureProbe;
 import chlorine.etjourney.world.end.feature.cloud.Virga;
+import chlorine.etjourney.world.end.modifier.EndBlock;
 
 /**
  * Mammatus and virga hang from the rock above them without a gap, even where the underside slants or its lumps
@@ -88,8 +89,14 @@ class HangingCloudsTest {
         return x >= ox && x < ox + 16 && z >= oz && z < oz + 16;
     }
 
+    /** The block there, ignoring the glowshrooms: they stand on the ground and are not clouds. */
     private static Object get(MemorySink[] halves, int x, int y, int z) {
-        return y < 128 ? halves[0].get(x, y, z) : halves[1].get(x, y, z);
+        EndBlock b = y < 128 ? halves[0].get(x, y, z) : halves[1].get(x, y, z);
+        if (b == EndBlock.MYCELIA_STEM || b == EndBlock.MYCELIA_CAP
+            || b == EndBlock.MYCELIA_GILL
+            || b == EndBlock.MYCELIA_VINE
+            || b == EndBlock.MYCELIA_VINE_LAST) return null;
+        return b;
     }
 
     private static void assertHangs(String style, int chunks, int least, boolean streaks) {
