@@ -41,3 +41,6 @@ CLAUDE.md
 /docs/
 /shots/
 /tools/
+
+# Upstream mods cloned for reference
+/external/
