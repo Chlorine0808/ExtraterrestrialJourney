@@ -116,4 +116,15 @@ class EndBiomeTest {
             EndBiome.at(SEED, 1100 + i * 131.0, -i * 17.0),
             EndBiome.at(SEED, 1100 + i * 131.0, -i * 17.0));
     }
+
+    /** The self-windowed overload gives one verdict per column, whatever chunk asks, and honours the void rule. */
+    @Test
+    void columnVerdictIgnoresTheWindowAndFollowsTheVoidShare() {
+        for (int x = -600; x < 600; x += 37) {
+            for (int z = -600; z < 600; z += 41) {
+                assertEquals(EndBiome.at(SEED, x, z), EndBiome.at(SEED, x, z, 0.0));
+                assertEquals(null, EndBiome.at(SEED, x, z, 0.51));
+            }
+        }
+    }
 }

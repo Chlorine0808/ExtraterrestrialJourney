@@ -47,6 +47,11 @@ public enum EndBiome {
         return at(seed, Continent.seedsNear(seed, x, z, Continent.warpReach()), Mountains.near(seed, x, z, 0), x, z);
     }
 
+    /** One column with its own lookups, so the verdict does not depend on a chunk's window. */
+    public static EndBiome at(long seed, double x, double z, double voidShare) {
+        return voidShare > VOID_LIMIT ? null : at(seed, x, z);
+    }
+
     static EndBiome atWarped(long seed, List<Continent.Seed> seeds, List<Mountains.Mountain> mountains, double wx,
         double wz) {
         Continent.Seed owner = Continent.highest(seeds, wx, wz);

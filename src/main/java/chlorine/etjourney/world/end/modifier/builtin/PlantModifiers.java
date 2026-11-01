@@ -117,8 +117,9 @@ public final class PlantModifiers {
                 public boolean mycelia(double x, double z) {
                     // The same integer sample the surface paint takes.
                     int bx = (int) Math.floor(x), bz = (int) Math.floor(z);
-                    return EndBiome.at(area.seed, view.seeds(), view.mountains(), bx, bz, view.voidShare(bx, bz))
-                        == EndBiome.MYCELIA && view.weight("LAYERED", bx, bz) < LAYERED_LIMIT;
+                    // Anchors lie outside the chunk's window, so the biome looks up its own seeds and mountains.
+                    return EndBiome.at(area.seed, bx, bz, view.voidShare(bx, bz)) == EndBiome.MYCELIA
+                        && view.weight("LAYERED", bx, bz) < LAYERED_LIMIT;
                 }
             };
             List<Glowshrooms.Anchor> kept = new ArrayList<>();
