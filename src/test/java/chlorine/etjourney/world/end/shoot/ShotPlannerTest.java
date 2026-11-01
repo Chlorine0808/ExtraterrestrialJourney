@@ -148,6 +148,9 @@ class ShotPlannerTest {
             assertEquals(View.GROUND, shots.get(1).view);
             assertNotNull(shots.get(1).fixed);
             assertNull(shots.get(0).fixed);
+            Target t = shots.get(1).target;
+            assertEquals(t.x + 0.7 * t.size / 4, shots.get(1).fixed.x, 1e-9);
+            assertEquals(-20f, shots.get(1).fixed.pitch, 0f);
             for (PlannedShot s : shots) {
                 assertNotNull(s.target, size + " " + s.group);
                 assertEquals(EndBiome.MYCELIA, SAMPLER.biome(Math.floor(s.target.x), Math.floor(s.target.z)));

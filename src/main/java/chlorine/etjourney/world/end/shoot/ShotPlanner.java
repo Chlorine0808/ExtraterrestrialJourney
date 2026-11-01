@@ -126,7 +126,7 @@ public final class ShotPlanner {
         }
     }
 
-    /** Like add, but the ground view stands half a cap radius off the stem and looks up at the gills. */
+    /** Like add, but the ground view stands 0.7 cap radius off the stem and looks up at the gills. */
     private static void addGlowshrooms(List<PlannedShot> out, ShotSpec spec, List<Target> found) {
         String prefix = spec.arg.equals("GIANT") ? "Giant キノコ" : "通常のキノコ";
         for (int n = 0; n < spec.count; n++) {
@@ -135,7 +135,7 @@ public final class ShotPlanner {
                 Camera fixed = null;
                 if (t != null && v == View.GROUND) {
                     // The cap radius is a quarter of the scene size; yaw 90 looks along -x, back at the stem.
-                    fixed = new Camera(t.x + t.size / 8, t.y + 2, t.z, 90f, -30f);
+                    fixed = new Camera(t.x + 0.7 * t.size / 4, t.y + 2, t.z, 90f, -20f);
                 }
                 out.add(
                     new PlannedShot(
