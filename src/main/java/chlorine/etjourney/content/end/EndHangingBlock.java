@@ -14,6 +14,8 @@ import chlorine.etjourney.core.registry.RegistryNames;
 /** Glowing fur drawn crossed that hangs from a mycelia gill or from fur above, and drops nothing. */
 final class EndHangingBlock extends Block {
 
+    private static Block gill, vine;
+
     EndHangingBlock(LargePlantBlockTable.Entry entry) {
         super(Material.plants);
         setHardness(0.0F);
@@ -51,9 +53,13 @@ final class EndHangingBlock extends Block {
 
     @Override
     public boolean canBlockStay(World world, int x, int y, int z) {
+        if (gill == null) {
+            // Resolved on first use: this block is registered before the ones it hangs from.
+            gill = Block.getBlockFromName(ModInfo.MODID + ":mycelia_gill");
+            vine = Block.getBlockFromName(ModInfo.MODID + ":mycelia_vine");
+        }
         Block above = world.getBlock(x, y + 1, z);
-        return above == Block.getBlockFromName(ModInfo.MODID + ":mycelia_gill")
-            || above == Block.getBlockFromName(ModInfo.MODID + ":mycelia_vine");
+        return above == gill || above == vine;
     }
 
     @Override
