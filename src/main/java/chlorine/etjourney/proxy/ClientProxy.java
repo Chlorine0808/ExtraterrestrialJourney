@@ -1,5 +1,6 @@
 package chlorine.etjourney.proxy;
 
+import chlorine.etjourney.content.entity.EntityRenderers;
 import chlorine.etjourney.world.end.debug.shoot.ShootHarness;
 import cpw.mods.fml.common.event.FMLInitializationEvent;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
@@ -15,6 +16,7 @@ public class ClientProxy extends CommonProxy {
     @Override
     public void init(FMLInitializationEvent event) {
         super.init(event);
+        EntityRenderers.init();
         ShootHarness.startIfRequested();
     }
 }
