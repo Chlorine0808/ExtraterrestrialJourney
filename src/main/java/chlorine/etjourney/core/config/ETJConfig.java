@@ -14,6 +14,8 @@ public final class ETJConfig {
     public static String[] excludedBiomes = new String[0], excludedMods = new String[0];
     /** Whether biosphere columns take their sample's biomes, for grass, leaf and water colours. */
     public static boolean biomeColors = true;
+    /** Whether mod entities with a spawn rule are added to natural spawning. */
+    public static boolean naturalSpawns = true;
 
     private ETJConfig() {}
 
@@ -54,6 +56,11 @@ public final class ETJConfig {
             "biospheres",
             new String[0],
             "Mods whose biomes are never put in a biosphere, by mod ID; minecraft for the vanilla biomes.");
+        naturalSpawns = config.getBoolean(
+            "naturalSpawns",
+            "entities",
+            true,
+            "Let ETJ creatures spawn naturally in the outer End. Turn off to stop them without touching the world.");
         if (config.hasChanged()) {
             config.save();
         }
