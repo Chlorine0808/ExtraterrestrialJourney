@@ -27,6 +27,7 @@ public class CommonProxy {
     public void init(FMLInitializationEvent event) {
         ETJNetwork.init();
         ModWorld.init();
+        ModContent.init();
         compat.init();
         ModLog.LOG.info("init done");
     }
