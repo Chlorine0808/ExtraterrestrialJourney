@@ -4,6 +4,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
+
 import net.minecraft.init.Items;
 
 import org.junit.jupiter.api.Test;
@@ -51,8 +55,22 @@ class OreBlockTest {
         assertTrue(block.canEntityDestroy(null, 0, 0, 0, null));
     }
 
+    private static final Set<String> EARLY = new HashSet<>(
+        Arrays.asList(
+            "ender_gold_ore",
+            "ender_platinum_ore",
+            "sakura_gold_ore",
+            "golden_palladium_ore",
+            "drift_ore",
+            "ascended_crystal_ore",
+            "black_quartz_ore",
+            "rhenium_ore"));
+
     @Test
-    void everyOreSoFarIsAnEarlyOne() {
-        for (OreBlockTable.Entry e : OreBlockTable.ENTRIES) assertFalse(e.blastproof, e.name);
+    void onlyEarlyOresGiveWay() {
+        for (OreBlockTable.Entry e : OreBlockTable.ENTRIES) {
+            assertEquals(!EARLY.contains(e.name), e.blastproof, e.name);
+            if (e.blastproof) assertTrue(e.harvestLevel >= 3, e.name + " opens to a pickaxe below diamond");
+        }
     }
 }

@@ -28,6 +28,11 @@ public enum EndBlock {
     ASCENDED_CRYSTAL,
     BLACK_QUARTZ,
     RHENIUM_ORE,
+    OSMIUM_ORE,
+    IRIDIUM_ORE,
+    ARCEODYMIUM_ORE,
+    KTANGPHOR_ORE,
+    COLTAN_ORE,
     /** Plants set on the biome surfaces at populate time. */
     GROVE_GRASS,
     GROVE_FERN,
