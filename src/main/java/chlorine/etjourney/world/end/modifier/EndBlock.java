@@ -66,6 +66,12 @@ public enum EndBlock {
     CRYSTAL_BUD_MEDIUM,
     CRYSTAL_BUD_LARGE,
     CRYSTAL_CLUSTER,
+    LUCENT_LOG,
+    LUCENT_LEAVES,
+    LUCENT_FUR,
+    LUCENT_VINE,
+    LUCENT_VINE_LAST,
+    LUCENT_LANTERN,
     /** Links of hanging and sky chains. */
     CHAIN,
     /** Shells of biospheres. */
