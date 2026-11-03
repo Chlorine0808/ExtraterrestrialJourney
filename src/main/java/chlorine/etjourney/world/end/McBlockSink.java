@@ -53,6 +53,12 @@ final class McBlockSink implements BlockSink {
     }
 
     @Override
+    public boolean is(int x, int y, int z, EndBlock kind) {
+        int i = index(x, y, z);
+        return blocks[i] == EndPalette.block(kind) && (meta == null || meta[i] == EndPalette.meta(kind));
+    }
+
+    @Override
     public void place(int x, int y, int z, EndBlock block) {
         if (isAir(x, y, z)) set(x, y, z, block);
     }

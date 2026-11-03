@@ -14,6 +14,9 @@ public interface BlockSink {
 
     boolean isAir(int x, int y, int z);
 
+    /** Whether the block at (x, y, z) is the given kind. */
+    boolean is(int x, int y, int z, EndBlock kind);
+
     /** Places a block only into air. */
     void place(int x, int y, int z, EndBlock block);
 
