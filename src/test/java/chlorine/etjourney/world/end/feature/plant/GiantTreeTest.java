@@ -278,6 +278,11 @@ class GiantTreeTest {
             }
 
             @Override
+            public boolean is(int x, int y, int z, EndBlock kind) {
+                return blocks.get(key(x, y, z)) == kind;
+            }
+
+            @Override
             public void place(int x, int y, int z, EndBlock block) {
                 if (isAir(x, y, z)) blocks.put(key(x, y, z), block);
             }

@@ -43,7 +43,7 @@ public final class FeatureModifiers {
     /** Footprint reach, in island radii, over which a zone island's surface is repainted. */
     private static final double PAINT_REACH = 1.3;
     private static final int PAINT_DEPTH = 3;
-    private static final int PAINT_ORDER = 814, ORE_ORDER = 816;
+    private static final int PAINT_ORDER = 814, ORE_ORDER = 880;
     /** How far outside a tube's exact surface a block still counts as part of the tube. */
     private static final double TUBE_SLACK = 3;
     /** The top of the generator's half; Y 128 up is written by the tall pass. */
@@ -296,9 +296,9 @@ public final class FeatureModifiers {
     private static final int ORE_DEPTH_CAP = 32;
 
     /**
-     * Ore veins in the rock, after both paints so the depth counts painted rock as rock, and before lake water and
-     * everything placed block by block (islets, structures, clouds), which so never hold ore. An ore never replaces a
-     * surface block: its depth is at least one.
+     * Ore veins in the rock, after the terrain, clouds and structures and before the BIOSPHERES spheres. Only stone and
+     * fill blocks take ore, so water, wood and chains are left alone and break the rock's depth. An ore never replaces
+     * a surface block: its depth is at least one.
      */
     public static Modifier ores() {
         return blockModifier(ORE_ORDER, (area, view, sink) -> {
@@ -320,16 +320,19 @@ public final class FeatureModifiers {
                             int column = (x - ox) * 16 + z - oz;
                             int d = depth[column * height + y - minY];
                             if (d < ore.minDepth || d > ore.maxDepth) return;
+                            if (!isRock(sink, x, y, z, HOSTS)) return;
                             if (ore.biome != null) {
                                 if (!biomeKnown[column]) {
                                     biomes[column] = biomeAt(area, view, x, z);
                                     biomeKnown[column] = true;
                                 }
                                 if (biomes[column] != ore.biome) return;
+                            }
+                            if (ore.biome != null || ore.onZones) {
                                 if (offIslands[column] == null)
                                     offIslands[column] = ZoneIslands.ownerAt(view.zoneIslands(), x, z, PAINT_REACH)
                                         == null;
-                                if (!offIslands[column]) return;
+                                if (offIslands[column] != !ore.onZones) return;
                             }
                             sink.set(x, y, z, ore.block);
                         });
@@ -339,7 +342,37 @@ public final class FeatureModifiers {
         });
     }
 
-    /** Each block's depth below the surface of its run of rock, -1 for air, by column then height. */
+    /** Blocks that make up the rock, surfaces included, and those of them that take ore. */
+    private static final EndBlock[] ROCK = rockKinds(true), HOSTS = rockKinds(false);
+
+    private static EndBlock[] rockKinds(boolean withTops) {
+        List<EndBlock> kinds = new ArrayList<>();
+        kinds.add(EndBlock.STONE);
+        for (EndBiome biome : EndBiome.values()) {
+            if (withTops) kinds.add(biome.top);
+            kinds.add(biome.fill);
+        }
+        for (Zone zone : Zone.values()) {
+            if (withTops) kinds.add(zone.top);
+            kinds.add(zone.fill);
+        }
+        return kinds.toArray(new EndBlock[0]);
+    }
+
+    private static boolean isRock(BlockSink sink, int x, int y, int z, EndBlock[] kinds) {
+        if (sink.isAir(x, y, z)) return false;
+        for (EndBlock kind : kinds) if (sink.is(x, y, z, kind)) return true;
+        return false;
+    }
+
+    /** Whether rock stands at (x, y, z) above the sink; past the world top there is none. */
+    private static boolean rockAbove(TerrainView view, BlockSink sink, BlockSink above, int x, int y, int z) {
+        if (y > 255) return false;
+        if (sink.maxY() == LOWER_TOP) return above != null && isRock(above, x, y, z, ROCK);
+        return view.densityAt(x, y, z) > 0;
+    }
+
+    /** Each block's depth below the surface of its run of rock, -1 for anything else, by column then height. */
     private static int[] oreDepths(TerrainView view, BlockSink sink) {
         BlockSink above = above(view, sink, ORE_ORDER);
         int minY = sink.minY(), height = sink.maxY() - minY;
@@ -348,9 +381,9 @@ public final class FeatureModifiers {
             for (int lz = 0; lz < 16; lz++) {
                 int x = sink.originX() + lx, z = sink.originZ() + lz, base = (lx * 16 + lz) * height;
                 int d = -1;
-                while (d + 1 < ORE_DEPTH_CAP && solidAbove(view, sink, above, x, sink.maxY() + d + 1, z)) d++;
+                while (d + 1 < ORE_DEPTH_CAP && rockAbove(view, sink, above, x, sink.maxY() + d + 1, z)) d++;
                 for (int y = sink.maxY() - 1; y >= minY; y--) {
-                    d = sink.isAir(x, y, z) ? -1 : Math.min(d + 1, ORE_DEPTH_CAP);
+                    d = isRock(sink, x, y, z, ROCK) ? Math.min(d + 1, ORE_DEPTH_CAP) : -1;
                     depth[base + y - minY] = d;
                 }
             }

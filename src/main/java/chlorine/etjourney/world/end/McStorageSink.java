@@ -56,6 +56,14 @@ final class McStorageSink implements BlockSink {
     }
 
     @Override
+    public boolean is(int x, int y, int z, EndBlock kind) {
+        ExtendedBlockStorage section = storage[y >> 4];
+        if (section == null) return false;
+        return section.getBlockByExtId(x - originX, y & 15, z - originZ) == EndPalette.block(kind)
+            && section.getExtBlockMetadata(x - originX, y & 15, z - originZ) == EndPalette.meta(kind);
+    }
+
+    @Override
     public void place(int x, int y, int z, EndBlock block) {
         if (isAir(x, y, z)) set(x, y, z, block);
     }

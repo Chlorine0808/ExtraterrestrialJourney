@@ -15,7 +15,10 @@ import chlorine.etjourney.world.end.feature.Ore;
 import chlorine.etjourney.world.end.feature.ZoneIslands;
 import chlorine.etjourney.world.end.modifier.EndBlock;
 
-/** Each ore keeps to its biome and heights, never shows on the surface, and every one of them can be found. */
+/**
+ * Each ore keeps to its biome or the zone islands and its heights, never shows on the surface, lies in the clouds too,
+ * and every one of them can be found.
+ */
 class OrePlacementTest {
 
     private static final long SEED = 91L;
@@ -93,6 +96,9 @@ class OrePlacementTest {
                 assertTrue(EndBiome.at(SEED, x, z) == ore.biome, at + " in " + EndBiome.at(SEED, x, z));
                 assertTrue(ZoneIslands.ownerAt(s.plan.zoneIslands(), x, z, 1) == null, at + " on a zone island");
             }
+            if (ore.onZones) {
+                assertTrue(ZoneIslands.ownerAt(s.plan.zoneIslands(), x, z, 1.3) != null, at + " off the zone islands");
+            }
         });
     }
 
@@ -104,13 +110,25 @@ class OrePlacementTest {
         });
     }
 
-    /** Ores lie in rock the density grid made, never in clouds or structures drawn block by block. */
+    /** The ore pass runs after the clouds, so their rock holds ores like the ground does. */
     @Test
-    void oresLieOnlyInGroundRock() {
-        forEachOre(
-            (s, ore, x, y, z) -> assertTrue(
-                s.plan.densityAt(x, y, z) > -8,
-                ore + " away from the ground at " + x + "," + y + "," + z));
+    void cumulusCloudsHoldOres() {
+        TerrainSampler sampler = ZoneIslandPaintTest.SAMPLER;
+        int offGround = 0, chunks = 0;
+        for (int step = 0; step < 40000 && chunks < 60; step++) {
+            int cx = (step % 200 - 100) * 3, cz = (step / 200 - 100) * 3;
+            double mx = cx * 16 + 8, mz = cz * 16 + 8;
+            if (mx * mx + mz * mz < 1200 * 1200 || sampler.styleWeight("CUMULUS", mx, mz) < 0.5) continue;
+            chunks++;
+            ChunkPlan plan = new ChunkPlan(sampler, cx, cz, (a, b) -> Collections.emptyList());
+            MemorySink[] halves = ZoneIslandPaintTest.generate(cx, cz);
+            for (int x = cx * 16; x < cx * 16 + 16; x++)
+                for (int z = cz * 16; z < cz * 16 + 16; z++) for (int y = 0; y < 256; y++) {
+                    if (BY_BLOCK.containsKey(halves[y >> 7].get(x, y, z)) && plan.densityAt(x, y, z) <= -8) offGround++;
+                }
+        }
+        assertTrue(chunks > 0, "no cumulus chunk found");
+        assertTrue(offGround > 0, "no ore off the ground in " + chunks + " cumulus chunks");
     }
 
     @Test
