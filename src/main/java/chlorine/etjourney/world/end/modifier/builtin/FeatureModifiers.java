@@ -86,6 +86,7 @@ public final class FeatureModifiers {
         all.add(StructureModifiers.voxels(Column.KIND, 870, EndBlock.STONE));
         all.add(StructureModifiers.voxels(Tool.KIND, 872, EndBlock.STONE));
         all.add(PlantModifiers.giantTrees(874));
+        all.add(PlantModifiers.glowshrooms(875));
         all.add(StructureModifiers.spires(873));
         all.add(StructureModifiers.biospheres());
         return all;

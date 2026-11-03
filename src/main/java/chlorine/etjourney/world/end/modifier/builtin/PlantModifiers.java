@@ -1,5 +1,6 @@
 package chlorine.etjourney.world.end.modifier.builtin;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -7,8 +8,10 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import chlorine.etjourney.world.end.feature.Continent;
 import chlorine.etjourney.world.end.feature.ContinentIds;
+import chlorine.etjourney.world.end.feature.EndBiome;
 import chlorine.etjourney.world.end.feature.plant.GiantTree;
 import chlorine.etjourney.world.end.feature.plant.GiantTrees;
+import chlorine.etjourney.world.end.feature.plant.Glowshrooms;
 import chlorine.etjourney.world.end.modifier.BlockSink;
 import chlorine.etjourney.world.end.modifier.ChunkArea;
 import chlorine.etjourney.world.end.modifier.Modifier;
@@ -91,5 +94,44 @@ public final class PlantModifiers {
                 }
             }
         }
+    }
+
+    /** LAYERED stacks tiers over the probe's ground, so the probe's ground is not its top. */
+    private static final double LAYERED_LIMIT = 0.05;
+
+    /**
+     * The glowshrooms reaching the chunk. An anchor whose cap touches a reserved area, or whose root stands in a
+     * fade, as seen from the root's chunk, is left out, so every chunk judges it alike.
+     */
+    public static Modifier glowshrooms(int order) {
+        return FeatureModifiers.blockModifier(order, (area, view, sink) -> {
+            Glowshrooms.Terrain terrain = new Glowshrooms.Terrain() {
+
+                @Override
+                public double ground(double x, double z) {
+                    return view.structures()
+                        .ground(x, z);
+                }
+
+                @Override
+                public boolean mycelia(double x, double z) {
+                    // The same integer sample the surface paint takes.
+                    int bx = (int) Math.floor(x), bz = (int) Math.floor(z);
+                    // Anchors lie outside the chunk's window, so the biome looks up its own seeds and mountains.
+                    return EndBiome.at(area.seed, bx, bz, view.voidShare(bx, bz)) == EndBiome.MYCELIA
+                        && view.weight("LAYERED", bx, bz) < LAYERED_LIMIT;
+                }
+            };
+            List<Glowshrooms.Anchor> kept = new ArrayList<>();
+            for (Glowshrooms.Anchor a : Glowshrooms
+                .reaching(area.seed, sink.originX() >> 4, sink.originZ() >> 4, terrain)) {
+                List<Area> reserved = view.reservedAt(a.x >> 4, a.z >> 4);
+                double radius = Math.ceil(20 * a.shape.scale());
+                if (Reservations.touches(reserved, a.x, a.z, radius)) continue;
+                if (Reservations.suppression(reserved, a.x, a.z) > 0.1) continue;
+                kept.add(a);
+            }
+            Glowshrooms.draw(kept, sink);
+        });
     }
 }

@@ -33,7 +33,7 @@ final class PlantBlockTable {
             new Entry("highland_tuft", EndBlock.HIGHLAND_TUFT, true, 0),
             new Entry("highland_thistle", EndBlock.HIGHLAND_THISTLE, false, 0),
             new Entry("mycelia_sprout", EndBlock.MYCELIA_SPROUT, true, 0),
-            new Entry("glowcap", EndBlock.GLOWCAP, false, 7),
+            new Entry("mycelia_smallshroom", EndBlock.MYCELIA_SMALLSHROOM, false, 7),
             new Entry("amber_reed", EndBlock.AMBER_REED, true, 0),
             new Entry("amber_bulb", EndBlock.AMBER_BULB, false, 4)));
 

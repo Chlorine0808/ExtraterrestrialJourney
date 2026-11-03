@@ -1,7 +1,10 @@
 package chlorine.etjourney.world.end.feature.plant;
 
+import java.util.ArrayDeque;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 import chlorine.etjourney.world.end.modifier.EndBlock;
 
@@ -21,6 +24,37 @@ final class Voxels implements PlantSink {
 
     static long key(int x, int y, int z) {
         return ((long) (x & 0x3FFFFF) << 42) | ((long) (z & 0x3FFFFF) << 20) | (y & 0xFFFFF);
+    }
+
+    static int x(long key) {
+        return (int) (key >> 42);
+    }
+
+    static int y(long key) {
+        return (int) (key & 0xFFFFF);
+    }
+
+    static int z(long key) {
+        return (int) ((key << 22) >> 42);
+    }
+
+    /** How many written cells are face-connected to (x, y, z), itself included. */
+    int connected(int x, int y, int z) {
+        long start = key(x, y, z);
+        if (!cells.containsKey(start)) return 0;
+        Set<Long> seen = new HashSet<>();
+        ArrayDeque<Long> open = new ArrayDeque<>();
+        seen.add(start);
+        open.add(start);
+        int[][] faces = { { 1, 0, 0 }, { -1, 0, 0 }, { 0, 1, 0 }, { 0, -1, 0 }, { 0, 0, 1 }, { 0, 0, -1 } };
+        while (!open.isEmpty()) {
+            long c = open.poll();
+            for (int[] f : faces) {
+                long n = key(x(c) + f[0], y(c) + f[1], z(c) + f[2]);
+                if (cells.containsKey(n) && seen.add(n)) open.add(n);
+            }
+        }
+        return seen.size();
     }
 
     boolean isEmpty() {

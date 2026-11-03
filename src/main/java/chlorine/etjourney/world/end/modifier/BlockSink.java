@@ -7,6 +7,11 @@ public interface BlockSink {
 
     int originZ();
 
+    /** Writable width in x and z; a chunk is 16, a test sink may be wider. */
+    default int width() {
+        return 16;
+    }
+
     /** Writable heights are minY to maxY - 1: 0-127 for the generator's array, 128-255 for the tall pass. */
     int minY();
 

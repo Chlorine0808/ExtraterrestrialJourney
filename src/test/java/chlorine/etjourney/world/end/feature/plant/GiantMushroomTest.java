@@ -10,10 +10,16 @@ import org.junit.jupiter.api.Test;
 
 import chlorine.etjourney.world.end.modifier.EndBlock;
 
-/** The MYCELIA giant mushrooms: three sizes with a stem, a gilled underside and a capped top. */
+/** The MYCELIA giant mushrooms: the small one, a piece, plain on top with gills lining the underside. */
 class GiantMushroomTest {
 
     private static final int X = 100, Y = 64, Z = -37;
+
+    @Test
+    void onlySmallRemains() {
+        assertEquals(1, GiantMushroom.values().length);
+        assertEquals("SMALL", GiantMushroom.values()[0].name());
+    }
 
     @Test
     void staysWithinEight() {
@@ -29,8 +35,12 @@ class GiantMushroomTest {
         }
     }
 
+    private static boolean isCap(EndBlock b) {
+        return b == EndBlock.MYCELIA_CAP || b == EndBlock.MYCELIA_GILL;
+    }
+
     @Test
-    void gillsLineTheUnderside() {
+    void capLooksPlainFromAbove() {
         for (GiantMushroom size : GiantMushroom.values()) {
             for (int seed = 0; seed < 50; seed++) {
                 Voxels v = new Voxels();
@@ -38,16 +48,13 @@ class GiantMushroomTest {
                 int columns = 0;
                 for (int dx = -8; dx <= 8; dx++) {
                     for (int dz = -8; dz <= 8; dz++) {
-                        EndBlock lowest = null, highest = null;
+                        EndBlock highest = null;
                         for (int dy = 0; dy <= 31; dy++) {
                             EndBlock b = v.cells.get(Voxels.key(X + dx, Y + dy, Z + dz));
-                            if (b != EndBlock.MYCELIA_GILL && b != EndBlock.MYCELIA_CAP) continue;
-                            if (lowest == null) lowest = b;
-                            highest = b;
+                            if (b != null) highest = b;
                         }
-                        if (lowest == null) continue;
+                        if (!isCap(highest)) continue;
                         columns++;
-                        assertEquals(EndBlock.MYCELIA_GILL, lowest, size + " seed " + seed);
                         assertEquals(EndBlock.MYCELIA_CAP, highest, size + " seed " + seed);
                     }
                 }
@@ -58,29 +65,49 @@ class GiantMushroomTest {
     }
 
     @Test
-    void sizesAreOrdered() {
-        double[] mean = new double[3];
+    void smallGillsAreEven() {
+        int columns = 0, gilled = 0;
+        for (int i = 1; i <= 20; i++) {
+            Voxels v = new Voxels();
+            GiantMushroom.SMALL.grow(new Random(i * 0x9E3779B97F4A7C15L), X, Y, Z, 40, v);
+            for (int dx = -8; dx <= 8; dx++) {
+                for (int dz = -8; dz <= 8; dz++) {
+                    EndBlock lowest = null;
+                    boolean cap = false, stem = false;
+                    for (int dy = 0; dy <= 31; dy++) {
+                        EndBlock b = v.cells.get(Voxels.key(X + dx, Y + dy, Z + dz));
+                        if (b == null) continue;
+                        if (lowest == null) lowest = b;
+                        cap |= isCap(b);
+                        stem |= b == EndBlock.MYCELIA_STEM;
+                    }
+                    if (!cap || stem) continue;
+                    columns++;
+                    if (lowest == EndBlock.MYCELIA_GILL) gilled++;
+                }
+            }
+        }
+        assertTrue(columns > 0);
+        assertTrue(gilled >= 0.8 * columns, "gill share " + gilled + "/" + columns);
+    }
+
+    @Test
+    void holdsTogether() {
         for (GiantMushroom size : GiantMushroom.values()) {
             for (int seed = 0; seed < 50; seed++) {
                 Voxels v = new Voxels();
                 size.grow(new Random(seed), X, Y, Z, 40, v);
-                mean[size.ordinal()] += (v.height(Y) + 1) / 50.0;
+                assertEquals(v.cells.size(), v.connected(X, Y, Z), size + " seed " + seed);
             }
         }
-        assertTrue(mean[0] < mean[1], "small " + mean[0] + " medium " + mean[1]);
-        assertTrue(mean[1] < mean[2], "medium " + mean[1] + " large " + mean[2]);
     }
 
     @Test
     void shrinksToTheHeadroom() {
-        int[] lowest = { 6, 12, 22 };
-        for (GiantMushroom size : GiantMushroom.values()) {
-            int headroom = lowest[size.ordinal()];
-            for (int seed = 0; seed < 50; seed++) {
-                Voxels v = new Voxels();
-                assertTrue(size.grow(new Random(seed), X, Y, Z, headroom, v), size + " seed " + seed);
-                assertTrue(v.height(Y) < headroom, size + " seed " + seed);
-            }
+        for (int seed = 0; seed < 50; seed++) {
+            Voxels v = new Voxels();
+            assertTrue(GiantMushroom.SMALL.grow(new Random(seed), X, Y, Z, 6, v), "seed " + seed);
+            assertTrue(v.height(Y) < 6, "seed " + seed);
         }
     }
 

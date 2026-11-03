@@ -132,6 +132,9 @@ public final class ShotList {
             case "giant-tree":
                 what = ShotSpec.What.GIANT_TREE;
                 break;
+            case "glowshroom":
+                what = ShotSpec.What.GLOWSHROOM;
+                break;
             case "at":
                 what = ShotSpec.What.AT;
                 break;
@@ -157,6 +160,12 @@ public final class ShotList {
                     throw new IllegalArgumentException("unknown sphere class '" + arg + "'");
                 }
             }
+        } else if (what == ShotSpec.What.GLOWSHROOM) {
+            if (t.length <= next || t[next].contains("="))
+                throw new IllegalArgumentException("glowshroom needs NORMAL or GIANT");
+            arg = t[next++];
+            if (!arg.equals("NORMAL") && !arg.equals("GIANT"))
+                throw new IllegalArgumentException("unknown glowshroom size '" + arg + "'");
         } else if (what == ShotSpec.What.AT) {
             if (t.length < next + 3) throw new IllegalArgumentException("at needs x y z");
             at = new double[] { Double.parseDouble(t[next]), Double.parseDouble(t[next + 1]),

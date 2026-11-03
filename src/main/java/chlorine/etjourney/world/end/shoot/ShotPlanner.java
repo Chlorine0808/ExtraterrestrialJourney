@@ -64,6 +64,9 @@ public final class ShotPlanner {
                 case GIANT_TREE:
                     add(out, spec, "巨木", locator.giantTrees(ox, oz, spec.count));
                     break;
+                case GLOWSHROOM:
+                    addGlowshrooms(out, spec, locator.glowshrooms(spec.arg.equals("GIANT"), ox, oz, spec.count));
+                    break;
                 case ARC_TOUCH:
                     add(out, spec, "ARCS 接地", locator.arcTouches(ox, oz, spec.count));
                     break;
@@ -117,6 +120,30 @@ public final class ShotPlanner {
                         v,
                         t,
                         null,
+                        null,
+                        t == null ? NOT_FOUND : null));
+            }
+        }
+    }
+
+    /** Like add, but the ground view stands 0.7 cap radius off the stem and looks up at the gills. */
+    private static void addGlowshrooms(List<PlannedShot> out, ShotSpec spec, List<Target> found) {
+        String prefix = spec.arg.equals("GIANT") ? "Giant キノコ" : "通常のキノコ";
+        for (int n = 0; n < spec.count; n++) {
+            Target t = n < found.size() ? found.get(n) : null;
+            for (View v : spec.views) {
+                Camera fixed = null;
+                if (t != null && v == View.GROUND) {
+                    // The cap radius is a quarter of the scene size; yaw 90 looks along -x, back at the stem.
+                    fixed = new Camera(t.x + 0.7 * t.size / 4, t.y + 2, t.z, 90f, -20f);
+                }
+                out.add(
+                    new PlannedShot(
+                        prefix + " " + (n + 1),
+                        out.size() + 1,
+                        v,
+                        t,
+                        fixed,
                         null,
                         t == null ? NOT_FOUND : null));
             }
