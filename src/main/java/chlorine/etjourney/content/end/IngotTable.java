@@ -37,11 +37,9 @@ final class IngotTable {
             new Entry("ingot_ktangphor", "ingotKtangphor", "ktangphor_ore", 1.5F),
             new Entry("ingot_tantalum", "ingotTantalum", null, 1.5F),
             new Entry("ingot_niobium", "ingotNiobium", null, 1.5F),
-            // The endgame ingots carry the modifier of their mod-specific name, so other mods do not take them
-            // for their own americium or actinium.
-            new Entry("ingot_semistable_americium", "ingotSemistableAmericium", "americium_ore", 2.0F),
-            new Entry("ingot_semistable_actinium", "ingotSemistableActinium", "actinium_ore", 2.0F),
-            new Entry("ingot_inactive_neutron", "ingotInactiveNeutron", "neutron_ore", 2.0F)));
+            new Entry("ingot_semistable_americium", "ingotAmericium", "americium_ore", 2.0F),
+            new Entry("ingot_semistable_actinium", "ingotActinium", "actinium_ore", 2.0F),
+            new Entry("ingot_inactive_neutron", "ingotNeutron", "neutron_ore", 2.0F)));
 
     private IngotTable() {}
 }
