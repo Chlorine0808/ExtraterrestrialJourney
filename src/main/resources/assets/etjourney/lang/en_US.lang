@@ -103,3 +103,5 @@ item.etjourney.crystal_shard.name=Crystal Shard
 tile.etjourney.hydrofluoric_acid.name=Hydrofluoric Acid
 fluid.etjourney.hydrofluoric_acid=Hydrofluoric Acid
 death.attack.etjourney.hydrofluoric_acid=%1$s dissolved in hydrofluoric acid
+item.etjourney.tantalum_bucket.name=Tantalum Bucket
+item.etjourney.tantalum_bucket_hydrofluoric_acid.name=Hydrofluoric Acid Bucket
