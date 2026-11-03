@@ -7,8 +7,8 @@ import java.util.List;
 import chlorine.etjourney.world.end.modifier.EndBlock;
 
 /**
- * Registry names of the End ores and gems, the hardness and pickaxe level of each, the item it drops, and the ore
- * dictionary names of both.
+ * Registry names of the End ores and gems, the hardness and pickaxe level of each, the item it drops, the ore
+ * dictionary names of both, and whether it survives explosions.
  */
 final class OreBlockTable {
 
@@ -22,9 +22,11 @@ final class OreBlockTable {
         final String drop;
         final int minDrops, maxDrops;
         final String oreName, dropOreName;
+        /** Midgame and endgame ores survive explosions and the Wither, so only a pickaxe can mine them. */
+        final boolean blastproof;
 
         Entry(String name, EndBlock kind, float hardness, int harvestLevel, String drop, int minDrops, int maxDrops,
-            String oreName, String dropOreName) {
+            String oreName, String dropOreName, boolean blastproof) {
             this.name = name;
             this.kind = kind;
             this.hardness = hardness;
@@ -34,6 +36,7 @@ final class OreBlockTable {
             this.maxDrops = maxDrops;
             this.oreName = oreName;
             this.dropOreName = dropOreName;
+            this.blastproof = blastproof;
         }
     }
 
@@ -49,7 +52,8 @@ final class OreBlockTable {
                 1,
                 1,
                 "oreEnderGold",
-                "rawEnderGold"),
+                "rawEnderGold",
+                false),
             new Entry(
                 "ender_platinum_ore",
                 EndBlock.ENDER_PLATINUM_ORE,
@@ -59,7 +63,8 @@ final class OreBlockTable {
                 1,
                 1,
                 "oreEnderPlatinum",
-                "rawEnderPlatinum"),
+                "rawEnderPlatinum",
+                false),
             new Entry(
                 "sakura_gold_ore",
                 EndBlock.SAKURA_GOLD_ORE,
@@ -69,7 +74,8 @@ final class OreBlockTable {
                 1,
                 1,
                 "oreSakuraGold",
-                "rawSakuraGold"),
+                "rawSakuraGold",
+                false),
             new Entry(
                 "golden_palladium_ore",
                 EndBlock.GOLDEN_PALLADIUM_ORE,
@@ -79,8 +85,9 @@ final class OreBlockTable {
                 1,
                 1,
                 "oreGoldenPalladium",
-                "rawGoldenPalladium"),
-            new Entry("drift_ore", EndBlock.DRIFT_ORE, 3.0F, 2, "drift_shard", 1, 2, "oreDrift", "gemDrift"),
+                "rawGoldenPalladium",
+                false),
+            new Entry("drift_ore", EndBlock.DRIFT_ORE, 3.0F, 2, "drift_shard", 1, 2, "oreDrift", "gemDrift", false),
             new Entry(
                 "ascended_crystal_ore",
                 EndBlock.ASCENDED_CRYSTAL,
@@ -90,7 +97,8 @@ final class OreBlockTable {
                 1,
                 1,
                 "oreAscendedCrystal",
-                "gemAscendedCrystal"),
+                "gemAscendedCrystal",
+                false),
             new Entry(
                 "black_quartz_ore",
                 EndBlock.BLACK_QUARTZ,
@@ -100,7 +108,8 @@ final class OreBlockTable {
                 1,
                 1,
                 "oreBlackQuartz",
-                "gemBlackQuartz")));
+                "gemBlackQuartz",
+                false)));
 
     private OreBlockTable() {}
 }
