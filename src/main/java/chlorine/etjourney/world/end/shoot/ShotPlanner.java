@@ -67,6 +67,9 @@ public final class ShotPlanner {
                 case GLOWSHROOM:
                     addGlowshrooms(out, spec, locator.glowshrooms(spec.arg.equals("GIANT"), ox, oz, spec.count));
                     break;
+                case LAKE:
+                    add(out, spec, "湖", locator.lakes(ox, oz, spec.count));
+                    break;
                 case ARC_TOUCH:
                     add(out, spec, "ARCS 接地", locator.arcTouches(ox, oz, spec.count));
                     break;
