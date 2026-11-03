@@ -48,12 +48,15 @@ final class LargePlantBlockTable {
         final EndBlock kind;
         final Type type;
         final int light;
+        /** Registry names of the blocks a hanging block may stay under; empty for other types. */
+        final List<String> hangsFrom;
 
-        Entry(String name, EndBlock kind, Type type, int light) {
+        Entry(String name, EndBlock kind, Type type, int light, String... hangsFrom) {
             this.name = name;
             this.kind = kind;
             this.type = type;
             this.light = light;
+            this.hangsFrom = Collections.unmodifiableList(Arrays.asList(hangsFrom));
         }
     }
 
@@ -97,8 +100,14 @@ final class LargePlantBlockTable {
             new Entry("mycelia_stem", EndBlock.MYCELIA_STEM, Type.LOG, 0),
             new Entry("mycelia_cap", EndBlock.MYCELIA_CAP, Type.CAP, 0),
             new Entry("mycelia_gill", EndBlock.MYCELIA_GILL, Type.CAP, 10),
-            new Entry("mycelia_vine", EndBlock.MYCELIA_VINE, Type.HANGING, 10),
-            new Entry("mycelia_vine_last", EndBlock.MYCELIA_VINE_LAST, Type.HANGING, 10),
+            new Entry("mycelia_vine", EndBlock.MYCELIA_VINE, Type.HANGING, 10, "mycelia_gill", "mycelia_vine"),
+            new Entry(
+                "mycelia_vine_last",
+                EndBlock.MYCELIA_VINE_LAST,
+                Type.HANGING,
+                10,
+                "mycelia_gill",
+                "mycelia_vine"),
             new Entry("amber_root", EndBlock.AMBER_ROOT, Type.LOG, 0),
             new Entry("amber_seed", EndBlock.AMBER_SEED, Type.GLOW, 10),
             new Entry("amber_stem", EndBlock.AMBER_STEM, Type.STEM, 0),
