@@ -63,7 +63,10 @@ class IngotTableTest {
         for (IngotTable.Entry e : IngotTable.ENTRIES) assertTrue(names.add(e.name), "twice: " + e.name);
         Set<String> textures = new HashSet<>();
         try (DirectoryStream<Path> pngs = Files.newDirectoryStream(ASSETS.resolve("textures/items"), "ingot_*.png")) {
-            for (Path png : pngs) textures.add(png.getFileName().toString().replace(".png", ""));
+            for (Path png : pngs) textures.add(
+                png.getFileName()
+                    .toString()
+                    .replace(".png", ""));
         }
         assertEquals(textures, names);
     }
