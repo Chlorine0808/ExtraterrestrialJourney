@@ -14,8 +14,8 @@ import chlorine.etjourney.world.end.modifier.EndBlock;
 import cpw.mods.fml.common.registry.GameRegistry;
 
 /**
- * Registers the End zone, biome, ore, plant and large-plant blocks and the ore drops, and binds the blocks into the
- * palette.
+ * Registers the End zone, biome, ore, plant and large-plant blocks, the ore drops and ingots, and binds the blocks into
+ * the palette.
  */
 public final class EndBlocks {
 
@@ -27,6 +27,7 @@ public final class EndBlocks {
             GameRegistry.registerBlock(block, entry.name);
             EndPalette.bind(entry.kind, block, 0);
         }
+        Map<String, OreBlock> ores = new HashMap<>();
         for (OreBlockTable.Entry entry : OreBlockTable.ENTRIES) {
             MaterialItem drop = new MaterialItem(entry.drop);
             GameRegistry.registerItem(drop, entry.drop);
@@ -35,13 +36,28 @@ public final class EndBlocks {
             EndPalette.bind(entry.kind, block, 0);
             OreDictionary.registerOre(entry.oreName, block);
             OreDictionary.registerOre(entry.dropOreName, drop);
+            ores.put(entry.name, block);
         }
+        registerIngots(ores);
         for (PlantBlockTable.Entry entry : PlantBlockTable.ENTRIES) {
             PlantBlock block = new PlantBlock(entry);
             GameRegistry.registerBlock(block, entry.name);
             EndPalette.bind(entry.kind, block, 0);
         }
         registerLargePlants();
+    }
+
+    /** Registers each ingot and lets its ore block and raw drop smelt into it. */
+    private static void registerIngots(Map<String, OreBlock> ores) {
+        for (IngotTable.Entry entry : IngotTable.ENTRIES) {
+            MaterialItem ingot = new MaterialItem(entry.name);
+            GameRegistry.registerItem(ingot, entry.name);
+            OreDictionary.registerOre(entry.oreName, ingot);
+            if (entry.ore == null) continue;
+            OreBlock ore = ores.get(entry.ore);
+            GameRegistry.addSmelting(ore, new ItemStack(ingot), entry.experience);
+            GameRegistry.addSmelting(ore.getItemDropped(0, null, 0), new ItemStack(ingot), entry.experience);
+        }
     }
 
     private static void registerLargePlants() {
