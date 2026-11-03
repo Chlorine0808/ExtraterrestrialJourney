@@ -2,18 +2,20 @@ package chlorine.etjourney.world.end;
 
 import java.util.Random;
 
+import net.minecraft.block.Block;
 import net.minecraft.init.Blocks;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.IChunkProvider;
 
 import chlorine.etjourney.world.end.feature.Falls;
+import chlorine.etjourney.world.end.modifier.EndBlock;
 import chlorine.etjourney.world.end.noise.Distance;
 import cpw.mods.fml.common.IWorldGenerator;
 import cpw.mods.fml.common.registry.GameRegistry;
 
 /**
- * Sets flowing water springs into the rim cliffs of VOID_FALLS land at populate time. The water is left to flow on
- * scheduled ticks, so it pours off the edge into the void.
+ * Sets springs of the palette's water into the rim cliffs of VOID_FALLS land at populate time. The liquid is left to
+ * flow on scheduled ticks, so it pours off the edge into the void.
  */
 public final class VoidFalls implements IWorldGenerator {
 
@@ -39,9 +41,13 @@ public final class VoidFalls implements IWorldGenerator {
                 .styleWeight("VOID_FALLS", ox + 8, oz + 8)))
             return;
         Falls.Ground ground = (x, z) -> world.getHeightValue(x, z) - 1;
+        boolean bound = EndPalette.isBound(EndBlock.WATER);
+        // The stand-in still water would not start flowing, so it gives way to flowing water.
+        Block spring = bound ? EndPalette.block(EndBlock.WATER) : Blocks.flowing_water;
+        int meta = bound ? EndPalette.meta(EndBlock.WATER) : 0;
         for (int attempt = 0; attempt < Falls.ATTEMPTS; attempt++) {
             int[] s = Falls.spring(seed, ox, oz, attempt, ground);
-            if (s != null) world.setBlock(s[0], s[1], s[2], Blocks.flowing_water, 0, 2);
+            if (s != null) world.setBlock(s[0], s[1], s[2], spring, meta, 2);
         }
     }
 }
