@@ -11,7 +11,8 @@ public enum EndBiome {
     GROVE(EndBlock.GROVE_TOP, EndBlock.GROVE_FILL),
     HIGHLAND(EndBlock.HIGHLAND_TOP, EndBlock.HIGHLAND_FILL),
     MYCELIA(EndBlock.MYCELIA_TOP, EndBlock.MYCELIA_FILL),
-    AMBER(EndBlock.AMBER_TOP, EndBlock.AMBER_FILL);
+    AMBER(EndBlock.AMBER_TOP, EndBlock.AMBER_FILL),
+    LUCENTWOODS(EndBlock.LUCENTWOODS_TOP, EndBlock.LUCENTWOODS_FILL);
 
     private static final double BARE_SHARE = 0.5;
     /** Styles without a continent (arcs, islets, shoals) holding more of the base weight than this stay bare. */

@@ -40,7 +40,9 @@ final class ZoneBlockTable {
             new Entry("mycelia_rock", EndBlock.MYCELIA_FILL, null),
             new Entry("mycelia_turf", EndBlock.MYCELIA_TOP, "mycelia_rock"),
             new Entry("amber_rock", EndBlock.AMBER_FILL, null),
-            new Entry("amber_crust", EndBlock.AMBER_TOP, "amber_rock")));
+            new Entry("amber_crust", EndBlock.AMBER_TOP, "amber_rock"),
+            new Entry("lucent_rock", EndBlock.LUCENTWOODS_FILL, null),
+            new Entry("lucent_moss", EndBlock.LUCENTWOODS_TOP, "lucent_rock")));
 
     private ZoneBlockTable() {}
 }

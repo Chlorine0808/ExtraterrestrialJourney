@@ -13,7 +13,8 @@ public enum LargeFlora {
     MYCELIA_SMALL(EndBiome.MYCELIA, GiantMushroom.SMALL, 1.0, 2, null),
     AMBER_LIGHTROOT(EndBiome.AMBER, Lightroot.INSTANCE, 0.6, 1, null),
     HIGHLAND_CRYSTAL(EndBiome.HIGHLAND, CrystalCluster.INSTANCE, 0.3, 1, null),
-    HIGHLAND_TREE(EndBiome.HIGHLAND, TwistedTree.INSTANCE, 0.2, 1, null);
+    HIGHLAND_TREE(EndBiome.HIGHLAND, TwistedTree.INSTANCE, 0.2, 1, null),
+    LUCENT_BUSH(EndBiome.LUCENTWOODS, LucentBush.INSTANCE, 5.0, 1, null);
 
     /** How far a cluster try may lie from its patch centre, in x and z. */
     private static final int SPREAD = 3;
