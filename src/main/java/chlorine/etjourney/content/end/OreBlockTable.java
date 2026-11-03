@@ -107,8 +107,8 @@ final class OreBlockTable {
                 "black_quartz",
                 1,
                 1,
-                "oreBlackQuartz",
-                "gemBlackQuartz",
+                "oreQuartzBlack",
+                "gemQuartzBlack",
                 false)));
 
     private OreBlockTable() {}
