@@ -15,7 +15,8 @@ public enum Ore {
     GOLDEN_PALLADIUM(EndBlock.GOLDEN_PALLADIUM_ORE, 2.5, 3, 6, 4, 24, 0, 255, EndBiome.HIGHLAND),
     DRIFT(EndBlock.DRIFT_ORE, 0.3, 1, 3, 1, Integer.MAX_VALUE, 150, 255, null),
     ASCENDED_CRYSTAL(EndBlock.ASCENDED_CRYSTAL, 0.8, 2, 5, 1, Integer.MAX_VALUE, 150, 255, null),
-    BLACK_QUARTZ(EndBlock.BLACK_QUARTZ, 0.8, 2, 5, 1, Integer.MAX_VALUE, 0, 40, null);
+    BLACK_QUARTZ(EndBlock.BLACK_QUARTZ, 0.8, 2, 5, 1, Integer.MAX_VALUE, 0, 40, null),
+    RHENIUM(EndBlock.RHENIUM_ORE, 0.12, 1, 2, 8, Integer.MAX_VALUE, 0, 255, null);
 
     public static final int CUBE = 16;
     /** The farthest a vein reaches from its start. */

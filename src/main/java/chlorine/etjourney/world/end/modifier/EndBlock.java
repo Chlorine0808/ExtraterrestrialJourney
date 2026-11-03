@@ -27,6 +27,7 @@ public enum EndBlock {
     DRIFT_ORE,
     ASCENDED_CRYSTAL,
     BLACK_QUARTZ,
+    RHENIUM_ORE,
     /** Plants set on the biome surfaces at populate time. */
     GROVE_GRASS,
     GROVE_FERN,

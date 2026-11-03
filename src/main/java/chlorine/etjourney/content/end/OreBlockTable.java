@@ -109,6 +109,17 @@ final class OreBlockTable {
                 1,
                 "oreQuartzBlack",
                 "gemQuartzBlack",
+                false),
+            new Entry(
+                "rhenium_ore",
+                EndBlock.RHENIUM_ORE,
+                4.0F,
+                2,
+                "raw_rhenium",
+                1,
+                1,
+                "oreRhenium",
+                "rawRhenium",
                 false)));
 
     private OreBlockTable() {}
