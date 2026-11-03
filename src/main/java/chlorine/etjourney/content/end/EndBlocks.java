@@ -33,6 +33,8 @@ public final class EndBlocks {
             OreBlock block = new OreBlock(entry, drop);
             GameRegistry.registerBlock(block, entry.name);
             EndPalette.bind(entry.kind, block, 0);
+            OreDictionary.registerOre(entry.oreName, block);
+            OreDictionary.registerOre(entry.dropOreName, drop);
         }
         for (PlantBlockTable.Entry entry : PlantBlockTable.ENTRIES) {
             PlantBlock block = new PlantBlock(entry);

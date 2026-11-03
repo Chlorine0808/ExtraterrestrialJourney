@@ -55,6 +55,17 @@ class OreBlockTableTest {
     }
 
     @Test
+    void everyOreAndDropIsListedUnderItsMaterial() {
+        Set<String> names = new HashSet<>();
+        for (OreBlockTable.Entry e : OreBlockTable.ENTRIES) {
+            assertTrue(e.oreName.matches("ore[A-Z]\\w+"), e.oreName);
+            assertTrue(e.dropOreName.matches("(raw|gem)[A-Z]\\w+"), e.dropOreName);
+            assertEquals(e.oreName.substring(3), e.dropOreName.substring(3), e.name);
+            assertTrue(names.add(e.oreName), "shared ore name: " + e.oreName);
+        }
+    }
+
+    @Test
     void everyDropTextureIsA16By16Png() throws IOException {
         for (OreBlockTable.Entry e : OreBlockTable.ENTRIES) {
             Path png = ASSETS.resolve("textures/items/" + e.drop + ".png");
