@@ -19,6 +19,22 @@ class BiomePaintTest {
 
     private static final long SEED = 91L;
     private static final Set<EndBlock> BIOME_BLOCKS = EnumSet.noneOf(EndBlock.class);
+    /** What the block pass grows on the ground: it stands on the surface, so it counts as open above it. */
+    private static final Set<EndBlock> PLANTS = EnumSet.of(
+        EndBlock.GROVE_LOG,
+        EndBlock.GROVE_LEAVES,
+        EndBlock.GROVE_BLOSSOM,
+        EndBlock.MYCELIA_STEM,
+        EndBlock.MYCELIA_CAP,
+        EndBlock.MYCELIA_GILL,
+        EndBlock.MYCELIA_VINE,
+        EndBlock.MYCELIA_VINE_LAST,
+        EndBlock.LUCENT_LOG,
+        EndBlock.LUCENT_LEAVES,
+        EndBlock.LUCENT_FUR,
+        EndBlock.LUCENT_VINE,
+        EndBlock.LUCENT_VINE_LAST,
+        EndBlock.LUCENT_LANTERN);
     static {
         for (EndBiome b : EndBiome.values()) {
             BIOME_BLOCKS.add(b.top);
@@ -123,7 +139,7 @@ class BiomePaintTest {
                 boolean open = false;
                 for (int up = 1; up <= 3; up++) {
                     EndBlock above = get(halves, x, y + up, z);
-                    if (above == null || above == EndBlock.WATER) open = true;
+                    if (above == null || above == EndBlock.WATER || PLANTS.contains(above)) open = true;
                     else if (!BIOME_BLOCKS.contains(above)) break;
                 }
                 if (!open && deep[0]++ == 0) System.out.println("paint deep inside at " + x + "," + y + "," + z);

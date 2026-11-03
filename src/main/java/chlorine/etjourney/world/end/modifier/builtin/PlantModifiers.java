@@ -12,6 +12,7 @@ import chlorine.etjourney.world.end.feature.EndBiome;
 import chlorine.etjourney.world.end.feature.plant.GiantTree;
 import chlorine.etjourney.world.end.feature.plant.GiantTrees;
 import chlorine.etjourney.world.end.feature.plant.Glowshrooms;
+import chlorine.etjourney.world.end.feature.plant.LucentTrees;
 import chlorine.etjourney.world.end.modifier.BlockSink;
 import chlorine.etjourney.world.end.modifier.ChunkArea;
 import chlorine.etjourney.world.end.modifier.Modifier;
@@ -132,6 +133,41 @@ public final class PlantModifiers {
                 kept.add(a);
             }
             Glowshrooms.draw(kept, sink);
+        });
+    }
+
+    /**
+     * The Lucentwoods trees reaching the chunk, judged against reserved areas as the glowshrooms are: from the root's
+     * chunk, the crown's reach and the root's fade.
+     */
+    public static Modifier lucentTrees(int order) {
+        return FeatureModifiers.blockModifier(order, (area, view, sink) -> {
+            LucentTrees.Terrain terrain = new LucentTrees.Terrain() {
+
+                @Override
+                public double ground(double x, double z) {
+                    return view.structures()
+                        .ground(x, z);
+                }
+
+                @Override
+                public boolean lucent(double x, double z) {
+                    int bx = (int) Math.floor(x), bz = (int) Math.floor(z);
+                    return EndBiome.at(area.seed, bx, bz, view.voidShare(bx, bz)) == EndBiome.LUCENTWOODS
+                        && view.weight("LAYERED", bx, bz) < LAYERED_LIMIT;
+                }
+            };
+            List<LucentTrees.Anchor> kept = new ArrayList<>();
+            for (LucentTrees.Anchor a : LucentTrees
+                .reaching(area.seed, sink.originX() >> 4, sink.originZ() >> 4, terrain)) {
+                List<Area> reserved = view.reservedAt(a.x >> 4, a.z >> 4);
+                double radius = Math
+                    .max(Math.max(-a.shape.minX(), a.shape.maxX()), Math.max(-a.shape.minZ(), a.shape.maxZ()));
+                if (Reservations.touches(reserved, a.x, a.z, radius)) continue;
+                if (Reservations.suppression(reserved, a.x, a.z) > 0.1) continue;
+                kept.add(a);
+            }
+            LucentTrees.draw(kept, sink);
         });
     }
 }
