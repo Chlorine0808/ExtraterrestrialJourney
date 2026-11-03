@@ -23,9 +23,9 @@ public enum Ore {
     ARCEODYMIUM(EndBlock.ARCEODYMIUM_ORE, 1.2, 3, 6, 4, Integer.MAX_VALUE, 0, 255, null),
     KTANGPHOR(EndBlock.KTANGPHOR_ORE, 0.8, 3, 5, 12, Integer.MAX_VALUE, 0, 80, null),
     COLTAN(EndBlock.COLTAN_ORE, 1.5, 3, 6, 4, 24, 0, 255, null),
-    SEMISTABLE_AMERICIUM(EndBlock.SEMISTABLE_AMERICIUM_ORE, 1.0, 2, 4, 4, Integer.MAX_VALUE, 0, 255, null, true),
-    SEMISTABLE_ACTINIUM(EndBlock.SEMISTABLE_ACTINIUM_ORE, 1.0, 2, 4, 4, Integer.MAX_VALUE, 0, 255, null, true),
-    INACTIVE_NEUTRON(EndBlock.INACTIVE_NEUTRON_ORE, 0.4, 1, 3, 8, Integer.MAX_VALUE, 0, 255, null, true);
+    AMERICIUM(EndBlock.AMERICIUM_ORE, 1.0, 2, 4, 4, Integer.MAX_VALUE, 0, 255, null, true),
+    ACTINIUM(EndBlock.ACTINIUM_ORE, 1.0, 2, 4, 4, Integer.MAX_VALUE, 0, 255, null, true),
+    NEUTRON(EndBlock.NEUTRON_ORE, 0.4, 1, 3, 8, Integer.MAX_VALUE, 0, 255, null, true);
 
     public static final int CUBE = 16;
     /** The farthest a vein reaches from its start. */
