@@ -15,7 +15,10 @@ import chlorine.etjourney.world.end.feature.Ore;
 import chlorine.etjourney.world.end.feature.ZoneIslands;
 import chlorine.etjourney.world.end.modifier.EndBlock;
 
-/** Each ore keeps to its biome or the zone islands and its heights, never shows on the surface, and every one of them can be found. */
+/**
+ * Each ore keeps to its biome or the zone islands and its heights, never shows on the surface, and every one of them
+ * can be found.
+ */
 class OrePlacementTest {
 
     private static final long SEED = 91L;
