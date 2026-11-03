@@ -99,3 +99,7 @@ item.etjourney.ingot_semistable_americium.name=Semistable Americium Ingot
 item.etjourney.ingot_semistable_actinium.name=Semistable Actinium Ingot
 item.etjourney.ingot_inactive_neutron.name=Inactive Neutron Ingot
 item.etjourney.crystal_shard.name=Crystal Shard
+
+tile.etjourney.hydrofluoric_acid.name=Hydrofluoric Acid
+fluid.etjourney.hydrofluoric_acid=Hydrofluoric Acid
+death.attack.etjourney.hydrofluoric_acid=%1$s dissolved in hydrofluoric acid

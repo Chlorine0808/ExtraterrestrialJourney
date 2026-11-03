@@ -99,3 +99,7 @@ item.etjourney.ingot_semistable_americium.name=準安定アメリシウムイン
 item.etjourney.ingot_semistable_actinium.name=準安定アクチニウムインゴット
 item.etjourney.ingot_inactive_neutron.name=不活性ニュートロンインゴット
 item.etjourney.crystal_shard.name=結晶の欠片
+
+tile.etjourney.hydrofluoric_acid.name=フッ化水素酸
+fluid.etjourney.hydrofluoric_acid=フッ化水素酸
+death.attack.etjourney.hydrofluoric_acid=%1$s はフッ化水素酸に溶けた
