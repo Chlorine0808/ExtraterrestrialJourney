@@ -325,10 +325,12 @@ public final class FeatureModifiers {
                                     biomeKnown[column] = true;
                                 }
                                 if (biomes[column] != ore.biome) return;
+                            }
+                            if (ore.biome != null || ore.onZones) {
                                 if (offIslands[column] == null)
                                     offIslands[column] = ZoneIslands.ownerAt(view.zoneIslands(), x, z, PAINT_REACH)
                                         == null;
-                                if (!offIslands[column]) return;
+                                if (offIslands[column] != !ore.onZones) return;
                             }
                             sink.set(x, y, z, ore.block);
                         });

@@ -40,7 +40,7 @@ final class OreBlockTable {
         }
     }
 
-    // Vanilla pickaxe levels stand in until the mod has tools of its own.
+    // Vanilla pickaxe levels stand in until the mod has tools of its own; no vanilla pickaxe reaches the endgame's 4.
     static final List<Entry> ENTRIES = Collections.unmodifiableList(
         Arrays.asList(
             new Entry(
@@ -175,6 +175,39 @@ final class OreBlockTable {
                 1,
                 "oreColtan",
                 "rawColtan",
+                true),
+            new Entry(
+                "semistable_americium_ore",
+                EndBlock.SEMISTABLE_AMERICIUM_ORE,
+                8.0F,
+                4,
+                "raw_americium",
+                1,
+                1,
+                "oreSemistableAmericium",
+                "rawSemistableAmericium",
+                true),
+            new Entry(
+                "semistable_actinium_ore",
+                EndBlock.SEMISTABLE_ACTINIUM_ORE,
+                8.0F,
+                4,
+                "raw_actinium",
+                1,
+                1,
+                "oreSemistableActinium",
+                "rawSemistableActinium",
+                true),
+            new Entry(
+                "inactive_neutron_ore",
+                EndBlock.INACTIVE_NEUTRON_ORE,
+                8.0F,
+                4,
+                "raw_neutron",
+                1,
+                1,
+                "oreInactiveNeutron",
+                "rawInactiveNeutron",
                 true)));
 
     private OreBlockTable() {}

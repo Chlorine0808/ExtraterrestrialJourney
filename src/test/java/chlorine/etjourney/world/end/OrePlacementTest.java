@@ -15,7 +15,7 @@ import chlorine.etjourney.world.end.feature.Ore;
 import chlorine.etjourney.world.end.feature.ZoneIslands;
 import chlorine.etjourney.world.end.modifier.EndBlock;
 
-/** Each ore keeps to its biome and heights, never shows on the surface, and every one of them can be found. */
+/** Each ore keeps to its biome or the zone islands and its heights, never shows on the surface, and every one of them can be found. */
 class OrePlacementTest {
 
     private static final long SEED = 91L;
@@ -92,6 +92,9 @@ class OrePlacementTest {
             if (ore.biome != null) {
                 assertTrue(EndBiome.at(SEED, x, z) == ore.biome, at + " in " + EndBiome.at(SEED, x, z));
                 assertTrue(ZoneIslands.ownerAt(s.plan.zoneIslands(), x, z, 1) == null, at + " on a zone island");
+            }
+            if (ore.onZones) {
+                assertTrue(ZoneIslands.ownerAt(s.plan.zoneIslands(), x, z, 1.3) != null, at + " off the zone islands");
             }
         });
     }

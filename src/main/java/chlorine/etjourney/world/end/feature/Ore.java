@@ -22,7 +22,10 @@ public enum Ore {
     IRIDIUM(EndBlock.IRIDIUM_ORE, 1.0, 3, 6, 8, Integer.MAX_VALUE, 130, 255, null),
     ARCEODYMIUM(EndBlock.ARCEODYMIUM_ORE, 1.2, 3, 6, 4, Integer.MAX_VALUE, 0, 255, null),
     KTANGPHOR(EndBlock.KTANGPHOR_ORE, 0.8, 3, 5, 12, Integer.MAX_VALUE, 0, 80, null),
-    COLTAN(EndBlock.COLTAN_ORE, 1.5, 3, 6, 4, 24, 0, 255, null);
+    COLTAN(EndBlock.COLTAN_ORE, 1.5, 3, 6, 4, 24, 0, 255, null),
+    SEMISTABLE_AMERICIUM(EndBlock.SEMISTABLE_AMERICIUM_ORE, 1.0, 2, 4, 4, Integer.MAX_VALUE, 0, 255, null, true),
+    SEMISTABLE_ACTINIUM(EndBlock.SEMISTABLE_ACTINIUM_ORE, 1.0, 2, 4, 4, Integer.MAX_VALUE, 0, 255, null, true),
+    INACTIVE_NEUTRON(EndBlock.INACTIVE_NEUTRON_ORE, 0.4, 1, 3, 8, Integer.MAX_VALUE, 0, 255, null, true);
 
     public static final int CUBE = 16;
     /** The farthest a vein reaches from its start. */
@@ -37,9 +40,16 @@ public enum Ore {
     public final int minY, maxY;
     /** The only biome it lies in, off zone islands; null for anywhere. */
     public final EndBiome biome;
+    /** Whether it lies only on zone islands, as the endgame ores do. */
+    public final boolean onZones;
 
     Ore(EndBlock block, double perCube, int minSize, int maxSize, int minDepth, int maxDepth, int minY, int maxY,
         EndBiome biome) {
+        this(block, perCube, minSize, maxSize, minDepth, maxDepth, minY, maxY, biome, false);
+    }
+
+    Ore(EndBlock block, double perCube, int minSize, int maxSize, int minDepth, int maxDepth, int minY, int maxY,
+        EndBiome biome, boolean onZones) {
         this.block = block;
         this.perCube = perCube;
         this.minSize = minSize;
@@ -49,6 +59,7 @@ public enum Ore {
         this.minY = minY;
         this.maxY = maxY;
         this.biome = biome;
+        this.onZones = onZones;
     }
 
     public interface VeinBlock {

@@ -33,6 +33,9 @@ public enum EndBlock {
     ARCEODYMIUM_ORE,
     KTANGPHOR_ORE,
     COLTAN_ORE,
+    SEMISTABLE_AMERICIUM_ORE,
+    SEMISTABLE_ACTINIUM_ORE,
+    INACTIVE_NEUTRON_ORE,
     /** Plants set on the biome surfaces at populate time. */
     GROVE_GRASS,
     GROVE_FERN,
