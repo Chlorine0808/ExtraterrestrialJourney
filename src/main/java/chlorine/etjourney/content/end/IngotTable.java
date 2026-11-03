@@ -4,7 +4,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-/** Registry names of the ingots, their ore dictionary names, and the ore each one smelts from. */
+/** Registry names of the ingots, their ore dictionary names, and the ore or raw material each one smelts from. */
 final class IngotTable {
 
     static final class Entry {
@@ -13,12 +13,21 @@ final class IngotTable {
         final String oreName;
         /** Registry name of the ore whose block and raw drop smelt into this ingot, or null when none does. */
         final String ore;
+        /** Registry name of a raw material with no ore block that smelts into this ingot, or null. */
+        final String raw;
+        final String rawOreName;
         final float experience;
 
         Entry(String name, String oreName, String ore, float experience) {
+            this(name, oreName, ore, null, null, experience);
+        }
+
+        Entry(String name, String oreName, String ore, String raw, String rawOreName, float experience) {
             this.name = name;
             this.oreName = oreName;
             this.ore = ore;
+            this.raw = raw;
+            this.rawOreName = rawOreName;
             this.experience = experience;
         }
     }
@@ -35,8 +44,9 @@ final class IngotTable {
             new Entry("ingot_iridium", "ingotIridium", "iridium_ore", 1.5F),
             new Entry("ingot_arceodymium", "ingotArceodymium", "arceodymium_ore", 1.5F),
             new Entry("ingot_ktangphor", "ingotKtangphor", "ktangphor_ore", 1.5F),
-            new Entry("ingot_tantalum", "ingotTantalum", null, 1.5F),
-            new Entry("ingot_niobium", "ingotNiobium", null, 1.5F),
+            // The hydrofluoric acid splits Coltan into these two raw materials.
+            new Entry("ingot_tantalum", "ingotTantalum", null, HydrofluoricAcid.RAW_TANTALUM, "rawTantalum", 1.5F),
+            new Entry("ingot_niobium", "ingotNiobium", null, HydrofluoricAcid.RAW_NIOBIUM, "rawNiobium", 1.5F),
             new Entry("ingot_semistable_americium", "ingotAmericium", "americium_ore", 2.0F),
             new Entry("ingot_semistable_actinium", "ingotActinium", "actinium_ore", 2.0F),
             new Entry("ingot_inactive_neutron", "ingotNeutron", "neutron_ore", 2.0F)));
