@@ -166,6 +166,11 @@ class GlowshroomsTest {
         }
 
         @Override
+        public boolean is(int x, int y, int z, EndBlock kind) {
+            return cells.get(key(x, y, z)) == kind;
+        }
+
+        @Override
         public void place(int x, int y, int z, EndBlock block) {
             if (inside(x, y, z)) cells.putIfAbsent(key(x, y, z), block);
         }
