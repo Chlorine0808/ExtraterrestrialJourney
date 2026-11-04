@@ -16,7 +16,7 @@ public interface StructureProbe {
         return -1000;
     }
 
-    /** Whether lake water lies within range of (x, z); only the plant probe knows the lakes. */
+    /** Whether lake water lies within range of (x, z); only the standing probe knows the lakes. */
     default boolean wet(double x, double z, double range) {
         return false;
     }

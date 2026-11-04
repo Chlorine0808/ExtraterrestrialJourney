@@ -302,7 +302,7 @@ public final class ChunkPlan implements TerrainView {
     }
 
     @Override
-    public StructureProbe plants() {
-        return sampler.plantProbe();
+    public StructureProbe standing() {
+        return sampler.standingProbe();
     }
 }

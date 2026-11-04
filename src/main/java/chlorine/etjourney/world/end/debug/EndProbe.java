@@ -176,7 +176,7 @@ public final class EndProbe {
                     seed,
                     s,
                     EndTerrain.sampler(seed)
-                        .plantProbe())) {
+                        .standingProbe())) {
                     if (a[0] >= x0 && a[0] < x1 && a[2] >= z0 && a[2] < z1) trees.add((int) a[0] + "," + (int) a[2]);
                 }
             }

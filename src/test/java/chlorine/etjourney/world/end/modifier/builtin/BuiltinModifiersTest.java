@@ -112,7 +112,7 @@ class BuiltinModifiersTest {
             }
 
             @Override
-            public StructureProbe plants() {
+            public StructureProbe standing() {
                 return null;
             }
 

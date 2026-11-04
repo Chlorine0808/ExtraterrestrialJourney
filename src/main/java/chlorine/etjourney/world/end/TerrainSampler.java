@@ -248,11 +248,11 @@ public final class TerrainSampler {
     }
 
     /**
-     * The structure probe with the ground as the lakes shape it, and very low under their water, so plants root on
-     * the shore and never on a lake. Lakes dropped for a reserved area count too: the answers must not depend on
+     * The structure probe with the ground as the lakes shape it, and very low under their water, so what stands on
+     * the ground stands on the shore and never on a lake. Lakes dropped for a reserved area count too: the answers must not depend on
      * the asking chunk, since giant trees are kept per continent.
      */
-    public StructureProbe plantProbe() {
+    public StructureProbe standingProbe() {
         StructureProbe bare = structureProbe();
         Lakes.Probe lakes = lakeProbe();
         return new StructureProbe() {
@@ -438,8 +438,8 @@ public final class TerrainSampler {
         }
 
         @Override
-        public StructureProbe plants() {
-            return plantProbe();
+        public StructureProbe standing() {
+            return standingProbe();
         }
 
         @Override
