@@ -408,12 +408,30 @@ public final class FeatureModifiers {
                 if (top < 0) return;
                 int bottom = 0;
                 while (view.densityAt(x, bottom, z) <= 0) bottom++;
-                int floor = cut >= 1 ? 0 : top + 1 - (int) Math.round((top - bottom + 1) * cut);
+                int floor = holeFloor(cut, top, bottom);
                 // Up to the rock's top plus what faces() may have pushed out above it.
                 int ceiling = Math.min(sink.maxY() - 1, top + (int) FACE_DEPTH + 2);
                 for (int y = Math.max(floor, sink.minY()); y <= ceiling; y++) sink.clear(x, y, z);
             });
         });
+    }
+
+    /** The lowest block a sinkhole removing the given share clears from rock spanning bottom to top. */
+    private static int holeFloor(double cut, int top, int bottom) {
+        return cut >= 1 ? 0 : top + 1 - (int) Math.round((top - bottom + 1) * cut);
+    }
+
+    /** Whether a sinkhole clears column (x, z) through the rock's underside, as holes() cuts it. */
+    public static boolean holedThrough(long seed, List<Holes.Hole> holes, TerrainView view, int x, int z) {
+        double cut = Holes.cutFraction(seed, holes, x, z);
+        if (cut <= 0) return false;
+        if (cut >= 1) return true;
+        int top = 255;
+        while (top >= 0 && view.densityAt(x, top, z) <= 0) top--;
+        if (top < 0) return false;
+        int bottom = 0;
+        while (view.densityAt(x, bottom, z) <= 0) bottom++;
+        return holeFloor(cut, top, bottom) <= bottom;
     }
 
     /** Floods every column inside a lake's flat ring whose ground ended up below the water level. */
