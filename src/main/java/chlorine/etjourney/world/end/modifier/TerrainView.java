@@ -71,4 +71,7 @@ public interface TerrainView {
 
     /** Terrain answers for placing free-standing structures; the same for every chunk. */
     StructureProbe structures();
+
+    /** The structure answers with the lakes in: plants root on the ground the lakes leave, never on their water. */
+    StructureProbe plants();
 }

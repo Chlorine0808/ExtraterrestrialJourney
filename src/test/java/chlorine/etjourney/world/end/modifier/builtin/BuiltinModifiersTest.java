@@ -107,6 +107,11 @@ class BuiltinModifiersTest {
             }
 
             @Override
+            public StructureProbe plants() {
+                return null;
+            }
+
+            @Override
             public BlockSink upperBefore(int order) {
                 return null;
             }

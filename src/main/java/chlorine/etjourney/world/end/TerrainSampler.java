@@ -247,6 +247,51 @@ public final class TerrainSampler {
         };
     }
 
+    /**
+     * The structure probe with the ground as the lakes shape it, and very low under their water, so plants root on
+     * the shore and never on a lake. Lakes dropped for a reserved area count too: the answers must not depend on
+     * the asking chunk, since giant trees are kept per continent.
+     */
+    public StructureProbe plantProbe() {
+        StructureProbe bare = structureProbe();
+        Lakes.Probe lakes = lakeProbe();
+        return new StructureProbe() {
+
+            @Override
+            public double weight(String style, double x, double z) {
+                return bare.weight(style, x, z);
+            }
+
+            @Override
+            public double land(double x, double z) {
+                return bare.land(x, z);
+            }
+
+            @Override
+            public double ground(double x, double z) {
+                double top = bare.ground(x, z);
+                if (top <= -100) return top;
+                List<Lakes.Lake> near = Lakes.near(seed, x, z, 0, lakes);
+                return Lakes.wet(near, x, z, 0) ? -1000 : Lakes.shape(near, top, x, z);
+            }
+
+            @Override
+            public double underside(double x, double z) {
+                return bare.underside(x, z);
+            }
+
+            @Override
+            public boolean wet(double x, double z, double range) {
+                return Lakes.wet(Lakes.near(seed, x, z, range, lakes), x, z, range);
+            }
+
+            @Override
+            public double[] regionCentre(int cx, int cz) {
+                return bare.regionCentre(cx, cz);
+            }
+        };
+    }
+
     public double styleWeight(String style, double x, double z) {
         Style s = picker.byName(style);
         return s == null ? 0 : weights(x, z).of(s);
@@ -385,6 +430,11 @@ public final class TerrainSampler {
         @Override
         public StructureProbe structures() {
             return structureProbe();
+        }
+
+        @Override
+        public StructureProbe plants() {
+            return plantProbe();
         }
 
         @Override
