@@ -72,9 +72,9 @@ public final class FeatureModifiers {
         all.add(StructureModifiers.hanging(Mammatus.KIND, 856, m -> m.centreY + 0.4 * m.radius));
         all.add(StructureModifiers.voxels(Anvil.KIND, 857, EndBlock.STONE));
         // Mushrooms block by block, so their round caps are not cut into the 8-block grid's polygons.
-        all.add(StructureModifiers.voxels(Structures.MUSHROOMS, 859, EndBlock.STONE));
+        all.add(StructureModifiers.standingVoxels(Structures.MUSHROOMS, 859, EndBlock.STONE));
         all.add(StructureModifiers.ringlets());
-        all.add(StructureModifiers.voxels(Structures.CROSSES, 861, EndBlock.STONE));
+        all.add(StructureModifiers.standingVoxels(Structures.CROSSES, 861, EndBlock.STONE));
         all.add(StructureModifiers.voxels(Structures.HANGING_CHAINS, 862, EndBlock.CHAIN));
         all.add(StructureModifiers.voxels(Structures.SKY_CHAINS, 863, EndBlock.CHAIN));
         all.add(StructureModifiers.voxels(Lenticular.KIND, 864, EndBlock.STONE));
@@ -82,9 +82,9 @@ public final class FeatureModifiers {
         all.add(StructureModifiers.virga(866));
         all.add(StructureModifiers.voxels(Billow.KIND, 867, EndBlock.STONE));
         all.add(StructureModifiers.voxels(Paper.KIND, 868, EndBlock.STONE));
-        all.add(StructureModifiers.voxels(Enoki.KIND, 869, EndBlock.STONE));
-        all.add(StructureModifiers.voxels(Column.KIND, 870, EndBlock.STONE));
-        all.add(StructureModifiers.voxels(Tool.KIND, 872, EndBlock.STONE));
+        all.add(StructureModifiers.standingVoxels(Enoki.KIND, 869, EndBlock.STONE));
+        all.add(StructureModifiers.standingVoxels(Column.KIND, 870, EndBlock.STONE));
+        all.add(StructureModifiers.standingVoxels(Tool.KIND, 872, EndBlock.STONE));
         all.add(PlantModifiers.giantTrees(874));
         all.add(PlantModifiers.glowshrooms(875));
         all.add(PlantModifiers.lucentTrees(876));

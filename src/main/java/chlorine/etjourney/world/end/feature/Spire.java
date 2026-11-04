@@ -137,6 +137,17 @@ public final class Spire extends Structure {
     public Spire outsideHoles(long seed, List<Holes.Hole> holes) {
         List<Needle> kept = new ArrayList<>();
         for (Needle n : needles) if (Holes.cutFraction(seed, holes, n.x0, n.z0) <= 0) kept.add(n);
+        return keeping(kept);
+    }
+
+    /** The needles whose root is clear of lake water, or null when none are; the probe must know the lakes. */
+    public Spire outsideLakes(StructureProbe probe) {
+        List<Needle> kept = new ArrayList<>();
+        for (Needle n : needles) if (!probe.wet(n.x0, n.z0, n.radius + 1)) kept.add(n);
+        return keeping(kept);
+    }
+
+    private Spire keeping(List<Needle> kept) {
         if (kept.size() == needles.length) return this;
         return kept.isEmpty() ? null : new Spire(centreX, centreZ, kept.toArray(new Needle[0]));
     }

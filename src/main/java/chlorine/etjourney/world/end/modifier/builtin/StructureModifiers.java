@@ -32,14 +32,35 @@ public final class StructureModifiers {
      * density grid resolves. A block is placed where the structure's density at its centre is not negative.
      */
     public static Modifier voxels(Structure.Kind<? extends Structure> kind, int order, EndBlock block) {
+        return voxels(kind, order, block, false);
+    }
+
+    /** Voxels of a kind that stands on the ground, leaving out one with a foot in a lake's water. */
+    public static Modifier standingVoxels(Structure.Kind<? extends Structure> kind, int order, EndBlock block) {
+        return voxels(kind, order, block, true);
+    }
+
+    private static Modifier voxels(Structure.Kind<? extends Structure> kind, int order, EndBlock block,
+        boolean standing) {
         return FeatureModifiers.blockModifier(order, (area, view, sink) -> {
             for (Structure s : kind.near(area.seed, sink.originX() + 8, sink.originZ() + 8, 12, view.structures())) {
+                if (standing && wet(view, s)) continue;
                 List<Area> reserved = view
                     .reservedAt((int) Math.floor(s.centreX) >> 4, (int) Math.floor(s.centreZ) >> 4);
                 Shape placed = placed(reserved, s, kind);
                 if (placed != null) draw(placed, sink, block);
             }
         });
+    }
+
+    /** Clear water kept around a foot, so a stem does not stand at the water's edge either. */
+    private static final double FOOT_MARGIN = 2;
+
+    /** Whether a foot of the structure stands in a lake's water; the same from every chunk. */
+    static boolean wet(TerrainView view, Structure s) {
+        for (double[] foot : s.feet()) if (view.standing()
+            .wet(foot[0], foot[1], FOOT_MARGIN)) return true;
+        return false;
     }
 
     /** How far up or down the rock's real underside is looked for, from the one the structure was placed under. */
@@ -209,6 +230,7 @@ public final class StructureModifiers {
             for (Spire s : Spire.KIND.near(area.seed, sink.originX() + 8, sink.originZ() + 8, 12, view.structures())) {
                 if (!stands(view, s, Spire.KIND)) continue;
                 Spire kept = s.outsideHoles(area.seed, view.holes());
+                if (kept != null) kept = kept.outsideLakes(view.standing());
                 if (kept != null) draw(kept, sink, EndBlock.STONE);
             }
         });
@@ -272,6 +294,8 @@ public final class StructureModifiers {
             public void shapes(ChunkArea area, List<Shape> out, double weight) {
                 double cx = area.originX() + 8, cz = area.originZ() + 8;
                 for (Structure s : kind.near(area.seed, cx, cz, 16, area.view.structures())) {
+                    // Every kind drawn this way stands on the ground or has no feet.
+                    if (wet(area.view, s)) continue;
                     // Decided by the structure's own centre chunk, so every chunk it reaches agrees.
                     List<Area> reserved = area.view
                         .reservedAt((int) Math.floor(s.centreX) >> 4, (int) Math.floor(s.centreZ) >> 4);
