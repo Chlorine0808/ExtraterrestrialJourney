@@ -75,7 +75,10 @@ public final class StructureModifiers {
                 if (!stands(view, v, Virga.KIND)) continue;
                 int dy = liftTo(view, v, v.top - 2);
                 int root = (int) v.top + dy;
+                // Under a sinkhole's shaft a streak hangs in the open hole: the density still has the rock it cut.
                 Virga kept = v.rootedOnly((x, z) -> rockAbove(view, x, root, z) > 0);
+                if (kept != null) kept = kept
+                    .clearOf((x, z) -> FeatureModifiers.holedThrough(area.seed, view.holesNear(x, z, 0), view, x, z));
                 if (kept == null) continue;
                 Shape shape = lifted(kept, dy);
                 draw(shape, sink, EndBlock.STONE);

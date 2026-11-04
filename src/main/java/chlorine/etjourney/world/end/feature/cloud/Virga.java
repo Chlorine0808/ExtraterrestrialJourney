@@ -75,7 +75,7 @@ public final class Virga extends Structure {
         this.salt = salt;
     }
 
-    /** Whether a streak rooted at the top of column (x, z) has rock to hang from. */
+    /** A test on column (x, z): for rootedOnly, whether a streak there has rock to hang from. */
     public interface Roots {
 
         boolean rooted(int x, int z);
@@ -93,6 +93,33 @@ public final class Virga extends Structure {
         if (n == strands.length) return this;
         if (n == 0) return null;
         return new Virga(centreX, centreZ, top, Arrays.copyOf(kept, n), longest, spread, lean, heading, salt);
+    }
+
+    /** The streaks that pass under no blocked column, root to tip, or null when none do; this virga when all do. */
+    public Virga clearOf(Roots blocked) {
+        double[] kept = new double[strands.length];
+        int n = 0;
+        for (int i = 0; i < strands.length; i += 3) {
+            if (crosses(strands[i], strands[i + 1], strands[i + 2], blocked)) continue;
+            System.arraycopy(strands, i, kept, n, 3);
+            n += 3;
+        }
+        if (n == strands.length) return this;
+        if (n == 0) return null;
+        return new Virga(centreX, centreZ, top, Arrays.copyOf(kept, n), longest, spread, lean, heading, salt);
+    }
+
+    /** Whether a streak from (x, z) of the given length passes under a blocked column as it leans. */
+    private boolean crosses(double x, double z, double length, Roots blocked) {
+        int lastX = Integer.MIN_VALUE, lastZ = Integer.MIN_VALUE;
+        for (int depth = 0; depth <= length; depth++) {
+            int bx = (int) Math.floor(x + leanX * depth), bz = (int) Math.floor(z + leanZ * depth);
+            if (bx == lastX && bz == lastZ) continue;
+            if (blocked.rooted(bx, bz)) return true;
+            lastX = bx;
+            lastZ = bz;
+        }
+        return false;
     }
 
     @Override

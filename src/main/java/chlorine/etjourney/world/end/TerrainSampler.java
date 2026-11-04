@@ -383,6 +383,11 @@ public final class TerrainSampler {
         }
 
         @Override
+        public List<Holes.Hole> holesNear(double x, double z, double range) {
+            return Collections.emptyList();
+        }
+
+        @Override
         public List<ZoneIslands.Island> zoneIslands() {
             return Collections.emptyList();
         }
