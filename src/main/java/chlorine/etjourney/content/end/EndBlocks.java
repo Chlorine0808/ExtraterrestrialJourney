@@ -47,12 +47,18 @@ public final class EndBlocks {
         registerLargePlants();
     }
 
-    /** Registers each ingot and lets its ore block and raw drop smelt into it. */
+    /** Registers each ingot and lets its ore block and raw drop, or its raw material, smelt into it. */
     private static void registerIngots(Map<String, OreBlock> ores) {
         for (IngotTable.Entry entry : IngotTable.ENTRIES) {
             MaterialItem ingot = new MaterialItem(entry.name);
             GameRegistry.registerItem(ingot, entry.name);
             OreDictionary.registerOre(entry.oreName, ingot);
+            if (entry.raw != null) {
+                MaterialItem raw = new MaterialItem(entry.raw);
+                GameRegistry.registerItem(raw, entry.raw);
+                OreDictionary.registerOre(entry.rawOreName, raw);
+                GameRegistry.addSmelting(raw, new ItemStack(ingot), entry.experience);
+            }
             if (entry.ore == null) continue;
             OreBlock ore = ores.get(entry.ore);
             GameRegistry.addSmelting(ore, new ItemStack(ingot), entry.experience);

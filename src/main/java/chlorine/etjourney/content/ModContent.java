@@ -1,5 +1,6 @@
 package chlorine.etjourney.content;
 
+import chlorine.etjourney.content.end.EndAcid;
 import chlorine.etjourney.content.end.EndBlocks;
 import chlorine.etjourney.content.end.EndSpawns;
 import chlorine.etjourney.core.util.ModLog;
@@ -11,6 +12,7 @@ public final class ModContent {
 
     public static void preInit() {
         EndBlocks.preInit();
+        EndAcid.preInit();
         ModLog.LOG.debug("content: preInit");
     }
 
