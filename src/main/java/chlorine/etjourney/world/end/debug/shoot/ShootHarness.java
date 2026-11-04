@@ -38,6 +38,7 @@ import chlorine.etjourney.world.end.shoot.Report;
 import chlorine.etjourney.world.end.shoot.ShotList;
 import chlorine.etjourney.world.end.shoot.ShotPlanner;
 import chlorine.etjourney.world.end.shoot.ShotRecord;
+import chlorine.etjourney.world.end.shoot.ShotsOutput;
 import chlorine.etjourney.world.end.shoot.Watchdog;
 import chlorine.etjourney.world.end.shoot.WorldPlan;
 import cpw.mods.fml.common.FMLCommonHandler;
@@ -319,8 +320,9 @@ public final class ShootHarness {
     }
 
     private Path runDir(Minecraft mc) {
-        return new File(mc.mcDataDir, "etj-shots").toPath()
-            .resolve(stamp);
+        return ShotsOutput.root(System.getProperty("etj.shotsDir"), mc.mcDataDir)
+            .toPath()
+            .resolve(ShotsOutput.folder(stamp, System.getProperty("etj.shotsBranch")));
     }
 
     private Path writeReport(Minecraft mc) {
