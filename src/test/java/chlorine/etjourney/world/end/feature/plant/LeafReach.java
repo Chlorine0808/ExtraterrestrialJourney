@@ -16,11 +16,13 @@ final class LeafReach {
     private LeafReach() {}
 
     private static boolean isWood(EndBlock b) {
-        return b == EndBlock.GROVE_LOG || b == EndBlock.HIGHLAND_LOG;
+        return b == EndBlock.GROVE_LOG || b == EndBlock.HIGHLAND_LOG || b == EndBlock.LUCENT_LOG;
     }
 
     private static boolean isLeaf(EndBlock b) {
-        return b == EndBlock.GROVE_LEAVES || b == EndBlock.GROVE_BLOSSOM || b == EndBlock.HIGHLAND_LEAVES;
+        return b == EndBlock.GROVE_LEAVES || b == EndBlock.GROVE_BLOSSOM
+            || b == EndBlock.HIGHLAND_LEAVES
+            || b == EndBlock.LUCENT_LEAVES;
     }
 
     private static long pack(int x, int y, int z) {

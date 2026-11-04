@@ -24,7 +24,11 @@ final class LargePlantBlockTable {
         BUDDING,
         BUD,
         /** Fur that hangs from a gill or from fur above it. */
-        HANGING;
+        HANGING,
+        /** Outer leaves beside the leaves they grow on. */
+        FUR,
+        /** A solid glowing lantern. */
+        LANTERN;
 
         /** Ore dictionary name, or null. */
         final String oreName;
@@ -48,12 +52,15 @@ final class LargePlantBlockTable {
         final EndBlock kind;
         final Type type;
         final int light;
+        /** Registry names of the blocks a hanging block may stay under, or fur beside; empty for other types. */
+        final List<String> hangsFrom;
 
-        Entry(String name, EndBlock kind, Type type, int light) {
+        Entry(String name, EndBlock kind, Type type, int light, String... hangsFrom) {
             this.name = name;
             this.kind = kind;
             this.type = type;
             this.light = light;
+            this.hangsFrom = Collections.unmodifiableList(Arrays.asList(hangsFrom));
         }
     }
 
@@ -97,8 +104,14 @@ final class LargePlantBlockTable {
             new Entry("mycelia_stem", EndBlock.MYCELIA_STEM, Type.LOG, 0),
             new Entry("mycelia_cap", EndBlock.MYCELIA_CAP, Type.CAP, 0),
             new Entry("mycelia_gill", EndBlock.MYCELIA_GILL, Type.CAP, 10),
-            new Entry("mycelia_vine", EndBlock.MYCELIA_VINE, Type.HANGING, 10),
-            new Entry("mycelia_vine_last", EndBlock.MYCELIA_VINE_LAST, Type.HANGING, 10),
+            new Entry("mycelia_vine", EndBlock.MYCELIA_VINE, Type.HANGING, 10, "mycelia_gill", "mycelia_vine"),
+            new Entry(
+                "mycelia_vine_last",
+                EndBlock.MYCELIA_VINE_LAST,
+                Type.HANGING,
+                10,
+                "mycelia_gill",
+                "mycelia_vine"),
             new Entry("amber_root", EndBlock.AMBER_ROOT, Type.LOG, 0),
             new Entry("amber_seed", EndBlock.AMBER_SEED, Type.GLOW, 10),
             new Entry("amber_stem", EndBlock.AMBER_STEM, Type.STEM, 0),
@@ -107,7 +120,27 @@ final class LargePlantBlockTable {
             new Entry("crystal_bud_small", EndBlock.CRYSTAL_BUD_SMALL, Type.BUD, 1),
             new Entry("crystal_bud_medium", EndBlock.CRYSTAL_BUD_MEDIUM, Type.BUD, 2),
             new Entry("crystal_bud_large", EndBlock.CRYSTAL_BUD_LARGE, Type.BUD, 4),
-            new Entry("crystal_cluster", EndBlock.CRYSTAL_CLUSTER, Type.BUD, 5)));
+            new Entry("crystal_cluster", EndBlock.CRYSTAL_CLUSTER, Type.BUD, 5),
+            new Entry("lucent_log", EndBlock.LUCENT_LOG, Type.LOG, 0),
+            new Entry("lucent_leaves", EndBlock.LUCENT_LEAVES, Type.LEAVES, 0),
+            new Entry("lucent_fur", EndBlock.LUCENT_FUR, Type.FUR, 0, "lucent_leaves"),
+            new Entry(
+                "lucent_vine",
+                EndBlock.LUCENT_VINE,
+                Type.HANGING,
+                6,
+                "lucent_leaves",
+                "lucent_fur",
+                "lucent_vine"),
+            new Entry(
+                "lucent_vine_last",
+                EndBlock.LUCENT_VINE_LAST,
+                Type.HANGING,
+                10,
+                "lucent_leaves",
+                "lucent_fur",
+                "lucent_vine"),
+            new Entry("lucent_lantern", EndBlock.LUCENT_LANTERN, Type.LANTERN, 15)));
 
     static final List<Sapling> SAPLINGS = Collections.unmodifiableList(
         Arrays.asList(
@@ -119,7 +152,8 @@ final class LargePlantBlockTable {
             new Wood("grove_planks", "grove_log"),
             new Wood("highland_planks", "highland_log"),
             new Wood("mycelia_planks", "mycelia_stem"),
-            new Wood("amber_planks", "amber_root")));
+            new Wood("amber_planks", "amber_root"),
+            new Wood("lucent_planks", "lucent_log")));
 
     private LargePlantBlockTable() {}
 }

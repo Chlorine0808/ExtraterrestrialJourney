@@ -16,7 +16,9 @@ public enum Flora {
     MYCELIA_SPROUT(EndBlock.MYCELIA_SPROUT, EndBiome.MYCELIA, 0.12, 0, 0),
     MYCELIA_SMALLSHROOM(EndBlock.MYCELIA_SMALLSHROOM, EndBiome.MYCELIA, 0, 1.5, 6),
     AMBER_REED(EndBlock.AMBER_REED, EndBiome.AMBER, 0.06, 0, 0),
-    AMBER_BULB(EndBlock.AMBER_BULB, EndBiome.AMBER, 0, 0.5, 5);
+    AMBER_BULB(EndBlock.AMBER_BULB, EndBiome.AMBER, 0, 0.5, 5),
+    LUCENT_GRASS(EndBlock.LUCENT_GRASS, EndBiome.LUCENTWOODS, 0.15, 0, 0),
+    LUCENT_BLOOM(EndBlock.LUCENT_BLOOM, EndBiome.LUCENTWOODS, 0, 1.0, 6);
 
     public static final int WINDOW = 16;
     /** Most surfaces one column may report. */

@@ -20,6 +20,8 @@ public enum EndBlock {
     MYCELIA_FILL,
     AMBER_TOP,
     AMBER_FILL,
+    LUCENTWOODS_TOP,
+    LUCENTWOODS_FILL,
     ENDER_GOLD_ORE,
     ENDER_PLATINUM_ORE,
     SAKURA_GOLD_ORE,
@@ -46,6 +48,8 @@ public enum EndBlock {
     MYCELIA_SMALLSHROOM,
     AMBER_REED,
     AMBER_BULB,
+    LUCENT_GRASS,
+    LUCENT_BLOOM,
     /** Large plants and crystals. */
     GROVE_LOG,
     GROVE_LEAVES,
@@ -66,6 +70,12 @@ public enum EndBlock {
     CRYSTAL_BUD_MEDIUM,
     CRYSTAL_BUD_LARGE,
     CRYSTAL_CLUSTER,
+    LUCENT_LOG,
+    LUCENT_LEAVES,
+    LUCENT_FUR,
+    LUCENT_VINE,
+    LUCENT_VINE_LAST,
+    LUCENT_LANTERN,
     /** Links of hanging and sky chains. */
     CHAIN,
     /** Shells of biospheres. */

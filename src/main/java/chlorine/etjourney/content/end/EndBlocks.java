@@ -113,6 +113,12 @@ public final class EndBlocks {
                 case HANGING:
                     block = new EndHangingBlock(entry);
                     break;
+                case FUR:
+                    block = new EndFurBlock(entry);
+                    break;
+                case LANTERN:
+                    block = new EndLanternBlock(entry);
+                    break;
                 default:
                     continue;
             }

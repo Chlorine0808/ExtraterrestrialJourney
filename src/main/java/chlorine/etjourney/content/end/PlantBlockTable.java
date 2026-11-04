@@ -35,7 +35,9 @@ final class PlantBlockTable {
             new Entry("mycelia_sprout", EndBlock.MYCELIA_SPROUT, true, 0),
             new Entry("mycelia_smallshroom", EndBlock.MYCELIA_SMALLSHROOM, false, 7),
             new Entry("amber_reed", EndBlock.AMBER_REED, true, 0),
-            new Entry("amber_bulb", EndBlock.AMBER_BULB, false, 4)));
+            new Entry("amber_bulb", EndBlock.AMBER_BULB, false, 4),
+            new Entry("lucent_grass", EndBlock.LUCENT_GRASS, true, 0),
+            new Entry("lucent_bloom", EndBlock.LUCENT_BLOOM, false, 7)));
 
     private PlantBlockTable() {}
 }

@@ -26,7 +26,7 @@ import chlorine.etjourney.world.end.reserve.Reservations;
  */
 class GiantTreeDrawTest {
 
-    private static final long SEED = 77L;
+    private static final long SEED = 82L;
     private static final TerrainSampler SAMPLER = new TerrainSampler(SEED, new RegionPicker(Styles.all()));
     private static final double[] ANCHOR = firstAnchor();
     private static final int BASE = (int) Math.floor(ANCHOR[1]);

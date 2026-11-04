@@ -50,7 +50,13 @@ class LargePlantBlockTableTest {
             EndBlock.CRYSTAL_BUD_SMALL,
             EndBlock.CRYSTAL_BUD_MEDIUM,
             EndBlock.CRYSTAL_BUD_LARGE,
-            EndBlock.CRYSTAL_CLUSTER);
+            EndBlock.CRYSTAL_CLUSTER,
+            EndBlock.LUCENT_LOG,
+            EndBlock.LUCENT_LEAVES,
+            EndBlock.LUCENT_FUR,
+            EndBlock.LUCENT_VINE,
+            EndBlock.LUCENT_VINE_LAST,
+            EndBlock.LUCENT_LANTERN);
         Set<EndBlock> bound = EnumSet.noneOf(EndBlock.class);
         for (LargePlantBlockTable.Entry e : LargePlantBlockTable.ENTRIES) {
             assertTrue(bound.add(e.kind), "twice: " + e.kind);
@@ -100,8 +106,12 @@ class LargePlantBlockTableTest {
                 assertEquals(0, t.flammability, e.name);
             }
         }
-        assertEquals(new HashSet<>(Arrays.asList("grove_log", "highland_log", "mycelia_stem", "amber_root")), logs);
-        assertEquals(new HashSet<>(Arrays.asList("grove_leaves", "grove_blossom", "highland_leaves")), leaves);
+        assertEquals(
+            new HashSet<>(Arrays.asList("grove_log", "highland_log", "mycelia_stem", "amber_root", "lucent_log")),
+            logs);
+        assertEquals(
+            new HashSet<>(Arrays.asList("grove_leaves", "grove_blossom", "highland_leaves", "lucent_leaves")),
+            leaves);
         assertEquals("plankWood", LargePlantBlockTable.PLANKS_ORE);
         assertEquals(5, LargePlantBlockTable.PLANKS_FIRE_SPREAD);
         assertEquals(20, LargePlantBlockTable.PLANKS_FLAMMABILITY);
@@ -124,7 +134,8 @@ class LargePlantBlockTableTest {
                 // Buds and fur are drawn crossed, so their corners must be clear.
                 check(
                     "textures/blocks/" + e.name + ".png",
-                    e.type == LargePlantBlockTable.Type.BUD || e.type == LargePlantBlockTable.Type.HANGING);
+                    e.type == LargePlantBlockTable.Type.BUD || e.type == LargePlantBlockTable.Type.HANGING
+                        || e.type == LargePlantBlockTable.Type.FUR);
             }
         }
         for (LargePlantBlockTable.Wood w : LargePlantBlockTable.WOODS)

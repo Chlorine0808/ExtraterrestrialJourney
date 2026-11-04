@@ -19,8 +19,6 @@ public final class Glowshrooms {
     public static final int NORMAL_CELL = 16, GIANT_CELL = 256, GIANT_MARGIN = 64;
     /** Fill bound of the largest Giant: ceil(22 * 3.5) + 2 = 79, rounded up. */
     public static final int GIANT_REACH = 80;
-    /** The y at which the block passes split; a fur run never crosses it. */
-    private static final int SPLIT_Y = 128;
     private static final int NORMAL_NEIGHBOURS = 2;
     private static final long SALT = 0x3C6EF372FE94F82BL;
     private static final long GIANT_SALT = 0x5851F42D4C957F2DL;
@@ -182,16 +180,11 @@ public final class Glowshrooms {
         return giants;
     }
 
-    /**
-     * Writes the anchors' cells that fall in the sink, in list order, into air only. A fur run belongs to the half
-     * (below or above {@code SPLIT_Y}) that holds its gill, and its cells in the other half are cut; it is written
-     * only when its gill was placed and every cell of it in the sink is air. So both halves, and any chunk, reach
-     * the same verdict.
-     */
+    /** Writes the anchors' cells that fall in the sink, in list order, into air only; fur runs as HangingRun judges. */
     public static void draw(List<Anchor> anchors, BlockSink sink) {
         for (Anchor a : anchors) {
             if (!touches(a, sink)) continue;
-            final Run run = new Run(sink);
+            final HangingRun run = new HangingRun(sink, 4);
             final Set<Long> gills = new HashSet<>();
             final boolean[] open = { false };
             a.shape.forEach((dx, dy, dz, block) -> {
@@ -235,47 +228,6 @@ public final class Glowshrooms {
     }
 
     private static boolean inside(BlockSink s, int x, int y, int z) {
-        return x >= s.originX() && x < s.originX() + s.width()
-            && z >= s.originZ()
-            && z < s.originZ() + s.width()
-            && y >= s.minY()
-            && y < s.maxY();
-    }
-
-    /** The fur cells of one run, collected so the run can be judged whole. */
-    private static final class Run {
-
-        private final BlockSink sink;
-        private final int[] xs = new int[4], ys = new int[4], zs = new int[4];
-        private final EndBlock[] kinds = new EndBlock[4];
-        private int n, half;
-        private boolean gillPlaced;
-
-        Run(BlockSink sink) {
-            this.sink = sink;
-        }
-
-        void start(int gillY, boolean placed) {
-            n = 0;
-            half = gillY / SPLIT_Y;
-            gillPlaced = placed;
-        }
-
-        void add(int x, int y, int z, EndBlock b) {
-            if (y / SPLIT_Y != half || n == kinds.length) return;
-            xs[n] = x;
-            ys[n] = y;
-            zs[n] = z;
-            kinds[n++] = b;
-        }
-
-        void flush() {
-            boolean clear = gillPlaced;
-            for (int i = 0; i < n && clear; i++)
-                if (inside(sink, xs[i], ys[i], zs[i]) && !sink.isAir(xs[i], ys[i], zs[i])) clear = false;
-            if (clear) for (int i = 0; i < n; i++)
-                if (inside(sink, xs[i], ys[i], zs[i])) sink.place(xs[i], ys[i], zs[i], kinds[i]);
-            n = 0;
-        }
+        return HangingRun.inside(s, x, y, z);
     }
 }
