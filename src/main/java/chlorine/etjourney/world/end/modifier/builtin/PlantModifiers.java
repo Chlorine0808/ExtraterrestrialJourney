@@ -86,12 +86,12 @@ public final class PlantModifiers {
                 Continent.Seed s = Continent.seedAt(area.seed, i, j);
                 if (s == null || Math.hypot(s.x - cx, s.z - cz) > REACH) continue;
                 if (!seen.add(ContinentIds.of(area.seed, s))) continue;
-                for (double[] a : GiantTrees.anchors(area.seed, s, view.structures())) {
+                for (double[] a : GiantTrees.anchors(area.seed, s, view.plants())) {
                     if (Math.hypot(a[0] - cx, a[2] - cz) > REACH) continue;
                     if (!GiantTree.reaches(a, sink.minY(), sink.maxY())) continue;
                     List<Area> reserved = view.reservedAt((int) Math.floor(a[0]) >> 4, (int) Math.floor(a[2]) >> 4);
                     if (blocked(reserved, a)) continue;
-                    new GiantTree(area.seed, a, view.structures()).draw(sink);
+                    new GiantTree(area.seed, a, view.plants()).draw(sink);
                 }
             }
         }

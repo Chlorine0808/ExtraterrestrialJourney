@@ -24,7 +24,7 @@ class GiantTreesTest {
 
     private static final long SEED = 77L;
     private static final TerrainSampler SAMPLER = new TerrainSampler(SEED, new RegionPicker(Styles.all()));
-    private static final StructureProbe PROBE = SAMPLER.structureProbe();
+    private static final StructureProbe PROBE = SAMPLER.plantProbe();
     private static final double MIN_RANGE = 1500, MAX_RANGE = 6000;
 
     /** One member seed per continent id found by the scan. */

@@ -42,7 +42,7 @@ class GiantTreeDrawTest {
             for (int cz = -40; cz <= 40; cz++) {
                 Continent.Seed s = Continent.seedAt(SEED, cx, cz);
                 if (s == null) continue;
-                List<double[]> anchors = GiantTrees.anchors(SEED, s, SAMPLER.structureProbe());
+                List<double[]> anchors = GiantTrees.anchors(SEED, s, SAMPLER.plantProbe());
                 if (!anchors.isEmpty() && anchors.get(0)[1] < 140) return anchors.get(0);
             }
         }
@@ -94,7 +94,7 @@ class GiantTreeDrawTest {
     /** The tree alone drawn into an empty chunk. */
     private static Blocks alone(int cx, int cz) {
         MemorySink sink = new MemorySink(cx, cz, 0, 256);
-        new GiantTree(SEED, ANCHOR, SAMPLER.structureProbe()).draw(sink);
+        new GiantTree(SEED, ANCHOR, SAMPLER.plantProbe()).draw(sink);
         return sink::get;
     }
 

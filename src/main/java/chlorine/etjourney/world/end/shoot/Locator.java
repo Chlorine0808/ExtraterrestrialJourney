@@ -95,7 +95,7 @@ final class Locator {
                 long id = ContinentIds.of(seed, s);
                 if (chosen.contains(id)) return null;
                 double[] best = null;
-                for (double[] a : GiantTrees.anchors(seed, s, sampler.structureProbe()))
+                for (double[] a : GiantTrees.anchors(seed, s, sampler.plantProbe()))
                     if (best == null || Math.hypot(a[0] - ox, a[2] - oz) < Math.hypot(best[0] - ox, best[2] - oz))
                         best = a;
                 return best == null ? null : new double[] { best[0], best[1], best[2], Double.longBitsToDouble(id) };
