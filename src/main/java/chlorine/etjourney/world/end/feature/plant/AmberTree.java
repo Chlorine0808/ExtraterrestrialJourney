@@ -20,6 +20,8 @@ public final class AmberTree {
     private static final int FIT_TRIES = 6;
     private static final int STRAND_POINTS = 10;
     private static final int REACH = 12;
+    private static final int[][] FACES = { { 1, 0, 0 }, { -1, 0, 0 }, { 0, 1, 0 }, { 0, -1, 0 }, { 0, 0, 1 },
+        { 0, 0, -1 } };
 
     /** The ground as the tree sees it. */
     public interface Ground {
@@ -106,10 +108,10 @@ public final class AmberTree {
         double pick = r.nextDouble();
         int strands = pick < 0.45 ? 4 : pick < 0.85 ? 5 : 6;
         double merge = tipY + (2.5 + r.nextDouble() * 1.5) * scale;
-        double twist = (1.2 + r.nextDouble()) * (r.nextBoolean() ? 1 : -1);
+        double twist = (0.6 + r.nextDouble() * 0.6) * (r.nextBoolean() ? 1 : -1);
         double start = r.nextDouble() * Math.PI * 2;
         double legs = radius + 2.2 * scale;
-        double thick = Math.max(1.1, 1.3 * scale), thin = Math.max(1.1, 1.1 * scale);
+        double thick = 0.95, thin = 0.8;
         Sdf wood = null;
         List<List<double[]>> paths = new ArrayList<>();
         for (int s = 0; s < strands; s++) {
@@ -124,7 +126,7 @@ public final class AmberTree {
                 double follow = Math.max(0, Math.min(1, (y - cy) / (tipY - cy)));
                 double ax = lx * follow, az = lz * follow;
                 double taper = legs + (thin - legs) * t;
-                double hug = t >= 1 ? 0 : clearance(seed, ax, y, az, a, thick * 0.8);
+                double hug = t >= 1 ? 0 : clearance(seed, ax, y, az, a, thick + 0.3);
                 double d = Math.max(taper, hug);
                 path.add(new double[] { ax + Math.cos(a) * d, y, az + Math.sin(a) * d });
             }
@@ -141,18 +143,23 @@ public final class AmberTree {
         double topY = (13 + r.nextDouble() * 3) * scale;
         List<double[]> trunk = Spline.make(lx, merge, lz, lx, topY, lz, 5);
         Spline.jitter(trunk, r, 0.6, 0, 0.6, 2);
-        wood = wood.smoothUnion(Spline.shape(trunk, Math.max(1.2, 1.6 * scale), 1.1), 2);
+        wood = wood.smoothUnion(Spline.shape(trunk, 1.3, 0.9), 2);
 
         Map<Long, EndBlock> cells = new LinkedHashMap<>();
         int top = (int) Math.ceil(topY + 2);
         for (int x = -REACH; x <= REACH; x++) {
             for (int z = -REACH; z <= REACH; z++) {
                 for (int y = -SINK - 4; y <= top; y++) {
-                    if (wood.distance(x, y, z) < 0) cells.put(SdfFill.key(x, y, z), EndBlock.AMBER_ROOT);
-                    else if (seed.distance(x, y, z) < 0) cells.put(SdfFill.key(x, y, z), EndBlock.AMBER_SEED);
+                    // Sample at the block's centre, where line() puts its points too.
+                    double px = x + 0.5, py = y + 0.5, pz = z + 0.5;
+                    if (wood.distance(px, py, pz) < 0) cells.put(SdfFill.key(x, y, z), EndBlock.AMBER_ROOT);
+                    else if (seed.distance(px, py, pz) < 0) cells.put(SdfFill.key(x, y, z), EndBlock.AMBER_SEED);
                 }
             }
         }
+        // The centre lines keep the thin strands face-connected.
+        for (List<double[]> path : paths) line(path, cells);
+        line(trunk, cells);
 
         // Branches out of the upper strands, each with a fruit at its end.
         int branches = 2 + r.nextInt(3);
@@ -180,7 +187,11 @@ public final class AmberTree {
                 new double[] { from[0] + (tip[0] - from[0]) * stop, from[1] + (tip[1] - from[1]) * stop,
                     from[2] + (tip[2] - from[2]) * stop });
             line(branch, cells);
-            fruit(tip, size, cells);
+            if (!fruit(tip, size, cells)) {
+                // Rounding left a gap: run the branch on into the fruit's centre.
+                branch.set(1, tip);
+                line(branch, cells);
+            }
         }
 
         // Roots crawling out from each leg over the ground.
@@ -248,19 +259,25 @@ public final class AmberTree {
         }
     }
 
-    /** A ball of seed around the tip, leaving wood as it is. */
-    private static void fruit(double[] tip, double radius, Map<Long, EndBlock> cells) {
+    /** A ball of seed around the tip, leaving wood as it is; whether it touches wood. */
+    private static boolean fruit(double[] tip, double radius, Map<Long, EndBlock> cells) {
         int cx = (int) Math.floor(tip[0]), cy = (int) Math.floor(tip[1]), cz = (int) Math.floor(tip[2]);
         int reach = (int) Math.ceil(radius);
+        List<Long> placed = new ArrayList<>();
         for (int x = -reach; x <= reach; x++) {
             for (int y = -reach; y <= reach; y++) {
                 for (int z = -reach; z <= reach; z++) {
                     if (x * x + y * y + z * z > radius * radius + 0.5) continue;
                     long k = SdfFill.key(cx + x, cy + y, cz + z);
-                    if (cells.get(k) != EndBlock.AMBER_ROOT) cells.put(k, EndBlock.AMBER_SEED);
+                    if (cells.get(k) == EndBlock.AMBER_ROOT) continue;
+                    cells.put(k, EndBlock.AMBER_SEED);
+                    placed.add(k);
                 }
             }
         }
+        for (long k : placed) for (int[] f : FACES)
+            if (cells.get(SdfFill.offset(k, f[0], f[1], f[2])) == EndBlock.AMBER_ROOT) return true;
+        return false;
     }
 
     private static double sq(double v) {
