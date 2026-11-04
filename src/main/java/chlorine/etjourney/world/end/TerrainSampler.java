@@ -249,8 +249,8 @@ public final class TerrainSampler {
 
     /**
      * The structure probe with the ground as the lakes shape it, and very low under their water, so what stands on
-     * the ground stands on the shore and never on a lake. Lakes dropped for a reserved area count too: the answers must not depend on
-     * the asking chunk, since giant trees are kept per continent.
+     * the ground stands on the shore and never on a lake. Lakes dropped for a reserved area count too: the answers
+     * must not depend on the asking chunk, since giant trees are kept per continent.
      */
     public StructureProbe standingProbe() {
         StructureProbe bare = structureProbe();
