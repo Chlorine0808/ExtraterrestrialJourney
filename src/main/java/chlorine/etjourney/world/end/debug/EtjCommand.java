@@ -2,6 +2,7 @@ package chlorine.etjourney.world.end.debug;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -297,9 +298,17 @@ public final class EtjCommand extends CommandBase {
 
     private static void lake(EntityPlayerMP player, TerrainSampler sampler) {
         long seed = sampler.seed();
+        WorldServer end = (WorldServer) player.worldObj;
+        IChunkProvider generator = end.theChunkProviderServer.currentChunkProvider;
         double[] hit = EndSearch.nearestInCells(Lakes.CELL, player.posX, player.posZ, (cx, cz) -> {
             Lakes.Lake l = Lakes.inCell(seed, cx, cz, sampler.lakeProbe());
-            return l == null ? null : new double[] { l.x, l.z, l.waterLevel + 3 };
+            if (l == null) return null;
+            // Generation drops a lake touching a reserved area; skip those too.
+            List<Area> reserved = Reservations
+                .forChunk(generator, end, seed, (int) Math.floor(l.x) >> 4, (int) Math.floor(l.z) >> 4);
+            if (Lakes.withoutReserved(Collections.singletonList(l), reserved)
+                .isEmpty()) return null;
+            return new double[] { l.x, l.z, l.waterLevel + 3 };
         });
         if (hit == null) say(player, "No lake within " + EndSearch.RADIUS + " blocks");
         else teleport(player, hit[0], hit[2], hit[1], "lake");

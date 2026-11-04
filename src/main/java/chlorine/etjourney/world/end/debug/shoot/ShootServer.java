@@ -1,5 +1,6 @@
 package chlorine.etjourney.world.end.debug.shoot;
 
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -19,6 +20,7 @@ import net.minecraft.world.WorldServer;
 import net.minecraft.world.chunk.IChunkProvider;
 import net.minecraftforge.common.DimensionManager;
 
+import chlorine.etjourney.world.end.ChunkPlan;
 import chlorine.etjourney.world.end.EndTerrain;
 import chlorine.etjourney.world.end.TerrainSampler;
 import chlorine.etjourney.world.end.biosphere.SampleWorlds;
@@ -26,6 +28,7 @@ import chlorine.etjourney.world.end.debug.EtjArgs;
 import chlorine.etjourney.world.end.feature.Biosphere;
 import chlorine.etjourney.world.end.feature.BiosphereSource;
 import chlorine.etjourney.world.end.modifier.builtin.StructureModifiers;
+import chlorine.etjourney.world.end.reserve.Reservations;
 import chlorine.etjourney.world.end.shoot.Framing;
 import chlorine.etjourney.world.end.shoot.PlannedShot;
 import chlorine.etjourney.world.end.shoot.Pocket;
@@ -81,7 +84,10 @@ public final class ShootServer {
     public static List<PlannedShot> expand(ShotList list) {
         long seed = seed(list);
         WorldServer end = end();
-        return ShotPlanner.expand(list, EndTerrain.sampler(seed), b -> {
+        IChunkProvider generator = end == null ? null : end.theChunkProviderServer.currentChunkProvider;
+        ChunkPlan.ReservedLookup reserved = end == null ? (cx, cz) -> Collections.emptyList()
+            : (cx, cz) -> Reservations.forChunk(generator, end, seed, cx, cz);
+        return ShotPlanner.expand(list, EndTerrain.sampler(seed), reserved, b -> {
             // A ball that gives way to a reserved island (HEE) is never built; it would leave an empty frame.
             if (!stands(end, seed, b)) return null;
             SampleWorlds.Site s = SampleWorlds.site(seed, b);

@@ -6,6 +6,7 @@ import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 
+import chlorine.etjourney.world.end.ChunkPlan;
 import chlorine.etjourney.world.end.TerrainSampler;
 import chlorine.etjourney.world.end.debug.EndSearch;
 import chlorine.etjourney.world.end.feature.Biosphere;
@@ -44,8 +45,9 @@ public final class ShotPlanner {
 
     private ShotPlanner() {}
 
-    public static List<PlannedShot> expand(ShotList list, TerrainSampler sampler, Sites sites) {
-        Locator locator = new Locator(sampler);
+    public static List<PlannedShot> expand(ShotList list, TerrainSampler sampler, ChunkPlan.ReservedLookup reserved,
+        Sites sites) {
+        Locator locator = new Locator(sampler, reserved);
         SphereSearch spheres = searchSpheres(list, locator, sites);
         List<PlannedShot> out = new ArrayList<>();
         double ox = list.originX, oz = list.originZ;

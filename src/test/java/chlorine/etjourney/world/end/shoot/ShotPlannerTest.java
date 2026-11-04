@@ -14,6 +14,7 @@ import java.util.List;
 
 import org.junit.jupiter.api.Test;
 
+import chlorine.etjourney.world.end.ChunkPlan;
 import chlorine.etjourney.world.end.TerrainSampler;
 import chlorine.etjourney.world.end.feature.BiosphereSource;
 import chlorine.etjourney.world.end.feature.EndBiome;
@@ -26,6 +27,7 @@ import chlorine.etjourney.world.end.region.Styles;
  */
 class ShotPlannerTest {
 
+    private static final ChunkPlan.ReservedLookup NO_RESERVATIONS = (cx, cz) -> Collections.emptyList();
     private static final TerrainSampler SAMPLER = new TerrainSampler(
         ShotList.DEFAULT_SEED,
         new RegionPicker(Styles.all()));
@@ -56,7 +58,7 @@ class ShotPlannerTest {
             "shot biosphere NETHER count=2 views=outside,inside",
             "shot mountain min-top=150 count=1 views=aerial",
             "shot arc-touch count=1 views=aerial");
-        List<PlannedShot> shots = ShotPlanner.expand(l, SAMPLER, BY_KEY);
+        List<PlannedShot> shots = ShotPlanner.expand(l, SAMPLER, NO_RESERVATIONS, BY_KEY);
         assertEquals(36, shots.size());
         for (int i = 0; i < shots.size(); i++) {
             PlannedShot s = shots.get(i);
@@ -82,7 +84,7 @@ class ShotPlannerTest {
     @Test
     void ballsWithoutSitesBecomeMissingShots() {
         ShotList l = list("sphere-candidates 5", "shot biosphere CAVE count=1 views=outside,inside");
-        List<PlannedShot> shots = ShotPlanner.expand(l, SAMPLER, b -> null);
+        List<PlannedShot> shots = ShotPlanner.expand(l, SAMPLER, NO_RESERVATIONS, b -> null);
         assertEquals(2, shots.size());
         for (PlannedShot s : shots) {
             assertEquals("洞窟の球 1", s.group);
@@ -94,7 +96,7 @@ class ShotPlannerTest {
     @Test
     void fixedShotKeepsItsCamera() {
         List<PlannedShot> shots = ShotPlanner
-            .expand(list("shot at 3200 120 -40 yaw=45 pitch=30 label=example"), SAMPLER, BY_KEY);
+            .expand(list("shot at 3200 120 -40 yaw=45 pitch=30 label=example"), SAMPLER, NO_RESERVATIONS, BY_KEY);
         assertEquals(1, shots.size());
         PlannedShot s = shots.get(0);
         assertEquals("example", s.group);
@@ -131,7 +133,7 @@ class ShotPlannerTest {
     @Test
     void giantTreeLineGivesOneAerialAndOneGroundShotPerTree() {
         List<PlannedShot> shots = ShotPlanner
-            .expand(list("shot giant-tree count=2 views=aerial,ground"), SAMPLER, BY_KEY);
+            .expand(list("shot giant-tree count=2 views=aerial,ground"), SAMPLER, NO_RESERVATIONS, BY_KEY);
         assertEquals(4, shots.size());
         assertEquals("巨木 1", shots.get(0).group);
         assertEquals(View.GROUND, shots.get(1).view);
@@ -142,8 +144,11 @@ class ShotPlannerTest {
     @Test
     void glowshroomTargetsSitOnMycelia() {
         for (String size : new String[] { "NORMAL", "GIANT" }) {
-            List<PlannedShot> shots = ShotPlanner
-                .expand(list("shot glowshroom " + size + " count=2 views=aerial,ground"), SAMPLER, BY_KEY);
+            List<PlannedShot> shots = ShotPlanner.expand(
+                list("shot glowshroom " + size + " count=2 views=aerial,ground"),
+                SAMPLER,
+                NO_RESERVATIONS,
+                BY_KEY);
             assertEquals(4, shots.size());
             assertEquals(View.GROUND, shots.get(1).view);
             assertNotNull(shots.get(1).fixed);
@@ -163,7 +168,7 @@ class ShotPlannerTest {
     @Test
     void styledBiomeLineKeepsToThatStyle() {
         List<PlannedShot> shots = ShotPlanner
-            .expand(list("shot biome GROVE style=LAYERED count=1 views=aerial"), SAMPLER, BY_KEY);
+            .expand(list("shot biome GROVE style=LAYERED count=1 views=aerial"), SAMPLER, NO_RESERVATIONS, BY_KEY);
         assertEquals(1, shots.size());
         Target t = shots.get(0).target;
         assertNotNull(t);
@@ -174,7 +179,7 @@ class ShotPlannerTest {
     void largePlantsListFindsATargetForEveryShot() throws IOException {
         ShotList l = ShotList.read(Paths.get("src/test/resources/shots/2026-10-30-large-plants.txt"));
         assertEquals(Collections.emptyList(), l.errors);
-        List<PlannedShot> shots = ShotPlanner.expand(l, SAMPLER, BY_KEY);
+        List<PlannedShot> shots = ShotPlanner.expand(l, SAMPLER, NO_RESERVATIONS, BY_KEY);
         assertEquals(3 + 3 * 2 + 2 * 2 + 2 * 2 + 2 * 2 + 1 + 2 * 2 + 2 * 2, shots.size());
         for (PlannedShot s : shots) {
             assertNotNull(s.target, s.group);
