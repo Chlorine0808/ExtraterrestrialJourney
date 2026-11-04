@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -18,13 +19,14 @@ import chlorine.etjourney.world.end.feature.EndBiome;
 import chlorine.etjourney.world.end.feature.Lakes;
 import chlorine.etjourney.world.end.region.RegionPicker;
 import chlorine.etjourney.world.end.region.Styles;
+import chlorine.etjourney.world.end.reserve.Area;
 
 /** Locator on the screenshot seed: what it finds really stands where it says. */
 class LocatorTest {
 
     private static final long SEED = 7037748451318983361L;
     private static final TerrainSampler SAMPLER = new TerrainSampler(SEED, new RegionPicker(Styles.all()));
-    private static final Locator LOCATOR = new Locator(SAMPLER);
+    private static final Locator LOCATOR = new Locator(SAMPLER, (cx, cz) -> Collections.emptyList());
 
     @Test
     void continentsOfEachBiomeAreDistinctAndWearIt() {
@@ -66,6 +68,15 @@ class LocatorTest {
                     .stream()
                     .anyMatch(l -> l.x == t.x && l.z == t.z && l.waterLevel == t.y));
         }
+    }
+
+    @Test
+    void lakesDroppedByAReservationAreSkipped() {
+        Target nearest = LOCATOR.lakes(3000, 0, 1)
+            .get(0);
+        Area island = new Area("hee", nearest.x + 150, nearest.z, 128);
+        Locator reserved = new Locator(SAMPLER, (cx, cz) -> Collections.singletonList(island));
+        for (Target t : reserved.lakes(3000, 0, 3)) assertNotEquals(nearest.key, t.key);
     }
 
     @Test

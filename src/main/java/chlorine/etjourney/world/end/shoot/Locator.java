@@ -6,6 +6,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import chlorine.etjourney.world.end.ChunkPlan;
 import chlorine.etjourney.world.end.TerrainSampler;
 import chlorine.etjourney.world.end.debug.EndSearch;
 import chlorine.etjourney.world.end.feature.ArcPaths;
@@ -18,6 +19,7 @@ import chlorine.etjourney.world.end.feature.Mountains;
 import chlorine.etjourney.world.end.feature.StructureProbe;
 import chlorine.etjourney.world.end.feature.plant.GiantTrees;
 import chlorine.etjourney.world.end.feature.plant.Glowshrooms;
+import chlorine.etjourney.world.end.reserve.Area;
 
 /** Finds screenshot targets from the seed alone, nearest first; a search that comes up short returns fewer. */
 final class Locator {
@@ -39,9 +41,12 @@ final class Locator {
     private static final int NORMAL_RINGS = 6;
 
     private final TerrainSampler sampler;
+    /** Reserved areas by chunk, as generation sees them. */
+    private final ChunkPlan.ReservedLookup reserved;
 
-    Locator(TerrainSampler sampler) {
+    Locator(TerrainSampler sampler, ChunkPlan.ReservedLookup reserved) {
         this.sampler = sampler;
+        this.reserved = reserved;
     }
 
     List<Target> continents(EndBiome biome, double ox, double oz, int count) {
@@ -209,7 +214,8 @@ final class Locator {
             double[] hit = EndSearch.nearestInCells(Lakes.CELL, ox, oz, (cx, cz) -> {
                 if (chosen.contains(cellKey(cx, cz))) return null;
                 Lakes.Lake l = Lakes.inCell(seed, cx, cz, probe);
-                return l == null ? null : new double[] { l.x, l.z, l.waterLevel, l.radius, cx, cz };
+                if (l == null || !generated(l)) return null;
+                return new double[] { l.x, l.z, l.waterLevel, l.radius, cx, cz };
             });
             if (hit == null) break;
             long key = cellKey((int) hit[4], (int) hit[5]);
@@ -217,6 +223,13 @@ final class Locator {
             out.add(new Target("lake", hit[0], hit[2], hit[1], hit[3] * LAKE_SCENE_RADII, key));
         }
         return out;
+    }
+
+    /** Whether generation keeps the lake; ChunkPlan drops lakes that touch a reserved area. */
+    private boolean generated(Lakes.Lake lake) {
+        List<Area> areas = reserved.at((int) Math.floor(lake.x) >> 4, (int) Math.floor(lake.z) >> 4);
+        return !Lakes.withoutReserved(Collections.singletonList(lake), areas)
+            .isEmpty();
     }
 
     /** Points where an ARCS tube meets the ground, one per path, looking outward ring by ring. */
