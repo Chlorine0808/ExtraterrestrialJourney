@@ -16,6 +16,11 @@ public interface StructureProbe {
         return -1000;
     }
 
+    /** Whether lake water lies within range of (x, z); only the standing probe knows the lakes. */
+    default boolean wet(double x, double z, double range) {
+        return false;
+    }
+
     /** Centre of style region cell (cx, cz), whose cells are REGION_CELL wide; plain cell centres by default. */
     default double[] regionCentre(int cx, int cz) {
         return new double[] { (cx + 0.5) * REGION_CELL, (cz + 0.5) * REGION_CELL };

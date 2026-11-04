@@ -72,9 +72,9 @@ public final class FeatureModifiers {
         all.add(StructureModifiers.hanging(Mammatus.KIND, 856, m -> m.centreY + 0.4 * m.radius));
         all.add(StructureModifiers.voxels(Anvil.KIND, 857, EndBlock.STONE));
         // Mushrooms block by block, so their round caps are not cut into the 8-block grid's polygons.
-        all.add(StructureModifiers.voxels(Structures.MUSHROOMS, 859, EndBlock.STONE));
+        all.add(StructureModifiers.standingVoxels(Structures.MUSHROOMS, 859, EndBlock.STONE));
         all.add(StructureModifiers.ringlets());
-        all.add(StructureModifiers.voxels(Structures.CROSSES, 861, EndBlock.STONE));
+        all.add(StructureModifiers.standingVoxels(Structures.CROSSES, 861, EndBlock.STONE));
         all.add(StructureModifiers.voxels(Structures.HANGING_CHAINS, 862, EndBlock.CHAIN));
         all.add(StructureModifiers.voxels(Structures.SKY_CHAINS, 863, EndBlock.CHAIN));
         all.add(StructureModifiers.voxels(Lenticular.KIND, 864, EndBlock.STONE));
@@ -82,9 +82,9 @@ public final class FeatureModifiers {
         all.add(StructureModifiers.virga(866));
         all.add(StructureModifiers.voxels(Billow.KIND, 867, EndBlock.STONE));
         all.add(StructureModifiers.voxels(Paper.KIND, 868, EndBlock.STONE));
-        all.add(StructureModifiers.voxels(Enoki.KIND, 869, EndBlock.STONE));
-        all.add(StructureModifiers.voxels(Column.KIND, 870, EndBlock.STONE));
-        all.add(StructureModifiers.voxels(Tool.KIND, 872, EndBlock.STONE));
+        all.add(StructureModifiers.standingVoxels(Enoki.KIND, 869, EndBlock.STONE));
+        all.add(StructureModifiers.standingVoxels(Column.KIND, 870, EndBlock.STONE));
+        all.add(StructureModifiers.standingVoxels(Tool.KIND, 872, EndBlock.STONE));
         all.add(PlantModifiers.giantTrees(874));
         all.add(PlantModifiers.glowshrooms(875));
         all.add(PlantModifiers.lucentTrees(876));
@@ -408,12 +408,30 @@ public final class FeatureModifiers {
                 if (top < 0) return;
                 int bottom = 0;
                 while (view.densityAt(x, bottom, z) <= 0) bottom++;
-                int floor = cut >= 1 ? 0 : top + 1 - (int) Math.round((top - bottom + 1) * cut);
+                int floor = holeFloor(cut, top, bottom);
                 // Up to the rock's top plus what faces() may have pushed out above it.
                 int ceiling = Math.min(sink.maxY() - 1, top + (int) FACE_DEPTH + 2);
                 for (int y = Math.max(floor, sink.minY()); y <= ceiling; y++) sink.clear(x, y, z);
             });
         });
+    }
+
+    /** The lowest block a sinkhole removing the given share clears from rock spanning bottom to top. */
+    private static int holeFloor(double cut, int top, int bottom) {
+        return cut >= 1 ? 0 : top + 1 - (int) Math.round((top - bottom + 1) * cut);
+    }
+
+    /** Whether a sinkhole clears column (x, z) through the rock's underside, as holes() cuts it. */
+    public static boolean holedThrough(long seed, List<Holes.Hole> holes, TerrainView view, int x, int z) {
+        double cut = Holes.cutFraction(seed, holes, x, z);
+        if (cut <= 0) return false;
+        if (cut >= 1) return true;
+        int top = 255;
+        while (top >= 0 && view.densityAt(x, top, z) <= 0) top--;
+        if (top < 0) return false;
+        int bottom = 0;
+        while (view.densityAt(x, bottom, z) <= 0) bottom++;
+        return holeFloor(cut, top, bottom) <= bottom;
     }
 
     /** Floods every column inside a lake's flat ring whose ground ended up below the water level. */

@@ -145,6 +145,14 @@ public final class Lakes {
         return lake.radius + SHORE_BAND;
     }
 
+    /** Whether a lake's water lies within range of (x, z); the bed sinks below the water inside the lake's radius. */
+    public static boolean wet(List<Lake> lakes, double x, double z, double range) {
+        for (Lake lake : lakes) {
+            if (Distance.planar(x - lake.x, z - lake.z) < lake.radius + range) return true;
+        }
+        return false;
+    }
+
     public static Lake floodAt(List<Lake> lakes, double x, double z) {
         for (Lake lake : lakes) {
             if (Distance.planar(x - lake.x, z - lake.z) < floodRadius(lake)) return lake;

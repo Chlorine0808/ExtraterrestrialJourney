@@ -244,6 +244,11 @@ public final class ChunkPlan implements TerrainView {
     }
 
     @Override
+    public List<Holes.Hole> holesNear(double x, double z, double range) {
+        return Holes.near(sampler.seed(), x, z, range, sampler.holeProbe());
+    }
+
+    @Override
     public List<ZoneIslands.Island> zoneIslands() {
         return zoneIslands;
     }
@@ -294,5 +299,10 @@ public final class ChunkPlan implements TerrainView {
     @Override
     public StructureProbe structures() {
         return sampler.structureProbe();
+    }
+
+    @Override
+    public StructureProbe standing() {
+        return sampler.standingProbe();
     }
 }

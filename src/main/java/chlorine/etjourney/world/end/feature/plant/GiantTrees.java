@@ -69,6 +69,8 @@ public final class GiantTrees {
         for (int i = 0; i < Math.min(CANDIDATES, order.length) && out.size() < wanted; i++) {
             Continent.Seed s = Continent.seedAt(seed, ContinentIds.cellX(order[i]), ContinentIds.cellZ(order[i]));
             if (s == null || tooClose(out, s.x, s.z) || !insideGrove(seed, s.x, s.z)) continue;
+            // The roots crawl over the ground out to FOOTPRINT; on a lake they would hang over the water.
+            if (probe.wet(s.x, s.z, FOOTPRINT)) continue;
             double ground = probe.ground(s.x, s.z);
             if (ground <= -100 || ground + HEIGHT > 250 || !level(probe, s.x, s.z, ground)) continue;
             out.add(new double[] { s.x, ground, s.z });

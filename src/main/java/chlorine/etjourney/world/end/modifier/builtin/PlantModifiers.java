@@ -86,12 +86,12 @@ public final class PlantModifiers {
                 Continent.Seed s = Continent.seedAt(area.seed, i, j);
                 if (s == null || Math.hypot(s.x - cx, s.z - cz) > REACH) continue;
                 if (!seen.add(ContinentIds.of(area.seed, s))) continue;
-                for (double[] a : GiantTrees.anchors(area.seed, s, view.structures())) {
+                for (double[] a : GiantTrees.anchors(area.seed, s, view.standing())) {
                     if (Math.hypot(a[0] - cx, a[2] - cz) > REACH) continue;
                     if (!GiantTree.reaches(a, sink.minY(), sink.maxY())) continue;
                     List<Area> reserved = view.reservedAt((int) Math.floor(a[0]) >> 4, (int) Math.floor(a[2]) >> 4);
                     if (blocked(reserved, a)) continue;
-                    new GiantTree(area.seed, a, view.structures()).draw(sink);
+                    new GiantTree(area.seed, a, view.standing()).draw(sink);
                 }
             }
         }
@@ -110,7 +110,7 @@ public final class PlantModifiers {
 
                 @Override
                 public double ground(double x, double z) {
-                    return view.structures()
+                    return view.standing()
                         .ground(x, z);
                 }
 
@@ -121,6 +121,12 @@ public final class PlantModifiers {
                     // Anchors lie outside the chunk's window, so the biome looks up its own seeds and mountains.
                     return EndBiome.at(area.seed, bx, bz, view.voidShare(bx, bz)) == EndBiome.MYCELIA
                         && view.weight("LAYERED", bx, bz) < LAYERED_LIMIT;
+                }
+
+                @Override
+                public boolean wet(double x, double z, double range) {
+                    return view.standing()
+                        .wet(x, z, range);
                 }
             };
             List<Glowshrooms.Anchor> kept = new ArrayList<>();
@@ -146,7 +152,7 @@ public final class PlantModifiers {
 
                 @Override
                 public double ground(double x, double z) {
-                    return view.structures()
+                    return view.standing()
                         .ground(x, z);
                 }
 

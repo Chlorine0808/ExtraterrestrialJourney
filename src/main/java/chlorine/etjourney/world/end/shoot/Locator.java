@@ -95,7 +95,7 @@ final class Locator {
                 long id = ContinentIds.of(seed, s);
                 if (chosen.contains(id)) return null;
                 double[] best = null;
-                for (double[] a : GiantTrees.anchors(seed, s, sampler.structureProbe()))
+                for (double[] a : GiantTrees.anchors(seed, s, sampler.standingProbe()))
                     if (best == null || Math.hypot(a[0] - ox, a[2] - oz) < Math.hypot(best[0] - ox, best[2] - oz))
                         best = a;
                 return best == null ? null : new double[] { best[0], best[1], best[2], Double.longBitsToDouble(id) };
@@ -162,7 +162,7 @@ final class Locator {
 
     /** The terrain the glowshroom placement sees, built from the sampler as the production modifier builds it. */
     private Glowshrooms.Terrain glowshroomTerrain() {
-        StructureProbe probe = sampler.structureProbe();
+        StructureProbe probe = sampler.standingProbe();
         return new Glowshrooms.Terrain() {
 
             @Override
@@ -175,6 +175,11 @@ final class Locator {
                 int bx = (int) Math.floor(x), bz = (int) Math.floor(z);
                 return sampler.biome(bx, bz) == EndBiome.MYCELIA
                     && sampler.styleWeight("LAYERED", bx, bz) < LAYERED_LIMIT;
+            }
+
+            @Override
+            public boolean wet(double x, double z, double range) {
+                return probe.wet(x, z, range);
             }
         };
     }

@@ -25,6 +25,9 @@ public interface TerrainView {
 
     List<Holes.Hole> holes();
 
+    /** Sinkholes whose cut may reach within range of (x, z), alike from every chunk. */
+    List<Holes.Hole> holesNear(double x, double z, double range);
+
     /** Zone islands near the chunk, without those touching reserved areas. */
     List<ZoneIslands.Island> zoneIslands();
 
@@ -71,4 +74,7 @@ public interface TerrainView {
 
     /** Terrain answers for placing free-standing structures; the same for every chunk. */
     StructureProbe structures();
+
+    /** The structure answers with the lakes in, for what stands on the ground: never on a lake's water. */
+    StructureProbe standing();
 }
