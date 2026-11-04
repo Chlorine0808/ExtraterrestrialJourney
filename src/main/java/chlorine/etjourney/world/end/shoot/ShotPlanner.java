@@ -69,6 +69,9 @@ public final class ShotPlanner {
                 case GLOWSHROOM:
                     addGlowshrooms(out, spec, locator.glowshrooms(spec.arg.equals("GIANT"), ox, oz, spec.count));
                     break;
+                case AMBER_TREE:
+                    add(out, spec, "タネの木", locator.amberTrees(ox, oz, spec.count));
+                    break;
                 case LAKE:
                     add(out, spec, "湖", locator.lakes(ox, oz, spec.count));
                     break;
