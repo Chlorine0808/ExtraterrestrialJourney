@@ -13,16 +13,20 @@ fun git(vararg args: String): String =
 /** The main checkout; the project itself unless this is a worktree. */
 fun mainCheckout(): File = file(git("rev-parse", "--path-format=absolute", "--git-common-dir")).parentFile
 
-// A worktree starts without the main checkout's mod configs, so mods fall back to defaults and their IDs clash.
-// Copy the main checkout's config over the worktree's before every run; the main checkout is the source of truth.
+// A worktree starts without the main checkout's mod configs, so mods fall back to defaults and their IDs clash, and
+// without eula.txt, so runServer refuses to start. Copy both from the main checkout before every run; the main
+// checkout is the source of truth.
 listOf("runClient", "runServer").forEach { name ->
     tasks.named<JavaExec>(name) {
         val main = mainCheckout()
         if (main.canonicalFile != projectDir.canonicalFile) {
-            val from = main.resolve(workingDir.relativeTo(projectDir)).resolve("config")
-            val to = workingDir.resolve("config")
+            val mainRun = main.resolve(workingDir.relativeTo(projectDir))
+            val run = workingDir
             doFirst {
-                if (from.isDirectory) from.copyRecursively(to, overwrite = true)
+                for (entry in listOf("config", "eula.txt")) {
+                    val from = mainRun.resolve(entry)
+                    if (from.exists()) from.copyRecursively(run.resolve(entry), overwrite = true)
+                }
             }
         }
     }
