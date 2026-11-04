@@ -75,9 +75,11 @@ public final class AmberTree {
 
     /** Builds the tree; it shrinks to fit under {@code maxTop}, and is null when it still does not fit. */
     public static AmberTree of(long shapeSeed, int maxTop, Ground ground) {
+        // A lake or the void reads as far below; legs and roots stop a few blocks down instead.
+        Ground floor = (dx, dz) -> Math.max(ground.top(dx, dz), -2 * SINK);
         double scale = 1;
         for (int i = 0; i <= FIT_TRIES; i++, scale *= 0.9) {
-            AmberTree t = build(shapeSeed, scale, ground);
+            AmberTree t = build(shapeSeed, scale, floor);
             if (t.maxY <= maxTop) return t;
         }
         return null;

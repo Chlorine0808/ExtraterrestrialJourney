@@ -199,6 +199,17 @@ class AmberTreeTest {
     }
 
     @Test
+    void staysShallowBesideTheVoid() {
+        // The probe reports a lake or the void as -1000; legs and roots must not run down to it.
+        AmberTree.Ground edge = (dx, dz) -> dx > 3 ? -1060 : -1;
+        for (long i = 0; i < 20; i++) {
+            AmberTree t = AmberTree.of(seedOf(i), 250, edge);
+            assertNotNull(t);
+            assertTrue(t.minY() >= -3 * AmberTree.SINK, "seed " + i + " minY " + t.minY());
+        }
+    }
+
+    @Test
     void shrinksUnderALowCeiling() {
         for (long i = 0; i < 20; i++) {
             AmberTree t = AmberTree.of(seedOf(i), 12, FLAT);
