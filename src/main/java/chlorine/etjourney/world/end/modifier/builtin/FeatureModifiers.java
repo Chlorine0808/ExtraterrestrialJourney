@@ -88,6 +88,7 @@ public final class FeatureModifiers {
         all.add(PlantModifiers.giantTrees(874));
         all.add(PlantModifiers.glowshrooms(875));
         all.add(PlantModifiers.lucentTrees(876));
+        all.add(PlantModifiers.amberTrees(877));
         all.add(StructureModifiers.spires(873));
         all.add(StructureModifiers.biospheres());
         return all;

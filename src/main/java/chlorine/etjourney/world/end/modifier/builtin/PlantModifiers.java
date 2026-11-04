@@ -9,6 +9,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import chlorine.etjourney.world.end.feature.Continent;
 import chlorine.etjourney.world.end.feature.ContinentIds;
 import chlorine.etjourney.world.end.feature.EndBiome;
+import chlorine.etjourney.world.end.feature.plant.AmberTrees;
 import chlorine.etjourney.world.end.feature.plant.GiantTree;
 import chlorine.etjourney.world.end.feature.plant.GiantTrees;
 import chlorine.etjourney.world.end.feature.plant.Glowshrooms;
@@ -174,6 +175,38 @@ public final class PlantModifiers {
                 kept.add(a);
             }
             LucentTrees.draw(kept, sink);
+        });
+    }
+
+    /** The AMBER seed trees reaching the chunk, judged against reserved areas as the Lucentwoods trees are. */
+    public static Modifier amberTrees(int order) {
+        return FeatureModifiers.blockModifier(order, (area, view, sink) -> {
+            AmberTrees.Terrain terrain = new AmberTrees.Terrain() {
+
+                @Override
+                public double ground(double x, double z) {
+                    return view.standing()
+                        .ground(x, z);
+                }
+
+                @Override
+                public boolean amber(double x, double z) {
+                    int bx = (int) Math.floor(x), bz = (int) Math.floor(z);
+                    return EndBiome.at(area.seed, bx, bz, view.voidShare(bx, bz)) == EndBiome.AMBER
+                        && view.weight("LAYERED", bx, bz) < LAYERED_LIMIT;
+                }
+            };
+            List<AmberTrees.Anchor> kept = new ArrayList<>();
+            for (AmberTrees.Anchor a : AmberTrees
+                .reaching(area.seed, sink.originX() >> 4, sink.originZ() >> 4, terrain)) {
+                List<Area> reserved = view.reservedAt(a.x >> 4, a.z >> 4);
+                double radius = Math
+                    .max(Math.max(-a.shape.minX(), a.shape.maxX()), Math.max(-a.shape.minZ(), a.shape.maxZ()));
+                if (Reservations.touches(reserved, a.x, a.z, radius)) continue;
+                if (Reservations.suppression(reserved, a.x, a.z) > 0.1) continue;
+                kept.add(a);
+            }
+            AmberTrees.draw(kept, sink);
         });
     }
 }
