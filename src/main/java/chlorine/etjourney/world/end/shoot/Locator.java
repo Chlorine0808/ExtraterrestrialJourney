@@ -162,7 +162,7 @@ final class Locator {
 
     /** The terrain the glowshroom placement sees, built from the sampler as the production modifier builds it. */
     private Glowshrooms.Terrain glowshroomTerrain() {
-        StructureProbe probe = sampler.structureProbe();
+        StructureProbe probe = sampler.plantProbe();
         return new Glowshrooms.Terrain() {
 
             @Override
@@ -175,6 +175,11 @@ final class Locator {
                 int bx = (int) Math.floor(x), bz = (int) Math.floor(z);
                 return sampler.biome(bx, bz) == EndBiome.MYCELIA
                     && sampler.styleWeight("LAYERED", bx, bz) < LAYERED_LIMIT;
+            }
+
+            @Override
+            public boolean wet(double x, double z, double range) {
+                return probe.wet(x, z, range);
             }
         };
     }

@@ -20,6 +20,8 @@ public final class Glowshrooms {
     /** Fill bound of the largest Giant: ceil(22 * 3.5) + 2 = 79, rounded up. */
     public static final int GIANT_REACH = 80;
     private static final int NORMAL_NEIGHBOURS = 2;
+    /** Reach of the root flare from the stem's axis at scale 1: a sphere of 4 with a wave of 1.5. */
+    private static final double FOOT = 5.5;
     private static final long SALT = 0x3C6EF372FE94F82BL;
     private static final long GIANT_SALT = 0x5851F42D4C957F2DL;
     private static final long K1 = 0x9E3779B97F4A7C15L, K2 = 0xC2B2AE3D27D4EB4FL;
@@ -38,6 +40,9 @@ public final class Glowshrooms {
 
         /** Whether the topmost surface of the column is mycelia. */
         boolean mycelia(double x, double z);
+
+        /** Whether lake water lies within range of (x, z). */
+        boolean wet(double x, double z, double range);
     }
 
     /** A glowshroom to grow; {@code y} is the ground plus one. */
@@ -132,7 +137,7 @@ public final class Glowshrooms {
 
     private static Anchor make(long seed, int x, int z, double scale, long shapeSeed, long order, boolean giant,
         Terrain t, Map<Key, Object> cache) {
-        if (!t.mycelia(x + 0.5, z + 0.5)) return null;
+        if (!t.mycelia(x + 0.5, z + 0.5) || t.wet(x + 0.5, z + 0.5, FOOT * scale)) return null;
         double ground = t.ground(x + 0.5, z + 0.5);
         if (ground <= -100) return null;
         int y = (int) Math.floor(ground) + 1;

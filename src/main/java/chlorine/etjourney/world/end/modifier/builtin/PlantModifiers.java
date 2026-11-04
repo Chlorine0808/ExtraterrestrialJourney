@@ -110,7 +110,7 @@ public final class PlantModifiers {
 
                 @Override
                 public double ground(double x, double z) {
-                    return view.structures()
+                    return view.plants()
                         .ground(x, z);
                 }
 
@@ -121,6 +121,12 @@ public final class PlantModifiers {
                     // Anchors lie outside the chunk's window, so the biome looks up its own seeds and mountains.
                     return EndBiome.at(area.seed, bx, bz, view.voidShare(bx, bz)) == EndBiome.MYCELIA
                         && view.weight("LAYERED", bx, bz) < LAYERED_LIMIT;
+                }
+
+                @Override
+                public boolean wet(double x, double z, double range) {
+                    return view.plants()
+                        .wet(x, z, range);
                 }
             };
             List<Glowshrooms.Anchor> kept = new ArrayList<>();

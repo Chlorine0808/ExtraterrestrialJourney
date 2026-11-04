@@ -29,7 +29,49 @@ class GlowshroomsTest {
             public boolean mycelia(double x, double z) {
                 return x >= 0;
             }
+
+            @Override
+            public boolean wet(double x, double z, double range) {
+                return false;
+            }
         };
+    }
+
+    /** Flat mycelia with a round lake of the given radius at (cx, cz). */
+    private static Glowshrooms.Terrain lake(final double cx, final double cz, final double radius) {
+        return new Glowshrooms.Terrain() {
+
+            @Override
+            public double ground(double x, double z) {
+                return 60;
+            }
+
+            @Override
+            public boolean mycelia(double x, double z) {
+                return true;
+            }
+
+            @Override
+            public boolean wet(double x, double z, double range) {
+                return Math.hypot(x - cx, z - cz) < radius + range;
+            }
+        };
+    }
+
+    @Test
+    void rootsKeepTheirFlareOffTheWater() {
+        Glowshrooms.Terrain t = lake(80, 80, 40);
+        int near = 0;
+        for (int i = 0; i < 10; i++) {
+            for (int j = 0; j < 10; j++) {
+                for (Glowshrooms.Anchor a : Glowshrooms.normalIn(13L, i, j, t)) {
+                    double d = Math.hypot(a.x + 0.5 - 80, a.z + 0.5 - 80);
+                    assertTrue(d >= 40 + 5.5 * a.shape.scale(), "shroom at " + a.x + "," + a.z);
+                    if (d < 60) near++;
+                }
+            }
+        }
+        assertTrue(near > 0, "no shroom near the shore to judge");
     }
 
     @Test
