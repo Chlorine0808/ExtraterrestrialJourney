@@ -15,6 +15,7 @@ import org.junit.jupiter.api.Test;
 import chlorine.etjourney.world.end.TerrainSampler;
 import chlorine.etjourney.world.end.feature.Biosphere;
 import chlorine.etjourney.world.end.feature.EndBiome;
+import chlorine.etjourney.world.end.feature.Lakes;
 import chlorine.etjourney.world.end.region.RegionPicker;
 import chlorine.etjourney.world.end.region.Styles;
 
@@ -51,6 +52,20 @@ class LocatorTest {
         assertTrue(
             LOCATOR.mountains(150, 3000, 0, 1)
                 .get(0).y >= 150);
+    }
+
+    @Test
+    void lakesAreDistinctAndStandOnTheLiquid() {
+        List<Target> found = LOCATOR.lakes(3000, 0, 3);
+        assertEquals(3, found.size());
+        Set<Long> keys = new HashSet<>();
+        for (Target t : found) {
+            assertTrue(keys.add(t.key));
+            assertTrue(
+                Lakes.near(SEED, t.x, t.z, 1, SAMPLER.lakeProbe())
+                    .stream()
+                    .anyMatch(l -> l.x == t.x && l.z == t.z && l.waterLevel == t.y));
+        }
     }
 
     @Test

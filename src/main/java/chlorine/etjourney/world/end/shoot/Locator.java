@@ -13,6 +13,7 @@ import chlorine.etjourney.world.end.feature.Biosphere;
 import chlorine.etjourney.world.end.feature.Continent;
 import chlorine.etjourney.world.end.feature.ContinentIds;
 import chlorine.etjourney.world.end.feature.EndBiome;
+import chlorine.etjourney.world.end.feature.Lakes;
 import chlorine.etjourney.world.end.feature.Mountains;
 import chlorine.etjourney.world.end.feature.StructureProbe;
 import chlorine.etjourney.world.end.feature.plant.GiantTrees;
@@ -24,6 +25,8 @@ final class Locator {
     private static final double LAND = 10;
     /** Scene sizes; an arc touch is framed with the stretch of tube that comes down to the ground. */
     private static final double CONTINENT_SIZE = 96, MOUNTAIN_SIZE = 64, ARC_SCENE_SIZE = 64;
+    /** A lake is framed with its shore, so the scene is this many times its radius. */
+    private static final double LAKE_SCENE_RADII = 3;
 
     /** Style weight at a continent point from which the style counts as dominant there. */
     private static final double STYLE_DOMINANT = 0.6;
@@ -192,6 +195,26 @@ final class Locator {
             long key = cellKey((int) hit[3], (int) hit[4]);
             chosen.add(key);
             out.add(new Target("mountain", hit[0], hit[2], hit[1], MOUNTAIN_SIZE, key));
+        }
+        return out;
+    }
+
+    /** Lakes nearest first, the target on the liquid surface at the centre. */
+    List<Target> lakes(double ox, double oz, int count) {
+        long seed = sampler.seed();
+        Lakes.Probe probe = sampler.lakeProbe();
+        Set<Long> chosen = new HashSet<>();
+        List<Target> out = new ArrayList<>();
+        for (int i = 0; i < count; i++) {
+            double[] hit = EndSearch.nearestInCells(Lakes.CELL, ox, oz, (cx, cz) -> {
+                if (chosen.contains(cellKey(cx, cz))) return null;
+                Lakes.Lake l = Lakes.inCell(seed, cx, cz, probe);
+                return l == null ? null : new double[] { l.x, l.z, l.waterLevel, l.radius, cx, cz };
+            });
+            if (hit == null) break;
+            long key = cellKey((int) hit[4], (int) hit[5]);
+            chosen.add(key);
+            out.add(new Target("lake", hit[0], hit[2], hit[1], hit[3] * LAKE_SCENE_RADII, key));
         }
         return out;
     }

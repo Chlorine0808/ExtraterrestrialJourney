@@ -58,6 +58,14 @@ class ShotListTest {
     }
 
     @Test
+    void lakeLineTakesGroundViews() {
+        ShotSpec s = ShotList.parse(Collections.singletonList("shot lake count=3 views=aerial,ground")).specs.get(0);
+        assertEquals(ShotSpec.What.LAKE, s.what);
+        assertEquals(3, s.count);
+        assertEquals(Arrays.asList(View.AERIAL, View.GROUND), s.views);
+    }
+
+    @Test
     void atLineKeepsTheCamera() {
         ShotSpec s = ShotList.parse(Collections.singletonList("shot at 3200 120 -40 yaw=45 pitch=30 label=gate")).specs
             .get(0);

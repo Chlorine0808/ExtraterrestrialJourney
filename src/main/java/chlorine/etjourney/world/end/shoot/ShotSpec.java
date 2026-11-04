@@ -13,6 +13,7 @@ public final class ShotSpec {
         ARC_TOUCH,
         GIANT_TREE,
         GLOWSHROOM,
+        LAKE,
         AT
     }
 

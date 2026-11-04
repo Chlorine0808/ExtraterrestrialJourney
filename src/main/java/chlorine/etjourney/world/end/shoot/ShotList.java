@@ -135,6 +135,9 @@ public final class ShotList {
             case "glowshroom":
                 what = ShotSpec.What.GLOWSHROOM;
                 break;
+            case "lake":
+                what = ShotSpec.What.LAKE;
+                break;
             case "at":
                 what = ShotSpec.What.AT;
                 break;
