@@ -152,7 +152,7 @@ public final class PlantModifiers {
 
                 @Override
                 public double ground(double x, double z) {
-                    return view.structures()
+                    return view.plants()
                         .ground(x, z);
                 }
 
