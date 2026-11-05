@@ -9,6 +9,8 @@ import java.util.Map;
 import java.util.Random;
 
 import chlorine.etjourney.world.end.modifier.BlockSink;
+import chlorine.etjourney.world.end.reserve.Area;
+import chlorine.etjourney.world.end.reserve.Reservations;
 
 /**
  * Decides where the AMBER seed trees stand, per cell and from the seed alone, so any chunk can ask for its neighbours.
@@ -63,6 +65,23 @@ public final class AmberTrees {
         Random r = new Random(seed ^ SALT ^ cellX * K1 ^ cellZ * K2);
         // Rehash: Random seeds that are close give nearly equal first draws.
         return new Random(r.nextLong() ^ r.nextLong());
+    }
+
+    /**
+     * Whether generation keeps the tree beside reserved areas. The fade is sampled around the reach as well as at the
+     * root, since the legs stand on ground the fade may have lowered.
+     */
+    public static boolean clearOf(Anchor a, List<Area> reserved) {
+        if (reserved.isEmpty()) return true;
+        double reach = Math.max(Math.max(-a.shape.minX(), a.shape.maxX()), Math.max(-a.shape.minZ(), a.shape.maxZ()));
+        if (Reservations.touches(reserved, a.x, a.z, reach)) return false;
+        if (Reservations.suppression(reserved, a.x, a.z) > 0.1) return false;
+        for (int k = 0; k < 8; k++) {
+            double angle = k * Math.PI / 4;
+            double x = a.x + reach * Math.cos(angle), z = a.z + reach * Math.sin(angle);
+            if (Reservations.suppression(reserved, x, z) > 0.1) return false;
+        }
+        return true;
     }
 
     /** The tree of one 32 x 32 cell, if any. */

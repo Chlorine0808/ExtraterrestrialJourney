@@ -1,6 +1,7 @@
 package chlorine.etjourney.world.end.feature.plant;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.ArrayList;
@@ -14,6 +15,8 @@ import java.util.Set;
 import org.junit.jupiter.api.Test;
 
 import chlorine.etjourney.world.end.modifier.EndBlock;
+import chlorine.etjourney.world.end.reserve.Area;
+import chlorine.etjourney.world.end.reserve.Reservations;
 
 /** AMBER seed trees placed per cell from the seed alone and drawn chunk by chunk into air. */
 class AmberTreesTest {
@@ -134,5 +137,35 @@ class AmberTreesTest {
             AmberTrees.draw(AmberTrees.reaching(3L, i, j, t), new MapSink(cells, i * 16, j * 16, 16, 0, 256));
         for (Map.Entry<Long, EndBlock> e : before.entrySet()) assertEquals(e.getValue(), cells.get(e.getKey()));
         assertTrue(cells.size() > before.size());
+    }
+
+    private static AmberTrees.Anchor anyTree() {
+        AmberTrees.Terrain t = flat(60);
+        for (int c = 0;; c++) {
+            List<AmberTrees.Anchor> a = AmberTrees.in(5L, 2 + c, 3, t);
+            if (!a.isEmpty()) return a.get(0);
+        }
+    }
+
+    @Test
+    void keptFarFromReservedAreas() {
+        AmberTrees.Anchor a = anyTree();
+        assertTrue(AmberTrees.clearOf(a, Collections.<Area>emptyList()));
+        assertTrue(AmberTrees.clearOf(a, Collections.singletonList(new Area("hee", a.x + 2000, a.z, 128))));
+    }
+
+    @Test
+    void droppedWhenTheFadeReachesALegButNotTheRoot() {
+        AmberTrees.Anchor a = anyTree();
+        double reach = Math.max(a.shape.maxX(), 1);
+        boolean found = false;
+        for (double d = 100; d < 600 && !found; d += 0.5) {
+            List<Area> areas = Collections.singletonList(new Area("hee", a.x + d, a.z, 128));
+            if (Reservations.suppression(areas, a.x, a.z) > 0.1) continue;
+            if (Reservations.suppression(areas, a.x + reach, a.z) <= 0.1) continue;
+            found = true;
+            assertFalse(AmberTrees.clearOf(a, areas));
+        }
+        assertTrue(found);
     }
 }

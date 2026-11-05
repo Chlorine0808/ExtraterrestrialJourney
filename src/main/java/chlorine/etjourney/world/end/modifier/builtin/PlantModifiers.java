@@ -178,7 +178,7 @@ public final class PlantModifiers {
         });
     }
 
-    /** The AMBER seed trees reaching the chunk, judged against reserved areas as the Lucentwoods trees are. */
+    /** The AMBER seed trees reaching the chunk, minus those a reserved area's fade would reach. */
     public static Modifier amberTrees(int order) {
         return FeatureModifiers.blockModifier(order, (area, view, sink) -> {
             AmberTrees.Terrain terrain = new AmberTrees.Terrain() {
@@ -199,12 +199,7 @@ public final class PlantModifiers {
             List<AmberTrees.Anchor> kept = new ArrayList<>();
             for (AmberTrees.Anchor a : AmberTrees
                 .reaching(area.seed, sink.originX() >> 4, sink.originZ() >> 4, terrain)) {
-                List<Area> reserved = view.reservedAt(a.x >> 4, a.z >> 4);
-                double radius = Math
-                    .max(Math.max(-a.shape.minX(), a.shape.maxX()), Math.max(-a.shape.minZ(), a.shape.maxZ()));
-                if (Reservations.touches(reserved, a.x, a.z, radius)) continue;
-                if (Reservations.suppression(reserved, a.x, a.z) > 0.1) continue;
-                kept.add(a);
+                if (AmberTrees.clearOf(a, view.reservedAt(a.x >> 4, a.z >> 4))) kept.add(a);
             }
             AmberTrees.draw(kept, sink);
         });
