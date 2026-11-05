@@ -251,6 +251,12 @@ final class Locator {
                 return sampler.biome(bx, bz) == EndBiome.AMBER
                     && sampler.styleWeight("LAYERED", bx, bz) < LAYERED_LIMIT;
             }
+
+            @Override
+            public long source() {
+                // The probe only predicts the generated ground, so its shapes stay apart from generation's.
+                return 1;
+            }
         };
     }
 

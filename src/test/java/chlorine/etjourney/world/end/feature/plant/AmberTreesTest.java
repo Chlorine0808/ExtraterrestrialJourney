@@ -168,4 +168,41 @@ class AmberTreesTest {
         }
         assertTrue(found);
     }
+
+    @Test
+    void terrainsFromDifferentSourcesDoNotShareShapes() {
+        AmberTrees.Anchor a = firstTree(31L, flat(60));
+        // Same root, but the ground falls away two blocks out, so the legs sink deeper.
+        AmberTrees.Terrain probe = new AmberTrees.Terrain() {
+
+            @Override
+            public double ground(double x, double z) {
+                return Math.hypot(x - a.x - 0.5, z - a.z - 0.5) <= 2 ? 60 : 55;
+            }
+
+            @Override
+            public boolean amber(double x, double z) {
+                return true;
+            }
+
+            @Override
+            public long source() {
+                return 1;
+            }
+        };
+        AmberTree seen = AmberTrees.in(31L, a.x >> 5, a.z >> 5, probe)
+            .get(0).shape;
+        AmberTrees.in(32L, 0, 0, flat(60)); // another seed clears the cache
+        AmberTree fresh = AmberTrees.in(31L, a.x >> 5, a.z >> 5, probe)
+            .get(0).shape;
+        assertEquals(fresh.minY(), seen.minY());
+        assertTrue(fresh.minY() < a.shape.minY(), fresh.minY() + " vs " + a.shape.minY());
+    }
+
+    private static AmberTrees.Anchor firstTree(long seed, AmberTrees.Terrain t) {
+        for (int c = 0;; c++) {
+            List<AmberTrees.Anchor> found = AmberTrees.in(seed, c, 0, t);
+            if (!found.isEmpty()) return found.get(0);
+        }
+    }
 }

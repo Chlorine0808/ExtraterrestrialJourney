@@ -43,6 +43,11 @@ public final class AmberTrees {
 
         /** Whether the topmost surface of the column is AMBER ground. */
         boolean amber(double x, double z);
+
+        /** Shapes are cached per source; a terrain whose ground may differ from generation's needs its own. */
+        default long source() {
+            return 0;
+        }
     }
 
     /** A tree to grow; {@code y} is the ground plus one. */
@@ -104,7 +109,7 @@ public final class AmberTrees {
         double ground = t.ground(x + 0.5, z + 0.5);
         if (ground <= -100) return null;
         int y = (int) Math.floor(ground) + 1;
-        long key = shapeSeed ^ (long) y * K1;
+        long key = shapeSeed ^ (long) y * K1 ^ t.source() * K2;
         Object shape;
         synchronized (AmberTrees.class) {
             if (!seeded || seed != cachedSeed) {
