@@ -101,6 +101,15 @@ public final class PlantModifiers {
     /** LAYERED stacks tiers over the probe's ground, so the probe's ground is not its top. */
     private static final double LAYERED_LIMIT = 0.05;
 
+    /** Whether the column's top is the biome's ground, outside LAYERED, as a plant placement asks. */
+    private static boolean wears(ChunkArea area, TerrainView view, EndBiome biome, double x, double z) {
+        // The same integer sample the surface paint takes.
+        int bx = (int) Math.floor(x), bz = (int) Math.floor(z);
+        // Anchors lie outside the chunk's window, so the biome looks up its own seeds and mountains.
+        return EndBiome.at(area.seed, bx, bz, view.voidShare(bx, bz)) == biome
+            && view.weight("LAYERED", bx, bz) < LAYERED_LIMIT;
+    }
+
     /**
      * The glowshrooms reaching the chunk. An anchor whose cap touches a reserved area, or whose root stands in a
      * fade, as seen from the root's chunk, is left out, so every chunk judges it alike.
@@ -117,11 +126,7 @@ public final class PlantModifiers {
 
                 @Override
                 public boolean mycelia(double x, double z) {
-                    // The same integer sample the surface paint takes.
-                    int bx = (int) Math.floor(x), bz = (int) Math.floor(z);
-                    // Anchors lie outside the chunk's window, so the biome looks up its own seeds and mountains.
-                    return EndBiome.at(area.seed, bx, bz, view.voidShare(bx, bz)) == EndBiome.MYCELIA
-                        && view.weight("LAYERED", bx, bz) < LAYERED_LIMIT;
+                    return wears(area, view, EndBiome.MYCELIA, x, z);
                 }
 
                 @Override
@@ -159,9 +164,7 @@ public final class PlantModifiers {
 
                 @Override
                 public boolean lucent(double x, double z) {
-                    int bx = (int) Math.floor(x), bz = (int) Math.floor(z);
-                    return EndBiome.at(area.seed, bx, bz, view.voidShare(bx, bz)) == EndBiome.LUCENTWOODS
-                        && view.weight("LAYERED", bx, bz) < LAYERED_LIMIT;
+                    return wears(area, view, EndBiome.LUCENTWOODS, x, z);
                 }
             };
             List<LucentTrees.Anchor> kept = new ArrayList<>();
@@ -191,9 +194,7 @@ public final class PlantModifiers {
 
                 @Override
                 public boolean amber(double x, double z) {
-                    int bx = (int) Math.floor(x), bz = (int) Math.floor(z);
-                    return EndBiome.at(area.seed, bx, bz, view.voidShare(bx, bz)) == EndBiome.AMBER
-                        && view.weight("LAYERED", bx, bz) < LAYERED_LIMIT;
+                    return wears(area, view, EndBiome.AMBER, x, z);
                 }
             };
             List<AmberTrees.Anchor> kept = new ArrayList<>();
