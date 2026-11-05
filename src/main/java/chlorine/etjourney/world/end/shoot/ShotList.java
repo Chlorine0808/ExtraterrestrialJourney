@@ -138,6 +138,9 @@ public final class ShotList {
             case "lake":
                 what = ShotSpec.What.LAKE;
                 break;
+            case "building":
+                what = ShotSpec.What.BUILDING;
+                break;
             case "at":
                 what = ShotSpec.What.AT;
                 break;
@@ -169,6 +172,10 @@ public final class ShotList {
             arg = t[next++];
             if (!arg.equals("NORMAL") && !arg.equals("GIANT"))
                 throw new IllegalArgumentException("unknown glowshroom size '" + arg + "'");
+        } else if (what == ShotSpec.What.BUILDING) {
+            if (t.length <= next || t[next].contains("="))
+                throw new IllegalArgumentException("building needs a kind id");
+            arg = t[next++];
         } else if (what == ShotSpec.What.AT) {
             if (t.length < next + 3) throw new IllegalArgumentException("at needs x y z");
             at = new double[] { Double.parseDouble(t[next]), Double.parseDouble(t[next + 1]),

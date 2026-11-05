@@ -172,4 +172,15 @@ class ShotListTest {
                 .contains("style"),
             list.errors.get(1));
     }
+
+    @Test
+    void parsesBuildingShot() {
+        ShotList list = ShotList.parse(Arrays.asList("shot building test_box count=2", "shot building"));
+        assertEquals(1, list.specs.size());
+        ShotSpec spec = list.specs.get(0);
+        assertEquals(ShotSpec.What.BUILDING, spec.what);
+        assertEquals("test_box", spec.arg);
+        assertEquals(2, spec.count);
+        assertEquals(1, list.errors.size());
+    }
 }

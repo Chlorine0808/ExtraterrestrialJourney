@@ -72,6 +72,9 @@ public final class ShotPlanner {
                 case LAKE:
                     add(out, spec, "湖", locator.lakes(ox, oz, spec.count));
                     break;
+                case BUILDING:
+                    add(out, spec, "建物 " + spec.arg, locator.buildings(spec.arg, ox, oz, spec.count));
+                    break;
                 case ARC_TOUCH:
                     add(out, spec, "ARCS 接地", locator.arcTouches(ox, oz, spec.count));
                     break;
