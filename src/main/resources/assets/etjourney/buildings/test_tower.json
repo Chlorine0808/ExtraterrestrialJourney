@@ -1,0 +1,411 @@
+[
+  {
+    "name": "test_tower",
+    "layers": [
+      {
+        "name": "top",
+        "rows": [
+          "BBBBB",
+          "BBBBB",
+          "BBQBB",
+          "BBBBB",
+          "BBBBB"
+        ]
+      },
+      {
+        "name": "shaft",
+        "rows": [
+          "BBBBB",
+          "B   B",
+          "B   B",
+          "B   B",
+          "BBBBB"
+        ]
+      },
+      {
+        "name": "shaft",
+        "rows": [
+          "BBBBB",
+          "B   B",
+          "B   B",
+          "B   B",
+          "BBBBB"
+        ]
+      },
+      {
+        "name": "shaft",
+        "rows": [
+          "BBBBB",
+          "B   B",
+          "B   B",
+          "B   B",
+          "BBBBB"
+        ]
+      },
+      {
+        "name": "shaft",
+        "rows": [
+          "BBBBB",
+          "B   B",
+          "B   B",
+          "B   B",
+          "BBBBB"
+        ]
+      },
+      {
+        "name": "shaft",
+        "rows": [
+          "BBBBB",
+          "B   B",
+          "B   B",
+          "B   B",
+          "BBBBB"
+        ]
+      },
+      {
+        "name": "shaft",
+        "rows": [
+          "BBBBB",
+          "B   B",
+          "B   B",
+          "B   B",
+          "BBBBB"
+        ]
+      },
+      {
+        "name": "shaft",
+        "rows": [
+          "BBBBB",
+          "B   B",
+          "B   B",
+          "B   B",
+          "BBBBB"
+        ]
+      },
+      {
+        "name": "shaft",
+        "rows": [
+          "BBBBB",
+          "B   B",
+          "B   B",
+          "B   B",
+          "BBBBB"
+        ]
+      },
+      {
+        "name": "shaft",
+        "rows": [
+          "BBBBB",
+          "B   B",
+          "B   B",
+          "B   B",
+          "BBBBB"
+        ]
+      },
+      {
+        "name": "shaft",
+        "rows": [
+          "BBBBB",
+          "B   B",
+          "B   B",
+          "B   B",
+          "BBBBB"
+        ]
+      },
+      {
+        "name": "shaft",
+        "rows": [
+          "BBBBB",
+          "B   B",
+          "B   B",
+          "B   B",
+          "BBBBB"
+        ]
+      },
+      {
+        "name": "shaft",
+        "rows": [
+          "BBBBB",
+          "B   B",
+          "B   B",
+          "B   B",
+          "BBBBB"
+        ]
+      },
+      {
+        "name": "shaft",
+        "rows": [
+          "BBBBB",
+          "B   B",
+          "B   B",
+          "B   B",
+          "BBBBB"
+        ]
+      },
+      {
+        "name": "shaft",
+        "rows": [
+          "BBBBB",
+          "B   B",
+          "B   B",
+          "B   B",
+          "BBBBB"
+        ]
+      },
+      {
+        "name": "shaft",
+        "rows": [
+          "BBBBB",
+          "B   B",
+          "B   B",
+          "B   B",
+          "BBBBB"
+        ]
+      },
+      {
+        "name": "shaft",
+        "rows": [
+          "BBBBB",
+          "B   B",
+          "B   B",
+          "B   B",
+          "BBBBB"
+        ]
+      },
+      {
+        "name": "shaft",
+        "rows": [
+          "BBBBB",
+          "B   B",
+          "B   B",
+          "B   B",
+          "BBBBB"
+        ]
+      },
+      {
+        "name": "shaft",
+        "rows": [
+          "BBBBB",
+          "B   B",
+          "B   B",
+          "B   B",
+          "BBBBB"
+        ]
+      },
+      {
+        "name": "shaft",
+        "rows": [
+          "BBBBB",
+          "B   B",
+          "B   B",
+          "B   B",
+          "BBBBB"
+        ]
+      },
+      {
+        "name": "shaft",
+        "rows": [
+          "BBBBB",
+          "B   B",
+          "B   B",
+          "B   B",
+          "BBBBB"
+        ]
+      },
+      {
+        "name": "shaft",
+        "rows": [
+          "BBBBB",
+          "B   B",
+          "B   B",
+          "B   B",
+          "BBBBB"
+        ]
+      },
+      {
+        "name": "shaft",
+        "rows": [
+          "BBBBB",
+          "B   B",
+          "B   B",
+          "B   B",
+          "BBBBB"
+        ]
+      },
+      {
+        "name": "shaft",
+        "rows": [
+          "BBBBB",
+          "B   B",
+          "B   B",
+          "B   B",
+          "BBBBB"
+        ]
+      },
+      {
+        "name": "shaft",
+        "rows": [
+          "BBBBB",
+          "B   B",
+          "B   B",
+          "B   B",
+          "BBBBB"
+        ]
+      },
+      {
+        "name": "shaft",
+        "rows": [
+          "BBBBB",
+          "B   B",
+          "B   B",
+          "B   B",
+          "BBBBB"
+        ]
+      },
+      {
+        "name": "shaft",
+        "rows": [
+          "BBBBB",
+          "B   B",
+          "B   B",
+          "B   B",
+          "BBBBB"
+        ]
+      },
+      {
+        "name": "shaft",
+        "rows": [
+          "BBBBB",
+          "B   B",
+          "B   B",
+          "B   B",
+          "BBBBB"
+        ]
+      },
+      {
+        "name": "shaft",
+        "rows": [
+          "BBBBB",
+          "B   B",
+          "B   B",
+          "B   B",
+          "BBBBB"
+        ]
+      },
+      {
+        "name": "shaft",
+        "rows": [
+          "BBBBB",
+          "B   B",
+          "B   B",
+          "B   B",
+          "BBBBB"
+        ]
+      },
+      {
+        "name": "shaft",
+        "rows": [
+          "BBBBB",
+          "B   B",
+          "B   B",
+          "B   B",
+          "BBBBB"
+        ]
+      },
+      {
+        "name": "shaft",
+        "rows": [
+          "BBBBB",
+          "B   B",
+          "B   B",
+          "B   B",
+          "BBBBB"
+        ]
+      },
+      {
+        "name": "shaft",
+        "rows": [
+          "BBBBB",
+          "B   B",
+          "B   B",
+          "B   B",
+          "BBBBB"
+        ]
+      },
+      {
+        "name": "shaft",
+        "rows": [
+          "BBBBB",
+          "B   B",
+          "B   B",
+          "B   B",
+          "BBBBB"
+        ]
+      },
+      {
+        "name": "shaft",
+        "rows": [
+          "BBBBB",
+          "B   B",
+          "B   B",
+          "B   B",
+          "BBBBB"
+        ]
+      },
+      {
+        "name": "shaft",
+        "rows": [
+          "BBBBB",
+          "B   B",
+          "B   B",
+          "B   B",
+          "BBBBB"
+        ]
+      },
+      {
+        "name": "shaft",
+        "rows": [
+          "BBBBB",
+          "B   B",
+          "B   B",
+          "B   B",
+          "BBBBB"
+        ]
+      },
+      {
+        "name": "shaft",
+        "rows": [
+          "BBBBB",
+          "B   B",
+          "B   B",
+          "B   B",
+          "BBBBB"
+        ]
+      },
+      {
+        "name": "shaft",
+        "rows": [
+          "BBBBB",
+          "B   B",
+          "B   B",
+          "B   B",
+          "BBBBB"
+        ]
+      },
+      {
+        "name": "shaft",
+        "rows": [
+          "BBBBB",
+          "B   B",
+          "B   B",
+          "B   B",
+          "BBBBB"
+        ]
+      }
+    ],
+    "mappings": {
+      "B": "minecraft:quartz_block:0",
+      "Q": "minecraft:glowstone:0"
+    }
+  }
+]
