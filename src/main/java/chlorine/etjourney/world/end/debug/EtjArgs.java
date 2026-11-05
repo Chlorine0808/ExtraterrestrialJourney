@@ -36,7 +36,8 @@ public final class EtjArgs {
     /** Candidates for the last word of args. */
     static List<String> complete(String[] args, List<String> styles, List<String> zones) {
         String last = args[args.length - 1];
-        if (args.length == 1) return matching(Arrays.asList("end", "look"), last);
+        if (args.length == 1) return matching(Arrays.asList("end", "look", "build"), last);
+        if (args[0].equals("build")) return matching(BuildCommand.complete(args), last);
         if (!args[0].equals("end")) return Collections.emptyList();
         if (args.length == 2) return matching(SUBCOMMANDS, last);
         switch (args[1]) {

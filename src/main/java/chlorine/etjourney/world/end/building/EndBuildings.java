@@ -127,6 +127,42 @@ public final class EndBuildings implements IWorldGenerator {
         return false;
     }
 
+    /** A building found by find. */
+    public static final class Found {
+
+        public final BuildingKind kind;
+        public final Placement placement;
+
+        Found(BuildingKind kind, Placement placement) {
+            this.kind = kind;
+            this.placement = placement;
+        }
+    }
+
+    /** The generated building nearest (x, z) within radius, of kind id or of any kind when id is null. */
+    public static Found find(Object generator, World end, long seed, int x, int z, String id, int radius) {
+        TerrainSampler sampler = EndTerrain.sampler(seed);
+        StructureProbe probe = sampler.structureProbe(), standing = sampler.standingProbe();
+        Found best = null;
+        double bestDistance = Double.MAX_VALUE;
+        for (BuildingKind kind : KINDS) {
+            if (id != null && !kind.id.equals(id)) continue;
+            Template t = template(kind);
+            if (t == null) continue;
+            int c0x = Math.floorDiv(x - radius, kind.cell), c1x = Math.floorDiv(x + radius, kind.cell);
+            int c0z = Math.floorDiv(z - radius, kind.cell), c1z = Math.floorDiv(z + radius, kind.cell);
+            for (int cx = c0x; cx <= c1x; cx++) for (int cz = c0z; cz <= c1z; cz++) {
+                Placement p = kind.compute(seed, cx, cz, t, probe, standing);
+                if (p == null) continue;
+                double d = Distance.planar(p.anchorX - x, p.anchorZ - z);
+                if (d > radius || d >= bestDistance || blocked(generator, end, seed, p, probe)) continue;
+                best = new Found(kind, p);
+                bestDistance = d;
+            }
+        }
+        return best;
+    }
+
     private static InputStream resource(String path) {
         return EndBuildings.class.getClassLoader()
             .getResourceAsStream(path);
