@@ -12,7 +12,7 @@ import chlorine.etjourney.world.end.feature.sdf.Spline;
 import chlorine.etjourney.world.end.modifier.EndBlock;
 
 /** AMBER's seed tree: twisted strands hug a glowing drop, join into one trunk above it, and bear a few fruits. */
-public final class AmberTree {
+public final class AmberTree implements PlantCells.Bounds {
 
     /** Blocks the legs reach below their foot, so the tree does not float on a slope. */
     public static final int SINK = 4;
@@ -278,26 +278,32 @@ public final class AmberTree {
         return strands;
     }
 
+    @Override
     public int minX() {
         return minX;
     }
 
+    @Override
     public int maxX() {
         return maxX;
     }
 
+    @Override
     public int minY() {
         return minY;
     }
 
+    @Override
     public int maxY() {
         return maxY;
     }
 
+    @Override
     public int minZ() {
         return minZ;
     }
 
+    @Override
     public int maxZ() {
         return maxZ;
     }

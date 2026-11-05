@@ -3,9 +3,7 @@ package chlorine.etjourney.world.end.feature.plant;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Random;
 
 import chlorine.etjourney.world.end.modifier.BlockSink;
@@ -22,17 +20,7 @@ public final class AmberTrees {
     /** Distance kept from the cell's edge, so neighbours stay apart. */
     private static final int MARGIN = 4;
     private static final long SALT = 0x6A09E667F3BCC909L;
-    private static final long K1 = 0x9E3779B97F4A7C15L, K2 = 0xC2B2AE3D27D4EB4FL;
-    private static final Object NONE = new Object();
-    private static final Map<Long, Object> CACHE = new LinkedHashMap<Long, Object>(16, 0.75f, true) {
-
-        @Override
-        protected boolean removeEldestEntry(Map.Entry<Long, Object> e) {
-            return size() > 512;
-        }
-    };
-    private static long cachedSeed;
-    private static boolean seeded;
+    private static final ShapeCache<AmberTree> CACHE = new ShapeCache<>();
 
     private AmberTrees() {}
 
@@ -67,9 +55,7 @@ public final class AmberTrees {
     }
 
     private static Random random(long seed, int cellX, int cellZ) {
-        Random r = new Random(seed ^ SALT ^ cellX * K1 ^ cellZ * K2);
-        // Rehash: Random seeds that are close give nearly equal first draws.
-        return new Random(r.nextLong() ^ r.nextLong());
+        return PlantCells.random(seed, SALT, cellX, cellZ);
     }
 
     /**
@@ -118,25 +104,13 @@ public final class AmberTrees {
         double ground = t.ground(x + 0.5, z + 0.5);
         if (ground <= -100) return null;
         int y = (int) Math.floor(ground) + 1;
-        long key = shapeSeed ^ (long) y * K1 ^ t.source() * K2;
-        Object shape;
-        synchronized (AmberTrees.class) {
-            if (!seeded || seed != cachedSeed) {
-                CACHE.clear();
-                cachedSeed = seed;
-                seeded = true;
-            }
-            shape = CACHE.get(key);
-        }
-        if (shape == null) {
-            AmberTree built = AmberTree
-                .of(shapeSeed, 250 - y, (dx, dz) -> (int) Math.floor(t.ground(x + dx + 0.5, z + dz + 0.5)) - y);
-            shape = built == null ? NONE : built;
-            synchronized (AmberTrees.class) {
-                CACHE.put(key, shape);
-            }
-        }
-        return shape == NONE ? null : new Anchor(x, y, z, order, (AmberTree) shape);
+        long key = shapeSeed ^ (long) y * PlantCells.K1 ^ t.source() * PlantCells.K2;
+        AmberTree shape = CACHE.get(
+            seed,
+            key,
+            () -> AmberTree
+                .of(shapeSeed, 250 - y, (dx, dz) -> (int) Math.floor(t.ground(x + dx + 0.5, z + dz + 0.5)) - y));
+        return shape == null ? null : new Anchor(x, y, z, order, shape);
     }
 
     /** Every tree whose cell may reach the chunk, by {@code order}. */
@@ -156,7 +130,7 @@ public final class AmberTrees {
     /** Writes the trees' cells that fall in the sink, in list order, into air only. */
     public static void draw(List<Anchor> anchors, BlockSink sink) {
         for (Anchor a : anchors) {
-            if (!touches(a, sink)) continue;
+            if (!PlantCells.touches(a.x, a.y, a.z, a.shape, sink)) continue;
             a.shape.forEach((dx, dy, dz, block) -> {
                 int x = a.x + dx, y = a.y + dy, z = a.z + dz;
                 if (HangingRun.inside(sink, x, y, z) && sink.isAir(x, y, z)) sink.place(x, y, z, block);
@@ -164,12 +138,4 @@ public final class AmberTrees {
         }
     }
 
-    /** Whether the anchor's bounding box meets the sink's volume. */
-    private static boolean touches(Anchor a, BlockSink s) {
-        return a.x + a.shape.maxX() >= s.originX() && a.x + a.shape.minX() < s.originX() + s.width()
-            && a.z + a.shape.maxZ() >= s.originZ()
-            && a.z + a.shape.minZ() < s.originZ() + s.width()
-            && a.y + a.shape.maxY() >= s.minY()
-            && a.y + a.shape.minY() < s.maxY();
-    }
 }

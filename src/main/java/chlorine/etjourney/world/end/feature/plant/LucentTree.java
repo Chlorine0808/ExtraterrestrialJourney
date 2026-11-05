@@ -15,7 +15,7 @@ import chlorine.etjourney.world.end.feature.sdf.SdfFill;
 import chlorine.etjourney.world.end.modifier.EndBlock;
 
 /** BetterEnd's lucernia at full size: branches fanning out of one foot, each ending in a leaf ball hung with vines. */
-public final class LucentTree {
+public final class LucentTree implements PlantCells.Bounds {
 
     /** Blocks the foot reaches below the root, so the tree does not float where the probe's ground runs high. */
     public static final int SINK = 6;
@@ -274,26 +274,32 @@ public final class LucentTree {
         return branches;
     }
 
+    @Override
     public int minX() {
         return minX;
     }
 
+    @Override
     public int maxX() {
         return maxX;
     }
 
+    @Override
     public int minY() {
         return minY;
     }
 
+    @Override
     public int maxY() {
         return maxY;
     }
 
+    @Override
     public int minZ() {
         return minZ;
     }
 
+    @Override
     public int maxZ() {
         return maxZ;
     }
