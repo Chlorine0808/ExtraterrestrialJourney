@@ -20,6 +20,7 @@ import chlorine.etjourney.world.end.EndTerrain;
 import chlorine.etjourney.world.end.building.BuildingKind;
 import chlorine.etjourney.world.end.building.EndBuildings;
 import chlorine.etjourney.world.end.building.WorldTarget;
+import chlorine.etjourney.world.end.reserve.Reservations;
 
 /** /etj build place|list|find: trying templates in game and finding the generated buildings. */
 final class BuildCommand {
@@ -144,22 +145,22 @@ final class BuildCommand {
         Long seed = EndTerrain.seed();
         if (seed == null) return;
         WorldServer end = (WorldServer) player.worldObj;
-        EndBuildings.Found found = EndBuildings.find(
-            end.theChunkProviderServer.currentChunkProvider,
-            end,
+        List<EndBuildings.Found> found = EndBuildings.nearest(
+            (cx, cz) -> Reservations.forChunk(end.theChunkProviderServer.currentChunkProvider, end, seed, cx, cz),
             seed,
             MathHelper.floor_double(player.posX),
             MathHelper.floor_double(player.posZ),
             id,
-            FIND_RADIUS);
-        if (found == null) {
+            FIND_RADIUS,
+            1);
+        if (found.isEmpty()) {
             say(player, "No building within " + FIND_RADIUS + " blocks");
             return;
         }
-        Placement p = found.placement;
+        Placement p = found.get(0).placement;
         say(
             player,
-            found.kind.id + " at "
+            found.get(0).kind.id + " at "
                 + p.anchorX
                 + " "
                 + p.anchorY
