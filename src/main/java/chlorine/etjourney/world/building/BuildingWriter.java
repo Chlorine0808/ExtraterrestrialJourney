@@ -1,5 +1,8 @@
 package chlorine.etjourney.world.building;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import chlorine.etjourney.world.end.noise.Hash;
 
 /**
@@ -29,6 +32,9 @@ public final class BuildingWriter {
         int za = Math.max(z0, p.minZ()), zb = Math.min(z0 + depth - 1, p.maxZ());
         int bottom = p.bottomY();
         int written = 0;
+        // Torches and the like break off when nothing holds them yet, so they wait for the rest of the window.
+        List<int[]> later = new ArrayList<>();
+        List<BlockRef> laterRefs = new ArrayList<>();
         for (int x = xa; x <= xb; x++) {
             for (int z = za; z <= zb; z++) {
                 int[] local = p.rotation.toLocal(t, x - p.anchorX, 0, z - p.anchorZ);
@@ -38,12 +44,23 @@ public final class BuildingWriter {
                     if (y < MIN_Y || y > MAX_Y) continue;
                     Cell cell = t.get(lx, ly, lz);
                     if (cell.isKeep()) continue;
-                    if (cell.isAir()) target.setAir(x, y, z);
-                    else target.set(x, y, z, cell.pick(Hash.hash01(p.salt, x, y, z)), p.rotation);
                     written++;
+                    if (cell.isAir()) {
+                        target.setAir(x, y, z);
+                        continue;
+                    }
+                    BlockRef ref = cell.pick(Hash.hash01(p.salt, x, y, z));
+                    if (target.attachable(ref)) {
+                        later.add(new int[] { x, y, z });
+                        laterRefs.add(ref);
+                    } else target.set(x, y, z, ref, p.rotation);
                 }
                 written += foundation(p, t.get(lx, 0, lz), x, bottom, z, target);
             }
+        }
+        for (int i = 0; i < later.size(); i++) {
+            int[] at = later.get(i);
+            target.set(at[0], at[1], at[2], laterRefs.get(i), p.rotation);
         }
         return written;
     }

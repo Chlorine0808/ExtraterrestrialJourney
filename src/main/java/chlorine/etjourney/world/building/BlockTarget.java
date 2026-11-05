@@ -9,4 +9,9 @@ public interface BlockTarget {
 
     /** Whether a foundation may fill (x, y, z); the first position that is not stops the column. */
     boolean replaceable(int x, int y, int z);
+
+    /** Whether the block hangs on a neighbour (a torch, a lever); these are written after the rest of the window. */
+    default boolean attachable(BlockRef ref) {
+        return false;
+    }
 }

@@ -6,7 +6,9 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.StringReader;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.junit.jupiter.api.Test;
@@ -23,6 +25,7 @@ class BuildingWriterTest {
 
         private void record(int x, int y, int z, String what) {
             blocks.put(x + "," + y + "," + z, what);
+            order.add(what);
             minWrittenY = Math.min(minWrittenY, y);
             maxWrittenY = Math.max(maxWrittenY, y);
             calls++;
@@ -44,6 +47,13 @@ class BuildingWriterTest {
         public boolean replaceable(int x, int y, int z) {
             return !blocks.containsKey(x + "," + y + "," + z);
         }
+
+        @Override
+        public boolean attachable(BlockRef ref) {
+            return ref.name.equals("m:torch");
+        }
+
+        final List<String> order = new ArrayList<>();
 
         String at(int x, int y, int z) {
             return blocks.get(x + "," + y + "," + z);
@@ -173,5 +183,15 @@ class BuildingWriterTest {
         MemoryTarget target = new MemoryTarget();
         BuildingWriter.writeAll(at(t, Rotation.R90, 0, 64, 0, 0), target);
         assertEquals("m:stairs:2", target.at(0, 64, 0));
+    }
+
+    @Test
+    void attachablesGoAfterTheBlocksTheyHangOn() throws Exception {
+        // A torch west of its wall: written x first, it would come before the wall.
+        Template t = template("{\"rows\":[\"TA\",\"AA\"]}", "\"A\":\"m:a\",\"T\":\"m:torch:2\"", true);
+        MemoryTarget target = new MemoryTarget();
+        BuildingWriter.write(at(t, Rotation.R0, 9, 64, 9, 0), 8, 8, target);
+        assertEquals(4, target.order.size());
+        assertEquals("m:torch:2", target.order.get(3));
     }
 }
