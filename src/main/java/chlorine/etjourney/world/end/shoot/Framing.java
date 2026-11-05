@@ -20,9 +20,22 @@ public final class Framing {
     /** How far the second ground spot stands from the target, along the best look. */
     public static final double GROUND_SHIFT = 24;
 
+    /** How far a seed tree's ground view stands off, how high above the root, and where on the tree it aims. */
+    private static final double TREE_STAND = 15, TREE_RISE = 4, TREE_AIM = 7;
+    /** Ground under a tree's ground view may fall this far below the root or rise this far above it. */
+    private static final double TREE_DROP = 8, TREE_CLIMB = 10;
+    /** Turns tried away from the +x stand, nearest first. */
+    private static final float[] TREE_TURNS = { 0, 45, -45, 90, -90, 135, -135, 180 };
+
     public interface BiomeAt {
 
         EndBiome at(double x, double z);
+    }
+
+    /** The topmost ground's y; -100 or lower where there is none. */
+    public interface GroundAt {
+
+        double at(double x, double z);
     }
 
     private Framing() {}
@@ -95,6 +108,39 @@ public final class Framing {
 
     public static Camera ground(double x, double groundTop, double z, float yaw) {
         return new Camera(x, groundTop, z, yaw, (float) GROUND_PITCH);
+    }
+
+    /**
+     * A seed tree's ground view: off the tree along +x if the ground there will do, else along the nearest turn
+     * that will, raised above the ground in between and looking back at the tree.
+     */
+    public static Camera treeGround(Target t, GroundAt ground) {
+        for (float turn : TREE_TURNS) {
+            float yaw = 90f + turn;
+            double top = highestGround(t, ground, yaw);
+            if (!Double.isNaN(top) && top <= t.y + TREE_CLIMB) return standOff(t, yaw, top);
+        }
+        return standOff(t, 90f, highestGround(t, ground, 90f));
+    }
+
+    /** The highest ground on the line from the tree to its view, NaN when any of it is missing or falls away. */
+    private static double highestGround(Target t, GroundAt ground, float yaw) {
+        double[] d = EtjArgs.lookDirection(yaw, 0);
+        double top = Double.NEGATIVE_INFINITY;
+        for (int r = 1; r <= TREE_STAND; r++) {
+            double g = ground.at(t.x - d[0] * r, t.z - d[2] * r);
+            if (g <= -100 || g < t.y - TREE_DROP) return Double.NaN;
+            top = Math.max(top, g);
+        }
+        return top;
+    }
+
+    private static Camera standOff(Target t, float yaw, double groundTop) {
+        double[] d = EtjArgs.lookDirection(yaw, 0);
+        double feet = t.y + TREE_RISE;
+        if (!Double.isNaN(groundTop)) feet = Math.max(feet, Math.floor(groundTop) + 3);
+        float pitch = (float) Math.toDegrees(Math.atan2(feet + EYE - (t.y + TREE_AIM), TREE_STAND));
+        return new Camera(t.x - d[0] * TREE_STAND, feet, t.z - d[2] * TREE_STAND, yaw, pitch);
     }
 
     /** Whether a view whose ray hit at hitDistance (NaN when it hit nothing) is not blocked in front of its subject. */
