@@ -27,6 +27,8 @@ public final class BuildingKind {
     public final int floatMinY, floatMaxY;
     public final BlockRef foundation;
     public final int foundationDepth;
+    /** Whether a blank in the file is air rather than left alone. */
+    public final boolean blankIsAir;
     private final String[] styles;
     private final long salt;
 
@@ -42,6 +44,7 @@ public final class BuildingKind {
         this.floatMaxY = b.floatMaxY;
         this.foundation = b.foundation;
         this.foundationDepth = b.foundationDepth;
+        this.blankIsAir = b.blankIsAir;
         this.styles = b.styles;
         this.salt = 0x6A09E667F3BCC909L * (b.id.hashCode() + 1L);
     }
@@ -107,6 +110,7 @@ public final class BuildingKind {
         private int floatMinY, floatMaxY;
         private BlockRef foundation;
         private int foundationDepth = 24;
+        private boolean blankIsAir = true;
         private String[] styles = new String[0];
 
         private Builder(String id, String templateName) {
@@ -141,6 +145,12 @@ public final class BuildingKind {
         public Builder foundation(BlockRef block, int depth) {
             this.foundation = block;
             this.foundationDepth = depth;
+            return this;
+        }
+
+        /** Reads a blank in the file as "leave alone", as OKModular does, instead of air. */
+        public Builder keepBlank() {
+            this.blankIsAir = false;
             return this;
         }
 
