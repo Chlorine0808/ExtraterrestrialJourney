@@ -26,6 +26,7 @@ import chlorine.etjourney.world.end.feature.StructureProbe;
 import chlorine.etjourney.world.end.feature.Structures;
 import chlorine.etjourney.world.end.feature.Tool;
 import chlorine.etjourney.world.end.noise.Distance;
+import chlorine.etjourney.world.end.reserve.Area;
 import chlorine.etjourney.world.end.reserve.Reservations;
 import cpw.mods.fml.common.IWorldGenerator;
 import cpw.mods.fml.common.Loader;
@@ -36,7 +37,13 @@ public final class EndBuildings implements IWorldGenerator {
 
     private static final int END = 1;
     private static final List<BuildingKind> KINDS = new ArrayList<>();
-    private static TemplateStore store = new TemplateStore(null, EndBuildings::resource);
+    /** What generation reads: the jar only, so a world comes out the same on every install. */
+    private static final TemplateStore STORE = new TemplateStore(null, EndBuildings::resource);
+    /** What the place command reads: a fresh scan in OKModular's folder first. */
+    private static TemplateStore scans = STORE;
+
+    /** Suppression above which the ground is lowered enough to leave a building hanging; as StructureModifiers. */
+    private static final double SUPPRESSED = 0.1;
 
     private boolean warned;
 
@@ -45,7 +52,7 @@ public final class EndBuildings implements IWorldGenerator {
             Loader.instance()
                 .getConfigDir(),
             "okmodular/structures");
-        store = new TemplateStore(okmodular, EndBuildings::resource);
+        scans = new TemplateStore(okmodular, EndBuildings::resource);
         // FML runs lighter weights first: after the biospheres (10) and the plants (4, 5).
         GameRegistry.registerWorldGenerator(new EndBuildings(), 20);
     }
@@ -60,7 +67,11 @@ public final class EndBuildings implements IWorldGenerator {
     }
 
     public static TemplateStore store() {
-        return store;
+        return STORE;
+    }
+
+    public static TemplateStore scans() {
+        return scans;
     }
 
     public static BuildingKind kind(String id) {
@@ -69,7 +80,7 @@ public final class EndBuildings implements IWorldGenerator {
     }
 
     public static Template template(BuildingKind kind) {
-        return store.get(kind.templateName, kind.blankIsAir);
+        return STORE.get(kind.templateName, kind.blankIsAir);
     }
 
     @Override
@@ -120,9 +131,10 @@ public final class EndBuildings implements IWorldGenerator {
     public static boolean blocked(ChunkPlan.ReservedLookup reserved, long seed, Placement p, StructureProbe probe) {
         double cx = (p.minX() + p.maxX()) / 2.0, cz = (p.minZ() + p.maxZ()) / 2.0;
         double radius = Distance.planar((p.maxX() - p.minX()) / 2.0, (p.maxZ() - p.minZ()) / 2.0);
-        if (p.minY() < Reservations.CLEAR_Y
-            && Reservations.touches(reserved.at((int) Math.floor(cx) >> 4, (int) Math.floor(cz) >> 4), cx, cz, radius))
-            return true;
+        if (p.minY() < Reservations.CLEAR_Y) {
+            List<Area> areas = reserved.at((int) Math.floor(cx) >> 4, (int) Math.floor(cz) >> 4);
+            if (Reservations.touches(areas, cx, cz, radius) || onFadedGround(areas, p)) return true;
+        }
         for (Structure.Kind<? extends Structure> kind : SHAPES) if (!kind.near(seed, cx, cz, radius, probe)
             .isEmpty()) return true;
         return false;
@@ -167,6 +179,15 @@ public final class EndBuildings implements IWorldGenerator {
             if (!blocked(reserved, seed, f.placement, probe)) out.add(f);
         }
         return out;
+    }
+
+    /** Whether a corner or the centre lies on the coast an island lowers, as StructureModifiers.blocked judges feet. */
+    static boolean onFadedGround(List<Area> areas, Placement p) {
+        if (p.minY() >= Reservations.CLEAR_Y) return false;
+        double[][] points = { { p.minX(), p.minZ() }, { p.maxX(), p.minZ() }, { p.minX(), p.maxZ() },
+            { p.maxX(), p.maxZ() }, { (p.minX() + p.maxX()) / 2.0, (p.minZ() + p.maxZ()) / 2.0 } };
+        for (double[] point : points) if (Reservations.suppression(areas, point[0], point[1]) > SUPPRESSED) return true;
+        return false;
     }
 
     private static InputStream resource(String path) {

@@ -72,18 +72,18 @@ final class BuildCommand {
             return;
         }
         // Read from disk again, so a fresh scan shows up without a restart.
-        EndBuildings.store()
+        EndBuildings.scans()
             .clear();
         boolean blankIsAir = true;
         for (BuildingKind kind : EndBuildings.kinds()) if (kind.templateName.equals(name)) blankIsAir = kind.blankIsAir;
-        Template t = EndBuildings.store()
+        Template t = EndBuildings.scans()
             .get(name, blankIsAir);
         if (t == null) {
             say(
                 player,
                 "Cannot read " + name
                     + ": "
-                    + EndBuildings.store()
+                    + EndBuildings.scans()
                         .failures()
                         .get(name));
             return;
