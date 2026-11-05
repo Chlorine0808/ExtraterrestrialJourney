@@ -169,7 +169,9 @@ class TemplateParserTest {
             "[{\"layers\":[{\"rows\":[\"A\"]}],\"mappings\":{\"A\":{\"component\":\"casing\",\"blocks\":[\"m:a\"]}}}]",
             "[{\"layers\":[{\"rows\":[\"A\"]}],\"mappings\":{\"A\":{\"blocks\":[\"m:a\"],\"weights\":[1,2]}}}]",
             "[{\"layers\":[{\"rows\":[\"A\"]}],\"mappings\":{\"A\":{\"blocks\":[\"m:a\"],\"weights\":[0]}}}]",
-            "[{\"layers\":[{\"rows\":[\"A{m:b\"]}],\"mappings\":{\"A\":\"m:a\"}}]", "[]" })
+            "[{\"layers\":[{\"rows\":[\"A{m:b\"]}],\"mappings\":{\"A\":\"m:a\"}}]", "[]",
+            "[{\"layers\":[{\"name\":\"y1\"}],\"mappings\":{}}]",
+            "[{\"layers\":[{\"rows\":[\"A\"]}],\"mappings\":{\"A\":{\"blocks\":[\"m:a\"],\"weights\":[\"x\"]}}}]" })
     void rejects(String json) {
         assertThrows(TemplateException.class, () -> TemplateParser.parse("t", new StringReader(json), true));
     }

@@ -10,7 +10,6 @@ import java.util.Map;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import com.google.gson.JsonParseException;
 import com.google.gson.JsonParser;
 
 import chlorine.etjourney.core.util.ModLog;
@@ -30,8 +29,9 @@ public final class TemplateParser {
     public static Template parse(String name, Reader json, boolean blankIsAir) throws TemplateException {
         try {
             return read(name, new JsonParser().parse(json), blankIsAir);
-        } catch (JsonParseException | IllegalStateException | ClassCastException | UnsupportedOperationException e) {
-            throw new TemplateException("malformed JSON: " + e.getMessage());
+        } catch (RuntimeException e) {
+            // Gson throws unchecked exceptions for a wrong shape (a missing key, a string for a number).
+            throw new TemplateException("malformed JSON: " + e);
         }
     }
 
