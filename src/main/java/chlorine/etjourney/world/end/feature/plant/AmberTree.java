@@ -116,6 +116,7 @@ public final class AmberTree {
         double thick = 0.95, thin = 0.8;
         Sdf wood = null;
         List<List<double[]>> paths = new ArrayList<>();
+        double lowest = 0;
         for (int s = 0; s < strands; s++) {
             double a0 = start + (s + (r.nextDouble() - 0.5) * 0.5) * Math.PI * 2 / strands;
             double turn = twist * (0.7 + r.nextDouble() * 0.6);
@@ -136,6 +137,7 @@ public final class AmberTree {
             int fx = (int) Math.floor(foot[0]), fz = (int) Math.floor(foot[2]);
             double bottom = Math.min(0, ground.top(fx, fz) + 1) - SINK;
             path.add(0, new double[] { foot[0], bottom, foot[2] });
+            lowest = Math.min(lowest, bottom);
             paths.add(path);
             Sdf strand = Spline.shape(path, thick, thin);
             wood = wood == null ? strand : wood.union(strand);
@@ -149,9 +151,11 @@ public final class AmberTree {
 
         Map<Long, EndBlock> cells = new LinkedHashMap<>();
         int top = (int) Math.ceil(topY + 2);
+        // A leg's end cap reaches about one thickness under its bottom point.
+        int bottom = (int) Math.floor(lowest) - 2;
         for (int x = -REACH; x <= REACH; x++) {
             for (int z = -REACH; z <= REACH; z++) {
-                for (int y = -SINK - 4; y <= top; y++) {
+                for (int y = bottom; y <= top; y++) {
                     // Sample at the block's centre, where line() puts its points too.
                     double px = x + 0.5, py = y + 0.5, pz = z + 0.5;
                     if (wood.distance(px, py, pz) < 0) cells.put(SdfFill.key(x, y, z), EndBlock.AMBER_ROOT);

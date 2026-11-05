@@ -199,6 +199,19 @@ class AmberTreeTest {
     }
 
     @Test
+    void legsKeepTheirThicknessDownToTheirFoot() {
+        // Ground seven below the root sinks the legs to -10, under where the shape used to be sampled.
+        AmberTree.Ground low = (dx, dz) -> -7;
+        for (long i = 0; i < 20; i++) {
+            AmberTree t = AmberTree.of(seedOf(i), 250, low);
+            assertNotNull(t);
+            int[] cells = { 0 };
+            t.forEach((dx, dy, dz, k) -> { if (dy == -10 && k == EndBlock.AMBER_ROOT) cells[0]++; });
+            assertTrue(cells[0] >= 2 * t.strands(), "seed " + i + " " + cells[0] + " cells for " + t.strands());
+        }
+    }
+
+    @Test
     void staysShallowBesideTheVoid() {
         // The probe reports a lake or the void as -1000; legs and roots must not run down to it.
         AmberTree.Ground edge = (dx, dz) -> dx > 3 ? -1060 : -1;
