@@ -218,15 +218,18 @@ final class Locator {
         return out;
     }
 
-    private static AmberTrees.Anchor nearestAmberTree(long seed, Continent.Seed s, AmberTrees.Terrain terrain) {
+    /** The kept tree nearest the continent seed; generation drops trees beside reserved areas. */
+    private AmberTrees.Anchor nearestAmberTree(long seed, Continent.Seed s, AmberTrees.Terrain terrain) {
         int scx = (int) Math.floor((double) s.x / AmberTrees.CELL),
             scz = (int) Math.floor((double) s.z / AmberTrees.CELL);
         AmberTrees.Anchor best = null;
         for (int dx = -AMBER_RINGS; dx <= AMBER_RINGS; dx++) {
             for (int dz = -AMBER_RINGS; dz <= AMBER_RINGS; dz++) {
-                for (AmberTrees.Anchor a : AmberTrees.in(seed, scx + dx, scz + dz, terrain))
+                for (AmberTrees.Anchor a : AmberTrees.in(seed, scx + dx, scz + dz, terrain)) {
+                    if (!AmberTrees.clearOf(a, reserved.at(a.x >> 4, a.z >> 4))) continue;
                     if (best == null || Math.hypot(a.x - s.x, a.z - s.z) < Math.hypot(best.x - s.x, best.z - s.z))
                         best = a;
+                }
             }
         }
         return best;
