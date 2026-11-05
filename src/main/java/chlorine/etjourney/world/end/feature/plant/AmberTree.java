@@ -17,6 +17,8 @@ public final class AmberTree {
     /** Blocks the legs reach below their foot, so the tree does not float on a slope. */
     public static final int SINK = 4;
 
+    /** Ground further below the root than this counts as none, such as a lake or the void. */
+    private static final int FLOOR = -2 * SINK;
     private static final int FIT_TRIES = 6;
     private static final int STRAND_POINTS = 10;
     private static final int REACH = 12;
@@ -75,11 +77,9 @@ public final class AmberTree {
 
     /** Builds the tree; it shrinks to fit under {@code maxTop}, and is null when it still does not fit. */
     public static AmberTree of(long shapeSeed, int maxTop, Ground ground) {
-        // A lake or the void reads as far below; legs and roots stop a few blocks down instead.
-        Ground floor = (dx, dz) -> Math.max(ground.top(dx, dz), -2 * SINK);
         double scale = 1;
         for (int i = 0; i <= FIT_TRIES; i++, scale *= 0.9) {
-            AmberTree t = build(shapeSeed, scale, floor);
+            AmberTree t = build(shapeSeed, scale, ground);
             if (t.maxY <= maxTop) return t;
         }
         return null;
@@ -135,9 +135,15 @@ public final class AmberTree {
             }
             double[] foot = path.get(0);
             int fx = (int) Math.floor(foot[0]), fz = (int) Math.floor(foot[2]);
-            double bottom = Math.min(0, ground.top(fx, fz) + 1) - SINK;
-            path.add(0, new double[] { foot[0], bottom, foot[2] });
-            lowest = Math.min(lowest, bottom);
+            int under = ground.top(fx, fz);
+            if (under >= FLOOR) {
+                double bottom = Math.min(0, under + 1) - SINK;
+                path.add(0, new double[] { foot[0], bottom, foot[2] });
+                lowest = Math.min(lowest, bottom);
+            } else {
+                // No ground to stand on: the leg ends at its foot, and the root step below starts there.
+                path.add(0, foot.clone());
+            }
             paths.add(path);
             Sdf strand = Spline.shape(path, thick, thin);
             wood = wood == null ? strand : wood.union(strand);
@@ -214,10 +220,12 @@ public final class AmberTree {
                 for (int p = 1; p < 4; p++) {
                     double d = from + (to - from) * p / 3;
                     double x = Math.cos(angle) * d, z = Math.sin(angle) * d;
-                    int gy = ground.top((int) Math.floor(x), (int) Math.floor(z)) + 1;
-                    root.add(new double[] { x, gy, z });
+                    int under = ground.top((int) Math.floor(x), (int) Math.floor(z));
+                    // A root crawls over the ground only, so it stops where the ground ends.
+                    if (under < FLOOR) break;
+                    root.add(new double[] { x, under + 1, z });
                 }
-                line(root, cells);
+                if (root.size() > 1) line(root, cells);
             }
         }
         return new AmberTree(cells, strands);

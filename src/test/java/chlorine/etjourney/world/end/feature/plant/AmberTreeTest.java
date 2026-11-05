@@ -223,6 +223,25 @@ class AmberTreeTest {
     }
 
     @Test
+    void nothingHangsIntoTheVoid() {
+        // Past x = 3 there is no ground; a leg's thickness may spill one block over the edge.
+        AmberTree.Ground edge = (dx, dz) -> dx > 3 ? -1060 : -1;
+        int over = 0;
+        for (long i = 0; i < 20; i++) {
+            final long s = i;
+            int[] n = { 0 };
+            AmberTree.of(seedOf(i), 250, edge)
+                .forEach((dx, dy, dz, k) -> {
+                    if (dx < 5 || k != EndBlock.AMBER_ROOT) return;
+                    n[0]++;
+                    assertTrue(dy >= -1, "seed " + s + " hangs to " + dy + " at x " + dx);
+                });
+            over += n[0];
+        }
+        assertTrue(over > 0, "no wood over the void at all");
+    }
+
+    @Test
     void shrinksUnderALowCeiling() {
         for (long i = 0; i < 20; i++) {
             AmberTree t = AmberTree.of(seedOf(i), 12, FLAT);
