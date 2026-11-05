@@ -199,6 +199,24 @@ class AmberTreesTest {
         assertTrue(fresh.minY() < a.shape.minY(), fresh.minY() + " vs " + a.shape.minY());
     }
 
+    @Test
+    void spotsNameTheTreesWithoutBuildingThem() {
+        AmberTrees.Terrain t = flat(60);
+        int trees = 0;
+        for (int c = 0; c < 40; c++) {
+            List<AmberTrees.Anchor> found = AmberTrees.in(9L, c, -c, t);
+            int[] spot = AmberTrees.spot(9L, c, -c);
+            if (found.isEmpty()) {
+                assertEquals(null, spot);
+                continue;
+            }
+            trees++;
+            assertEquals(found.get(0).x, spot[0]);
+            assertEquals(found.get(0).z, spot[1]);
+        }
+        assertTrue(trees > 20);
+    }
+
     private static AmberTrees.Anchor firstTree(long seed, AmberTrees.Terrain t) {
         for (int c = 0;; c++) {
             List<AmberTrees.Anchor> found = AmberTrees.in(seed, c, 0, t);

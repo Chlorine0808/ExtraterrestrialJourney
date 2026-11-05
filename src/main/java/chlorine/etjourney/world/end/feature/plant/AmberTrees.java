@@ -104,6 +104,15 @@ public final class AmberTrees {
         return out;
     }
 
+    /** Where the cell's tree would stand, {x, z}, before the terrain is asked; null when the cell has none. */
+    public static int[] spot(long seed, int cellX, int cellZ) {
+        Random r = random(seed, cellX, cellZ);
+        if (r.nextDouble() >= CHANCE) return null;
+        int x = cellX * CELL + MARGIN + r.nextInt(CELL - 2 * MARGIN);
+        int z = cellZ * CELL + MARGIN + r.nextInt(CELL - 2 * MARGIN);
+        return new int[] { x, z };
+    }
+
     private static Anchor make(long seed, int x, int z, long shapeSeed, long order, Terrain t) {
         if (!t.amber(x + 0.5, z + 0.5)) return null;
         double ground = t.ground(x + 0.5, z + 0.5);

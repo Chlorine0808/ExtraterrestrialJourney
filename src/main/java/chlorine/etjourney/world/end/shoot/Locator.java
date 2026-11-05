@@ -2,6 +2,7 @@ package chlorine.etjourney.world.end.shoot;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -222,17 +223,20 @@ final class Locator {
     private AmberTrees.Anchor nearestAmberTree(long seed, Continent.Seed s, AmberTrees.Terrain terrain) {
         int scx = (int) Math.floor((double) s.x / AmberTrees.CELL),
             scz = (int) Math.floor((double) s.z / AmberTrees.CELL);
-        AmberTrees.Anchor best = null;
+        // Building a tree is costly, so cells go nearest spot first and the search stops at the first kept tree.
+        List<int[]> cells = new ArrayList<>();
         for (int dx = -AMBER_RINGS; dx <= AMBER_RINGS; dx++) {
             for (int dz = -AMBER_RINGS; dz <= AMBER_RINGS; dz++) {
-                for (AmberTrees.Anchor a : AmberTrees.in(seed, scx + dx, scz + dz, terrain)) {
-                    if (!AmberTrees.clearOf(a, reserved.at(a.x >> 4, a.z >> 4))) continue;
-                    if (best == null || Math.hypot(a.x - s.x, a.z - s.z) < Math.hypot(best.x - s.x, best.z - s.z))
-                        best = a;
-                }
+                int[] spot = AmberTrees.spot(seed, scx + dx, scz + dz);
+                if (spot != null) cells.add(new int[] { scx + dx, scz + dz, spot[0], spot[1] });
             }
         }
-        return best;
+        cells.sort(Comparator.comparingDouble(c -> Math.hypot(c[2] - s.x, c[3] - s.z)));
+        for (int[] c : cells) {
+            for (AmberTrees.Anchor a : AmberTrees.in(seed, c[0], c[1], terrain))
+                if (AmberTrees.clearOf(a, reserved.at(a.x >> 4, a.z >> 4))) return a;
+        }
+        return null;
     }
 
     /** The terrain the seed tree placement sees, built from the sampler as the production modifier builds it. */
