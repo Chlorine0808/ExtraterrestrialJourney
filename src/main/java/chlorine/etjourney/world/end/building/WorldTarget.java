@@ -6,6 +6,9 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import net.minecraft.block.Block;
+import net.minecraft.block.BlockButton;
+import net.minecraft.block.BlockLever;
+import net.minecraft.block.BlockTorch;
 import net.minecraft.init.Blocks;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.tileentity.TileEntity;
@@ -35,15 +38,38 @@ public final class WorldTarget implements BlockTarget {
     public void set(int x, int y, int z, BlockRef ref, Rotation rotation) {
         Block block = block(ref.name);
         if (block == null) return;
-        int meta = VanillaMetaRotations.forBlock(block)
-            .rotate(ref.meta, rotation);
-        world.setBlock(x, y, z, block, meta, 2);
-        if (ref.loot != null) fill(x, y, z, ref.loot);
+        try {
+            int meta = VanillaMetaRotations.forBlock(block)
+                .rotate(ref.meta, rotation);
+            world.setBlock(x, y, z, block, meta, 2);
+            // Chests, furnaces and dispensers pick a facing from their neighbours when added; put the template's back.
+            if (world.getBlock(x, y, z) == block && world.getBlockMetadata(x, y, z) != meta)
+                world.setBlockMetadataWithNotify(x, y, z, meta, 2);
+            if (ref.loot != null) fill(x, y, z, ref.loot);
+        } catch (RuntimeException e) {
+            failed(ref.name, e);
+        }
     }
 
     @Override
     public void setAir(int x, int y, int z) {
-        if (!world.isAirBlock(x, y, z)) world.setBlock(x, y, z, Blocks.air, 0, 2);
+        try {
+            if (!world.isAirBlock(x, y, z)) world.setBlock(x, y, z, Blocks.air, 0, 2);
+        } catch (RuntimeException e) {
+            failed("air", e);
+        }
+    }
+
+    @Override
+    public boolean attachable(BlockRef ref) {
+        Block block = block(ref.name);
+        return block instanceof BlockTorch || block instanceof BlockLever || block instanceof BlockButton;
+    }
+
+    /** A block failing as it is placed costs that block, not the building. */
+    private static void failed(String name, RuntimeException e) {
+        if (WARNED.add("failed:" + name))
+            ModLog.LOG.warn("Building block {} failed to place; later failures stay quiet", name, e);
     }
 
     @Override
