@@ -35,6 +35,11 @@ public final class Placement {
         for (int[] c : joint.cells) open.set(Template.index(template.sizeX, template.sizeZ, c[0], c[1], c[2]));
     }
 
+    public boolean isOpen(Joint joint) {
+        int[] c = joint.cells.get(0);
+        return isOpen(c[0], c[1], c[2]);
+    }
+
     boolean isOpen(int x, int y, int z) {
         return open.get(Template.index(template.sizeX, template.sizeZ, x, y, z));
     }
