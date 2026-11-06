@@ -14,6 +14,8 @@ import net.minecraft.world.WorldServer;
 
 import chlorine.etjourney.world.building.BuildingWriter;
 import chlorine.etjourney.world.building.Placement;
+import chlorine.etjourney.world.building.RoomAssembler;
+import chlorine.etjourney.world.building.RoomSet;
 import chlorine.etjourney.world.building.Rotation;
 import chlorine.etjourney.world.building.Template;
 import chlorine.etjourney.world.end.EndTerrain;
@@ -57,6 +59,7 @@ final class BuildCommand {
             List<String> names = new ArrayList<>();
             for (BuildingKind kind : EndBuildings.kinds())
                 names.add(args[1].equals("place") ? kind.templateName : kind.id);
+            if (args[1].equals("place")) for (RoomSet set : EndBuildings.roomSets()) names.add(set.id);
             return names;
         }
         if (args.length == 4 && args[1].equals("place")) return Arrays.asList("0", "90", "180", "270");
@@ -74,6 +77,11 @@ final class BuildCommand {
         // Read from disk again, so a fresh scan shows up without a restart.
         EndBuildings.scans()
             .clear();
+        RoomSet rooms = EndBuildings.roomSet(name);
+        if (rooms != null) {
+            placeRooms(player, rooms, rotation);
+            return;
+        }
         boolean blankIsAir = true;
         for (BuildingKind kind : EndBuildings.kinds()) if (kind.templateName.equals(name)) blankIsAir = kind.blankIsAir;
         Template t = EndBuildings.scans()
@@ -117,6 +125,58 @@ final class BuildCommand {
                 + "; "
                 + written
                 + " blocks");
+    }
+
+    /** Grows a fresh building from the room set each time, its start room ahead of the player. */
+    private static void placeRooms(EntityPlayerMP player, RoomSet set, Rotation rotation) {
+        int facing = MathHelper.floor_double(player.rotationYaw * 4 / 360 + 0.5) & 3;
+        int[][] ahead = { { 0, 1 }, { -1, 0 }, { 0, -1 }, { 1, 0 } };
+        Template start = EndBuildings.scans()
+            .get(set.start, true);
+        if (start == null) {
+            say(
+                player,
+                "Cannot read " + set.start
+                    + ": "
+                    + EndBuildings.scans()
+                        .failures()
+                        .get(set.start));
+            return;
+        }
+        int distance = GAP + Math.max(start.sizeX, start.sizeZ) / 2 + 1;
+        int x = MathHelper.floor_double(player.posX) + ahead[facing][0] * distance;
+        int z = MathHelper.floor_double(player.posZ) + ahead[facing][1] * distance;
+        int y = MathHelper.floor_double(player.posY) + start.anchorY;
+        long seed = player.worldObj.rand.nextLong();
+        List<Placement> placed = RoomAssembler.assemble(
+            set,
+            name -> EndBuildings.scans()
+                .get(name, true),
+            rotation,
+            x,
+            y,
+            z,
+            seed);
+        WorldTarget target = new WorldTarget(player.worldObj);
+        int written = 0;
+        for (Placement p : placed) written += BuildingWriter.writeAll(p, target);
+        say(
+            player,
+            "Placed " + set.id
+                + " ("
+                + placed.size()
+                + " rooms) at "
+                + x
+                + " "
+                + y
+                + " "
+                + z
+                + "; "
+                + written
+                + " blocks");
+        for (Map.Entry<String, String> e : EndBuildings.scans()
+            .failures()
+            .entrySet()) say(player, "Failed: " + e.getKey() + ": " + e.getValue());
     }
 
     private static void list(EntityPlayerMP player) {

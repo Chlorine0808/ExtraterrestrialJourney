@@ -1,11 +1,14 @@
 package chlorine.etjourney.content.end;
 
+import java.util.Arrays;
+
 import net.minecraft.init.Items;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.WeightedRandomChestContent;
 import net.minecraftforge.common.ChestGenHooks;
 
 import chlorine.etjourney.world.building.BlockRef;
+import chlorine.etjourney.world.building.RoomSet;
 import chlorine.etjourney.world.end.building.BuildingKind;
 import chlorine.etjourney.world.end.building.EndBuildings;
 
@@ -39,5 +42,12 @@ public final class EndBuildingContent {
                 .chance(0.3)
                 .floating(220, 280)
                 .build());
+        EndBuildings.addRooms(
+            new RoomSet(
+                "test_rooms",
+                "room_hub",
+                Arrays.asList("room_hub", "room_hall", "room_corner", "room_end"),
+                4,
+                12));
     }
 }

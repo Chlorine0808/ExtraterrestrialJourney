@@ -15,6 +15,7 @@ import net.minecraft.world.chunk.IChunkProvider;
 import chlorine.etjourney.core.util.ModLog;
 import chlorine.etjourney.world.building.BuildingWriter;
 import chlorine.etjourney.world.building.Placement;
+import chlorine.etjourney.world.building.RoomSet;
 import chlorine.etjourney.world.building.Template;
 import chlorine.etjourney.world.building.TemplateStore;
 import chlorine.etjourney.world.end.ChunkPlan;
@@ -37,6 +38,7 @@ public final class EndBuildings implements IWorldGenerator {
 
     private static final int END = 1;
     private static final List<BuildingKind> KINDS = new ArrayList<>();
+    private static final List<RoomSet> ROOM_SETS = new ArrayList<>();
     /** What generation reads: the jar only, so a world comes out the same on every install. */
     private static final TemplateStore STORE = new TemplateStore(null, EndBuildings::resource);
     /** What the place command reads: a fresh scan in OKModular's folder first. */
@@ -60,6 +62,20 @@ public final class EndBuildings implements IWorldGenerator {
     /** Adds a kind; content calls this in init. */
     public static void add(BuildingKind kind) {
         KINDS.add(kind);
+    }
+
+    /** Adds a building grown from rooms; content calls this in init. Only the place command uses these yet. */
+    public static void addRooms(RoomSet set) {
+        ROOM_SETS.add(set);
+    }
+
+    public static List<RoomSet> roomSets() {
+        return Collections.unmodifiableList(ROOM_SETS);
+    }
+
+    public static RoomSet roomSet(String id) {
+        for (RoomSet set : ROOM_SETS) if (set.id.equals(id)) return set;
+        return null;
     }
 
     public static List<BuildingKind> kinds() {
