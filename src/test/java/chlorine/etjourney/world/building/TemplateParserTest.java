@@ -7,6 +7,9 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.StringReader;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -151,9 +154,9 @@ class TemplateParserTest {
         // 3 wide, 1 high, 3 deep: one joint on each side.
         Template t = parse("{\"rows\":[\"A@A\",\"@A@\",\"A@A\"]}", "\"A\":\"m:a\",\"@\":\"m:seal\"");
         assertEquals(4, t.joints.size());
-        java.util.Set<String> facings = new java.util.HashSet<>();
+        Set<String> facings = new HashSet<>();
         for (Joint j : t.joints) facings.add(j.dx + "," + j.dz);
-        assertEquals(new java.util.HashSet<>(java.util.Arrays.asList("0,-1", "0,1", "-1,0", "1,0")), facings);
+        assertEquals(new HashSet<>(Arrays.asList("0,-1", "0,1", "-1,0", "1,0")), facings);
     }
 
     @Test
