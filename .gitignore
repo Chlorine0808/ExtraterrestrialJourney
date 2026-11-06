@@ -44,3 +44,6 @@ CLAUDE.md
 
 # Upstream mods cloned for reference
 /external/
+# Aseprite source files
+*.aseprite
+*.ase
