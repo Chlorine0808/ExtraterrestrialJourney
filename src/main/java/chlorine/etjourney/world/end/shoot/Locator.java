@@ -7,8 +7,10 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import chlorine.etjourney.world.building.Placement;
 import chlorine.etjourney.world.end.ChunkPlan;
 import chlorine.etjourney.world.end.TerrainSampler;
+import chlorine.etjourney.world.end.building.EndBuildings;
 import chlorine.etjourney.world.end.debug.EndSearch;
 import chlorine.etjourney.world.end.feature.ArcPaths;
 import chlorine.etjourney.world.end.feature.Biosphere;
@@ -45,6 +47,9 @@ final class Locator {
     private static final int AMBER_RINGS = 3;
     /** Normal-cell rings searched around a continent seed. */
     private static final int NORMAL_RINGS = 6;
+
+    /** How far from the origin buildings are searched for. */
+    private static final int BUILDING_RADIUS = 4096;
 
     private final TerrainSampler sampler;
     /** Reserved areas by chunk, as generation sees them. */
@@ -89,6 +94,19 @@ final class Locator {
                     hit[1],
                     CONTINENT_SIZE,
                     id));
+        }
+        return out;
+    }
+
+    /** Generated buildings of a kind, nearest the origin first. */
+    List<Target> buildings(String id, double ox, double oz, int count) {
+        List<Target> out = new ArrayList<>();
+        for (EndBuildings.Found f : EndBuildings
+            .nearest(reserved, sampler.seed(), (int) ox, (int) oz, id, BUILDING_RADIUS, count)) {
+            Placement p = f.placement;
+            double size = Math.max(p.maxX() - p.minX(), p.maxZ() - p.minZ()) + 1;
+            out.add(
+                new Target("建物", (p.minX() + p.maxX()) / 2.0, p.bottomY(), (p.minZ() + p.maxZ()) / 2.0, size, p.salt));
         }
         return out;
     }

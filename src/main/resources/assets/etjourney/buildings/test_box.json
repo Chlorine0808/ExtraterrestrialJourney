@@ -1,0 +1,101 @@
+[
+  {
+    "name": "test_box",
+    "layers": [
+      {
+        "name": "roof",
+        "rows": [
+          "AAAAAAAAA",
+          "AAAAAAAAA",
+          "AAAAAAAAA",
+          "AAAAAAAAA",
+          "AAAAAAAAA",
+          "AAAAAAAAA",
+          "AAAAAAAAA",
+          "AAAAAAAAA",
+          "AAAAAAAAA"
+        ]
+      },
+      {
+        "name": "wall",
+        "rows": [
+          "AAAAAAAAA",
+          "A       A",
+          "A       A",
+          "A       A",
+          "A       A",
+          "A       A",
+          "A       A",
+          "A       A",
+          "AAAAAAAAA"
+        ]
+      },
+      {
+        "name": "wall",
+        "rows": [
+          "AAAAAAAAA",
+          "A       A",
+          "A       A",
+          "A       A",
+          "A       A",
+          "A       A",
+          "A       A",
+          "A       A",
+          "AAAAAAAAA"
+        ]
+      },
+      {
+        "name": "wall",
+        "rows": [
+          "AAAAAAAAA",
+          "A       A",
+          "A       A",
+          "A       A",
+          "A       A",
+          "A       A",
+          "A       A",
+          "A       A",
+          "AAAAAAAAA"
+        ]
+      },
+      {
+        "name": "furnished",
+        "rows": [
+          "AAAAAAAAA",
+          "A S L T A",
+          "A       A",
+          "A       A",
+          "A   C   A",
+          "A       A",
+          "A       A",
+          "A       A",
+          "AAAAAAAAA"
+        ]
+      },
+      {
+        "name": "floor",
+        "rows": [
+          "AAAAAAAAA",
+          "AAAAAAAAA",
+          "AAAAAAAAA",
+          "AAAAAAAAA",
+          "AAAAAAAAA",
+          "AAAAAAAAA",
+          "AAAAAAAAA",
+          "AAAAAAAAA",
+          "AAAAAAAAA"
+        ]
+      }
+    ],
+    "mappings": {
+      "A": "minecraft:stonebrick:0",
+      "S": "minecraft:oak_stairs:0",
+      "L": "minecraft:log:4",
+      "T": "minecraft:torch:3",
+      "C": {
+        "block": "minecraft:chest:2",
+        "loot": "etjourney:end_ruins"
+      }
+    }
+  }
+]

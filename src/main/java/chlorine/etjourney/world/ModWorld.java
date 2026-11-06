@@ -7,6 +7,7 @@ import chlorine.etjourney.world.end.EndTerrain;
 import chlorine.etjourney.world.end.VoidFalls;
 import chlorine.etjourney.world.end.biosphere.BiosphereBiomes;
 import chlorine.etjourney.world.end.biosphere.BiosphereTransplant;
+import chlorine.etjourney.world.end.building.EndBuildings;
 import chlorine.etjourney.world.end.debug.EndProbe;
 import chlorine.etjourney.world.end.debug.EtjCommand;
 import cpw.mods.fml.common.event.FMLServerStartingEvent;
@@ -32,6 +33,7 @@ public final class ModWorld {
         EndFlora.register();
         BiosphereTransplant.register();
         BiosphereBiomes.register();
+        EndBuildings.register();
         ModLog.LOG.debug("world: init");
     }
 }

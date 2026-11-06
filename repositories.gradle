@@ -1,5 +1,13 @@
 // Add any additional repositories for your dependencies here.
 
 repositories {
+    // OKModular (dev only) and its OKCore, built by jitpack from GitHub.
+    maven {
+        url = "https://jitpack.io"
+        content {
+            includeGroup("com.github.Chlorine0808")
+            includeGroup("com.github.Shigure-Ruiseki")
+        }
+    }
 
 }

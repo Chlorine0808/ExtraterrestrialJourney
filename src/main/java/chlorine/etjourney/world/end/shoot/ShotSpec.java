@@ -15,6 +15,7 @@ public final class ShotSpec {
         GLOWSHROOM,
         AMBER_TREE,
         LAKE,
+        BUILDING,
         AT
     }
 
