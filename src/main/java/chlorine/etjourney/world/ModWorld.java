@@ -10,6 +10,7 @@ import chlorine.etjourney.world.end.biosphere.BiosphereTransplant;
 import chlorine.etjourney.world.end.building.EndBuildings;
 import chlorine.etjourney.world.end.debug.EndProbe;
 import chlorine.etjourney.world.end.debug.EtjCommand;
+import chlorine.etjourney.world.updraft.UpdraftWorld;
 import cpw.mods.fml.common.event.FMLServerStartingEvent;
 
 /** Entry point of the terrain engine: biome IDs in preInit, generators in init. */
@@ -24,6 +25,7 @@ public final class ModWorld {
 
     public static void serverStarting(FMLServerStartingEvent event) {
         event.registerServerCommand(new EtjCommand());
+        UpdraftWorld.serverStarting();
         EndProbe.runIfRequested();
     }
 
@@ -34,6 +36,7 @@ public final class ModWorld {
         BiosphereTransplant.register();
         BiosphereBiomes.register();
         EndBuildings.register();
+        UpdraftWorld.register();
         ModLog.LOG.debug("world: init");
     }
 }
