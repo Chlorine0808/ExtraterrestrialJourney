@@ -147,10 +147,57 @@ class TemplateParserTest {
     }
 
     @Test
-    void reservedAtActsBlank() throws Exception {
-        assertTrue(
-            parse("{\"rows\":[\"@\"]}", "", false).get(0, 0, 0)
-                .isKeep());
+    void jointTakesItsFacingFromItsFace() throws Exception {
+        // 3 wide, 1 high, 3 deep: one joint on each side.
+        Template t = parse("{\"rows\":[\"A@A\",\"@A@\",\"A@A\"]}", "\"A\":\"m:a\",\"@\":\"m:seal\"");
+        assertEquals(4, t.joints.size());
+        java.util.Set<String> facings = new java.util.HashSet<>();
+        for (Joint j : t.joints) facings.add(j.dx + "," + j.dz);
+        assertEquals(new java.util.HashSet<>(java.util.Arrays.asList("0,-1", "0,1", "-1,0", "1,0")), facings);
+    }
+
+    @Test
+    void jointCellIsTheSealBlock() throws Exception {
+        Template t = parse("{\"rows\":[\"AA\",\"@A\",\"AA\"]}", "\"A\":\"m:a\",\"@\":\"m:seal\"");
+        assertEquals("m:seal:0", only(t.get(0, 0, 1)));
+    }
+
+    @Test
+    void separateOpeningsOnOneFaceAreSeparateJoints() throws Exception {
+        Template t = parse("{\"rows\":[\"AAA\",\"@AA\",\"AAA\",\"@AA\",\"AAA\"]}", "\"A\":\"m:a\",\"@\":\"m:seal\"");
+        assertEquals(2, t.joints.size());
+    }
+
+    @Test
+    void jointIsARectangle() throws Exception {
+        Template t = parse(
+            "{\"rows\":[\"AAA\",\"@AA\",\"@AA\",\"AAA\"]},{\"rows\":[\"AAA\",\"@AA\",\"@AA\",\"AAA\"]}",
+            "\"A\":\"m:a\",\"@\":\"m:seal\"");
+        assertEquals(1, t.joints.size());
+        Joint j = t.joints.get(0);
+        assertEquals(-1, j.dx);
+        assertEquals(2, j.width);
+        assertEquals(2, j.height);
+        assertThrows(
+            TemplateException.class,
+            () -> parse(
+                "{\"rows\":[\"AAA\",\"@AA\",\"AAA\"]},{\"rows\":[\"AAA\",\"@AA\",\"@AA\"]}",
+                "\"A\":\"m:a\",\"@\":\"m:seal\""));
+    }
+
+    @Test
+    void jointOffAFaceOrOnAnEdgeFails() {
+        assertThrows(
+            TemplateException.class,
+            () -> parse("{\"rows\":[\"AAA\",\"A@A\",\"AAA\"]}", "\"A\":\"m:a\",\"@\":\"m:seal\""));
+        assertThrows(
+            TemplateException.class,
+            () -> parse("{\"rows\":[\"@AA\",\"AAA\",\"AAA\"]}", "\"A\":\"m:a\",\"@\":\"m:seal\""));
+    }
+
+    @Test
+    void jointNeedsASealMapping() {
+        assertThrows(TemplateException.class, () -> parse("{\"rows\":[\"A@A\",\"AAA\"]}", "\"A\":\"m:a\""));
     }
 
     @Test

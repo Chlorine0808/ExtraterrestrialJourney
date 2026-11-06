@@ -1,18 +1,19 @@
 package chlorine.etjourney.world.building;
 
 import java.io.Reader;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-
-import chlorine.etjourney.core.util.ModLog;
 
 /**
  * Reads the structure JSON that OKModular's wand scan writes: one entry, layers top to bottom, rows along z,
@@ -21,7 +22,7 @@ import chlorine.etjourney.core.util.ModLog;
 public final class TemplateParser {
 
     static final char BLANK = ' ', AIR = '_', KEEP = '.', ANCHOR = 'Q';
-    /** Reserved for the joints of rooms joined into one building; not yet given a meaning. */
+    /** A cell of a joint where another room may join; its mapping is the block that seals it when unused. */
     static final char JOINT = '@';
 
     private TemplateParser() {}
@@ -50,7 +51,7 @@ public final class TemplateParser {
         List<List<List<Cell>>> rows = new ArrayList<>();
         int sizeX = 0, sizeZ = 0;
         int[] anchor = null;
-        boolean warned = false;
+        List<int[]> jointCells = new ArrayList<>();
         int sizeY = layers.size();
         for (int i = 0; i < sizeY; i++) {
             int y = sizeY - 1 - i;
@@ -75,10 +76,7 @@ public final class TemplateParser {
                         if (anchor != null) throw new TemplateException("more than one 'Q'");
                         anchor = new int[] { cells.size(), y, z };
                     }
-                    if (ch == JOINT && !warned) {
-                        ModLog.LOG.warn("Building {}: '@' is reserved for room joints and is read as blank", name);
-                        warned = true;
-                    }
+                    if (ch == JOINT) jointCells.add(new int[] { cells.size(), y, z });
                     cells.add(cell(ch, mappings, blank));
                 }
                 sizeX = Math.max(sizeX, cells.size());
@@ -100,7 +98,16 @@ public final class TemplateParser {
             }
         }
         if (anchor == null) anchor = new int[] { sizeX / 2, 0, sizeZ / 2 };
-        return new Template(name, sizeX, sizeY, sizeZ, cells, anchor[0], anchor[1], anchor[2]);
+        return new Template(
+            name,
+            sizeX,
+            sizeY,
+            sizeZ,
+            cells,
+            anchor[0],
+            anchor[1],
+            anchor[2],
+            joints(jointCells, sizeX, sizeZ));
     }
 
     private static Cell cell(char ch, Map<Character, Cell> mappings, Cell blank) throws TemplateException {
@@ -109,8 +116,9 @@ public final class TemplateParser {
         switch (ch) {
             case BLANK:
             case ANCHOR:
-            case JOINT:
                 return blank;
+            case JOINT:
+                throw new TemplateException("'@' needs a mapping: the block that seals the joint when no room joins");
             case AIR:
                 return Cell.AIR;
             case KEEP:
@@ -118,6 +126,79 @@ public final class TemplateParser {
             default:
                 throw new TemplateException("'" + ch + "' has no mapping");
         }
+    }
+
+    /** Groups the '@' cells into joints: touching cells on one side, which must fill a rectangle. */
+    private static List<Joint> joints(List<int[]> cells, int sizeX, int sizeZ) throws TemplateException {
+        // Key each cell by its side and its place on that side: u along the side, then y.
+        Map<String, int[]> bySpot = new HashMap<>();
+        for (int[] c : cells) {
+            int[] side = side(c, sizeX, sizeZ);
+            bySpot.put(key(side, u(side, c), c[1]), c);
+        }
+        List<Joint> joints = new ArrayList<>();
+        Set<String> seen = new HashSet<>();
+        for (int[] start : cells) {
+            int[] side = side(start, sizeX, sizeZ);
+            if (!seen.add(key(side, u(side, start), start[1]))) continue;
+            List<int[]> group = new ArrayList<>();
+            ArrayDeque<int[]> open = new ArrayDeque<>();
+            open.add(start);
+            int uMin = Integer.MAX_VALUE, uMax = Integer.MIN_VALUE, yMin = Integer.MAX_VALUE, yMax = Integer.MIN_VALUE;
+            while (!open.isEmpty()) {
+                int[] c = open.poll();
+                group.add(c);
+                int u = u(side, c);
+                uMin = Math.min(uMin, u);
+                uMax = Math.max(uMax, u);
+                yMin = Math.min(yMin, c[1]);
+                yMax = Math.max(yMax, c[1]);
+                int[][] steps = { { 1, 0 }, { -1, 0 }, { 0, 1 }, { 0, -1 } };
+                for (int[] s : steps) {
+                    String k = key(side, u + s[0], c[1] + s[1]);
+                    int[] next = bySpot.get(k);
+                    if (next != null && seen.add(k)) open.add(next);
+                }
+            }
+            int width = uMax - uMin + 1, height = yMax - yMin + 1;
+            if (group.size() != width * height) throw new TemplateException(
+                "the '@' cells at " + start[0] + "," + start[1] + "," + start[2] + " do not fill a rectangle");
+            joints.add(new Joint(side[0], side[1], width, height, group));
+        }
+        return joints;
+    }
+
+    /** The one side of the box a joint cell lies on, as an outward {dx, dz}. */
+    private static int[] side(int[] c, int sizeX, int sizeZ) throws TemplateException {
+        int[] side = null;
+        int found = 0;
+        if (c[0] == 0) {
+            side = new int[] { -1, 0 };
+            found++;
+        }
+        if (c[0] == sizeX - 1) {
+            side = new int[] { 1, 0 };
+            found++;
+        }
+        if (c[2] == 0) {
+            side = new int[] { 0, -1 };
+            found++;
+        }
+        if (c[2] == sizeZ - 1) {
+            side = new int[] { 0, 1 };
+            found++;
+        }
+        if (found != 1) throw new TemplateException(
+            "'@' at " + c[0] + "," + c[1] + "," + c[2] + " must lie on exactly one side of the building");
+        return side;
+    }
+
+    private static int u(int[] side, int[] c) {
+        return side[0] != 0 ? c[2] : c[0];
+    }
+
+    private static String key(int[] side, int u, int y) {
+        return side[0] + "," + side[1] + "," + u + "," + y;
     }
 
     private static Map<Character, Cell> mappings(JsonObject json) throws TemplateException {
