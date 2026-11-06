@@ -186,6 +186,17 @@ class BuildingWriterTest {
     }
 
     @Test
+    void openJointsAreAirAndTheRestSealed() throws Exception {
+        Template t = template("{\"rows\":[\"AAA\",\"@A@\",\"AAA\"]}", "\"A\":\"m:a\",\"@\":\"m:seal\"", true);
+        Placement p = at(t, Rotation.R0, 1, 64, 1, 0);
+        for (Joint j : t.joints) if (j.dx < 0) p.open(j);
+        MemoryTarget target = new MemoryTarget();
+        BuildingWriter.writeAll(p, target);
+        assertEquals("air", target.at(0, 64, 1));
+        assertEquals("m:seal:0", target.at(2, 64, 1));
+    }
+
+    @Test
     void attachablesGoAfterTheBlocksTheyHangOn() throws Exception {
         // A torch west of its wall: written x first, it would come before the wall.
         Template t = template("{\"rows\":[\"TA\",\"AA\"]}", "\"A\":\"m:a\",\"T\":\"m:torch:2\"", true);

@@ -45,7 +45,7 @@ public final class BuildingWriter {
                     Cell cell = t.get(lx, ly, lz);
                     if (cell.isKeep()) continue;
                     written++;
-                    if (cell.isAir()) {
+                    if (cell.isAir() || p.isOpen(lx, ly, lz)) {
                         target.setAir(x, y, z);
                         continue;
                     }

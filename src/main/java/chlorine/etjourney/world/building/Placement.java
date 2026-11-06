@@ -1,5 +1,7 @@
 package chlorine.etjourney.world.building;
 
+import java.util.BitSet;
+
 /** A template set in the world: its turn, where its anchor lands, and what fills under it. */
 public final class Placement {
 
@@ -12,6 +14,8 @@ public final class Placement {
     /** Seeds the choice between a cell's blocks. */
     public final long salt;
     private final int[] bounds;
+    /** Template cells of the joints another room has joined; they are written as air. */
+    private final BitSet open = new BitSet();
 
     public Placement(Template template, Rotation rotation, int anchorX, int anchorY, int anchorZ, BlockRef foundation,
         int foundationDepth, long salt) {
@@ -24,6 +28,15 @@ public final class Placement {
         this.foundationDepth = foundation == null ? 0 : foundationDepth;
         this.salt = salt;
         this.bounds = rotation.rotatedBounds(template);
+    }
+
+    /** Marks a joint as joined, so its cells are written as air instead of sealed. */
+    public void open(Joint joint) {
+        for (int[] c : joint.cells) open.set(Template.index(template.sizeX, template.sizeZ, c[0], c[1], c[2]));
+    }
+
+    boolean isOpen(int x, int y, int z) {
+        return open.get(Template.index(template.sizeX, template.sizeZ, x, y, z));
     }
 
     public int minX() {
