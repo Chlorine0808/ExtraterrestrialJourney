@@ -1,0 +1,76 @@
+[
+  {
+    "name": "room_end",
+    "layers": [
+      {
+        "name": "y4",
+        "rows": [
+          "AAAAAAA",
+          "AAAAAAA",
+          "AAAAAAA",
+          "AAAGAAA",
+          "AAAAAAA",
+          "AAAAAAA",
+          "AAAAAAA"
+        ]
+      },
+      {
+        "name": "y3",
+        "rows": [
+          "AAAAAAA",
+          "A     A",
+          "A     A",
+          "A     A",
+          "A     A",
+          "A     A",
+          "AAAAAAA"
+        ]
+      },
+      {
+        "name": "y2",
+        "rows": [
+          "AAA@AAA",
+          "A     A",
+          "A     A",
+          "A     A",
+          "A     A",
+          "A     A",
+          "AAAAAAA"
+        ]
+      },
+      {
+        "name": "y1",
+        "rows": [
+          "AAA@AAA",
+          "A     A",
+          "A     A",
+          "A     A",
+          "A  C  A",
+          "A     A",
+          "AAAAAAA"
+        ]
+      },
+      {
+        "name": "y0",
+        "rows": [
+          "AAAAAAA",
+          "AAAAAAA",
+          "AAAAAAA",
+          "AAAAAAA",
+          "AAAAAAA",
+          "AAAAAAA",
+          "AAAAAAA"
+        ]
+      }
+    ],
+    "mappings": {
+      "A": "minecraft:stonebrick:0",
+      "@": "minecraft:stonebrick:2",
+      "G": "minecraft:glowstone:0",
+      "C": {
+        "block": "minecraft:chest:2",
+        "loot": "etjourney:end_ruins"
+      }
+    }
+  }
+]

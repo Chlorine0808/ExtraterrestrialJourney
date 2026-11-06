@@ -1,0 +1,92 @@
+[
+  {
+    "name": "room_hall",
+    "layers": [
+      {
+        "name": "y4",
+        "rows": [
+          "AAAAA",
+          "AAAAA",
+          "AAAAA",
+          "AAAAA",
+          "AAAAA",
+          "AAGAA",
+          "AAAAA",
+          "AAAAA",
+          "AAAAA",
+          "AAAAA",
+          "AAAAA"
+        ]
+      },
+      {
+        "name": "y3",
+        "rows": [
+          "AAAAA",
+          "A   A",
+          "A   A",
+          "A   A",
+          "A   A",
+          "A   A",
+          "A   A",
+          "A   A",
+          "A   A",
+          "A   A",
+          "AAAAA"
+        ]
+      },
+      {
+        "name": "y2",
+        "rows": [
+          "AA@AA",
+          "A   A",
+          "A   A",
+          "A   A",
+          "A   A",
+          "A   A",
+          "A   A",
+          "A   A",
+          "A   A",
+          "A   A",
+          "AA@AA"
+        ]
+      },
+      {
+        "name": "y1",
+        "rows": [
+          "AA@AA",
+          "A   A",
+          "A   A",
+          "A   A",
+          "A   A",
+          "A   A",
+          "A   A",
+          "A   A",
+          "A   A",
+          "A   A",
+          "AA@AA"
+        ]
+      },
+      {
+        "name": "y0",
+        "rows": [
+          "AAAAA",
+          "AAAAA",
+          "AAAAA",
+          "AAAAA",
+          "AAAAA",
+          "AAAAA",
+          "AAAAA",
+          "AAAAA",
+          "AAAAA",
+          "AAAAA",
+          "AAAAA"
+        ]
+      }
+    ],
+    "mappings": {
+      "A": "minecraft:stonebrick:0",
+      "@": "minecraft:stonebrick:2",
+      "G": "minecraft:glowstone:0"
+    }
+  }
+]
