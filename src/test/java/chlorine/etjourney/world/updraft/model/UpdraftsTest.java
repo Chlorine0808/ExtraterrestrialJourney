@@ -24,8 +24,14 @@ class UpdraftsTest {
         int a = all.add(1, A);
         all.add(0, B);
         assertEquals(Collections.singletonMap(a, A), all.in(1));
-        assertEquals(Collections.singletonList(B), new ArrayList<>(all.in(0).values()));
-        assertTrue(all.in(-1).isEmpty());
+        assertEquals(
+            Collections.singletonList(B),
+            new ArrayList<>(
+                all.in(0)
+                    .values()));
+        assertTrue(
+            all.in(-1)
+                .isEmpty());
     }
 
     @Test
