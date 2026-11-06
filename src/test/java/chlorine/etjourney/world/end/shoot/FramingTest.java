@@ -131,4 +131,46 @@ class FramingTest {
         assertEquals(-1, Framing.pickGround(146, new double[] { 23, 146 - Framing.GROUND_REACH - 1 }));
         assertEquals(1, Framing.pickGround(146, new double[] { 23, 146 - Framing.GROUND_REACH }));
     }
+
+    private static final Target SEED_TREE = new Target("t", 100, 81, -40, 40, 0);
+
+    @Test
+    void treeGroundStandsOffAlongPlusXOnFlatGround() {
+        Camera c = Framing.treeGround(SEED_TREE, (x, z) -> 80);
+        assertEquals(SEED_TREE.x + 15, c.x, 1e-9);
+        assertEquals(SEED_TREE.z, c.z, 1e-9);
+        assertEquals(SEED_TREE.y + 4, c.y, 1e-9);
+        assertEquals(90f, c.yaw, 1e-6);
+        assertEquals(-5, c.pitch, 0.5);
+    }
+
+    @Test
+    void treeGroundRisesAboveARisingSlope() {
+        // Ground climbs 0.6 per block east of the tree, 9 blocks above the root where the camera stood.
+        Framing.GroundAt slope = (x, z) -> 80 + Math.max(0, x - SEED_TREE.x) * 0.6;
+        Camera c = Framing.treeGround(SEED_TREE, slope);
+        double[] d = EtjArgs.lookDirection(c.yaw, 0);
+        for (int r = 0; r <= 14; r++) {
+            double x = c.x + d[0] * r, z = c.z + d[2] * r;
+            assertTrue(c.y >= Math.floor(slope.at(x, z)) + 1, "buried " + r + " blocks in front");
+        }
+        assertLooksAtTheTree(c);
+    }
+
+    @Test
+    void treeGroundStandsOnLandAtAContinentsEdge() {
+        // The void starts five blocks east of the tree.
+        Framing.GroundAt edge = (x, z) -> x > SEED_TREE.x + 4 ? -1000 : 80;
+        Camera c = Framing.treeGround(SEED_TREE, edge);
+        assertTrue(c.x <= SEED_TREE.x + 4, "x " + c.x);
+        assertEquals(SEED_TREE.y + 4, c.y, 1e-9);
+        assertLooksAtTheTree(c);
+    }
+
+    private static void assertLooksAtTheTree(Camera c) {
+        double[] d = EtjArgs.lookDirection(c.yaw, 0);
+        double dist = Math.hypot(SEED_TREE.x - c.x, SEED_TREE.z - c.z);
+        assertEquals(SEED_TREE.x, c.x + d[0] * dist, 0.5);
+        assertEquals(SEED_TREE.z, c.z + d[2] * dist, 0.5);
+    }
 }

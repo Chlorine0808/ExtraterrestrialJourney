@@ -2,6 +2,7 @@ package chlorine.etjourney.world.end.shoot;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -17,6 +18,7 @@ import chlorine.etjourney.world.end.feature.EndBiome;
 import chlorine.etjourney.world.end.feature.Lakes;
 import chlorine.etjourney.world.end.feature.Mountains;
 import chlorine.etjourney.world.end.feature.StructureProbe;
+import chlorine.etjourney.world.end.feature.plant.AmberTrees;
 import chlorine.etjourney.world.end.feature.plant.GiantTrees;
 import chlorine.etjourney.world.end.feature.plant.Glowshrooms;
 import chlorine.etjourney.world.end.reserve.Area;
@@ -37,6 +39,10 @@ final class Locator {
 
     /** Style weight below which the surface paint leaves a MYCELIA column to the glowshrooms. */
     private static final double LAYERED_LIMIT = 0.05;
+    /** A seed tree is 15 high with a 10-block reach. */
+    private static final double AMBER_TREE_SIZE = 40;
+    /** Cells searched on each side of a continent seed for its nearest seed tree. */
+    private static final int AMBER_RINGS = 3;
     /** Normal-cell rings searched around a continent seed. */
     private static final int NORMAL_RINGS = 6;
 
@@ -185,6 +191,75 @@ final class Locator {
             @Override
             public boolean wet(double x, double z, double range) {
                 return probe.wet(x, z, range);
+            }
+        };
+    }
+
+    /** The seed tree nearest the seed of each AMBER continent, continents nearest first. */
+    List<Target> amberTrees(double ox, double oz, int count) {
+        long seed = sampler.seed();
+        AmberTrees.Terrain terrain = amberTerrain();
+        Set<Long> chosen = new HashSet<>();
+        List<Target> out = new ArrayList<>();
+        for (int i = 0; i < count; i++) {
+            double[] hit = EndSearch.nearestInCells(Continent.SEED_CELL, ox, oz, (cx, cz) -> {
+                Continent.Seed s = Continent.seedAt(seed, cx, cz);
+                if (s == null || EndBiome.ofContinentOf(seed, s) != EndBiome.AMBER) return null;
+                long id = ContinentIds.of(seed, s);
+                if (chosen.contains(id)) return null;
+                AmberTrees.Anchor best = nearestAmberTree(seed, s, terrain);
+                if (best == null) return null;
+                return new double[] { best.x, best.z, best.y, Double.longBitsToDouble(id) };
+            });
+            if (hit == null) break;
+            long id = Double.doubleToRawLongBits(hit[3]);
+            chosen.add(id);
+            out.add(new Target("タネの木", hit[0], hit[2], hit[1], AMBER_TREE_SIZE, id));
+        }
+        return out;
+    }
+
+    /** The kept tree nearest the continent seed; generation drops trees beside reserved areas. */
+    private AmberTrees.Anchor nearestAmberTree(long seed, Continent.Seed s, AmberTrees.Terrain terrain) {
+        int scx = (int) Math.floor((double) s.x / AmberTrees.CELL),
+            scz = (int) Math.floor((double) s.z / AmberTrees.CELL);
+        // Building a tree is costly, so cells go nearest spot first and the search stops at the first kept tree.
+        List<int[]> cells = new ArrayList<>();
+        for (int dx = -AMBER_RINGS; dx <= AMBER_RINGS; dx++) {
+            for (int dz = -AMBER_RINGS; dz <= AMBER_RINGS; dz++) {
+                int[] spot = AmberTrees.spot(seed, scx + dx, scz + dz);
+                if (spot != null) cells.add(new int[] { scx + dx, scz + dz, spot[0], spot[1] });
+            }
+        }
+        cells.sort(Comparator.comparingDouble(c -> Math.hypot(c[2] - s.x, c[3] - s.z)));
+        for (int[] c : cells) {
+            for (AmberTrees.Anchor a : AmberTrees.in(seed, c[0], c[1], terrain))
+                if (AmberTrees.clearOf(a, reserved.at(a.x >> 4, a.z >> 4))) return a;
+        }
+        return null;
+    }
+
+    /** The terrain the seed tree placement sees, built from the sampler as the production modifier builds it. */
+    private AmberTrees.Terrain amberTerrain() {
+        StructureProbe probe = sampler.standingProbe();
+        return new AmberTrees.Terrain() {
+
+            @Override
+            public double ground(double x, double z) {
+                return probe.ground(x, z);
+            }
+
+            @Override
+            public boolean amber(double x, double z) {
+                int bx = (int) Math.floor(x), bz = (int) Math.floor(z);
+                return sampler.biome(bx, bz) == EndBiome.AMBER
+                    && sampler.styleWeight("LAYERED", bx, bz) < LAYERED_LIMIT;
+            }
+
+            @Override
+            public long source() {
+                // The probe only predicts the generated ground, so its shapes stay apart from generation's.
+                return 1;
             }
         };
     }

@@ -69,6 +69,9 @@ public final class ShotPlanner {
                 case GLOWSHROOM:
                     addGlowshrooms(out, spec, locator.glowshrooms(spec.arg.equals("GIANT"), ox, oz, spec.count));
                     break;
+                case AMBER_TREE:
+                    addAmberTrees(out, spec, locator.amberTrees(ox, oz, spec.count), sampler.standingProbe()::ground);
+                    break;
                 case LAKE:
                     add(out, spec, "湖", locator.lakes(ox, oz, spec.count));
                     break;
@@ -125,6 +128,28 @@ public final class ShotPlanner {
                         v,
                         t,
                         null,
+                        null,
+                        t == null ? NOT_FOUND : null));
+            }
+        }
+    }
+
+    /** Like add, but both views stand off the tree and look back at the seed. */
+    private static void addAmberTrees(List<PlannedShot> out, ShotSpec spec, List<Target> found,
+        Framing.GroundAt ground) {
+        for (int n = 0; n < spec.count; n++) {
+            Target t = n < found.size() ? found.get(n) : null;
+            for (View v : spec.views) {
+                Camera fixed = null;
+                if (t != null) fixed = v == View.GROUND ? Framing.treeGround(t, ground)
+                    : new Camera(t.x + 18, t.y + 20, t.z, 90f, 40f);
+                out.add(
+                    new PlannedShot(
+                        "タネの木 " + (n + 1),
+                        out.size() + 1,
+                        v,
+                        t,
+                        fixed,
                         null,
                         t == null ? NOT_FOUND : null));
             }

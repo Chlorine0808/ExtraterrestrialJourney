@@ -9,6 +9,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import chlorine.etjourney.world.end.feature.Continent;
 import chlorine.etjourney.world.end.feature.ContinentIds;
 import chlorine.etjourney.world.end.feature.EndBiome;
+import chlorine.etjourney.world.end.feature.plant.AmberTrees;
 import chlorine.etjourney.world.end.feature.plant.GiantTree;
 import chlorine.etjourney.world.end.feature.plant.GiantTrees;
 import chlorine.etjourney.world.end.feature.plant.Glowshrooms;
@@ -100,6 +101,15 @@ public final class PlantModifiers {
     /** LAYERED stacks tiers over the probe's ground, so the probe's ground is not its top. */
     private static final double LAYERED_LIMIT = 0.05;
 
+    /** Whether the column's top is the biome's ground, outside LAYERED, as a plant placement asks. */
+    private static boolean wears(ChunkArea area, TerrainView view, EndBiome biome, double x, double z) {
+        // The same integer sample the surface paint takes.
+        int bx = (int) Math.floor(x), bz = (int) Math.floor(z);
+        // Anchors lie outside the chunk's window, so the biome looks up its own seeds and mountains.
+        return EndBiome.at(area.seed, bx, bz, view.voidShare(bx, bz)) == biome
+            && view.weight("LAYERED", bx, bz) < LAYERED_LIMIT;
+    }
+
     /**
      * The glowshrooms reaching the chunk. An anchor whose cap touches a reserved area, or whose root stands in a
      * fade, as seen from the root's chunk, is left out, so every chunk judges it alike.
@@ -116,11 +126,7 @@ public final class PlantModifiers {
 
                 @Override
                 public boolean mycelia(double x, double z) {
-                    // The same integer sample the surface paint takes.
-                    int bx = (int) Math.floor(x), bz = (int) Math.floor(z);
-                    // Anchors lie outside the chunk's window, so the biome looks up its own seeds and mountains.
-                    return EndBiome.at(area.seed, bx, bz, view.voidShare(bx, bz)) == EndBiome.MYCELIA
-                        && view.weight("LAYERED", bx, bz) < LAYERED_LIMIT;
+                    return wears(area, view, EndBiome.MYCELIA, x, z);
                 }
 
                 @Override
@@ -158,9 +164,7 @@ public final class PlantModifiers {
 
                 @Override
                 public boolean lucent(double x, double z) {
-                    int bx = (int) Math.floor(x), bz = (int) Math.floor(z);
-                    return EndBiome.at(area.seed, bx, bz, view.voidShare(bx, bz)) == EndBiome.LUCENTWOODS
-                        && view.weight("LAYERED", bx, bz) < LAYERED_LIMIT;
+                    return wears(area, view, EndBiome.LUCENTWOODS, x, z);
                 }
             };
             List<LucentTrees.Anchor> kept = new ArrayList<>();
@@ -174,6 +178,31 @@ public final class PlantModifiers {
                 kept.add(a);
             }
             LucentTrees.draw(kept, sink);
+        });
+    }
+
+    /** The AMBER seed trees reaching the chunk, minus those a reserved area's fade would reach. */
+    public static Modifier amberTrees(int order) {
+        return FeatureModifiers.blockModifier(order, (area, view, sink) -> {
+            AmberTrees.Terrain terrain = new AmberTrees.Terrain() {
+
+                @Override
+                public double ground(double x, double z) {
+                    return view.standing()
+                        .ground(x, z);
+                }
+
+                @Override
+                public boolean amber(double x, double z) {
+                    return wears(area, view, EndBiome.AMBER, x, z);
+                }
+            };
+            List<AmberTrees.Anchor> kept = new ArrayList<>();
+            for (AmberTrees.Anchor a : AmberTrees
+                .reaching(area.seed, sink.originX() >> 4, sink.originZ() >> 4, terrain)) {
+                if (AmberTrees.clearOf(a, view.reservedAt(a.x >> 4, a.z >> 4))) kept.add(a);
+            }
+            AmberTrees.draw(kept, sink);
         });
     }
 }

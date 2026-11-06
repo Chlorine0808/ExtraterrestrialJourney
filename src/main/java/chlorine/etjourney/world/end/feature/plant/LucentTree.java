@@ -15,7 +15,7 @@ import chlorine.etjourney.world.end.feature.sdf.SdfFill;
 import chlorine.etjourney.world.end.modifier.EndBlock;
 
 /** BetterEnd's lucernia at full size: branches fanning out of one foot, each ending in a leaf ball hung with vines. */
-public final class LucentTree {
+public final class LucentTree implements PlantCells.Bounds {
 
     /** Blocks the foot reaches below the root, so the tree does not float where the probe's ground runs high. */
     public static final int SINK = 6;
@@ -102,7 +102,7 @@ public final class LucentTree {
                 spline.get(k)[0] += r.nextDouble() * 2 - 1;
                 spline.get(k)[2] += r.nextDouble() * 2 - 1;
             }
-            line(spline, solid);
+            BlockLines.line(spline, solid, EndBlock.LUCENT_LOG);
             tips.add(spline.get(spline.size() - 1));
         }
 
@@ -121,7 +121,7 @@ public final class LucentTree {
             double[] tip = spline.get(spline.size() - 1);
             int tx = (int) Math.floor(tip[0]), tz = (int) Math.floor(tip[2]);
             // Upstream keeps a root only when its tip ends in end stone.
-            if (Math.floor(tip[1]) <= ground.top(tx, tz)) line(spline, solid);
+            if (Math.floor(tip[1]) <= ground.top(tx, tz)) BlockLines.line(spline, solid, EndBlock.LUCENT_LOG);
         }
 
         pruneLeaves(solid);
@@ -192,36 +192,6 @@ public final class LucentTree {
         for (double[] p : template)
             out.add(new double[] { (p[0] * c - p[2] * s) * scale, p[1] * scale, (p[0] * s + p[2] * c) * scale });
         return out;
-    }
-
-    /** Logs along the polyline, one block thick and face-connected, over air and leaves. */
-    private static void line(List<double[]> spline, Map<Long, EndBlock> solid) {
-        int[] prev = null;
-        for (int i = 0; i + 1 < spline.size(); i++) {
-            double[] a = spline.get(i), b = spline.get(i + 1);
-            double len = Math.sqrt(sq(b[0] - a[0]) + sq(b[1] - a[1]) + sq(b[2] - a[2]));
-            int steps = Math.max(1, (int) Math.ceil(len * 3));
-            for (int s = 0; s <= steps; s++) {
-                double t = (double) s / steps;
-                int[] cell = { (int) Math.floor(a[0] + (b[0] - a[0]) * t), (int) Math.floor(a[1] + (b[1] - a[1]) * t),
-                    (int) Math.floor(a[2] + (b[2] - a[2]) * t) };
-                if (prev != null) {
-                    // Step one axis at a time so the line never joins on an edge or a corner only.
-                    for (int axis = 0; axis < 3; axis++) {
-                        if (prev[axis] == cell[axis]) continue;
-                        prev[axis] = cell[axis];
-                        solid.put(SdfFill.key(prev[0], prev[1], prev[2]), EndBlock.LUCENT_LOG);
-                    }
-                } else {
-                    prev = cell.clone();
-                }
-                solid.put(SdfFill.key(cell[0], cell[1], cell[2]), EndBlock.LUCENT_LOG);
-            }
-        }
-    }
-
-    private static double sq(double v) {
-        return v * v;
     }
 
     /** One leaf ball around a branch tip, as upstream's leavesBall; hanging points go to {@code hangs}. */
@@ -304,26 +274,32 @@ public final class LucentTree {
         return branches;
     }
 
+    @Override
     public int minX() {
         return minX;
     }
 
+    @Override
     public int maxX() {
         return maxX;
     }
 
+    @Override
     public int minY() {
         return minY;
     }
 
+    @Override
     public int maxY() {
         return maxY;
     }
 
+    @Override
     public int minZ() {
         return minZ;
     }
 
+    @Override
     public int maxZ() {
         return maxZ;
     }

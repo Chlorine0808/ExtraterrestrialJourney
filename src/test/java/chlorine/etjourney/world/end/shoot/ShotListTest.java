@@ -136,6 +136,16 @@ class ShotListTest {
     }
 
     @Test
+    void parsesAmberTree() {
+        ShotList list = ShotList.parse(Collections.singletonList("shot amber-tree count=3 views=aerial,ground"));
+        assertEquals(Collections.emptyList(), list.errors);
+        ShotSpec spec = list.specs.get(0);
+        assertEquals(ShotSpec.What.AMBER_TREE, spec.what);
+        assertEquals(3, spec.count);
+        assertEquals(Arrays.asList(View.AERIAL, View.GROUND), spec.views);
+    }
+
+    @Test
     void parsesGlowshroom() {
         ShotList list = ShotList.parse(
             Arrays.asList(
