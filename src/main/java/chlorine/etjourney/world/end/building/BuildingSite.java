@@ -27,6 +27,7 @@ public final class BuildingSite {
             high = Math.max(high, g);
         }
         if (high - low > maxSlope) return null;
-        return (int) Math.floor(low) - sink;
+        // floor(ground) is the top solid block: sinking by n puts the bottom layer in the top n blocks.
+        return (int) Math.floor(low) + 1 - sink;
     }
 }

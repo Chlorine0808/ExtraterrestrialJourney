@@ -43,18 +43,19 @@ class BuildingSiteTest {
 
     @Test
     void flatGroundSinksTwo() {
-        assertEquals(62, BuildingSite.groundY(ground((x, z) -> 64), 0, 0, 10, 10, 6, 2));
+        // Ground 64 is the top solid block, so the bottom layer takes y 63 and 64.
+        assertEquals(63, BuildingSite.groundY(ground((x, z) -> 64), 0, 0, 10, 10, 6, 2));
     }
 
     @Test
     void sinksFromTheLowestPoint() {
-        assertEquals(58, BuildingSite.groundY(ground((x, z) -> x == 0 && z == 0 ? 60 : 64), 0, 0, 10, 10, 6, 2));
+        assertEquals(59, BuildingSite.groundY(ground((x, z) -> x == 0 && z == 0 ? 60 : 64), 0, 0, 10, 10, 6, 2));
     }
 
     @Test
     void slopeOverLimitRejects() {
         assertNull(BuildingSite.groundY(ground((x, z) -> x == 10 && z == 10 ? 71 : 64), 0, 0, 10, 10, 6, 2));
-        assertEquals(62, BuildingSite.groundY(ground((x, z) -> x == 10 && z == 10 ? 70 : 64), 0, 0, 10, 10, 6, 2));
+        assertEquals(63, BuildingSite.groundY(ground((x, z) -> x == 10 && z == 10 ? 70 : 64), 0, 0, 10, 10, 6, 2));
     }
 
     @Test
