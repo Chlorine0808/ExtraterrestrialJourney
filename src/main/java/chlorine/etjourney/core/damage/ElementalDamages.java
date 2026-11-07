@@ -22,6 +22,9 @@ public final class ElementalDamages {
     public static boolean deal(EntityLivingBase target, ElementalDamageSource source) {
         // Damage is the server's; the fallback would otherwise kill the client's copy of a player.
         if (target.worldObj.isRemote) return false;
+        // PvP off or same team: stop here, or the piercing fallback would hit anyway.
+        if (target instanceof EntityPlayer && source.getEntity() instanceof EntityPlayer
+            && !((EntityPlayer) target).canAttackPlayer((EntityPlayer) source.getEntity())) return false;
         ElementalDamage damage = source.damage();
         boolean pierce = damage.isPiercing() && pierces(target);
         if (pierce) target.hurtResistantTime = 0;

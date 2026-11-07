@@ -3,15 +3,18 @@ package chlorine.etjourney.core.damage;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.util.ChatComponentTranslation;
-import net.minecraft.util.DamageSource;
+import net.minecraft.util.EntityDamageSource;
 import net.minecraft.util.IChatComponent;
 
 import chlorine.etjourney.core.ModInfo;
 import chlorine.etjourney.core.damage.model.DamageKind;
 import chlorine.etjourney.core.damage.model.ElementalDamage;
 
-/** A damage source that carries an elemental attack; its type is etjourney.<dominant element>. */
-public class ElementalDamageSource extends DamageSource {
+/**
+ * A damage source that carries an elemental attack; its type is etjourney.<dominant element>. An entity source, so
+ * players keep the server PvP setting and team friendly fire.
+ */
+public class ElementalDamageSource extends EntityDamageSource {
 
     private final ElementalDamage damage;
     private final Entity direct;
@@ -22,7 +25,8 @@ public class ElementalDamageSource extends DamageSource {
         super(
             ModInfo.MODID + "."
                 + damage.dominant()
-                    .name());
+                    .name(),
+            attacker);
         this.damage = damage;
         this.direct = direct;
         this.attacker = attacker;
@@ -48,6 +52,12 @@ public class ElementalDamageSource extends DamageSource {
     @Override
     public Entity getEntity() {
         return attacker;
+    }
+
+    /** Never scaled by difficulty: an enemy's strength is set by its attack. */
+    @Override
+    public boolean isDifficultyScaled() {
+        return false;
     }
 
     @Override
