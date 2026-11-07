@@ -37,6 +37,8 @@ listOf("runClient", "runServer").forEach { name ->
 // absolute path lands on the JVM command line. Shots always land in the main checkout's shots/, in a folder
 // tagged with the branch.
 tasks.named<JavaExec>("runClient") {
+    // Names the window after the branch and checkout folder, so parallel runs from worktrees can be told apart.
+    systemProperty("etj.windowTag", "${git("rev-parse", "--abbrev-ref", "HEAD")} @ ${projectDir.name}")
     providers.gradleProperty("etjShoot").orNull?.let {
         val main = mainCheckout()
         val list = listOf(file(it), main.resolve(it)).firstOrNull { f -> f.isFile }
