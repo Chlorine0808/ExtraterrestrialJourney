@@ -5,6 +5,7 @@ import net.minecraft.entity.player.EntityPlayer;
 
 import chlorine.etjourney.core.damage.model.DamageMath;
 import chlorine.etjourney.core.damage.model.ElementalDamage;
+import chlorine.etjourney.core.util.ModLog;
 
 /** The way in for elemental attacks. */
 public final class ElementalDamages {
@@ -27,7 +28,10 @@ public final class ElementalDamages {
         if (pierce && target instanceof EntityPlayer && !target.isDead && target.getHealth() > 0) {
             float expected = DamageMath.resolve(damage, ResistanceSources.of(target));
             float missing = DamageMath.shortfall(before, life(target), expected);
-            if (missing > 0) takeDirectly(target, source, missing);
+            if (missing > 0) {
+                ModLog.LOG.debug("piercing fallback takes {} from {}", missing, target.getCommandSenderName());
+                takeDirectly(target, source, missing);
+            }
         }
         boolean hit = life(target) < before;
         if (hit) ElementEffects.fire(target, source);
