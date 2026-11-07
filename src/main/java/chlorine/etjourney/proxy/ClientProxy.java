@@ -1,6 +1,7 @@
 package chlorine.etjourney.proxy;
 
 import chlorine.etjourney.content.craft.CraftRenderers;
+import chlorine.etjourney.content.end.FurRenderer;
 import chlorine.etjourney.content.entity.EntityRenderers;
 import chlorine.etjourney.world.end.debug.shoot.ShootHarness;
 import chlorine.etjourney.world.updraft.UpdraftLift;
@@ -20,6 +21,7 @@ public class ClientProxy extends CommonProxy {
         super.init(event);
         EntityRenderers.init();
         CraftRenderers.init();
+        FurRenderer.init();
         UpdraftLift.register();
         ShootHarness.startIfRequested();
     }

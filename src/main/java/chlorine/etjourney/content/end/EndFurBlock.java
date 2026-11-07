@@ -18,6 +18,9 @@ final class EndFurBlock extends Block {
     private static final int[][] FACES = { { 1, 0, 0 }, { -1, 0, 0 }, { 0, 1, 0 }, { 0, -1, 0 }, { 0, 0, 1 },
         { 0, 0, -1 } };
 
+    /** Set by FurRenderer on the client; the crossed-plant type until then. */
+    static int renderType = 1;
+
     private final String leavesName;
     private Block leaves;
 
@@ -44,7 +47,7 @@ final class EndFurBlock extends Block {
 
     @Override
     public int getRenderType() {
-        return 1;
+        return renderType;
     }
 
     @Override
@@ -64,10 +67,15 @@ final class EndFurBlock extends Block {
 
     @Override
     public boolean canBlockStay(World world, int x, int y, int z) {
-        // Resolved on first use: this block may be registered before its leaves.
-        if (leaves == null) leaves = Block.getBlockFromName(ModInfo.MODID + ":" + leavesName);
+        Block leaves = leaves();
         for (int[] f : FACES) if (world.getBlock(x + f[0], y + f[1], z + f[2]) == leaves) return true;
         return false;
+    }
+
+    /** Resolved on first use: this block may be registered before its leaves. */
+    Block leaves() {
+        if (leaves == null) leaves = Block.getBlockFromName(ModInfo.MODID + ":" + leavesName);
+        return leaves;
     }
 
     @Override
