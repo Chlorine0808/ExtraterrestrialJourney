@@ -59,6 +59,9 @@ public final class ElementalDamages {
         float fromAbsorption = Math.min(absorption, amount);
         target.setAbsorptionAmount(absorption - fromAbsorption);
         float health = Math.max(0, target.getHealth() - (amount - fromAbsorption));
+        // The death message comes from the combat tracker, so record this hit as vanilla damage would.
+        target.func_110142_aN()
+            .func_94547_a(source, target.getHealth(), amount - fromAbsorption);
         target.setHealth(health);
         if (target.getHealth() > health) target.getDataWatcher()
             .updateObject(HEALTH_WATCHER, health);
