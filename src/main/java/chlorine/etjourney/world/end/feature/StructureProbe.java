@@ -11,6 +11,11 @@ public interface StructureProbe {
     /** Ground surface at (x, z), or a very low value over the void. */
     double ground(double x, double z);
 
+    /** Topmost surface at (x, z), stacked slabs included, or a very low value over the void. */
+    default double surface(double x, double z) {
+        return ground(x, z);
+    }
+
     /** Underside of the land at (x, z), or a very low value where there is none. */
     default double underside(double x, double z) {
         return -1000;

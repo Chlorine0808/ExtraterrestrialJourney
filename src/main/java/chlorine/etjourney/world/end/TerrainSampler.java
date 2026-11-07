@@ -236,6 +236,11 @@ public final class TerrainSampler {
             }
 
             @Override
+            public double surface(double x, double z) {
+                return TerrainSampler.this.land(x, z) > 0 ? bareColumn(x, z, true).surface() : -1000;
+            }
+
+            @Override
             public double underside(double x, double z) {
                 return TerrainSampler.this.land(x, z) > 0 ? bareColumn(x, z, true).bottom : -1000;
             }
@@ -270,7 +275,18 @@ public final class TerrainSampler {
             @Override
             public double ground(double x, double z) {
                 double top = bare.ground(x, z);
-                if (top <= -100) return top;
+                return top <= -100 ? top : shore(top, x, z);
+            }
+
+            @Override
+            public double surface(double x, double z) {
+                if (TerrainSampler.this.land(x, z) <= 0) return -1000;
+                ColumnState c = bareColumn(x, z, true);
+                // The lakes lie on the ground, under any slab stacked over it.
+                return c.surface() > c.top ? c.surface() : shore(c.top, x, z);
+            }
+
+            private double shore(double top, double x, double z) {
                 List<Lakes.Lake> near = Lakes.near(seed, x, z, 0, lakes);
                 return Lakes.wet(near, x, z, 0) ? -1000 : Lakes.shape(near, top, x, z);
             }

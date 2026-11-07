@@ -32,6 +32,13 @@ public final class ColumnState {
         this.z = z;
     }
 
+    /** The topmost surface: the highest stacked slab, or the top when none stands above it. */
+    public double surface() {
+        double highest = top;
+        for (Layer layer : layers) highest = Math.max(highest, layer.top);
+        return highest;
+    }
+
     void refreshInterior() {
         interior = Math.min(1, Math.max(0, land / FULL_INTERIOR));
     }

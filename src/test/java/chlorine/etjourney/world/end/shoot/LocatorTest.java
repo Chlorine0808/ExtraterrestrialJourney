@@ -17,6 +17,7 @@ import chlorine.etjourney.world.end.TerrainSampler;
 import chlorine.etjourney.world.end.feature.Biosphere;
 import chlorine.etjourney.world.end.feature.EndBiome;
 import chlorine.etjourney.world.end.feature.Lakes;
+import chlorine.etjourney.world.end.modifier.ColumnState;
 import chlorine.etjourney.world.end.region.RegionPicker;
 import chlorine.etjourney.world.end.region.Styles;
 import chlorine.etjourney.world.end.reserve.Area;
@@ -133,6 +134,31 @@ class LocatorTest {
             assertEquals(EndBiome.GROVE, SAMPLER.biome(t.x, t.z));
             assertTrue(SAMPLER.styleWeight("LAYERED", t.x, t.z) >= 0.6);
         }
+    }
+
+    @Test
+    void styledContinentsStandOnTheTopmostSlab() {
+        for (Target t : LOCATOR.continents(EndBiome.GROVE, "LAYERED", 3000, 0, 2)) assertEquals(
+            SAMPLER.bareColumn(t.x, t.z, true)
+                .surface(),
+            t.y);
+    }
+
+    @Test
+    void amberTreesGrowOnLayeredSlabs() {
+        List<Target> found = LOCATOR.amberTrees("LAYERED", 3000, 0, 3);
+        assertEquals(3, found.size());
+        Set<String> spots = new HashSet<>();
+        boolean onSlab = false;
+        for (Target t : found) {
+            assertTrue(spots.add(t.x + "," + t.z), "tree at " + t.x + "," + t.z + " twice");
+            assertTrue(SAMPLER.styleWeight("LAYERED", t.x, t.z) >= 0.6);
+            ColumnState c = SAMPLER.bareColumn(t.x + 0.5, t.z + 0.5, true);
+            double top = Math.floor(c.surface()) + 1;
+            assertTrue(t.y <= top && t.y >= top - 6, "root " + t.y + " off the topmost surface " + top);
+            onSlab |= c.surface() > c.top + 2;
+        }
+        assertTrue(onSlab);
     }
 
     @Test

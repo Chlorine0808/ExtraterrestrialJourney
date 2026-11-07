@@ -39,8 +39,6 @@ final class Locator {
     /** A giant tree is 56 high with a 26-block reach, so this scene size puts the camera 200 blocks off. */
     private static final double TREE_SIZE = 80;
 
-    /** Style weight below which the surface paint leaves a MYCELIA column to the glowshrooms. */
-    private static final double LAYERED_LIMIT = 0.05;
     /** A seed tree is 15 high with a 10-block reach. */
     private static final double AMBER_TREE_SIZE = 40;
     /** Cells searched on each side of a continent seed for its nearest seed tree. */
@@ -90,7 +88,8 @@ final class Locator {
                 new Target(
                     biome == null ? "bare" : biome.name(),
                     hit[0],
-                    sampler.bareColumn(hit[0], hit[1], true).top,
+                    sampler.bareColumn(hit[0], hit[1], true)
+                        .surface(),
                     hit[1],
                     CONTINENT_SIZE,
                     id));
@@ -196,14 +195,13 @@ final class Locator {
 
             @Override
             public double ground(double x, double z) {
-                return probe.ground(x, z);
+                return probe.surface(x, z);
             }
 
             @Override
             public boolean mycelia(double x, double z) {
                 int bx = (int) Math.floor(x), bz = (int) Math.floor(z);
-                return sampler.biome(bx, bz) == EndBiome.MYCELIA
-                    && sampler.styleWeight("LAYERED", bx, bz) < LAYERED_LIMIT;
+                return sampler.biome(bx, bz) == EndBiome.MYCELIA;
             }
 
             @Override
@@ -213,11 +211,14 @@ final class Locator {
         };
     }
 
-    /** The seed tree nearest the seed of each AMBER continent, continents nearest first. */
-    List<Target> amberTrees(double ox, double oz, int count) {
+    /**
+     * The seed tree nearest the seed of each AMBER continent, continents nearest first. With a style, only trees whose
+     * root is at least STYLE_DOMINANT that style.
+     */
+    List<Target> amberTrees(String style, double ox, double oz, int count) {
         long seed = sampler.seed();
         AmberTrees.Terrain terrain = amberTerrain();
-        Set<Long> chosen = new HashSet<>();
+        Set<Long> chosen = new HashSet<>(), trees = new HashSet<>();
         List<Target> out = new ArrayList<>();
         for (int i = 0; i < count; i++) {
             double[] hit = EndSearch.nearestInCells(Continent.SEED_CELL, ox, oz, (cx, cz) -> {
@@ -225,20 +226,25 @@ final class Locator {
                 if (s == null || EndBiome.ofContinentOf(seed, s) != EndBiome.AMBER) return null;
                 long id = ContinentIds.of(seed, s);
                 if (chosen.contains(id)) return null;
-                AmberTrees.Anchor best = nearestAmberTree(seed, s, terrain);
+                AmberTrees.Anchor best = nearestAmberTree(seed, s, style, trees, terrain);
                 if (best == null) return null;
                 return new double[] { best.x, best.z, best.y, Double.longBitsToDouble(id) };
             });
             if (hit == null) break;
             long id = Double.doubleToRawLongBits(hit[3]);
             chosen.add(id);
+            trees.add(cellKey((int) hit[0], (int) hit[1]));
             out.add(new Target("タネの木", hit[0], hit[2], hit[1], AMBER_TREE_SIZE, id));
         }
         return out;
     }
 
-    /** The kept tree nearest the continent seed; generation drops trees beside reserved areas. */
-    private AmberTrees.Anchor nearestAmberTree(long seed, Continent.Seed s, AmberTrees.Terrain terrain) {
+    /**
+     * The kept tree nearest the continent seed, other than those already taken; neighbouring continents may reach the
+     * same tree. Generation drops trees beside reserved areas.
+     */
+    private AmberTrees.Anchor nearestAmberTree(long seed, Continent.Seed s, String style, Set<Long> taken,
+        AmberTrees.Terrain terrain) {
         int scx = (int) Math.floor((double) s.x / AmberTrees.CELL),
             scz = (int) Math.floor((double) s.z / AmberTrees.CELL);
         // Building a tree is costly, so cells go nearest spot first and the search stops at the first kept tree.
@@ -251,8 +257,11 @@ final class Locator {
         }
         cells.sort(Comparator.comparingDouble(c -> Math.hypot(c[2] - s.x, c[3] - s.z)));
         for (int[] c : cells) {
-            for (AmberTrees.Anchor a : AmberTrees.in(seed, c[0], c[1], terrain))
+            for (AmberTrees.Anchor a : AmberTrees.in(seed, c[0], c[1], terrain)) {
+                if (style != null && sampler.styleWeight(style, a.x, a.z) < STYLE_DOMINANT) continue;
+                if (taken.contains(cellKey(a.x, a.z))) continue;
                 if (AmberTrees.clearOf(a, reserved.at(a.x >> 4, a.z >> 4))) return a;
+            }
         }
         return null;
     }
@@ -264,14 +273,13 @@ final class Locator {
 
             @Override
             public double ground(double x, double z) {
-                return probe.ground(x, z);
+                return probe.surface(x, z);
             }
 
             @Override
             public boolean amber(double x, double z) {
                 int bx = (int) Math.floor(x), bz = (int) Math.floor(z);
-                return sampler.biome(bx, bz) == EndBiome.AMBER
-                    && sampler.styleWeight("LAYERED", bx, bz) < LAYERED_LIMIT;
+                return sampler.biome(bx, bz) == EndBiome.AMBER;
             }
 
             @Override

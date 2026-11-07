@@ -70,7 +70,11 @@ public final class ShotPlanner {
                     addGlowshrooms(out, spec, locator.glowshrooms(spec.arg.equals("GIANT"), ox, oz, spec.count));
                     break;
                 case AMBER_TREE:
-                    addAmberTrees(out, spec, locator.amberTrees(ox, oz, spec.count), sampler.standingProbe()::ground);
+                    addAmberTrees(
+                        out,
+                        spec,
+                        locator.amberTrees(spec.style, ox, oz, spec.count),
+                        sampler.standingProbe()::surface);
                     break;
                 case LAKE:
                     add(out, spec, "湖", locator.lakes(ox, oz, spec.count));

@@ -28,7 +28,7 @@ public final class ShotSpec {
     /** {x, y, z, yaw, pitch} for AT only, else null. */
     public final double[] at;
     public final String label;
-    /** Terrain style the continent point must be dominated by (biome and bare only), or null. */
+    /** Terrain style the continent point or the tree's root must be dominated by (biome, bare, amber-tree), or null. */
     public final String style;
     /** 1-based line number in the list file. */
     public final int line;

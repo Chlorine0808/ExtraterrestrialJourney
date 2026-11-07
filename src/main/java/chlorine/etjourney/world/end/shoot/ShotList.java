@@ -215,8 +215,8 @@ public final class ShotList {
                     at = withAngle(at, 4, value);
                     break;
                 case "style":
-                    if (what != ShotSpec.What.BIOME && what != ShotSpec.What.BARE)
-                        throw new IllegalArgumentException("style is for biome and bare");
+                    if (what != ShotSpec.What.BIOME && what != ShotSpec.What.BARE && what != ShotSpec.What.AMBER_TREE)
+                        throw new IllegalArgumentException("style is for biome, bare and amber-tree");
                     if (!isStyle(value)) throw new IllegalArgumentException("unknown style '" + value + "'");
                     style = value;
                     break;
