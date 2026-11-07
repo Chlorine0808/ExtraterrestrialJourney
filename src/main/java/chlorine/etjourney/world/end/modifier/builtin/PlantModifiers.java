@@ -98,16 +98,12 @@ public final class PlantModifiers {
         }
     }
 
-    /** LAYERED stacks tiers over the probe's ground, so the probe's ground is not its top. */
-    private static final double LAYERED_LIMIT = 0.05;
-
-    /** Whether the column's top is the biome's ground, outside LAYERED, as a plant placement asks. */
+    /** Whether the column's topmost surface is the biome's ground, as a plant placement asks. */
     private static boolean wears(ChunkArea area, TerrainView view, EndBiome biome, double x, double z) {
         // The same integer sample the surface paint takes.
         int bx = (int) Math.floor(x), bz = (int) Math.floor(z);
         // Anchors lie outside the chunk's window, so the biome looks up its own seeds and mountains.
-        return EndBiome.at(area.seed, bx, bz, view.voidShare(bx, bz)) == biome
-            && view.weight("LAYERED", bx, bz) < LAYERED_LIMIT;
+        return EndBiome.at(area.seed, bx, bz, view.voidShare(bx, bz)) == biome;
     }
 
     /**
@@ -121,7 +117,7 @@ public final class PlantModifiers {
                 @Override
                 public double ground(double x, double z) {
                     return view.standing()
-                        .ground(x, z);
+                        .surface(x, z);
                 }
 
                 @Override
@@ -159,7 +155,7 @@ public final class PlantModifiers {
                 @Override
                 public double ground(double x, double z) {
                     return view.standing()
-                        .ground(x, z);
+                        .surface(x, z);
                 }
 
                 @Override
@@ -189,7 +185,7 @@ public final class PlantModifiers {
                 @Override
                 public double ground(double x, double z) {
                     return view.standing()
-                        .ground(x, z);
+                        .surface(x, z);
                 }
 
                 @Override
