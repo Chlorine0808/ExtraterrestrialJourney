@@ -49,12 +49,18 @@ dependencies {
 
     // Dev client only: OKModular's wand scan saves End buildings as JSON (see docs/dev-notes.md).
     // Left out of runServer: OKCore calls a client-only Item method in preInit and crashes a dedicated server.
+    // -PokmLocal loads the dev jar from a sibling ../OKModular build instead, to test unpushed OKModular work.
     if (!gradle.startParameter.taskNames.any { it.toLowerCase().contains("runserver") }) {
-        runtimeOnlyNonPublishable("com.github.Chlorine0808:OKModular:d6b001f:dev") {
-            exclude group: "com.github.Shigure-Ruiseki", module: "OKCore"
+        if (project.hasProperty("okmLocal")) {
+            runtimeOnlyNonPublishable(fileTree(dir: "../OKModular/build/libs", include: "*-dev.jar"))
+            runtimeOnlyNonPublishable(rfg.deobf("com.github.Shigure-Ruiseki:OKCore:26.10.31.1:dev"))
+        } else {
+            runtimeOnlyNonPublishable("com.github.Chlorine0808:OKModular:d6b001f:dev") {
+                exclude group: "com.github.Shigure-Ruiseki", module: "OKCore"
+            }
+            // jitpack's OKCore dev jar still calls client methods by their SRG names; remap it to the dev names.
+            runtimeOnlyNonPublishable(rfg.deobf("com.github.Shigure-Ruiseki:OKCore:26.10.10.0:dev"))
         }
-        // jitpack's OKCore dev jar still calls client methods by their SRG names; remap it to the dev names.
-        runtimeOnlyNonPublishable(rfg.deobf("com.github.Shigure-Ruiseki:OKCore:26.10.10.0:dev"))
     }
     runtimeOnlyNonPublishable(rfg.deobf("maven.modrinth:carbon-config:WfL4zVO9"))
     runtimeOnlyNonPublishable(rfg.deobf("maven.modrinth:salutation:MGHtgMX3"))
