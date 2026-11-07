@@ -76,6 +76,9 @@ final class CraftDeviceBlock extends BlockContainer {
         }
         ItemStack taken = holder.takeLast();
         if (taken != null && !player.inventory.addItemStackToInventory(taken)) holder.spawn(taken);
+        // After a right-click the server marks every slot but the held one as sent without sending it, so a taken
+        // item that lands elsewhere would stay invisible to the client; send the changes now.
+        if (taken != null) player.inventoryContainer.detectAndSendChanges();
         return true;
     }
 
