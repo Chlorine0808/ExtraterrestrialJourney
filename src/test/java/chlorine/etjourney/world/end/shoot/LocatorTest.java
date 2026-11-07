@@ -148,8 +148,10 @@ class LocatorTest {
     void amberTreesGrowOnLayeredSlabs() {
         List<Target> found = LOCATOR.amberTrees("LAYERED", 3000, 0, 3);
         assertEquals(3, found.size());
+        Set<String> spots = new HashSet<>();
         boolean onSlab = false;
         for (Target t : found) {
+            assertTrue(spots.add(t.x + "," + t.z), "tree at " + t.x + "," + t.z + " twice");
             assertTrue(SAMPLER.styleWeight("LAYERED", t.x, t.z) >= 0.6);
             ColumnState c = SAMPLER.bareColumn(t.x + 0.5, t.z + 0.5, true);
             double top = Math.floor(c.surface()) + 1;

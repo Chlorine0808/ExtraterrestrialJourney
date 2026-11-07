@@ -218,7 +218,7 @@ final class Locator {
     List<Target> amberTrees(String style, double ox, double oz, int count) {
         long seed = sampler.seed();
         AmberTrees.Terrain terrain = amberTerrain();
-        Set<Long> chosen = new HashSet<>();
+        Set<Long> chosen = new HashSet<>(), trees = new HashSet<>();
         List<Target> out = new ArrayList<>();
         for (int i = 0; i < count; i++) {
             double[] hit = EndSearch.nearestInCells(Continent.SEED_CELL, ox, oz, (cx, cz) -> {
@@ -226,20 +226,25 @@ final class Locator {
                 if (s == null || EndBiome.ofContinentOf(seed, s) != EndBiome.AMBER) return null;
                 long id = ContinentIds.of(seed, s);
                 if (chosen.contains(id)) return null;
-                AmberTrees.Anchor best = nearestAmberTree(seed, s, style, terrain);
+                AmberTrees.Anchor best = nearestAmberTree(seed, s, style, trees, terrain);
                 if (best == null) return null;
                 return new double[] { best.x, best.z, best.y, Double.longBitsToDouble(id) };
             });
             if (hit == null) break;
             long id = Double.doubleToRawLongBits(hit[3]);
             chosen.add(id);
+            trees.add(cellKey((int) hit[0], (int) hit[1]));
             out.add(new Target("タネの木", hit[0], hit[2], hit[1], AMBER_TREE_SIZE, id));
         }
         return out;
     }
 
-    /** The kept tree nearest the continent seed; generation drops trees beside reserved areas. */
-    private AmberTrees.Anchor nearestAmberTree(long seed, Continent.Seed s, String style, AmberTrees.Terrain terrain) {
+    /**
+     * The kept tree nearest the continent seed, other than those already taken; neighbouring continents may reach the
+     * same tree. Generation drops trees beside reserved areas.
+     */
+    private AmberTrees.Anchor nearestAmberTree(long seed, Continent.Seed s, String style, Set<Long> taken,
+        AmberTrees.Terrain terrain) {
         int scx = (int) Math.floor((double) s.x / AmberTrees.CELL),
             scz = (int) Math.floor((double) s.z / AmberTrees.CELL);
         // Building a tree is costly, so cells go nearest spot first and the search stops at the first kept tree.
@@ -254,6 +259,7 @@ final class Locator {
         for (int[] c : cells) {
             for (AmberTrees.Anchor a : AmberTrees.in(seed, c[0], c[1], terrain)) {
                 if (style != null && sampler.styleWeight(style, a.x, a.z) < STYLE_DOMINANT) continue;
+                if (taken.contains(cellKey(a.x, a.z))) continue;
                 if (AmberTrees.clearOf(a, reserved.at(a.x >> 4, a.z >> 4))) return a;
             }
         }
