@@ -8,10 +8,8 @@ import chlorine.etjourney.world.end.noise.Hash;
 /** ANVILS: a stalk rising from the ground or the void under a flat cap that drifts to one side. */
 public final class Anvil extends Structure {
 
-    /** Height the cap's top rises above its rim. */
-    private static final double DOME = 4;
-    /** Farthest the lumps lift the roof. */
-    private static final double LUMPS = 2;
+    /** Largest radius the cap's rim is rounded off by; the top stays level, so it shows no terraces. */
+    private static final double RIM_ROUND = 6;
     /** Farthest the ruffles push the stalk's side out. */
     private static final double STALK_RUFFLE = 1.5;
 
@@ -26,8 +24,8 @@ public final class Anvil extends Structure {
             if (!Clouds.forms(s, cx, cz, probe.weight(style, x, z))) return null;
             double ground = probe.ground(x, z);
             double base = ground > -100 ? ground - 4 : 20 + 40 * Hash.hash01(s + 3, cx, cz);
-            double thick = 4 + 10 * Hash.hash01(s + 4, cx, cz);
-            double capY = Math.min(Clouds.CEILING - thick - DOME - LUMPS - 1, 150 + 80 * Hash.hash01(s + 5, cx, cz));
+            double thick = 6 + 12 * Hash.hash01(s + 4, cx, cz);
+            double capY = Math.min(Clouds.CEILING - thick - 1, 150 + 80 * Hash.hash01(s + 5, cx, cz));
             if (capY - base < 60) return null;
             double stalk = 8 + 4 * Hash.hash01(s + 6, cx, cz);
             double radius = 25 + 40 * Hash.hash01(s + 7, cx, cz);
@@ -45,7 +43,7 @@ public final class Anvil extends Structure {
 
     Anvil(double x, double z, double base, double stalk, double capY, double radius, double thick, double drift,
         double heading, double stretch, long salt) {
-        super(x, z, drift + radius * stretch * 1.15 + 1, base - 1, capY + thick + DOME + LUMPS + 1);
+        super(x, z, drift + radius * stretch * 1.15 + 1, base - 1, capY + thick + 1);
         this.base = base;
         this.stalk = stalk;
         this.capX = x + Math.cos(heading) * drift;
@@ -89,9 +87,8 @@ public final class Anvil extends Structure {
             d = Distance.planar(x - centreX, z - centreZ);
             double px = x - capX, pz = z - capZ, c = Math.cos(heading), s = Math.sin(heading);
             dc = Distance.planar((px * c + pz * s) / stretch, -px * s + pz * c);
-            double u = Math.min(1, dc / radius);
             rim = radius + Clouds.ruffle(salt + 2, x, 0, z, 16, 0.15 * radius);
-            roof = capY + thick + DOME * (1 - u * u) + Clouds.ruffle(salt + 4, x, 0, z, 10, LUMPS);
+            roof = capY + thick;
             floor = capY + Clouds.ruffle(salt + 6, x, 0, z, 12, 1.5);
         }
 
@@ -104,7 +101,10 @@ public final class Anvil extends Structure {
         }
 
         double cap(double y) {
-            return Math.min(rim - dc, Math.min(y - floor, roof - y));
+            // A slab between floor and roof whose rim is rounded off in the vertical section through the cap centre.
+            double half = (roof - floor) / 2, round = Math.min(half, RIM_ROUND);
+            double qx = dc - (rim - round), qy = Math.abs(y - (roof + floor) / 2) - (half - round);
+            return round - Distance.planar(Math.max(qx, 0), Math.max(qy, 0)) - Math.min(Math.max(qx, qy), 0);
         }
     }
 }

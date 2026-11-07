@@ -73,6 +73,8 @@ public final class FeatureModifiers {
         all.add(StructureModifiers.voxels(Anvil.KIND, 857, EndBlock.STONE));
         // Mushrooms block by block, so their round caps are not cut into the 8-block grid's polygons.
         all.add(StructureModifiers.standingVoxels(Structures.MUSHROOMS, 859, EndBlock.STONE));
+        // Large rings too: their tubes are only two or three grid cells across.
+        all.add(StructureModifiers.voxels(Structures.RINGS, 858, EndBlock.STONE));
         all.add(StructureModifiers.ringlets());
         all.add(StructureModifiers.standingVoxels(Structures.CROSSES, 861, EndBlock.STONE));
         all.add(StructureModifiers.voxels(Structures.HANGING_CHAINS, 862, EndBlock.CHAIN));

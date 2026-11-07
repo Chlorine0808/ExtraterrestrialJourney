@@ -84,6 +84,11 @@ class StructureLinesTest {
     }
 
     @Test
+    void ringLinesMatchTheirDensity() {
+        assertTrue(checkKind(Structures.RINGS, 337L, 6, 3) >= 6);
+    }
+
+    @Test
     void toolLinesMatchTheirDensity() {
         assertTrue(checkKind(Tool.KIND, 335L, 30, 1) >= 30);
     }
