@@ -1,5 +1,6 @@
 package chlorine.etjourney.content;
 
+import chlorine.etjourney.content.craft.CraftContent;
 import chlorine.etjourney.content.end.EndAcid;
 import chlorine.etjourney.content.end.EndBlocks;
 import chlorine.etjourney.content.end.EndBuildingContent;
@@ -14,6 +15,7 @@ public final class ModContent {
     public static void preInit() {
         EndBlocks.preInit();
         EndAcid.preInit();
+        CraftContent.preInit();
         ModLog.LOG.debug("content: preInit");
     }
 

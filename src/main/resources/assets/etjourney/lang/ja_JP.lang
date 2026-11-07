@@ -116,3 +116,6 @@ fluid.etjourney.hydrofluoric_acid=フッ化水素酸
 death.attack.etjourney.hydrofluoric_acid=%1$s はフッ化水素酸に溶けた
 item.etjourney.tantalum_bucket.name=タンタルのバケツ
 item.etjourney.tantalum_bucket_hydrofluoric_acid.name=フッ化水素酸入りバケツ
+tile.etjourney.forge.name=フォージ
+tile.etjourney.attune_altar.name=アチューンの祭壇
+tile.etjourney.attune_pedestal.name=アチューンの台座
