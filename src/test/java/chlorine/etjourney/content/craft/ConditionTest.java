@@ -9,7 +9,7 @@ import org.junit.jupiter.api.Test;
 class ConditionTest {
 
     private static ConditionContext at(long worldTime) {
-        return new ConditionContext("Grove", 1, true, worldTime);
+        return new ConditionContext("Grove", 1, true, true, worldTime);
     }
 
     @Test
@@ -24,18 +24,24 @@ class ConditionTest {
     }
 
     @Test
+    void nightIsNeverMetWhereTheSkyHasNoDayAndNight() {
+        // The End and the Nether keep a world clock, but nothing there shows it.
+        assertFalse(new NightCondition().isMet(new ConditionContext("Grove", 1, true, false, 18000L)));
+    }
+
+    @Test
     void dimensionMatchesAnyListedId() {
         DimensionCondition endOrNether = new DimensionCondition(1, -1);
-        assertTrue(endOrNether.isMet(new ConditionContext("Grove", 1, true, 0L)));
-        assertTrue(endOrNether.isMet(new ConditionContext("Hell", -1, false, 0L)));
-        assertFalse(endOrNether.isMet(new ConditionContext("Plains", 0, true, 0L)));
+        assertTrue(endOrNether.isMet(new ConditionContext("Grove", 1, true, true, 0L)));
+        assertTrue(endOrNether.isMet(new ConditionContext("Hell", -1, false, true, 0L)));
+        assertFalse(endOrNether.isMet(new ConditionContext("Plains", 0, true, true, 0L)));
     }
 
     @Test
     void biomeAndSkyReadOnlyTheirOwnPart() {
-        assertTrue(new BiomeCondition("Grove", "Highland").isMet(new ConditionContext("Highland", 0, false, 0L)));
-        assertFalse(new BiomeCondition("Grove").isMet(new ConditionContext("Highland", 1, true, 0L)));
-        assertTrue(new SkyCondition().isMet(new ConditionContext("Plains", 0, true, 0L)));
-        assertFalse(new SkyCondition().isMet(new ConditionContext("Grove", 1, false, 18000L)));
+        assertTrue(new BiomeCondition("Grove", "Highland").isMet(new ConditionContext("Highland", 0, false, true, 0L)));
+        assertFalse(new BiomeCondition("Grove").isMet(new ConditionContext("Highland", 1, true, true, 0L)));
+        assertTrue(new SkyCondition().isMet(new ConditionContext("Plains", 0, true, true, 0L)));
+        assertFalse(new SkyCondition().isMet(new ConditionContext("Grove", 1, false, true, 18000L)));
     }
 }

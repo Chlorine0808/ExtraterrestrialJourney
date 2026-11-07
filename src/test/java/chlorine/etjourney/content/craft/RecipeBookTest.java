@@ -16,7 +16,7 @@ class RecipeBookTest {
     private static final ItemKey PLATINUM = new ItemKey("etjourney:ingot_ender_platinum", 0, "ingotEnderPlatinum");
     private static final ItemKey DIRT = new ItemKey("minecraft:dirt", 0);
     private static final ItemOutput OUT = new ItemOutput("minecraft:gold_ingot", 0, 1);
-    private static final ConditionContext ANYWHERE = new ConditionContext("Grove", 1, true, 18000L);
+    private static final ConditionContext ANYWHERE = new ConditionContext("Grove", 1, true, true, 18000L);
 
     private static List<ItemKey> pile(ItemKey... keys) {
         return Arrays.asList(keys);
@@ -86,8 +86,8 @@ class RecipeBookTest {
             .build();
         RecipeBook book = new RecipeBook(Collections.singletonList(r));
         assertSame(r, book.find(null, pile(GOLD), ANYWHERE));
-        assertNull(book.find(null, pile(GOLD), new ConditionContext("Highland", 1, true, 18000L)));
-        assertNull(book.find(null, pile(GOLD), new ConditionContext("Grove", 1, false, 18000L)));
+        assertNull(book.find(null, pile(GOLD), new ConditionContext("Highland", 1, true, true, 18000L)));
+        assertNull(book.find(null, pile(GOLD), new ConditionContext("Grove", 1, false, true, 18000L)));
     }
 
     @Test
@@ -100,7 +100,7 @@ class RecipeBookTest {
             .input(ItemInput.ore("ingotEnderGold", 1))
             .build();
         RecipeBook book = new RecipeBook(Arrays.asList(strict, loose));
-        assertSame(strict, book.find(null, pile(GOLD), new ConditionContext("Highland", 1, true, 0L)));
+        assertSame(strict, book.find(null, pile(GOLD), new ConditionContext("Highland", 1, true, true, 0L)));
         assertSame(loose, book.find(null, pile(GOLD), ANYWHERE));
     }
 }

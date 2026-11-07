@@ -37,6 +37,7 @@ final class CraftWorld {
             biome(world, x, z),
             world.provider.dimensionId,
             world.canBlockSeeTheSky(x, y + 1, z),
+            !world.provider.hasNoSky,
             world.getWorldTime());
     }
 

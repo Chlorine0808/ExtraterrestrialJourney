@@ -10,16 +10,21 @@ public final class ConditionContext {
     final String biome;
     final int dimension;
     final boolean canSeeSky;
+    /** Whether the sky here turns from day to night; the End and the Nether keep a clock but show nothing of it. */
+    final boolean hasDayCycle;
     final long worldTime;
 
-    public ConditionContext(String biome, int dimension, boolean canSeeSky, long worldTime) {
+    public ConditionContext(String biome, int dimension, boolean canSeeSky, boolean hasDayCycle, long worldTime) {
         this.biome = biome;
         this.dimension = dimension;
         this.canSeeSky = canSeeSky;
+        this.hasDayCycle = hasDayCycle;
         this.worldTime = worldTime;
     }
 
+    /** Never where the sky has no day and night. */
     boolean isNight() {
+        if (!hasDayCycle) return false;
         long time = Math.floorMod(worldTime, DAY);
         return time >= DUSK && time < DAWN;
     }
