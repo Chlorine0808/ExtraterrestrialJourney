@@ -52,7 +52,10 @@ dependencies {
     // -PokmLocal loads the dev jar from a sibling ../OKModular build instead, to test unpushed OKModular work.
     if (!gradle.startParameter.taskNames.any { it.toLowerCase().contains("runserver") }) {
         if (project.hasProperty("okmLocal")) {
-            runtimeOnlyNonPublishable(fileTree(dir: "../OKModular/build/libs", include: "*-dev.jar"))
+            // build/libs keeps every old dev jar, so take only the newest.
+            def okmJar = fileTree(dir: "../OKModular/build/libs", include: "*-dev.jar").files.max { it.lastModified() }
+            if (okmJar == null) throw new GradleException("-PokmLocal: no dev jar in ../OKModular/build/libs; build OKModular first")
+            runtimeOnlyNonPublishable(files(okmJar))
             runtimeOnlyNonPublishable(rfg.deobf("com.github.Shigure-Ruiseki:OKCore:26.10.31.1:dev"))
         } else {
             runtimeOnlyNonPublishable("com.github.Chlorine0808:OKModular:d6b001f:dev") {
