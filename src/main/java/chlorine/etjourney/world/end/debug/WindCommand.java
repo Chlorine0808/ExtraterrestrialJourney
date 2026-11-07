@@ -10,13 +10,13 @@ import net.minecraft.util.ChatComponentText;
 import net.minecraft.util.MathHelper;
 import net.minecraft.util.Vec3;
 
-import chlorine.etjourney.world.updraft.UpdraftWorld;
-import chlorine.etjourney.world.updraft.model.Updraft;
+import chlorine.etjourney.world.wind.WindWorld;
+import chlorine.etjourney.world.wind.model.Wind;
 
-/** /etj updraft add|aim|remove|list: trial updrafts at the player's feet, until the server stops. */
-final class UpdraftCommand {
+/** /etj wind add|aim|remove|list: trial winds at the player's feet, until the server stops. */
+final class WindCommand {
 
-    static final String USAGE = "/etj updraft <add [height] [lift] [max]|aim [size] [lift] [max]|remove <id|all>|list>";
+    static final String USAGE = "/etj wind <add [height] [lift] [max]|aim [size] [lift] [max]|remove <id|all>|list>";
     /** Half the width of a trial column, around the block the player stands in. */
     private static final int HALF = 2;
     private static final int HEIGHT = 24;
@@ -25,7 +25,7 @@ final class UpdraftCommand {
     /** Side of a trial cube that blows where the player looks. */
     private static final int AIM_SIZE = 9;
 
-    private UpdraftCommand() {}
+    private WindCommand() {}
 
     static void run(EntityPlayerMP player, String[] args) {
         String what = args.length > 1 ? args[1] : "";
@@ -70,9 +70,9 @@ final class UpdraftCommand {
         int x = MathHelper.floor_double(player.posX);
         int y = MathHelper.floor_double(player.posY);
         int z = MathHelper.floor_double(player.posZ);
-        Updraft u;
+        Wind u;
         try {
-            u = new Updraft(x - HALF, y, z - HALF, x + HALF + 1, y + height, z + HALF + 1, lift, maxSpeed);
+            u = new Wind(x - HALF, y, z - HALF, x + HALF + 1, y + height, z + HALF + 1, lift, maxSpeed);
         } catch (IllegalArgumentException e) {
             say(player, e.getMessage());
             return;
@@ -84,9 +84,9 @@ final class UpdraftCommand {
     private static void aim(EntityPlayerMP player, int size, double lift, double maxSpeed) {
         Vec3 look = player.getLookVec();
         double h = size / 2.0;
-        Updraft u;
+        Wind u;
         try {
-            u = new Updraft(
+            u = new Wind(
                 player.posX - h,
                 player.posY - h,
                 player.posZ - h,
@@ -105,28 +105,28 @@ final class UpdraftCommand {
         put(player, u);
     }
 
-    private static void put(EntityPlayerMP player, Updraft u) {
-        int id = UpdraftWorld.SERVER.add(player.dimension, u);
-        say(player, "Updraft " + id + " " + u);
+    private static void put(EntityPlayerMP player, Wind u) {
+        int id = WindWorld.SERVER.add(player.dimension, u);
+        say(player, "Wind " + id + " " + u);
     }
 
     private static void remove(EntityPlayerMP player, String which) {
         if (which.equals("all")) {
-            UpdraftWorld.SERVER.clear(player.dimension);
-            say(player, "Removed every updraft in this dimension");
+            WindWorld.SERVER.clear(player.dimension);
+            say(player, "Removed every wind in this dimension");
             return;
         }
         int id = Integer.parseInt(which);
         say(
             player,
-            UpdraftWorld.SERVER.remove(player.dimension, id) ? "Removed updraft " + id
-                : "No updraft " + id + " in this dimension");
+            WindWorld.SERVER.remove(player.dimension, id) ? "Removed wind " + id
+                : "No wind " + id + " in this dimension");
     }
 
     private static void list(EntityPlayerMP player) {
-        Map<Integer, Updraft> here = UpdraftWorld.SERVER.in(player.dimension);
-        if (here.isEmpty()) say(player, "No updrafts in this dimension");
-        for (Map.Entry<Integer, Updraft> e : here.entrySet()) say(player, "Updraft " + e.getKey() + " " + e.getValue());
+        Map<Integer, Wind> here = WindWorld.SERVER.in(player.dimension);
+        if (here.isEmpty()) say(player, "No winds in this dimension");
+        for (Map.Entry<Integer, Wind> e : here.entrySet()) say(player, "Wind " + e.getKey() + " " + e.getValue());
     }
 
     private static void say(EntityPlayerMP player, String text) {

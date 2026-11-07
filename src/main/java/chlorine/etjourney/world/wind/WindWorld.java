@@ -1,4 +1,4 @@
-package chlorine.etjourney.world.updraft;
+package chlorine.etjourney.world.wind;
 
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
@@ -6,8 +6,8 @@ import net.minecraft.network.NetHandlerPlayServer;
 import net.minecraft.util.AxisAlignedBB;
 
 import chlorine.etjourney.core.network.ETJNetwork;
-import chlorine.etjourney.world.updraft.model.Updraft;
-import chlorine.etjourney.world.updraft.model.Updrafts;
+import chlorine.etjourney.world.wind.model.Wind;
+import chlorine.etjourney.world.wind.model.Winds;
 import cpw.mods.fml.common.FMLCommonHandler;
 import cpw.mods.fml.common.ObfuscationReflectionHelper;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
@@ -16,41 +16,41 @@ import cpw.mods.fml.common.gameevent.TickEvent;
 import cpw.mods.fml.relauncher.Side;
 
 /**
- * Server side of the updrafts: holds them, sends each dimension's to its players, and keeps a player held in one from
+ * Server side of the winds: holds them, sends each dimension's to its players, and keeps a player held in one from
  * being kicked for flying, or from taking fall damage when the air rises. The client moves the player (see
- * UpdraftLift).
+ * WindPush).
  */
-public final class UpdraftWorld {
+public final class WindWorld {
 
-    /** Not saved: sources register their updrafts again when they load. */
-    public static final Updrafts SERVER = new Updrafts();
+    /** Not saved: sources register their winds again when they load. */
+    public static final Winds SERVER = new Winds();
 
-    private UpdraftWorld() {}
+    private WindWorld() {}
 
     public static void register() {
         ETJNetwork.channel()
-            .registerMessage(UpdraftSync.Handler.class, UpdraftSync.class, ETJNetwork.nextId(), Side.CLIENT);
+            .registerMessage(WindSync.Handler.class, WindSync.class, ETJNetwork.nextId(), Side.CLIENT);
         SERVER.onChange(
             dimension -> ETJNetwork.channel()
                 .sendToDimension(sync(dimension), dimension));
         FMLCommonHandler.instance()
             .bus()
-            .register(new UpdraftWorld());
+            .register(new WindWorld());
     }
 
-    /** Drops the updrafts of a previous server in the same game. */
+    /** Drops the winds of a previous server in the same game. */
     public static void serverStarting() {
         SERVER.clearAll();
     }
 
-    /** The strongest updraft holding the player in the list, or null. */
-    static Updraft around(EntityPlayer player, Iterable<Updraft> updrafts) {
+    /** The strongest wind holding the player in the list, or null. */
+    static Wind around(EntityPlayer player, Iterable<Wind> winds) {
         AxisAlignedBB b = player.boundingBox;
-        return Updraft.strongest(updrafts, b.minX, b.minY, b.minZ, b.maxX, b.maxY, b.maxZ);
+        return Wind.strongest(winds, b.minX, b.minY, b.minZ, b.maxX, b.maxY, b.maxZ);
     }
 
-    private static UpdraftSync sync(int dimension) {
-        return new UpdraftSync(
+    private static WindSync sync(int dimension) {
+        return new WindSync(
             dimension,
             SERVER.in(dimension)
                 .values());
@@ -80,7 +80,7 @@ public final class UpdraftWorld {
     public void onPlayerTick(TickEvent.PlayerTickEvent event) {
         if (event.phase != TickEvent.Phase.START || event.side != Side.SERVER) return;
         EntityPlayer player = event.player;
-        Updraft u = around(
+        Wind u = around(
             player,
             SERVER.in(player.dimension)
                 .values());

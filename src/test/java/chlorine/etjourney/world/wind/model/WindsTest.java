@@ -1,4 +1,4 @@
-package chlorine.etjourney.world.updraft.model;
+package chlorine.etjourney.world.wind.model;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -12,15 +12,15 @@ import java.util.List;
 
 import org.junit.jupiter.api.Test;
 
-/** Sources register and remove updrafts per dimension, and each change is reported for that dimension. */
-class UpdraftsTest {
+/** Sources register and remove winds per dimension, and each change is reported for that dimension. */
+class WindsTest {
 
-    private static final Updraft A = new Updraft(0, 0, 0, 1, 1, 1, 0.1, 0.5);
-    private static final Updraft B = new Updraft(5, 0, 5, 6, 1, 6, 0.1, 0.5);
+    private static final Wind A = new Wind(0, 0, 0, 1, 1, 1, 0.1, 0.5);
+    private static final Wind B = new Wind(5, 0, 5, 6, 1, 6, 0.1, 0.5);
 
     @Test
     void keepsEachDimensionApart() {
-        Updrafts all = new Updrafts();
+        Winds all = new Winds();
         int a = all.add(1, A);
         all.add(0, B);
         assertEquals(Collections.singletonMap(a, A), all.in(1));
@@ -36,7 +36,7 @@ class UpdraftsTest {
 
     @Test
     void removesOnlyTheNamedOneInItsDimension() {
-        Updrafts all = new Updrafts();
+        Winds all = new Winds();
         int a = all.add(1, A);
         int b = all.add(1, B);
         assertNotEquals(a, b);
@@ -49,7 +49,7 @@ class UpdraftsTest {
     @Test
     void reportsTheDimensionOfEachChange() {
         List<Integer> changed = new ArrayList<>();
-        Updrafts all = new Updrafts();
+        Winds all = new Winds();
         all.onChange(changed::add);
         int a = all.add(1, A);
         all.add(-1, B);
