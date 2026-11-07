@@ -56,7 +56,12 @@ dependencies {
             def okmJar = fileTree(dir: "../OKModular/build/libs", include: "*-dev.jar").files.max { it.lastModified() }
             if (okmJar == null) throw new GradleException("-PokmLocal: no dev jar in ../OKModular/build/libs; build OKModular first")
             runtimeOnlyNonPublishable(files(okmJar))
-            runtimeOnlyNonPublishable(rfg.deobf("com.github.Shigure-Ruiseki:OKCore:26.10.31.1:dev"))
+            // A bare jar has no POM, so list OKModular's own dependencies by hand (match ../OKModular/dependencies.gradle).
+            runtimeOnlyNonPublishable("com.github.GTNewHorizons:GTNHLib:0.11.41:dev")
+            runtimeOnlyNonPublishable("com.github.GTNewHorizons:StructureLib:1.4.39:dev")
+            runtimeOnlyNonPublishable("com.github.GTNewHorizons:ModularUI2:2.3.79-1.7.10:dev")
+            // This OKCore's POM pulls the non-dev UniMixins, which FML rejects as a duplicate of ours.
+            runtimeOnlyNonPublishable(rfg.deobf("com.github.Shigure-Ruiseki:OKCore:26.10.31.1:dev")) { transitive = false }
         } else {
             runtimeOnlyNonPublishable("com.github.Chlorine0808:OKModular:d6b001f:dev") {
                 exclude group: "com.github.Shigure-Ruiseki", module: "OKCore"
