@@ -51,6 +51,8 @@ dependencies {
     // Left out of runServer: OKCore calls a client-only Item method in preInit and crashes a dedicated server.
     // -PokmLocal loads the dev jar from a sibling ../OKModular build instead, to test unpushed OKModular work.
     if (!gradle.startParameter.taskNames.any { it.toLowerCase().contains("runserver") }) {
+        // OKModular draws its NEI structure previews with this; without it the previews are missing.
+        runtimeOnlyNonPublishable("com.github.GTNewHorizons:BlockRenderer6343:1.4.14:dev") { transitive = false }
         if (project.hasProperty("okmLocal")) {
             // build/libs keeps every old dev jar, so take only the newest.
             def okmJar = fileTree(dir: "../OKModular/build/libs", include: "*-dev.jar").files.max { it.lastModified() }
