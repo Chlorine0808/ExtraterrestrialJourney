@@ -3,14 +3,56 @@ package chlorine.etjourney.core.damage;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 
+import chlorine.etjourney.core.damage.model.DamageMath;
+import chlorine.etjourney.core.damage.model.ElementalDamage;
+
 /** The way in for elemental attacks. */
 public final class ElementalDamages {
 
+    /** DataWatcher slot of EntityLivingBase health. */
+    private static final int HEALTH_WATCHER = 6;
+
     private ElementalDamages() {}
+
+    /**
+     * Hits the target and runs the element effects when health or absorption dropped. Piercing damage ignores the
+     * hurt cooldown, and on a player takes directly whatever armor outside the events held back.
+     */
+    public static boolean deal(EntityLivingBase target, ElementalDamageSource source) {
+        ElementalDamage damage = source.damage();
+        boolean pierce = damage.isPiercing() && pierces(target);
+        if (pierce) target.hurtResistantTime = 0;
+        float before = life(target);
+        target.attackEntityFrom(source, damage.raw());
+        if (pierce && target instanceof EntityPlayer && !target.isDead && target.getHealth() > 0) {
+            float expected = DamageMath.resolve(damage, ResistanceSources.of(target));
+            float missing = DamageMath.shortfall(before, life(target), expected);
+            if (missing > 0) takeDirectly(target, source, missing);
+        }
+        boolean hit = life(target) < before;
+        if (hit) ElementEffects.fire(target, source);
+        return hit;
+    }
 
     /** Whether piercing damage may get past the target's immunities: never creative players or invulnerables. */
     public static boolean pierces(EntityLivingBase target) {
         if (target.isEntityInvulnerable()) return false;
         return !(target instanceof EntityPlayer && ((EntityPlayer) target).capabilities.disableDamage);
+    }
+
+    private static float life(EntityLivingBase target) {
+        return target.getHealth() + target.getAbsorptionAmount();
+    }
+
+    /** Takes from absorption first, then health, past any setHealth override; kills at 0. */
+    private static void takeDirectly(EntityLivingBase target, ElementalDamageSource source, float amount) {
+        float absorption = target.getAbsorptionAmount();
+        float fromAbsorption = Math.min(absorption, amount);
+        target.setAbsorptionAmount(absorption - fromAbsorption);
+        float health = Math.max(0, target.getHealth() - (amount - fromAbsorption));
+        target.setHealth(health);
+        if (target.getHealth() > health) target.getDataWatcher()
+            .updateObject(HEALTH_WATCHER, health);
+        if (health <= 0) target.onDeath(source);
     }
 }
