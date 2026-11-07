@@ -27,7 +27,7 @@ import chlorine.etjourney.world.end.reserve.Reservations;
 /** /etj build place|list|find: trying templates in game and finding the generated buildings. */
 final class BuildCommand {
 
-    static final String USAGE = "/etj build <place <name> [0|90|180|270]|list|find [id]>";
+    static final String USAGE = "/etj build <place <name> [0|90|180|270]|list|find [id]|tp [id]>";
     private static final int END = 1;
     private static final int FIND_RADIUS = 4096;
     /** Gap between the player and the near side of a placed building. */
@@ -48,14 +48,17 @@ final class BuildCommand {
             case "find":
                 find(player, args.length > 2 ? args[2] : null);
                 return;
+            case "tp":
+                tp(player, args.length > 2 ? args[2] : null);
+                return;
             default:
                 say(player, "Usage: " + USAGE);
         }
     }
 
     static List<String> complete(String[] args) {
-        if (args.length == 2) return Arrays.asList("place", "list", "find");
-        if (args.length == 3 && (args[1].equals("place") || args[1].equals("find"))) {
+        if (args.length == 2) return Arrays.asList("place", "list", "find", "tp");
+        if (args.length == 3 && (args[1].equals("place") || args[1].equals("find") || args[1].equals("tp"))) {
             List<String> names = new ArrayList<>();
             for (BuildingKind kind : EndBuildings.kinds())
                 names.add(args[1].equals("place") ? kind.templateName : kind.id);
@@ -194,16 +197,45 @@ final class BuildCommand {
     }
 
     private static void find(EntityPlayerMP player, String id) {
+        EndBuildings.Found found = nearest(player, id);
+        if (found == null) return;
+        Placement p = found.placement;
+        say(
+            player,
+            found.kind.id + " at "
+                + p.anchorX
+                + " "
+                + p.anchorY
+                + " "
+                + p.anchorZ
+                + ", turned "
+                + p.rotation.quarterTurns() * 90);
+    }
+
+    /** Puts the player on top of the nearest building, or at the world's top where a tall one is cut off. */
+    private static void tp(EntityPlayerMP player, String id) {
+        EndBuildings.Found found = nearest(player, id);
+        if (found == null) return;
+        Placement p = found.placement;
+        double x = (p.minX() + p.maxX()) / 2 + 0.5;
+        double z = (p.minZ() + p.maxZ()) / 2 + 0.5;
+        int y = Math.min(p.maxY(), 255) + 1;
+        player.playerNetServerHandler.setPlayerLocation(x, y, z, player.rotationYaw, 0);
+        say(player, found.kind.id + " below, at " + (int) x + " " + y + " " + (int) z);
+    }
+
+    /** The nearest generated building, or null after telling the player why there is none. */
+    private static EndBuildings.Found nearest(EntityPlayerMP player, String id) {
         if (player.dimension != END) {
             say(player, "Run this in the End");
-            return;
+            return null;
         }
         if (id != null && EndBuildings.kind(id) == null) {
             say(player, "No building kind " + id);
-            return;
+            return null;
         }
         Long seed = EndTerrain.seed();
-        if (seed == null) return;
+        if (seed == null) return null;
         WorldServer end = (WorldServer) player.worldObj;
         List<EndBuildings.Found> found = EndBuildings.nearest(
             (cx, cz) -> Reservations.forChunk(end.theChunkProviderServer.currentChunkProvider, end, seed, cx, cz),
@@ -215,19 +247,9 @@ final class BuildCommand {
             1);
         if (found.isEmpty()) {
             say(player, "No building within " + FIND_RADIUS + " blocks");
-            return;
+            return null;
         }
-        Placement p = found.get(0).placement;
-        say(
-            player,
-            found.get(0).kind.id + " at "
-                + p.anchorX
-                + " "
-                + p.anchorY
-                + " "
-                + p.anchorZ
-                + ", turned "
-                + p.rotation.quarterTurns() * 90);
+        return found.get(0);
     }
 
     private static void say(ICommandSender sender, String text) {
