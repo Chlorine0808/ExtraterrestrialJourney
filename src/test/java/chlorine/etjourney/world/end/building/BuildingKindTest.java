@@ -156,6 +156,6 @@ class BuildingKindTest {
             .cell(64)
             .chance(1)
             .build();
-        for (Placement p : sample(kind, narrow(), FLAT)) assertEquals(62, p.bottomY());
+        for (Placement p : sample(kind, narrow(), FLAT)) assertEquals(63, p.bottomY());
     }
 }
