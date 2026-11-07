@@ -12,7 +12,7 @@ import java.util.Collections;
 
 import org.junit.jupiter.api.Test;
 
-/** An updraft catches a box overlapping it and speeds it upward until the cap. */
+/** An updraft catches a box overlapping it and speeds it along its direction until the cap. */
 class UpdraftTest {
 
     private static final double EPS = 1e-9;
@@ -37,29 +37,70 @@ class UpdraftTest {
         assertFalse(u.overlaps(4, 2, 1, 4.6, 3.8, 1.6));
     }
 
+    private static Updraft toward(double dx, double dy, double dz, double lift, double maxSpeed) {
+        return new Updraft(0, 0, 0, 4, 10, 4, dx, dy, dz, lift, maxSpeed);
+    }
+
+    private static void assertMotion(double x, double y, double z, double[] motion) {
+        assertEquals(x, motion[0], EPS);
+        assertEquals(y, motion[1], EPS);
+        assertEquals(z, motion[2], EPS);
+    }
+
     @Test
     void addsLiftEachTick() {
         Updraft u = column(0.1, 0.5);
-        assertEquals(0.02, u.push(-0.08), EPS);
-        assertEquals(0.12, u.push(0.02), EPS);
+        assertMotion(0, 0.02, 0, u.push(0, -0.08, 0));
+        assertMotion(0, 0.12, 0, u.push(0, 0.02, 0));
     }
 
     @Test
     void stopsAtTheCap() {
-        assertEquals(0.5, column(0.1, 0.5).push(0.45), EPS);
+        assertMotion(0, 0.5, 0, column(0.1, 0.5).push(0, 0.45, 0));
     }
 
     @Test
     void leavesAFasterRiseAlone() {
         // A jump already rising faster than the cap is not slowed down.
-        assertEquals(0.8, column(0.1, 0.5).push(0.8), EPS);
+        assertMotion(0, 0.8, 0, column(0.1, 0.5).push(0, 0.8, 0));
     }
 
     @Test
-    void rejectsAnEmptyBoxOrNoLift() {
+    void pushesSidewaysWithoutTouchingTheFall() {
+        assertMotion(0.1, -0.08, 0.3, toward(1, 0, 0, 0.1, 0.5).push(0, -0.08, 0.3));
+    }
+
+    @Test
+    void pushesAlongATiltedDirectionOfAnyLength() {
+        double h = 0.1 / Math.sqrt(2);
+        assertMotion(h, 0, -h, toward(2, 0, -2, 0.1, 0.5).push(0, 0, 0));
+    }
+
+    @Test
+    void capsOnlyTheSpeedAlongTheDirection() {
+        // Moving across the gust does not count toward its cap.
+        assertMotion(0.5, 0.3, 0.9, toward(1, 0, 0, 0.1, 0.5).push(0.45, 0.3, 0.9));
+    }
+
+    @Test
+    void slowsWhatMovesAgainstIt() {
+        assertMotion(0, 0.1, 0, toward(0, -1, 0, 0.1, 0.5).push(0, 0.2, 0));
+    }
+
+    @Test
+    void breaksTheFallOnlyWhenPushingUpward() {
+        assertTrue(column(0.1, 0.5).breaksFall());
+        assertTrue(toward(1, 0.2, 0, 0.1, 0.5).breaksFall());
+        assertFalse(toward(1, 0, 0, 0.1, 0.5).breaksFall());
+        assertFalse(toward(0, -1, 0, 0.1, 0.5).breaksFall());
+    }
+
+    @Test
+    void rejectsAnEmptyBoxNoLiftOrNoDirection() {
         assertThrows(IllegalArgumentException.class, () -> new Updraft(0, 0, 0, 0, 10, 4, 0.1, 0.5));
         assertThrows(IllegalArgumentException.class, () -> column(0, 0.5));
         assertThrows(IllegalArgumentException.class, () -> column(0.1, 0));
+        assertThrows(IllegalArgumentException.class, () -> toward(0, 0, 0, 0.1, 0.5));
     }
 
     @Test

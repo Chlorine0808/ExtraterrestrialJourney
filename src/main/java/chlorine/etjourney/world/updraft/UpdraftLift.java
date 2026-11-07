@@ -9,7 +9,7 @@ import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import cpw.mods.fml.common.gameevent.TickEvent;
 import cpw.mods.fml.relauncher.Side;
 
-/** Client side: lifts the local player, who owns their own movement, while inside an updraft. */
+/** Client side: pushes the local player, who owns their own movement, while inside an updraft. */
 public final class UpdraftLift {
 
     private UpdraftLift() {}
@@ -28,7 +28,10 @@ public final class UpdraftLift {
         if (player != Minecraft.getMinecraft().thePlayer || player.capabilities.isFlying) return;
         Updraft u = UpdraftWorld.around(player, UpdraftView.in(player.dimension));
         if (u == null) return;
-        player.motionY = u.push(player.motionY);
-        player.fallDistance = 0;
+        double[] motion = u.push(player.motionX, player.motionY, player.motionZ);
+        player.motionX = motion[0];
+        player.motionY = motion[1];
+        player.motionZ = motion[2];
+        if (u.breaksFall()) player.fallDistance = 0;
     }
 }

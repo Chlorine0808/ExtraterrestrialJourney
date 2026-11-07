@@ -16,8 +16,9 @@ import cpw.mods.fml.common.gameevent.TickEvent;
 import cpw.mods.fml.relauncher.Side;
 
 /**
- * Server side of the updrafts: holds them, sends each dimension's to its players, and keeps a lifted player from
- * taking fall damage or being kicked for flying. The client moves the player (see UpdraftLift).
+ * Server side of the updrafts: holds them, sends each dimension's to its players, and keeps a player held in one from
+ * being kicked for flying, or from taking fall damage when the air rises. The client moves the player (see
+ * UpdraftLift).
  */
 public final class UpdraftWorld {
 
@@ -84,7 +85,7 @@ public final class UpdraftWorld {
             SERVER.in(player.dimension)
                 .values());
         if (u == null) return;
-        player.fallDistance = 0;
+        if (u.breaksFall()) player.fallDistance = 0;
         if (player instanceof EntityPlayerMP) {
             NetHandlerPlayServer net = ((EntityPlayerMP) player).playerNetServerHandler;
             // A dedicated server without allow-flight kicks a player held in the air for 80 ticks.

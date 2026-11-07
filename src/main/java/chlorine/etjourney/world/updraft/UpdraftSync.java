@@ -34,6 +34,9 @@ public final class UpdraftSync implements IMessage {
             buf.writeDouble(u.maxX);
             buf.writeDouble(u.maxY);
             buf.writeDouble(u.maxZ);
+            buf.writeDouble(u.dirX);
+            buf.writeDouble(u.dirY);
+            buf.writeDouble(u.dirZ);
             buf.writeDouble(u.lift);
             buf.writeDouble(u.maxSpeed);
         }
@@ -45,9 +48,9 @@ public final class UpdraftSync implements IMessage {
         int n = buf.readInt();
         updrafts = new ArrayList<>(n);
         for (int i = 0; i < n; i++) {
-            double[] v = new double[8];
+            double[] v = new double[11];
             for (int k = 0; k < v.length; k++) v[k] = buf.readDouble();
-            updrafts.add(new Updraft(v[0], v[1], v[2], v[3], v[4], v[5], v[6], v[7]));
+            updrafts.add(new Updraft(v[0], v[1], v[2], v[3], v[4], v[5], v[6], v[7], v[8], v[9], v[10]));
         }
     }
 
