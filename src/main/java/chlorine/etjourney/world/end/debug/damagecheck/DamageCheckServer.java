@@ -7,18 +7,25 @@ import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 
+import net.minecraft.entity.monster.EntityZombie;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.util.ChatComponentTranslation;
+import net.minecraft.util.IChatComponent;
+import net.minecraft.world.WorldServer;
 import net.minecraft.world.WorldSettings;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.common.util.FakePlayerFactory;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
+import net.minecraftforge.event.entity.living.LivingHurtEvent;
 
 import chlorine.etjourney.core.damage.ElementalDamageSource;
 import chlorine.etjourney.core.damage.ElementalDamages;
+import chlorine.etjourney.core.damage.ResistanceSources;
 import chlorine.etjourney.core.damage.model.DamageKind;
 import chlorine.etjourney.core.damage.model.Element;
 import chlorine.etjourney.core.damage.model.ElementRegistry;
@@ -45,10 +52,20 @@ public final class DamageCheckServer {
     private boolean started;
     /** Whether the last LivingDeathEvent of the player reached the end of the bus uncancelled. */
     private Boolean deathPassed;
+    /** Translation key of the death message the combat tracker would print at that death. */
+    private String deathKey;
+    /** Makes a HIGHEST handler cancel any hurt event and zero it, as an early-cancelling mod would. */
+    private boolean cancelHurtFirst;
+    /** Makes a registered resistance source halve chaos on the player. */
+    private static volatile boolean halveChaos;
 
     private DamageCheckServer() {}
 
     static void register() {
+        ResistanceSources.register((target, out) -> {
+            Element chaos = ElementRegistry.get("chaos");
+            if (halveChaos && chaos != null) out.multiply(chaos, 0.5f);
+        });
         DamageCheckServer server = new DamageCheckServer();
         FMLCommonHandler.instance()
             .bus()
@@ -59,7 +76,19 @@ public final class DamageCheckServer {
     /** Registered after ETJ's own LOWEST handlers, so this sees what they left. */
     @SubscribeEvent(priority = EventPriority.LOWEST, receiveCanceled = true)
     public void onDeath(LivingDeathEvent event) {
-        if (event.entityLiving instanceof EntityPlayer) deathPassed = !event.isCanceled();
+        if (!(event.entityLiving instanceof EntityPlayer)) return;
+        deathPassed = !event.isCanceled();
+        IChatComponent message = event.entityLiving.func_110142_aN()
+            .func_151521_b();
+        deathKey = message instanceof ChatComponentTranslation ? ((ChatComponentTranslation) message).getKey()
+            : message.getUnformattedText();
+    }
+
+    @SubscribeEvent(priority = EventPriority.HIGHEST)
+    public void onHurtFirst(LivingHurtEvent event) {
+        if (!cancelHurtFirst) return;
+        event.ammount = 0;
+        event.setCanceled(true);
     }
 
     @SubscribeEvent
@@ -105,13 +134,49 @@ public final class DamageCheckServer {
         if (draconic == null) record("SKIP draconic: Draconic armor not found");
         else {
             wear(player, draconic, true);
-            float lost = hit(player, chaos5);
+            float lost = hit(player, chaos5, null);
             if (Math.abs(lost) > EPSILON) record("SKIP draconic: shield did not hold, lost " + lost);
             else {
                 record("PASS draconic blocks chaos 5");
                 wear(player, draconic, true);
                 expectLoss("draconic pierced by chaos 5", player, pierce5, 5);
             }
+        }
+
+        // A zombie, because on a player the fallback would make up for a wrong amount.
+        EntityZombie zombie = new EntityZombie(player.worldObj);
+        zombie.setPosition(player.posX + 3, player.posY, player.posZ);
+        player.worldObj.spawnEntityInWorld(zombie);
+        halveChaos = true;
+        cancelHurtFirst = true;
+        float zombieBefore = zombie.getHealth();
+        ElementalDamages.deal(zombie, new ElementalDamageSource(magic(chaos, 10, true), null, null));
+        float zombieLost = zombieBefore - zombie.getHealth();
+        cancelHurtFirst = false;
+        halveChaos = false;
+        zombie.setDead();
+        record(
+            (Math.abs(zombieLost - 5) <= EPSILON ? "PASS" : "FAIL") + " resisted after an early cancel: lost "
+                + zombieLost
+                + ", expected 5.0");
+
+        String client = DamageCheck.clientResult;
+        record(client == null ? "FAIL client side: never ran" : client);
+
+        reset(player);
+        MinecraftServer server = MinecraftServer.getServer();
+        boolean pvp = server.isPVPEnabled();
+        server.setAllowPvp(false);
+        EntityPlayer other = FakePlayerFactory.getMinecraft((WorldServer) player.worldObj);
+        expectLoss("pvp off blocks a player", player, magic(fire, 5, false), 0, other);
+        expectLoss("pvp off blocks a piercing player", player, magic(chaos, 5, true), 0, other);
+        server.setAllowPvp(pvp);
+
+        if (draconic == null) record("SKIP draconic death: Draconic armor not found");
+        else {
+            wear(player, draconic, true);
+            expectDeath("draconic killed by chaos 1000", player, chaos);
+            player.setHealth(player.getMaxHealth());
         }
 
         reset(player);
@@ -122,16 +187,26 @@ public final class DamageCheckServer {
         if (infinity == null) record("SKIP avaritia death: Infinity armor not found");
         else {
             wear(player, infinity, false);
-            deathPassed = null;
-            hit(player, magic(chaos, 1000, true));
-            boolean dead = player.getHealth() <= 0;
-            boolean passed = Boolean.TRUE.equals(deathPassed);
-            record(
-                (dead && passed ? "PASS" : "FAIL") + " avaritia killed by chaos 1000: health "
-                    + player.getHealth()
-                    + ", death event "
-                    + (deathPassed == null ? "never fired" : passed ? "passed" : "cancelled"));
+            expectDeath("avaritia killed by chaos 1000", player, chaos);
         }
+    }
+
+    /** Kills with piercing chaos 1000; the death event must pass and name the chaos death message. */
+    private void expectDeath(String name, EntityPlayerMP player, Element chaos) {
+        deathPassed = null;
+        deathKey = null;
+        hit(player, magic(chaos, 1000, true), null);
+        boolean dead = player.getHealth() <= 0;
+        boolean passed = Boolean.TRUE.equals(deathPassed);
+        boolean named = "death.attack.etjourney.chaos".equals(deathKey);
+        record(
+            (dead && passed && named ? "PASS " : "FAIL ") + name
+                + ": health "
+                + player.getHealth()
+                + ", death event "
+                + (deathPassed == null ? "never fired" : passed ? "passed" : "cancelled")
+                + ", message "
+                + deathKey);
     }
 
     private static ElementalDamage magic(Element element, float amount, boolean piercing) {
@@ -142,16 +217,21 @@ public final class DamageCheckServer {
     }
 
     private void expectLoss(String name, EntityPlayerMP player, ElementalDamage damage, float expected) {
-        float lost = hit(player, damage);
+        expectLoss(name, player, damage, expected, null);
+    }
+
+    private void expectLoss(String name, EntityPlayerMP player, ElementalDamage damage, float expected,
+        EntityPlayer attacker) {
+        float lost = hit(player, damage, attacker);
         boolean ok = Math.abs(lost - expected) <= EPSILON;
         record((ok ? "PASS " : "FAIL ") + name + ": lost " + lost + ", expected " + expected);
     }
 
     /** Health plus absorption lost to one hit, after the hurt cooldown is cleared. */
-    private static float hit(EntityPlayerMP player, ElementalDamage damage) {
+    private static float hit(EntityPlayerMP player, ElementalDamage damage, EntityPlayer attacker) {
         player.hurtResistantTime = 0;
         float before = player.getHealth() + player.getAbsorptionAmount();
-        ElementalDamages.deal(player, new ElementalDamageSource(damage, null, null));
+        ElementalDamages.deal(player, new ElementalDamageSource(damage, attacker, attacker));
         return before - (player.getHealth() + player.getAbsorptionAmount());
     }
 
