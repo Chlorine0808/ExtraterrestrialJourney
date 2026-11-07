@@ -65,11 +65,14 @@ dependencies {
             // This OKCore's POM pulls the non-dev UniMixins, which FML rejects as a duplicate of ours.
             runtimeOnlyNonPublishable(rfg.deobf("com.github.Shigure-Ruiseki:OKCore:26.10.31.1:dev")) { transitive = false }
         } else {
-            runtimeOnlyNonPublishable("com.github.Chlorine0808:OKModular:d6b001f:dev") {
-                exclude group: "com.github.Shigure-Ruiseki", module: "OKCore"
-            }
+            // The Gradle module files of OKModular and OKCore name the non-dev UniMixins and GTNHLib, which FML
+            // rejects as duplicates of the dev ones, so take both jars bare and list their dependencies here.
+            runtimeOnlyNonPublishable("com.github.Chlorine0808:OKModular:d6b001f:dev") { transitive = false }
+            runtimeOnlyNonPublishable("com.github.GTNewHorizons:GTNHLib:0.11.41:dev")
+            runtimeOnlyNonPublishable("com.github.GTNewHorizons:StructureLib:1.4.39:dev")
+            runtimeOnlyNonPublishable("com.github.GTNewHorizons:ModularUI2:2.3.79-1.7.10:dev")
             // jitpack's OKCore dev jar still calls client methods by their SRG names; remap it to the dev names.
-            runtimeOnlyNonPublishable(rfg.deobf("com.github.Shigure-Ruiseki:OKCore:26.10.10.0:dev"))
+            runtimeOnlyNonPublishable(rfg.deobf("com.github.Shigure-Ruiseki:OKCore:26.10.10.0:dev")) { transitive = false }
         }
     }
     runtimeOnlyNonPublishable(rfg.deobf("maven.modrinth:carbon-config:WfL4zVO9"))
