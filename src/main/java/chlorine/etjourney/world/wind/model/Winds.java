@@ -1,4 +1,4 @@
-package chlorine.etjourney.world.updraft.model;
+package chlorine.etjourney.world.wind.model;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -7,10 +7,10 @@ import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.function.IntConsumer;
 
-/** The updrafts of every dimension, keyed by an id their source keeps to remove them later. */
-public final class Updrafts {
+/** The winds of every dimension, keyed by an id their source keeps to remove them later. */
+public final class Winds {
 
-    private final Map<Integer, SortedMap<Integer, Updraft>> byDimension = new HashMap<>();
+    private final Map<Integer, SortedMap<Integer, Wind>> byDimension = new HashMap<>();
     private int nextId = 1;
     private IntConsumer listener = dimension -> {};
 
@@ -19,23 +19,23 @@ public final class Updrafts {
         this.listener = listener;
     }
 
-    public int add(int dimension, Updraft updraft) {
+    public int add(int dimension, Wind wind) {
         int id = nextId++;
         byDimension.computeIfAbsent(dimension, d -> new TreeMap<>())
-            .put(id, updraft);
+            .put(id, wind);
         listener.accept(dimension);
         return id;
     }
 
     public boolean remove(int dimension, int id) {
-        SortedMap<Integer, Updraft> here = byDimension.get(dimension);
+        SortedMap<Integer, Wind> here = byDimension.get(dimension);
         if (here == null || here.remove(id) == null) return false;
         listener.accept(dimension);
         return true;
     }
 
     public void clear(int dimension) {
-        SortedMap<Integer, Updraft> here = byDimension.remove(dimension);
+        SortedMap<Integer, Wind> here = byDimension.remove(dimension);
         if (here != null && !here.isEmpty()) listener.accept(dimension);
     }
 
@@ -44,9 +44,9 @@ public final class Updrafts {
         byDimension.clear();
     }
 
-    /** The updrafts of the dimension by id, in the order they were added. */
-    public SortedMap<Integer, Updraft> in(int dimension) {
-        SortedMap<Integer, Updraft> here = byDimension.get(dimension);
-        return here == null ? Collections.<Integer, Updraft>emptySortedMap() : Collections.unmodifiableSortedMap(here);
+    /** The winds of the dimension by id, in the order they were added. */
+    public SortedMap<Integer, Wind> in(int dimension) {
+        SortedMap<Integer, Wind> here = byDimension.get(dimension);
+        return here == null ? Collections.<Integer, Wind>emptySortedMap() : Collections.unmodifiableSortedMap(here);
     }
 }

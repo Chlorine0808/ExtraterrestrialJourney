@@ -7,7 +7,7 @@ import chlorine.etjourney.content.end.FurRenderer;
 import chlorine.etjourney.content.entity.EntityRenderers;
 import chlorine.etjourney.core.util.WindowTitle;
 import chlorine.etjourney.world.end.debug.shoot.ShootHarness;
-import chlorine.etjourney.world.updraft.UpdraftLift;
+import chlorine.etjourney.world.wind.WindPush;
 import cpw.mods.fml.common.event.FMLInitializationEvent;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 
@@ -25,7 +25,7 @@ public class ClientProxy extends CommonProxy {
         EntityRenderers.init();
         CraftRenderers.init();
         FurRenderer.init();
-        UpdraftLift.register();
+        WindPush.register();
         ShootHarness.startIfRequested();
         tagWindow();
     }

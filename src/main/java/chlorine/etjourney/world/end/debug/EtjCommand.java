@@ -54,7 +54,7 @@ public final class EtjCommand extends CommandBase {
         return "/etj look [range] | /etj end <here|styles|style <name>|style <name> pure|mix [a] [b] [c]|mountain [minTopY]|lake|hole|valley|zone <name>|biome <name>|heeisland|destitute|cam <x> <y> <z> <yaw> <pitch>> | "
             + BuildCommand.USAGE
             + " | "
-            + UpdraftCommand.USAGE;
+            + WindCommand.USAGE;
     }
 
     @Override
@@ -72,8 +72,8 @@ public final class EtjCommand extends CommandBase {
             look(getCommandSenderAsPlayer(sender), args.length > 1 ? parseIntBounded(sender, args[1], 1, 4096) : 1024);
             return;
         }
-        if (args.length >= 1 && args[0].equals("updraft")) {
-            UpdraftCommand.run(getCommandSenderAsPlayer(sender), args);
+        if (args.length >= 1 && args[0].equals("wind")) {
+            WindCommand.run(getCommandSenderAsPlayer(sender), args);
             return;
         }
         if (args.length >= 1 && args[0].equals("build")) {
