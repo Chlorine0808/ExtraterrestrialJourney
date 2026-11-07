@@ -5,7 +5,8 @@
 #   budget-minutes (default 480), settle-seconds (default 240), dry-run (true|false)
 # Shots: shot <what> [arg] key=value...
 #   what: biome <EndBiome>, bare, biosphere <SURFACE|WATER|CAVE|NETHER>, mountain, arc-touch, glowshroom <NORMAL|GIANT>, amber-tree, lake, at <x> <y> <z>
-#   keys: count=N (default 1), views=a,b (default: all allowed), min-top=Y (mountain), yaw=, pitch=, label= (at)
+#   keys: count=N (default 1), views=a,b (default: all allowed), min-top=Y (mountain), yaw=, pitch=, label= (at),
+#     style=<STYLE> (biome, bare, amber-tree: the continent point or the tree's root must be mostly that style)
 #   views: aerial,ground for biome/bare/mountain/arc-touch/glowshroom/amber-tree/lake; outside,inside for biosphere; none for at
 seed 7037748451318983361
 world-type DEFAULT
