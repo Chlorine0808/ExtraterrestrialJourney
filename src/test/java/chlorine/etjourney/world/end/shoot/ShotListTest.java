@@ -161,17 +161,19 @@ class ShotListTest {
     }
 
     @Test
-    void styleKeyIsKnownForBiomeAndBareOnly() {
+    void styleKeyIsKnownForBiomeBareAndAmberTreeOnly() {
         ShotList list = ShotList.parse(
             Arrays.asList(
                 "shot biome GROVE style=LAYERED",
                 "shot bare style=RANGES",
+                "shot amber-tree style=WAVES",
                 "shot biome GROVE style=NOPE",
                 "shot mountain style=LAYERED",
                 "shot giant-tree style=LAYERED"));
         assertEquals("LAYERED", list.specs.get(0).style);
         assertEquals("RANGES", list.specs.get(1).style);
-        assertEquals(2, list.specs.size());
+        assertEquals("WAVES", list.specs.get(2).style);
+        assertEquals(3, list.specs.size());
         assertEquals(3, list.errors.size());
         assertTrue(
             list.errors.get(0)

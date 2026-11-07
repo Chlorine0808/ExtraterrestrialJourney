@@ -211,8 +211,11 @@ final class Locator {
         };
     }
 
-    /** The seed tree nearest the seed of each AMBER continent, continents nearest first. */
-    List<Target> amberTrees(double ox, double oz, int count) {
+    /**
+     * The seed tree nearest the seed of each AMBER continent, continents nearest first. With a style, only trees whose
+     * root is at least STYLE_DOMINANT that style.
+     */
+    List<Target> amberTrees(String style, double ox, double oz, int count) {
         long seed = sampler.seed();
         AmberTrees.Terrain terrain = amberTerrain();
         Set<Long> chosen = new HashSet<>();
@@ -223,7 +226,7 @@ final class Locator {
                 if (s == null || EndBiome.ofContinentOf(seed, s) != EndBiome.AMBER) return null;
                 long id = ContinentIds.of(seed, s);
                 if (chosen.contains(id)) return null;
-                AmberTrees.Anchor best = nearestAmberTree(seed, s, terrain);
+                AmberTrees.Anchor best = nearestAmberTree(seed, s, style, terrain);
                 if (best == null) return null;
                 return new double[] { best.x, best.z, best.y, Double.longBitsToDouble(id) };
             });
@@ -236,7 +239,7 @@ final class Locator {
     }
 
     /** The kept tree nearest the continent seed; generation drops trees beside reserved areas. */
-    private AmberTrees.Anchor nearestAmberTree(long seed, Continent.Seed s, AmberTrees.Terrain terrain) {
+    private AmberTrees.Anchor nearestAmberTree(long seed, Continent.Seed s, String style, AmberTrees.Terrain terrain) {
         int scx = (int) Math.floor((double) s.x / AmberTrees.CELL),
             scz = (int) Math.floor((double) s.z / AmberTrees.CELL);
         // Building a tree is costly, so cells go nearest spot first and the search stops at the first kept tree.
@@ -249,8 +252,10 @@ final class Locator {
         }
         cells.sort(Comparator.comparingDouble(c -> Math.hypot(c[2] - s.x, c[3] - s.z)));
         for (int[] c : cells) {
-            for (AmberTrees.Anchor a : AmberTrees.in(seed, c[0], c[1], terrain))
+            for (AmberTrees.Anchor a : AmberTrees.in(seed, c[0], c[1], terrain)) {
+                if (style != null && sampler.styleWeight(style, a.x, a.z) < STYLE_DOMINANT) continue;
                 if (AmberTrees.clearOf(a, reserved.at(a.x >> 4, a.z >> 4))) return a;
+            }
         }
         return null;
     }
