@@ -2,6 +2,7 @@ package chlorine.etjourney.content.craft;
 
 import java.util.List;
 
+import net.minecraft.client.renderer.OpenGlHelper;
 import net.minecraft.client.renderer.entity.RenderItem;
 import net.minecraft.client.renderer.entity.RenderManager;
 import net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer;
@@ -34,6 +35,11 @@ public final class CraftRenderers extends TileEntitySpecialRenderer {
         if (items.isEmpty()) return;
         float spin = (tile.getWorldObj()
             .getTotalWorldTime() + partialTicks) * 2.0F;
+        // The dispatcher lights a tile by its own block, which is opaque and so always dark; light the items by the
+        // air they float in instead.
+        int light = tile.getWorldObj()
+            .getLightBrightnessForSkyBlocks(tile.xCoord, tile.yCoord + 1, tile.zCoord, 0);
+        OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, light % 65536, light / 65536);
         boolean wasInFrame = RenderItem.renderInFrame;
         RenderItem.renderInFrame = true;
         for (int i = 0; i < items.size(); i++) {
