@@ -20,7 +20,16 @@ public final class AmberTrees {
     /** Distance kept from the cell's edge, so neighbours stay apart. */
     private static final int MARGIN = 4;
     private static final long SALT = 0x6A09E667F3BCC909L;
+    /** Spots tried per cell; the one with the flattest footing wins. */
+    private static final int CANDIDATES = 6;
+    /** Radius of the footing, a little past the legs' feet. */
+    private static final int FOOT = 7;
+    /** Largest rise across the footing that the legs still reach down; steeper ground gets no tree. */
+    private static final int MAX_SPREAD = 6;
+    /** Half width of the square the seed rests on. */
+    private static final int REST = 3;
     private static final ShapeCache<AmberTree> CACHE = new ShapeCache<>();
+    private static final ShapeCache<int[]> FOOTINGS = new ShapeCache<>();
 
     private AmberTrees() {}
 
@@ -80,17 +89,54 @@ public final class AmberTrees {
         Random r = random(seed, cellX, cellZ);
         List<Anchor> out = new ArrayList<>();
         boolean present = r.nextDouble() < CHANCE;
-        int x = cellX * CELL + MARGIN + r.nextInt(CELL - 2 * MARGIN);
-        int z = cellZ * CELL + MARGIN + r.nextInt(CELL - 2 * MARGIN);
+        int[][] spots = new int[CANDIDATES][];
+        spots[0] = randomSpot(r, cellX, cellZ);
         long shapeSeed = r.nextLong();
         long order = r.nextLong();
         if (!present) return out;
-        Anchor a = make(seed, x, z, shapeSeed, order, t);
+        for (int i = 1; i < CANDIDATES; i++) spots[i] = randomSpot(r, cellX, cellZ);
+        double first = t.ground(spots[0][0] + 0.5, spots[0][1] + 0.5);
+        long key = (cellX * PlantCells.K1) ^ (cellZ * PlantCells.K2) ^ (long) Math.floor(first) * SALT ^ t.source();
+        int[] foot = FOOTINGS.get(seed, key, () -> footing(spots, t));
+        if (foot == null) return out;
+        Anchor a = make(seed, foot[0], foot[1], foot[2], shapeSeed, order, t);
         if (a != null) out.add(a);
         return out;
     }
 
-    /** Where the cell's tree would stand, {x, z}, before the terrain is asked; null when the cell has none. */
+    private static int[] randomSpot(Random r, int cellX, int cellZ) {
+        int x = cellX * CELL + MARGIN + r.nextInt(CELL - 2 * MARGIN);
+        int z = cellZ * CELL + MARGIN + r.nextInt(CELL - 2 * MARGIN);
+        return new int[] { x, z };
+    }
+
+    /**
+     * The spot with the flattest footing, as {x, z, y}, where y is the root: the lowest ground under the seed plus
+     * one, so the seed never floats and every leg reaches down to the ground. Null when no spot is flat enough.
+     */
+    private static int[] footing(int[][] spots, Terrain t) {
+        int[] best = null;
+        double bestSpread = Double.MAX_VALUE;
+        for (int[] s : spots) {
+            if (!t.amber(s[0] + 0.5, s[1] + 0.5)) continue;
+            double low = Double.MAX_VALUE, high = -Double.MAX_VALUE, rest = Double.MAX_VALUE;
+            for (int dx = -FOOT; dx <= FOOT; dx++) {
+                for (int dz = -FOOT; dz <= FOOT; dz++) {
+                    if (dx * dx + dz * dz > FOOT * FOOT) continue;
+                    double g = Math.floor(t.ground(s[0] + dx + 0.5, s[1] + dz + 0.5));
+                    low = Math.min(low, g);
+                    high = Math.max(high, g);
+                    if (Math.abs(dx) <= REST && Math.abs(dz) <= REST) rest = Math.min(rest, g);
+                }
+            }
+            if (low <= -100 || high - low > MAX_SPREAD || high - low >= bestSpread) continue;
+            bestSpread = high - low;
+            best = new int[] { s[0], s[1], (int) rest + 1 };
+        }
+        return best;
+    }
+
+    /** Where the cell's first candidate spot lies, {x, z}, before the terrain is asked; null when the cell has none. */
     public static int[] spot(long seed, int cellX, int cellZ) {
         Random r = random(seed, cellX, cellZ);
         if (r.nextDouble() >= CHANCE) return null;
@@ -99,12 +145,8 @@ public final class AmberTrees {
         return new int[] { x, z };
     }
 
-    private static Anchor make(long seed, int x, int z, long shapeSeed, long order, Terrain t) {
-        if (!t.amber(x + 0.5, z + 0.5)) return null;
-        double ground = t.ground(x + 0.5, z + 0.5);
-        if (ground <= -100) return null;
-        int y = (int) Math.floor(ground) + 1;
-        long key = shapeSeed ^ (long) y * PlantCells.K1 ^ t.source() * PlantCells.K2;
+    private static Anchor make(long seed, int x, int z, int y, long shapeSeed, long order, Terrain t) {
+        long key = shapeSeed ^ (long) y * PlantCells.K1 ^ t.source() * PlantCells.K2 ^ (long) x * SALT;
         AmberTree shape = CACHE.get(
             seed,
             key,

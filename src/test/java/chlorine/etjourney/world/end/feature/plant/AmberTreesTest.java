@@ -11,6 +11,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.DoubleBinaryOperator;
 
 import org.junit.jupiter.api.Test;
 
@@ -90,6 +91,63 @@ class AmberTreesTest {
             seen++;
         }
         assertTrue(seen > 0);
+    }
+
+    private static AmberTrees.Terrain shaped(final DoubleBinaryOperator ground) {
+        return new AmberTrees.Terrain() {
+
+            @Override
+            public double ground(double x, double z) {
+                return ground.applyAsDouble(x, z);
+            }
+
+            @Override
+            public boolean amber(double x, double z) {
+                return true;
+            }
+        };
+    }
+
+    private static List<AmberTrees.Anchor> trees(long seed, int cells, AmberTrees.Terrain t) {
+        List<AmberTrees.Anchor> out = new ArrayList<>();
+        for (int i = 0; i < cells; i++) out.addAll(AmberTrees.in(seed, i % 10, i / 10, t));
+        return out;
+    }
+
+    @Test
+    void steepSlopeHasNoTrees() {
+        assertTrue(trees(13L, 60, shaped((x, z) -> 60 + 1.2 * x)).isEmpty());
+    }
+
+    @Test
+    void gentleSlopeKeepsMostTrees() {
+        assertTrue(trees(13L, 60, shaped((x, z) -> 60 + 0.4 * x)).size() > 30);
+    }
+
+    @Test
+    void feetStayOffACliff() {
+        // A 20-block cliff runs through the middle of every cell.
+        AmberTrees.Terrain t = shaped((x, z) -> Math.floorMod((int) Math.floor(x), AmberTrees.CELL) < 16 ? 60 : 40);
+        List<AmberTrees.Anchor> all = trees(17L, 60, t);
+        assertTrue(all.size() > 20, "trees " + all.size());
+        for (AmberTrees.Anchor a : all) {
+            double here = t.ground(a.x + 0.5, a.z + 0.5);
+            for (int dx = -6; dx <= 6; dx++) for (int dz = -6; dz <= 6; dz++) if (dx * dx + dz * dz <= 36)
+                assertEquals(here, t.ground(a.x + dx + 0.5, a.z + dz + 0.5), "tree at " + a.x + "," + a.z);
+        }
+    }
+
+    @Test
+    void seedRestsOnTheLowGroundUnderIt() {
+        AmberTrees.Terrain t = shaped((x, z) -> 60 + 0.4 * x + 0.3 * z);
+        List<AmberTrees.Anchor> all = trees(19L, 60, t);
+        assertFalse(all.isEmpty());
+        for (AmberTrees.Anchor a : all) {
+            for (int dx = -3; dx <= 3; dx++) for (int dz = -3; dz <= 3; dz++) {
+                int ground = (int) Math.floor(t.ground(a.x + dx + 0.5, a.z + dz + 0.5));
+                assertTrue(a.y <= ground + 1, "root " + a.y + " over ground " + ground);
+            }
+        }
     }
 
     /** What the nine chunks around (cx, cz) would draw, merged into one ordered list. */
@@ -172,12 +230,13 @@ class AmberTreesTest {
     @Test
     void terrainsFromDifferentSourcesDoNotShareShapes() {
         AmberTrees.Anchor a = firstTree(31L, flat(60));
-        // Same root, but the ground falls away two blocks out, so the legs sink deeper.
+        // Same footing, but the ground sinks past the legs, so the roots crawl deeper.
         AmberTrees.Terrain probe = new AmberTrees.Terrain() {
 
             @Override
             public double ground(double x, double z) {
-                return Math.hypot(x - a.x - 0.5, z - a.z - 0.5) <= 2 ? 60 : 55;
+                double r = Math.hypot(x - a.x - 0.5, z - a.z - 0.5);
+                return r > 7.5 && r <= 10 ? 53 : 60;
             }
 
             @Override
