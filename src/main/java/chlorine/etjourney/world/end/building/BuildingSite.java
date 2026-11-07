@@ -12,8 +12,8 @@ public final class BuildingSite {
     private BuildingSite() {}
 
     /**
-     * The bottom layer's y: the lowest of the five points less the sink. Null where the points differ by more than
-     * maxSlope, or one is over the void or in lake water.
+     * The bottom layer's y: the highest of the five points less the sink, so the low side stands on the foundation.
+     * Null where the points differ by more than maxSlope, or one is over the void or in lake water.
      */
     public static Integer groundY(StructureProbe standing, int minX, int minZ, int maxX, int maxZ, int maxSlope,
         int sink) {
@@ -28,6 +28,6 @@ public final class BuildingSite {
         }
         if (high - low > maxSlope) return null;
         // floor(ground) is the top solid block: sinking by n puts the bottom layer in the top n blocks.
-        return (int) Math.floor(low) + 1 - sink;
+        return (int) Math.floor(high) + 1 - sink;
     }
 }
