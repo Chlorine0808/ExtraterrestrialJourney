@@ -39,8 +39,6 @@ final class Locator {
     /** A giant tree is 56 high with a 26-block reach, so this scene size puts the camera 200 blocks off. */
     private static final double TREE_SIZE = 80;
 
-    /** Style weight below which the surface paint leaves a MYCELIA column to the glowshrooms. */
-    private static final double LAYERED_LIMIT = 0.05;
     /** A seed tree is 15 high with a 10-block reach. */
     private static final double AMBER_TREE_SIZE = 40;
     /** Cells searched on each side of a continent seed for its nearest seed tree. */
@@ -196,14 +194,13 @@ final class Locator {
 
             @Override
             public double ground(double x, double z) {
-                return probe.ground(x, z);
+                return probe.surface(x, z);
             }
 
             @Override
             public boolean mycelia(double x, double z) {
                 int bx = (int) Math.floor(x), bz = (int) Math.floor(z);
-                return sampler.biome(bx, bz) == EndBiome.MYCELIA
-                    && sampler.styleWeight("LAYERED", bx, bz) < LAYERED_LIMIT;
+                return sampler.biome(bx, bz) == EndBiome.MYCELIA;
             }
 
             @Override
@@ -264,14 +261,13 @@ final class Locator {
 
             @Override
             public double ground(double x, double z) {
-                return probe.ground(x, z);
+                return probe.surface(x, z);
             }
 
             @Override
             public boolean amber(double x, double z) {
                 int bx = (int) Math.floor(x), bz = (int) Math.floor(z);
-                return sampler.biome(bx, bz) == EndBiome.AMBER
-                    && sampler.styleWeight("LAYERED", bx, bz) < LAYERED_LIMIT;
+                return sampler.biome(bx, bz) == EndBiome.AMBER;
             }
 
             @Override
