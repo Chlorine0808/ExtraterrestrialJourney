@@ -88,7 +88,8 @@ final class Locator {
                 new Target(
                     biome == null ? "bare" : biome.name(),
                     hit[0],
-                    sampler.bareColumn(hit[0], hit[1], true).top,
+                    sampler.bareColumn(hit[0], hit[1], true)
+                        .surface(),
                     hit[1],
                     CONTINENT_SIZE,
                     id));

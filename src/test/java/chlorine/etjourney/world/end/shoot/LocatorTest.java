@@ -136,6 +136,14 @@ class LocatorTest {
     }
 
     @Test
+    void styledContinentsStandOnTheTopmostSlab() {
+        for (Target t : LOCATOR.continents(EndBiome.GROVE, "LAYERED", 3000, 0, 2)) assertEquals(
+            SAMPLER.bareColumn(t.x, t.z, true)
+                .surface(),
+            t.y);
+    }
+
+    @Test
     void giantTreesStandOnGroveRootsOneEach() {
         List<Target> found = LOCATOR.giantTrees(3000, 0, 3);
         assertEquals(3, found.size());
