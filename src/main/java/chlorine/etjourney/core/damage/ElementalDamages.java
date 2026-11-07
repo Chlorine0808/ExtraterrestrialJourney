@@ -20,6 +20,8 @@ public final class ElementalDamages {
      * hurt cooldown, and on a player takes directly whatever armor outside the events held back.
      */
     public static boolean deal(EntityLivingBase target, ElementalDamageSource source) {
+        // Damage is the server's; the fallback would otherwise kill the client's copy of a player.
+        if (target.worldObj.isRemote) return false;
         ElementalDamage damage = source.damage();
         boolean pierce = damage.isPiercing() && pierces(target);
         if (pierce) target.hurtResistantTime = 0;
