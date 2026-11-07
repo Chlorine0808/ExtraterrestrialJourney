@@ -8,19 +8,22 @@ import java.util.Map;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.util.ChatComponentText;
 import net.minecraft.util.MathHelper;
+import net.minecraft.util.Vec3;
 
 import chlorine.etjourney.world.updraft.UpdraftWorld;
 import chlorine.etjourney.world.updraft.model.Updraft;
 
-/** /etj updraft add|remove|list: trial updrafts at the player's feet, until the server stops. */
+/** /etj updraft add|aim|remove|list: trial updrafts at the player's feet, until the server stops. */
 final class UpdraftCommand {
 
-    static final String USAGE = "/etj updraft <add [height] [lift] [max]|remove <id|all>|list>";
+    static final String USAGE = "/etj updraft <add [height] [lift] [max]|aim [size] [lift] [max]|remove <id|all>|list>";
     /** Half the width of a trial column, around the block the player stands in. */
     private static final int HALF = 2;
     private static final int HEIGHT = 24;
     private static final double LIFT = 0.15;
     private static final double MAX_SPEED = 0.6;
+    /** Side of a trial cube that blows where the player looks. */
+    private static final int AIM_SIZE = 9;
 
     private UpdraftCommand() {}
 
@@ -32,6 +35,13 @@ final class UpdraftCommand {
                     add(
                         player,
                         args.length > 2 ? Integer.parseInt(args[2]) : HEIGHT,
+                        args.length > 3 ? Double.parseDouble(args[3]) : LIFT,
+                        args.length > 4 ? Double.parseDouble(args[4]) : MAX_SPEED);
+                    return;
+                case "aim":
+                    aim(
+                        player,
+                        args.length > 2 ? Integer.parseInt(args[2]) : AIM_SIZE,
                         args.length > 3 ? Double.parseDouble(args[3]) : LIFT,
                         args.length > 4 ? Double.parseDouble(args[4]) : MAX_SPEED);
                     return;
@@ -51,7 +61,7 @@ final class UpdraftCommand {
     }
 
     static List<String> complete(String[] args) {
-        if (args.length == 2) return Arrays.asList("add", "remove", "list");
+        if (args.length == 2) return Arrays.asList("add", "aim", "remove", "list");
         if (args.length == 3 && args[1].equals("remove")) return Collections.singletonList("all");
         return Collections.emptyList();
     }
@@ -67,6 +77,35 @@ final class UpdraftCommand {
             say(player, e.getMessage());
             return;
         }
+        put(player, u);
+    }
+
+    /** A cube centred on the player's feet, blowing along their look. */
+    private static void aim(EntityPlayerMP player, int size, double lift, double maxSpeed) {
+        Vec3 look = player.getLookVec();
+        double h = size / 2.0;
+        Updraft u;
+        try {
+            u = new Updraft(
+                player.posX - h,
+                player.posY - h,
+                player.posZ - h,
+                player.posX + h,
+                player.posY + h,
+                player.posZ + h,
+                look.xCoord,
+                look.yCoord,
+                look.zCoord,
+                lift,
+                maxSpeed);
+        } catch (IllegalArgumentException e) {
+            say(player, e.getMessage());
+            return;
+        }
+        put(player, u);
+    }
+
+    private static void put(EntityPlayerMP player, Updraft u) {
         int id = UpdraftWorld.SERVER.add(player.dimension, u);
         say(player, "Updraft " + id + " " + u);
     }
