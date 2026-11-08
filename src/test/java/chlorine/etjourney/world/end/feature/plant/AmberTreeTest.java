@@ -221,6 +221,25 @@ class AmberTreeTest {
     }
 
     @Test
+    void legsStandOnTheGroundOnASlope() {
+        // Below the seed's equator a leg runs straight down, so on the downhill side it does not sweep out over
+        // lower ground. Higher up a strand winding round the seed may pass over air; a root stepping down the
+        // slope may leave a cell or two.
+        AmberTree.Ground slope = (dx, dz) -> Math.floorDiv(dx, 2) - 1;
+        int hanging = 0;
+        for (long i = 0; i < 100; i++) {
+            Map<Long, EndBlock> m = cells(AmberTree.of(seedOf(i), 250, slope));
+            for (Map.Entry<Long, EndBlock> e : m.entrySet()) {
+                long c = e.getKey();
+                int x = SdfFill.x(c), y = SdfFill.y(c), z = SdfFill.z(c);
+                if (e.getValue() != EndBlock.AMBER_ROOT || y > 0 || Math.hypot(x, z) > 6) continue;
+                if (y > slope.top(x, z) + 1 && !m.containsKey(SdfFill.offset(c, 0, -1, 0))) hanging++;
+            }
+        }
+        assertTrue(hanging <= 10, "hanging " + hanging);
+    }
+
+    @Test
     void rootsFollowTheGround() {
         AmberTree.Ground slope = (dx, dz) -> Math.floorDiv(dx, 2) - 1;
         for (long i = 0; i < 20; i++) {

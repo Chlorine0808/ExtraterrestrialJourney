@@ -127,7 +127,9 @@ public final class AmberTree implements PlantCells.Bounds {
             for (int k = 0; k < STRAND_POINTS; k++) {
                 double t = (double) k / (STRAND_POINTS - 1);
                 double y = t * merge;
-                double a = a0 + turn * t + 0.2 * Math.sin(phase + 5 * t);
+                // Below the equator the angle holds too, so the leg stands straight up from its foot.
+                double wind = Math.max(t, cy / merge);
+                double a = a0 + turn * wind + 0.2 * Math.sin(phase + 5 * wind);
                 double follow = Math.max(0, Math.min(1, (y - cy) / (tipY - cy)));
                 double ax = lx * follow, az = lz * follow;
                 double sink = -thick * HUG_SINK;
