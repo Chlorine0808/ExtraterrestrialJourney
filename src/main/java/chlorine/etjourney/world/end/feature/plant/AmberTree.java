@@ -11,7 +11,7 @@ import chlorine.etjourney.world.end.feature.sdf.SdfFill;
 import chlorine.etjourney.world.end.feature.sdf.Spline;
 import chlorine.etjourney.world.end.modifier.EndBlock;
 
-/** AMBER's seed tree: two or three strands wind round a glowing drop, join into one trunk above it, and bear a few fruits. */
+/** AMBER's seed tree: two or three strands wind round a glowing drop, join above it, and bear a few fruits. */
 public final class AmberTree implements PlantCells.Bounds {
 
     /** Blocks the legs reach below their foot, so the tree does not float on a slope. */
