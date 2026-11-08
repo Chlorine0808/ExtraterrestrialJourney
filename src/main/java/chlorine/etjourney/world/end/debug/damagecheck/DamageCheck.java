@@ -52,7 +52,6 @@ public final class DamageCheck {
         float before = mc.thePlayer.getHealth() + mc.thePlayer.getAbsorptionAmount();
         ElementalDamage damage = ElementalDamage.builder(DamageKind.MAGIC)
             .add(chaos, 5)
-            .piercing()
             .build();
         ElementalDamages.deal(mc.thePlayer, new ElementalDamageSource(damage, null, null));
         float lost = before - (mc.thePlayer.getHealth() + mc.thePlayer.getAbsorptionAmount());

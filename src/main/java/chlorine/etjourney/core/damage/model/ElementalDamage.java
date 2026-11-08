@@ -4,17 +4,15 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-/** One attack: an amount per element in the order added, its kind, and whether it pierces immunities. */
+/** One attack: an amount per element in the order added, and its kind. */
 public final class ElementalDamage {
 
     private final Map<Element, Float> parts;
     private final DamageKind kind;
-    private final boolean piercing;
 
-    private ElementalDamage(Map<Element, Float> parts, DamageKind kind, boolean piercing) {
+    private ElementalDamage(Map<Element, Float> parts, DamageKind kind) {
         this.parts = Collections.unmodifiableMap(new LinkedHashMap<>(parts));
         this.kind = kind;
-        this.piercing = piercing;
     }
 
     public static Builder builder(DamageKind kind) {
@@ -29,8 +27,28 @@ public final class ElementalDamage {
         return kind;
     }
 
+    /** Whether every part is absolute; a mixed attack pierces only through {@link #absolutePart()}. */
     public boolean isPiercing() {
-        return piercing;
+        if (parts.isEmpty()) return false;
+        for (Element element : parts.keySet()) if (!element.isAbsolute()) return false;
+        return true;
+    }
+
+    /** The absolute parts alone, of the same kind. */
+    public ElementalDamage absolutePart() {
+        return only(true);
+    }
+
+    /** Every part but the absolute ones, of the same kind. */
+    public ElementalDamage ordinaryPart() {
+        return only(false);
+    }
+
+    private ElementalDamage only(boolean absolute) {
+        Map<Element, Float> out = new LinkedHashMap<>();
+        for (Map.Entry<Element, Float> e : parts.entrySet()) if (e.getKey()
+            .isAbsolute() == absolute) out.put(e.getKey(), e.getValue());
+        return new ElementalDamage(out, kind);
     }
 
     /** The sum of every part before any resistance. */
@@ -57,7 +75,6 @@ public final class ElementalDamage {
 
         private final Map<Element, Float> parts = new LinkedHashMap<>();
         private final DamageKind kind;
-        private boolean piercing;
 
         private Builder(DamageKind kind) {
             if (kind == null) throw new IllegalArgumentException("kind is null");
@@ -72,13 +89,8 @@ public final class ElementalDamage {
             return this;
         }
 
-        public Builder piercing() {
-            piercing = true;
-            return this;
-        }
-
         public ElementalDamage build() {
-            return new ElementalDamage(parts, kind, piercing);
+            return new ElementalDamage(parts, kind);
         }
     }
 }

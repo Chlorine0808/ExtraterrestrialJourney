@@ -1,6 +1,7 @@
 package chlorine.etjourney.core.damage.model;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -24,6 +25,16 @@ class ElementRegistryTest {
         Element e = ElementRegistry.register("test_registry_light");
         assertSame(e, ElementRegistry.get("test_registry_light"));
         assertNull(ElementRegistry.get("test_registry_missing"));
+    }
+
+    @Test
+    void marksOnlyAbsoluteRegistrationsAbsolute() {
+        assertTrue(
+            ElementRegistry.registerAbsolute("test_registry_absolute")
+                .isAbsolute());
+        assertFalse(
+            ElementRegistry.register("test_registry_plain")
+                .isAbsolute());
     }
 
     @Test

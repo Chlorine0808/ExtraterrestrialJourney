@@ -1,16 +1,25 @@
 package chlorine.etjourney.core.damage.model;
 
-/** A damage element such as fire or chaos; two elements are the same when their names are. */
+/**
+ * A damage element such as fire or chaos; two elements are the same when their names are. An absolute element is
+ * reduced only by resistance to itself and pierces death immunity.
+ */
 public final class Element {
 
     private final String name;
+    private final boolean absolute;
 
-    Element(String name) {
+    Element(String name, boolean absolute) {
         this.name = name;
+        this.absolute = absolute;
     }
 
     public String name() {
         return name;
+    }
+
+    public boolean isAbsolute() {
+        return absolute;
     }
 
     @Override

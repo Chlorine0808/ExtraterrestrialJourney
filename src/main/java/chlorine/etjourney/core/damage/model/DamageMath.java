@@ -7,14 +7,18 @@ public final class DamageMath {
 
     private DamageMath() {}
 
-    /** Sum over elements of max(0, amount x element factor x kind factor - flat); a negative factor counts as 0. */
+    /**
+     * Sum over elements of max(0, amount x element factor x kind factor - flat); a negative factor counts as 0,
+     * and absolute elements skip the kind factor.
+     */
     public static float resolve(ElementalDamage damage, Resistance resistance) {
         float kind = Math.max(0, resistance.kindFactor(damage.kind()));
         float total = 0;
         for (Map.Entry<Element, Float> e : damage.parts()
             .entrySet()) {
-            float factor = Math.max(0, resistance.factor(e.getKey()));
-            total += Math.max(0, e.getValue() * factor * kind - resistance.flat(e.getKey()));
+            Element element = e.getKey();
+            float factor = Math.max(0, resistance.factor(element)) * (element.isAbsolute() ? 1 : kind);
+            total += Math.max(0, e.getValue() * factor - resistance.flat(element));
         }
         return total;
     }

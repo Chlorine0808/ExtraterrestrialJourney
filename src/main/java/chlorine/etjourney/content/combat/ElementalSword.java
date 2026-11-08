@@ -23,22 +23,23 @@ import chlorine.etjourney.core.damage.model.ElementRegistry;
 import chlorine.etjourney.core.damage.model.ElementalDamage;
 import chlorine.etjourney.core.registry.RegistryNames;
 
-/** A sword whose hit is physical, mostly its element and partly neutral; the chaos one pierces. */
+/** A sword whose hit is physical, mostly its element and partly neutral; the chaos part of the chaos one pierces. */
 final class ElementalSword extends ItemSword {
 
     static final float ELEMENT = 5, NEUTRAL = 3;
 
     private final ElementalGear.Kind kind;
     private final ElementalDamage damage;
+    private final boolean piercing;
 
     ElementalSword(String name, ElementalGear.Kind kind, ToolMaterial material) {
         super(material);
         this.kind = kind;
-        ElementalDamage.Builder b = ElementalDamage.builder(DamageKind.PHYSICAL)
+        this.damage = ElementalDamage.builder(DamageKind.PHYSICAL)
             .add(kind.element, ELEMENT)
-            .add(ElementRegistry.NEUTRAL, NEUTRAL);
-        if (kind.piercing()) b.piercing();
-        this.damage = b.build();
+            .add(ElementRegistry.NEUTRAL, NEUTRAL)
+            .build();
+        this.piercing = kind.element.isAbsolute();
         setUnlocalizedName(RegistryNames.unlocalized(name));
         setTextureName("iron_sword");
         setCreativeTab(CreativeTabs.tabCombat);
@@ -50,8 +51,8 @@ final class ElementalSword extends ItemSword {
         if (!(entity instanceof EntityLivingBase) || !entity.canAttackWithItem()) return false;
         if (player.worldObj.isRemote) return true;
         EntityLivingBase target = (EntityLivingBase) entity;
-        // Piercing skips the hurt cooldown, so keep the vanilla pace by hand.
-        if (damage.isPiercing() && target.hurtResistantTime > target.maxHurtResistantTime / 2) return true;
+        // The absolute part skips the hurt cooldown, so keep the vanilla pace by hand.
+        if (piercing && target.hurtResistantTime > target.maxHurtResistantTime / 2) return true;
         if (ElementalDamages.deal(target, new ElementalDamageSource(damage, player, player))) {
             stack.hitEntity(target, player);
             if (stack.stackSize <= 0) player.destroyCurrentEquippedItem();
@@ -84,7 +85,7 @@ final class ElementalSword extends ItemSword {
                 EnumChatFormatting.BLUE
                     + StatCollector.translateToLocalFormatted("etjourney.tooltip.damage", element, part.getValue()));
         }
-        if (damage.isPiercing())
+        if (piercing)
             lines.add(EnumChatFormatting.DARK_PURPLE + StatCollector.translateToLocal("etjourney.tooltip.piercing"));
     }
 }

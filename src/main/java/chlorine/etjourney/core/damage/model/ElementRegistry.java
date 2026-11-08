@@ -18,12 +18,21 @@ public final class ElementRegistry {
 
     private ElementRegistry() {}
 
-    public static synchronized Element register(String name) {
+    public static Element register(String name) {
+        return add(name, false);
+    }
+
+    /** Registers an element reduced only by resistance to itself, which pierces death immunity. */
+    public static Element registerAbsolute(String name) {
+        return add(name, true);
+    }
+
+    private static synchronized Element add(String name, boolean absolute) {
         if (name == null || !VALID.matcher(name)
             .matches())
             throw new IllegalArgumentException("Element name must be snake_case [a-z0-9_]+: '" + name + "'");
         if (BY_NAME.containsKey(name)) throw new IllegalArgumentException("Element already registered: " + name);
-        Element element = new Element(name);
+        Element element = new Element(name, absolute);
         BY_NAME.put(name, element);
         return element;
     }

@@ -123,23 +123,23 @@ public final class DamageCheckServer {
         reset(player);
         expectLoss("plain neutral 6 + fire 4", player, sword, 10);
 
-        ElementalDamage chaos5 = magic(chaos, 5, false), pierce5 = magic(chaos, 5, true);
+        ElementalDamage fire5 = magic(fire, 5), pierce5 = magic(chaos, 5);
         Item[] infinity = items("Avaritia", "Infinity_Helm", "Infinity_Chest", "Infinity_Pants", "Infinity_Shoes");
         Item[] draconic = items("DraconicEvolution", "draconicHelm", "draconicChest", "draconicLeggs", "draconicBoots");
         if (infinity == null) record("SKIP avaritia: Infinity armor not found");
         else {
             wear(player, infinity, false);
-            expectLoss("avaritia blocks chaos 5", player, chaos5, 0);
+            expectLoss("avaritia blocks fire 5", player, fire5, 0);
             wear(player, infinity, false);
             expectLoss("avaritia pierced by chaos 5", player, pierce5, 5);
         }
         if (draconic == null) record("SKIP draconic: Draconic armor not found");
         else {
             wear(player, draconic, true);
-            float lost = hit(player, chaos5, null);
+            float lost = hit(player, fire5, null);
             if (Math.abs(lost) > EPSILON) record("SKIP draconic: shield did not hold, lost " + lost);
             else {
-                record("PASS draconic blocks chaos 5");
+                record("PASS draconic blocks fire 5");
                 wear(player, draconic, true);
                 expectLoss("draconic pierced by chaos 5", player, pierce5, 5);
             }
@@ -152,7 +152,7 @@ public final class DamageCheckServer {
         halveChaos = true;
         cancelHurtFirst = true;
         float zombieBefore = zombie.getHealth();
-        ElementalDamages.deal(zombie, new ElementalDamageSource(magic(chaos, 10, true), null, null));
+        ElementalDamages.deal(zombie, new ElementalDamageSource(magic(chaos, 10), null, null));
         float zombieLost = zombieBefore - zombie.getHealth();
         cancelHurtFirst = false;
         halveChaos = false;
@@ -170,8 +170,8 @@ public final class DamageCheckServer {
         boolean pvp = server.isPVPEnabled();
         server.setAllowPvp(false);
         EntityPlayer other = FakePlayerFactory.getMinecraft((WorldServer) player.worldObj);
-        expectLoss("pvp off blocks a player", player, magic(fire, 5, false), 0, other);
-        expectLoss("pvp off blocks a piercing player", player, magic(chaos, 5, true), 0, other);
+        expectLoss("pvp off blocks a player", player, magic(fire, 5), 0, other);
+        expectLoss("pvp off blocks a piercing player", player, magic(chaos, 5), 0, other);
         server.setAllowPvp(pvp);
 
         if (draconic == null) record("SKIP draconic death: Draconic armor not found");
@@ -205,11 +205,17 @@ public final class DamageCheckServer {
             return;
         }
         wear(player, order, false);
-        expectLoss("etj immunity blocks fire 5", player, magic(fire, 5, false), 0);
+        expectLoss("etj immunity blocks fire 5", player, magic(fire, 5), 0);
         wear(player, order, false);
         record(vanilla(player, 5) == 0 ? "PASS etj immunity blocks generic 5" : "FAIL etj immunity let generic 5 in");
         wear(player, order, false);
         expectLoss("etj immunity pierced by chaos 5", player, pierce5, 5);
+        ElementalDamage mixed = ElementalDamage.builder(DamageKind.PHYSICAL)
+            .add(chaos, 5)
+            .add(ElementRegistry.NEUTRAL, 3)
+            .build();
+        wear(player, order, false);
+        expectLoss("etj immunity lets only the chaos part of chaos 5 + neutral 3 in", player, mixed, 5);
         wear(player, order, false);
         player.setCurrentItemOrArmor(1, null);
         float lost = vanilla(player, 5);
@@ -217,7 +223,15 @@ public final class DamageCheckServer {
 
         wear(player, fireSet, false);
         // 0.85 per piece and 0.5 off per piece, four pieces.
-        expectLoss("fire set resists fire 10", player, magic(fire, 10, false), (float) (10 * Math.pow(0.85, 4) - 2));
+        expectLoss("fire set resists fire 10", player, magic(fire, 10), (float) (10 * Math.pow(0.85, 4) - 2));
+
+        wear(player, fireSet, false);
+        // Vanilla armor 3 + 7 + 5 + 2 cuts the neutral 3 alone; chaos takes no armor.
+        expectLoss(
+            "vanilla armor cuts only the neutral of chaos 5 + neutral 3",
+            player,
+            mixed,
+            5 + 3f * (25 - 17) / 25);
 
         reset(player);
         EntityZombie zombie = new EntityZombie(player.worldObj);
@@ -252,7 +266,7 @@ public final class DamageCheckServer {
     private void expectDeath(String name, EntityPlayerMP player, Element chaos) {
         deathPassed = null;
         deathKey = null;
-        hit(player, magic(chaos, 1000, true), null);
+        hit(player, magic(chaos, 1000), null);
         boolean dead = player.getHealth() <= 0;
         boolean passed = Boolean.TRUE.equals(deathPassed);
         boolean named = "death.attack.etjourney.chaos".equals(deathKey);
@@ -266,11 +280,10 @@ public final class DamageCheckServer {
                 + deathKey);
     }
 
-    private static ElementalDamage magic(Element element, float amount, boolean piercing) {
-        ElementalDamage.Builder b = ElementalDamage.builder(DamageKind.MAGIC)
-            .add(element, amount);
-        if (piercing) b.piercing();
-        return b.build();
+    private static ElementalDamage magic(Element element, float amount) {
+        return ElementalDamage.builder(DamageKind.MAGIC)
+            .add(element, amount)
+            .build();
     }
 
     private void expectLoss(String name, EntityPlayerMP player, ElementalDamage damage, float expected) {

@@ -10,7 +10,7 @@ import cpw.mods.fml.common.registry.GameRegistry;
 /** One trial sword and armor set per element, drawn as tinted vanilla iron; no recipes yet. */
 public final class ElementalGear {
 
-    /** Each element's tint; order alone grants death immunity, chaos alone pierces it. */
+    /** Each element's tint; order alone grants death immunity. */
     enum Kind {
 
         FIRE(Elements.FIRE, 0xFF5A28),
@@ -27,10 +27,6 @@ public final class ElementalGear {
         Kind(Element element, int color) {
             this.element = element;
             this.color = color;
-        }
-
-        boolean piercing() {
-            return this == CHAOS;
         }
 
         boolean immune() {

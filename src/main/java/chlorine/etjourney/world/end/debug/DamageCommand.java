@@ -22,7 +22,7 @@ import chlorine.etjourney.core.damage.model.ElementalDamage;
 /** /etj damage: hits the creature in view, or the player, with one elemental attack. */
 final class DamageCommand {
 
-    static final String USAGE = "/etj damage <element> <amount> [physical|magic] [pierce] [self]";
+    static final String USAGE = "/etj damage <element> <amount> [physical|magic] [self]";
     private static final double REACH = 16;
 
     private DamageCommand() {}
@@ -50,14 +50,14 @@ final class DamageCommand {
         }
         List<String> flags = Arrays.asList(args)
             .subList(3, args.length);
-        ElementalDamage.Builder b = ElementalDamage
+        ElementalDamage damage = ElementalDamage
             .builder(flags.contains("magic") ? DamageKind.MAGIC : DamageKind.PHYSICAL)
-            .add(element, amount);
-        if (flags.contains("pierce")) b.piercing();
+            .add(element, amount)
+            .build();
         EntityLivingBase target = flags.contains("self") ? null : inView(player);
         if (target == null) target = player;
         float before = target.getHealth() + target.getAbsorptionAmount();
-        boolean hit = ElementalDamages.deal(target, new ElementalDamageSource(b.build(), player, player));
+        boolean hit = ElementalDamages.deal(target, new ElementalDamageSource(damage, player, player));
         float after = target.getHealth() + target.getAbsorptionAmount();
         say(player, target.getCommandSenderName() + ": " + before + " -> " + after + (hit ? "" : " (no damage)"));
     }
@@ -68,7 +68,7 @@ final class DamageCommand {
             for (Element e : ElementRegistry.all()) names.add(e.name());
             return names;
         }
-        if (args.length >= 4) return Arrays.asList("physical", "magic", "pierce", "self");
+        if (args.length >= 4) return Arrays.asList("physical", "magic", "self");
         return Collections.emptyList();
     }
 

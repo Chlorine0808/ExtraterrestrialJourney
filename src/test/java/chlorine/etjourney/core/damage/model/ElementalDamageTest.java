@@ -11,6 +11,7 @@ import org.junit.jupiter.api.Test;
 class ElementalDamageTest {
 
     private static final Element ICE = ElementRegistry.register("test_damage_ice");
+    private static final Element VOID = ElementRegistry.registerAbsolute("test_damage_void");
     private static final Element WIND = ElementRegistry.register("test_damage_wind");
 
     @Test
@@ -38,13 +39,50 @@ class ElementalDamageTest {
     }
 
     @Test
-    void marksPiercing() {
+    void piercesOnlyWhenEveryPartIsAbsolute() {
         assertTrue(
             ElementalDamage.builder(DamageKind.MAGIC)
-                .add(ICE, 1)
-                .piercing()
+                .add(VOID, 1)
                 .build()
                 .isPiercing());
+        assertFalse(
+            ElementalDamage.builder(DamageKind.MAGIC)
+                .add(VOID, 1)
+                .add(ICE, 1)
+                .build()
+                .isPiercing());
+        assertFalse(
+            ElementalDamage.builder(DamageKind.MAGIC)
+                .build()
+                .isPiercing());
+    }
+
+    @Test
+    void splitsTheAbsolutePartsFromTheRest() {
+        ElementalDamage d = ElementalDamage.builder(DamageKind.PHYSICAL)
+            .add(VOID, 5)
+            .add(ICE, 3)
+            .build();
+        assertEquals(
+            5f,
+            d.absolutePart()
+                .raw(),
+            1e-6);
+        assertTrue(
+            d.absolutePart()
+                .isPiercing());
+        assertEquals(
+            3f,
+            d.ordinaryPart()
+                .raw(),
+            1e-6);
+        assertFalse(
+            d.ordinaryPart()
+                .isPiercing());
+        assertEquals(
+            DamageKind.PHYSICAL,
+            d.absolutePart()
+                .kind());
     }
 
     @Test

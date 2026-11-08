@@ -9,6 +9,7 @@ import net.minecraft.util.DamageSource;
 import org.junit.jupiter.api.Test;
 
 import chlorine.etjourney.core.damage.model.DamageKind;
+import chlorine.etjourney.core.damage.model.Element;
 import chlorine.etjourney.core.damage.model.ElementRegistry;
 import chlorine.etjourney.core.damage.model.ElementalDamage;
 
@@ -17,11 +18,13 @@ class DeathImmunityTest {
     private static final class ImmuneItem extends Item implements DeathImmunity.Armor {
     }
 
+    private static final Element VOID = ElementRegistry.registerAbsolute("test_immunity_void");
+
     private static ElementalDamageSource elemental(boolean piercing) {
-        ElementalDamage.Builder b = ElementalDamage.builder(DamageKind.MAGIC)
-            .add(ElementRegistry.NEUTRAL, 5);
-        if (piercing) b.piercing();
-        return new ElementalDamageSource(b.build(), null, null);
+        ElementalDamage damage = ElementalDamage.builder(DamageKind.MAGIC)
+            .add(piercing ? VOID : ElementRegistry.NEUTRAL, 5)
+            .build();
+        return new ElementalDamageSource(damage, null, null);
     }
 
     @Test

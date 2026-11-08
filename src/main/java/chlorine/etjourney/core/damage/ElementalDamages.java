@@ -16,8 +16,9 @@ public final class ElementalDamages {
     private ElementalDamages() {}
 
     /**
-     * Hits the target and runs the element effects when health or absorption dropped. Piercing damage ignores the
-     * hurt cooldown, and on a player takes directly whatever armor outside the events held back.
+     * Hits the target and runs the element effects when health or absorption dropped. Only the absolute parts
+     * pierce, so a mixed attack lands as two hits: the ordinary part first, under the hurt cooldown, then the
+     * absolute part.
      */
     public static boolean deal(EntityLivingBase target, ElementalDamageSource source) {
         // Damage is the server's; the fallback would otherwise kill the client's copy of a player.
@@ -25,6 +26,29 @@ public final class ElementalDamages {
         // PvP off or same team: stop here, or the piercing fallback would hit anyway.
         if (target instanceof EntityPlayer && source.getEntity() instanceof EntityPlayer
             && !((EntityPlayer) target).canAttackPlayer((EntityPlayer) source.getEntity())) return false;
+        ElementalDamage damage = source.damage();
+        float before = life(target);
+        ElementalDamage absolute = damage.absolutePart();
+        if (damage.isPiercing() || absolute.parts()
+            .isEmpty()) hitOnce(target, source);
+        else {
+            hitOnce(target, part(source, damage.ordinaryPart()));
+            hitOnce(target, part(source, absolute));
+        }
+        boolean hit = life(target) < before;
+        if (hit) ElementEffects.fire(target, source);
+        return hit;
+    }
+
+    private static ElementalDamageSource part(ElementalDamageSource source, ElementalDamage damage) {
+        return new ElementalDamageSource(damage, source.getSourceOfDamage(), source.getEntity());
+    }
+
+    /**
+     * One hit of a single source. Piercing damage ignores the hurt cooldown, and on a player takes directly whatever
+     * armor outside the events held back.
+     */
+    private static void hitOnce(EntityLivingBase target, ElementalDamageSource source) {
         ElementalDamage damage = source.damage();
         boolean pierce = damage.isPiercing() && pierces(target);
         if (pierce) target.hurtResistantTime = 0;
@@ -38,9 +62,6 @@ public final class ElementalDamages {
                 takeDirectly(target, source, missing);
             }
         }
-        boolean hit = life(target) < before;
-        if (hit) ElementEffects.fire(target, source);
-        return hit;
     }
 
     /** Whether piercing damage may get past the target's immunities: never creative players or invulnerables. */

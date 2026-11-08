@@ -8,6 +8,7 @@ class DamageMathTest {
 
     private static final Element FIRE = ElementRegistry.register("test_math_fire");
     private static final Element NEUTRAL = ElementRegistry.NEUTRAL;
+    private static final Element VOID = ElementRegistry.registerAbsolute("test_math_void");
 
     /** The Solar sword of the spec: neutral 6 + fire 4. */
     private static ElementalDamage sword() {
@@ -15,6 +16,20 @@ class DamageMathTest {
             .add(NEUTRAL, 6)
             .add(FIRE, 4)
             .build();
+    }
+
+    @Test
+    void absoluteElementsIgnoreTheKindFactor() {
+        ElementalDamage d = ElementalDamage.builder(DamageKind.PHYSICAL)
+            .add(VOID, 4)
+            .add(NEUTRAL, 2)
+            .build();
+        Resistance r = Resistance.builder()
+            .multiplyKind(DamageKind.PHYSICAL, 0.5f)
+            .multiply(VOID, 0.5f)
+            .subtract(VOID, 1)
+            .build();
+        assertEquals(4 * 0.5f - 1 + 2 * 0.5f, DamageMath.resolve(d, r), 1e-6);
     }
 
     @Test
