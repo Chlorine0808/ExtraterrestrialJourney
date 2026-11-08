@@ -170,8 +170,7 @@ class AmberTreeTest {
             int shell = 0, gaps = 0;
             for (long c : body) {
                 int[] step = outward(c, mx, mz);
-                if (step == null || SdfFill.y(c) < 0 || body.contains(SdfFill.offset(c, step[0], 0, step[1])))
-                    continue;
+                if (step == null || SdfFill.y(c) < 0 || body.contains(SdfFill.offset(c, step[0], 0, step[1]))) continue;
                 shell++;
                 boolean air = false;
                 for (int k = 1; k <= 3; k++) {
