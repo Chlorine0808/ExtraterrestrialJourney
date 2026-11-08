@@ -154,6 +154,40 @@ class AmberTreeTest {
     }
 
     @Test
+    void noAirBetweenSeedAndStrands() {
+        // A strand that hugs the seed touches it; air with wood just beyond it is the gap the user saw.
+        // Below y = 0 lies the flat ground, so no air shows there.
+        for (long i = 0; i < 100; i++) {
+            Map<Long, EndBlock> m = cells(tree(i));
+            Set<Long> body = pieces(m, EndBlock.AMBER_SEED).get(0);
+            double mx = 0, mz = 0;
+            for (long c : body) {
+                mx += SdfFill.x(c);
+                mz += SdfFill.z(c);
+            }
+            mx /= body.size();
+            mz /= body.size();
+            int shell = 0, gaps = 0;
+            for (long c : body) {
+                int[] step = outward(c, mx, mz);
+                if (step == null || SdfFill.y(c) < 0 || body.contains(SdfFill.offset(c, step[0], 0, step[1])))
+                    continue;
+                shell++;
+                boolean air = false;
+                for (int k = 1; k <= 3; k++) {
+                    EndBlock b = m.get(SdfFill.offset(c, step[0] * k, 0, step[1] * k));
+                    if (b == null) air = true;
+                    else {
+                        if (air && b == EndBlock.AMBER_ROOT) gaps++;
+                        break;
+                    }
+                }
+            }
+            assertTrue(gaps <= shell * 0.08, "seed " + i + " gaps " + gaps + " of " + shell);
+        }
+    }
+
+    @Test
     void strandsVary() {
         Set<Integer> counts = new HashSet<>();
         for (long i = 0; i < 50; i++) {
@@ -230,15 +264,15 @@ class AmberTreeTest {
 
     @Test
     void nothingHangsIntoTheVoid() {
-        // Past x = 3 there is no ground; a leg's thickness may spill one block over the edge.
-        AmberTree.Ground edge = (dx, dz) -> dx > 3 ? -1060 : -1;
+        // Past x = 1 there is no ground; a leg's thickness may spill one block over the edge.
+        AmberTree.Ground edge = (dx, dz) -> dx > 1 ? -1060 : -1;
         int over = 0;
         for (long i = 0; i < 20; i++) {
             final long s = i;
             int[] n = { 0 };
             AmberTree.of(seedOf(i), 250, edge)
                 .forEach((dx, dy, dz, k) -> {
-                    if (dx < 5 || k != EndBlock.AMBER_ROOT) return;
+                    if (dx < 3 || k != EndBlock.AMBER_ROOT) return;
                     n[0]++;
                     assertTrue(dy >= -1, "seed " + s + " hangs to " + dy + " at x " + dx);
                 });
