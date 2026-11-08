@@ -71,6 +71,8 @@ public final class GiantTrees {
             if (s == null || tooClose(out, s.x, s.z) || !insideGrove(seed, s.x, s.z)) continue;
             // The roots crawl over the ground out to FOOTPRINT; on a lake they would hang over the water.
             if (probe.wet(s.x, s.z, FOOTPRINT)) continue;
+            // A sinkhole's funnel cuts the rock below the probe's ground, leaving the trunk over a hollow.
+            if (probe.holed(s.x, s.z, FOOTPRINT)) continue;
             double ground = probe.ground(s.x, s.z);
             if (ground <= -100 || ground + HEIGHT > 250 || !level(probe, s.x, s.z, ground)) continue;
             out.add(new double[] { s.x, ground, s.z });
