@@ -15,6 +15,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.ChatComponentTranslation;
+import net.minecraft.util.DamageSource;
 import net.minecraft.util.IChatComponent;
 import net.minecraft.world.WorldServer;
 import net.minecraft.world.WorldSettings;
@@ -23,6 +24,7 @@ import net.minecraftforge.common.util.FakePlayerFactory;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
 import net.minecraftforge.event.entity.living.LivingHurtEvent;
 
+import chlorine.etjourney.core.ModInfo;
 import chlorine.etjourney.core.damage.ElementalDamageSource;
 import chlorine.etjourney.core.damage.ElementalDamages;
 import chlorine.etjourney.core.damage.ResistanceSources;
@@ -184,11 +186,66 @@ public final class DamageCheckServer {
         expectLoss("creative not pierced", player, pierce5, 0);
         player.setGameType(WorldSettings.GameType.SURVIVAL);
 
+        checkGear(player, fire, chaos, pierce5);
+
         if (infinity == null) record("SKIP avaritia death: Infinity armor not found");
         else {
             wear(player, infinity, false);
             expectDeath("avaritia killed by chaos 1000", player, chaos);
         }
+    }
+
+    /** ETJ's death immunity on the order set, the fire set's resistance and the fire sword; ends dead and refilled. */
+    private void checkGear(EntityPlayerMP player, Element fire, Element chaos, ElementalDamage pierce5) {
+        Item[] order = items(ModInfo.MODID, "order_helmet", "order_chestplate", "order_leggings", "order_boots");
+        Item[] fireSet = items(ModInfo.MODID, "fire_helmet", "fire_chestplate", "fire_leggings", "fire_boots");
+        Item fireSword = GameRegistry.findItem(ModInfo.MODID, "fire_sword");
+        if (order == null || fireSet == null || fireSword == null) {
+            record("FAIL gear: elemental gear is not registered");
+            return;
+        }
+        wear(player, order, false);
+        expectLoss("etj immunity blocks fire 5", player, magic(fire, 5, false), 0);
+        wear(player, order, false);
+        record(vanilla(player, 5) == 0 ? "PASS etj immunity blocks generic 5" : "FAIL etj immunity let generic 5 in");
+        wear(player, order, false);
+        expectLoss("etj immunity pierced by chaos 5", player, pierce5, 5);
+        wear(player, order, false);
+        player.setCurrentItemOrArmor(1, null);
+        float lost = vanilla(player, 5);
+        record((lost > 0 ? "PASS" : "FAIL") + " three order pieces are not immune: lost " + lost);
+
+        wear(player, fireSet, false);
+        // 0.85 per piece and 0.5 off per piece, four pieces.
+        expectLoss("fire set resists fire 10", player, magic(fire, 10, false), (float) (10 * Math.pow(0.85, 4) - 2));
+
+        reset(player);
+        EntityZombie zombie = new EntityZombie(player.worldObj);
+        zombie.setPosition(player.posX + 3, player.posY, player.posZ);
+        player.worldObj.spawnEntityInWorld(zombie);
+        float before = zombie.getHealth();
+        float expected = 8f * (25 - zombie.getTotalArmorValue()) / 25;
+        new ItemStack(fireSword).getItem()
+            .onLeftClickEntity(new ItemStack(fireSword), player, zombie);
+        float zombieLost = before - zombie.getHealth();
+        zombie.setDead();
+        record(
+            (Math.abs(zombieLost - expected) <= EPSILON ? "PASS" : "FAIL") + " fire sword hits a zombie: lost "
+                + zombieLost
+                + ", expected "
+                + expected);
+
+        wear(player, order, false);
+        expectDeath("etj immunity killed by chaos 1000", player, chaos);
+        player.setHealth(player.getMaxHealth());
+    }
+
+    /** Health plus absorption lost to plain vanilla damage. */
+    private static float vanilla(EntityPlayerMP player, float amount) {
+        player.hurtResistantTime = 0;
+        float before = player.getHealth() + player.getAbsorptionAmount();
+        player.attackEntityFrom(DamageSource.generic, amount);
+        return before - (player.getHealth() + player.getAbsorptionAmount());
     }
 
     /** Kills with piercing chaos 1000; the death event must pass and name the chaos death message. */
