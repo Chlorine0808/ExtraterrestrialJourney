@@ -65,6 +65,15 @@ class AmberTreeTest {
         return out;
     }
 
+    /** One horizontal step away from the body's centre (mx, mz), along the larger axis; null at the centre. */
+    private static int[] outward(long c, double mx, double mz) {
+        double ox = SdfFill.x(c) - mx, oz = SdfFill.z(c) - mz;
+        if (ox == 0 && oz == 0) return null;
+        int sx = Math.abs(ox) >= Math.abs(oz) ? (int) Math.signum(ox) : 0;
+        int sz = sx == 0 ? (int) Math.signum(oz) : 0;
+        return new int[] { sx, sz };
+    }
+
     @Test
     void sameSeedSameTree() {
         List<String> a = new ArrayList<>(), b = new ArrayList<>();
@@ -131,12 +140,9 @@ class AmberTreeTest {
             mz /= body.size();
             int shell = 0, open = 0;
             for (long c : body) {
-                int x = SdfFill.x(c), y = SdfFill.y(c), z = SdfFill.z(c);
-                double ox = x - mx, oz = z - mz;
-                if (ox == 0 && oz == 0) continue;
-                int sx = Math.abs(ox) >= Math.abs(oz) ? (int) Math.signum(ox) : 0;
-                int sz = sx == 0 ? (int) Math.signum(oz) : 0;
-                long out = SdfFill.key(x + sx, y, z + sz);
+                int[] step = outward(c, mx, mz);
+                if (step == null) continue;
+                long out = SdfFill.offset(c, step[0], 0, step[1]);
                 if (body.contains(out)) continue;
                 shell++;
                 if (m.get(out) != EndBlock.AMBER_ROOT) open++;
@@ -152,10 +158,10 @@ class AmberTreeTest {
         Set<Integer> counts = new HashSet<>();
         for (long i = 0; i < 50; i++) {
             int n = tree(i).strands();
-            assertTrue(n >= 4 && n <= 6, "seed " + i);
+            assertTrue(n >= 2 && n <= 3, "seed " + i);
             counts.add(n);
         }
-        assertTrue(counts.size() >= 3);
+        assertEquals(2, counts.size());
     }
 
     @Test

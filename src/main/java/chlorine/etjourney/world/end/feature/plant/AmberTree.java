@@ -106,26 +106,27 @@ public final class AmberTree implements PlantCells.Bounds {
                 2)
             .displace(LucentShapes.noise(r.nextLong(), 0.5));
 
-        // The strands: an uneven helix that spreads into legs, hugs the seed, and closes above it.
+        // The strands: two or three thick strands winding about a full turn round the seed, closing above it.
         double pick = r.nextDouble();
-        int strands = pick < 0.45 ? 4 : pick < 0.85 ? 5 : 6;
+        int strands = pick < 0.75 ? 2 : 3;
         double merge = tipY + (2.5 + r.nextDouble() * 1.5) * scale;
-        double twist = (0.6 + r.nextDouble() * 0.6) * (r.nextBoolean() ? 1 : -1);
+        // A third strand winds less, so the three cover the seed no more than two do.
+        double twist = (5.5 + r.nextDouble() * 1.5) * (r.nextBoolean() ? 1 : -1) * (strands == 2 ? 1 : 0.6);
         double start = r.nextDouble() * Math.PI * 2;
         double legs = radius + 2.2 * scale;
-        double thick = 0.95, thin = 0.8;
+        double thick = 1.15, thin = 0.85;
         Sdf wood = null;
         List<List<double[]>> paths = new ArrayList<>();
         double lowest = 0;
         for (int s = 0; s < strands; s++) {
-            double a0 = start + (s + (r.nextDouble() - 0.5) * 0.5) * Math.PI * 2 / strands;
-            double turn = twist * (0.7 + r.nextDouble() * 0.6);
+            double a0 = start + (s + (r.nextDouble() - 0.5) * 0.3) * Math.PI * 2 / strands;
+            double turn = twist * (0.85 + r.nextDouble() * 0.3);
             double phase = r.nextDouble() * Math.PI * 2;
             List<double[]> path = new ArrayList<>();
             for (int k = 0; k < STRAND_POINTS; k++) {
                 double t = (double) k / (STRAND_POINTS - 1);
                 double y = t * merge;
-                double a = a0 + turn * t + 0.35 * Math.sin(phase + 5 * t);
+                double a = a0 + turn * t + 0.2 * Math.sin(phase + 5 * t);
                 double follow = Math.max(0, Math.min(1, (y - cy) / (tipY - cy)));
                 double ax = lx * follow, az = lz * follow;
                 double taper = legs + (thin - legs) * t;
