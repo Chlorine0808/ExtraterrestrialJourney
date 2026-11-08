@@ -4,6 +4,7 @@ import chlorine.etjourney.Tags;
 import chlorine.etjourney.compat.CompatManager;
 import chlorine.etjourney.content.ModContent;
 import chlorine.etjourney.core.config.ETJConfig;
+import chlorine.etjourney.core.damage.DeathImmunity;
 import chlorine.etjourney.core.damage.ElementalDamageEvents;
 import chlorine.etjourney.core.network.ETJNetwork;
 import chlorine.etjourney.core.util.ModLog;
@@ -28,6 +29,7 @@ public class CommonProxy {
     public void init(FMLInitializationEvent event) {
         ETJNetwork.init();
         ElementalDamageEvents.register();
+        DeathImmunity.register();
         ModWorld.init();
         ModContent.init();
         compat.init();
