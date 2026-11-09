@@ -142,6 +142,38 @@ class ShotPlannerTest {
     }
 
     @Test
+    void treeShotsTryCheckedCamerasAimedUpTheTree() {
+        // 20261106-042731, 3 and 20261109-014627, 5: a single fixed aerial stood inside the rock and was never
+        // checked, so the shot failed as too dark with nothing else to try.
+        for (String line : new String[] { "shot giant-tree count=1 views=aerial,ground",
+            "shot amber-tree count=1 views=aerial,ground" }) {
+            List<PlannedShot> shots = ShotPlanner.expand(list(line), SAMPLER, NO_RESERVATIONS, BY_KEY);
+            PlannedShot aerial = shots.get(0), ground = shots.get(1);
+            assertNull(aerial.fixed, line);
+            assertNull(ground.fixed, line);
+            assertTrue(aerial.tries.size() > 1, line);
+            assertTrue(ground.tries.size() > 1, line);
+            assertTrue(aerial.target.y > ground.target.y, line);
+            assertSame(aerial.tries.get(0), ShotPlanner.firstCamera(aerial, null));
+            assertSame(ground.tries.get(0), ShotPlanner.firstCamera(ground, null));
+        }
+    }
+
+    @Test
+    void giantTreeAerialStandsAboutAHundredBlocksOff() {
+        // 20261109-021434, 3: from 200 blocks off the tree was a speck among the grove.
+        PlannedShot aerial = ShotPlanner
+            .expand(list("shot giant-tree count=1 views=aerial"), SAMPLER, NO_RESERVATIONS, BY_KEY)
+            .get(0);
+        Camera c = aerial.tries.get(0);
+        Target t = aerial.target;
+        double d = Math.sqrt(
+            (c.x - t.x) * (c.x - t.x) + (c.y + Framing.EYE - t.y) * (c.y + Framing.EYE - t.y)
+                + (c.z - t.z) * (c.z - t.z));
+        assertEquals(100, d, 1);
+    }
+
+    @Test
     void glowshroomTargetsSitOnMycelia() {
         for (String size : new String[] { "NORMAL", "GIANT" }) {
             List<PlannedShot> shots = ShotPlanner.expand(

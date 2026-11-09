@@ -37,8 +37,8 @@ final class Locator {
 
     /** Style weight at a continent point from which the style counts as dominant there. */
     private static final double STYLE_DOMINANT = 0.6;
-    /** A giant tree is 56 high with a 26-block reach, so this scene size puts the camera 200 blocks off. */
-    private static final double TREE_SIZE = 80;
+    /** A giant tree is 56 high with a 26-block reach, so this scene size puts the aerial camera 100 blocks off. */
+    private static final double TREE_SIZE = 40;
 
     /** A seed tree is 15 high with a 10-block reach. */
     private static final double AMBER_TREE_SIZE = 40;

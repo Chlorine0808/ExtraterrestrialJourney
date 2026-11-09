@@ -182,7 +182,7 @@ class LocatorTest {
             assertTrue(keys.add(t.key));
             assertEquals(EndBiome.GROVE, SAMPLER.biome(t.x, t.z));
             assertEquals("巨木", t.label);
-            assertEquals(80, t.size, 0);
+            assertEquals(40, t.size, 0);
         }
     }
 }

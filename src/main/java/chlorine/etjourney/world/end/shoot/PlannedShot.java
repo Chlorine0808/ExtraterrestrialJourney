@@ -1,5 +1,7 @@
 package chlorine.etjourney.world.end.shoot;
 
+import java.util.List;
+
 /** One shot the run intends to take; target is null when none was found (then missing says why). */
 public final class PlannedShot {
 
@@ -7,19 +9,27 @@ public final class PlannedShot {
     public final int index;
     public final View view;
     public final Target target;
-    /** Fixed camera for AT shots only, otherwise null. */
+    /** Fixed camera, taken unchecked (AT shots, glowshrooms), otherwise null. */
     public final Camera fixed;
+    /** Cameras to try in order, each checked like a searched one, instead of the view's own search; or null. */
+    public final List<Camera> tries;
     /** Biosphere site text, or null. */
     public final String source;
     /** Reason when target is null. */
     public final String missing;
 
     public PlannedShot(String group, int index, View view, Target target, Camera fixed, String source, String missing) {
+        this(group, index, view, target, fixed, null, source, missing);
+    }
+
+    public PlannedShot(String group, int index, View view, Target target, Camera fixed, List<Camera> tries,
+        String source, String missing) {
         this.group = group;
         this.index = index;
         this.view = view;
         this.target = target;
         this.fixed = fixed;
+        this.tries = tries;
         this.source = source;
         this.missing = missing;
     }
