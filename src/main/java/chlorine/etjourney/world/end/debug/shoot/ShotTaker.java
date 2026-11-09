@@ -495,7 +495,7 @@ final class ShotTaker {
             dir = new double[] { dx / d, dy / d, dz / d };
             range = (int) Math.ceil(d);
             // The ball's glass is the subject seen from outside, not its centre; a tree's crown is part of it.
-            subject = s.view == View.OUTSIDE || s.tries != null ? d - t.size : d;
+            subject = s.view == View.OUTSIDE ? d - t.size : d - s.depth;
         } else {
             dir = EtjArgs.lookDirection(c.yaw, 0);
             range = NEAR_RANGE;

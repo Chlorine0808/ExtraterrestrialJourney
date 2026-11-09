@@ -160,6 +160,23 @@ class ShotPlannerTest {
     }
 
     @Test
+    void treeAerialsCountOnlyTheCrownAsTheSubject() {
+        // 20261110-025010, 13: with the whole scene size counted as subject, a seed tree's aerial 32 blocks off was
+        // never blocked, and the shot kept a view of the cliff in front of the tree.
+        for (String line : new String[] { "shot giant-tree count=1 views=aerial",
+            "shot amber-tree count=1 views=aerial" }) {
+            PlannedShot aerial = ShotPlanner.expand(list(line), SAMPLER, NO_RESERVATIONS, BY_KEY)
+                .get(0);
+            Camera c = aerial.tries.get(0);
+            Target t = aerial.target;
+            double d = Math.sqrt(
+                (c.x - t.x) * (c.x - t.x) + (c.y + Framing.EYE - t.y) * (c.y + Framing.EYE - t.y)
+                    + (c.z - t.z) * (c.z - t.z));
+            assertTrue(aerial.depth > 0 && aerial.depth < d / 2, line + " depth " + aerial.depth + " of " + d);
+        }
+    }
+
+    @Test
     void giantTreeAerialStandsAboutAHundredBlocksOff() {
         // 20261109-021434, 3: from 200 blocks off the tree was a speck among the grove.
         PlannedShot aerial = ShotPlanner

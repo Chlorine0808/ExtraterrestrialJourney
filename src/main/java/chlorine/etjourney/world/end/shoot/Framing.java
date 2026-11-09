@@ -27,25 +27,26 @@ public final class Framing {
 
     /**
      * How a tree's ground view stands off: how far, how high above the root, where on the tree it aims, and how far
-     * the ground in between may fall below the root or rise above it.
+     * the ground in between may fall below the root or rise above it. Reach is how far the crown spreads.
      */
     public static final class TreeFrame {
 
-        public final double stand, rise, aim, drop, climb;
+        public final double stand, rise, aim, drop, climb, reach;
 
-        TreeFrame(double stand, double rise, double aim, double drop, double climb) {
+        TreeFrame(double stand, double rise, double aim, double drop, double climb, double reach) {
             this.stand = stand;
             this.rise = rise;
             this.aim = aim;
             this.drop = drop;
             this.climb = climb;
+            this.reach = reach;
         }
     }
 
     /** A seed tree is 15 high with a 10-block reach. */
-    public static final TreeFrame SEED_TREE = new TreeFrame(15, 4, 7, 8, 10);
+    public static final TreeFrame SEED_TREE = new TreeFrame(15, 4, 7, 8, 10, 10);
     /** A giant tree is 56 high with a 26-block reach; 45 off, the whole of it fits the 70-degree view. */
-    public static final TreeFrame GIANT_TREE = new TreeFrame(45, 6, 26, 12, 20);
+    public static final TreeFrame GIANT_TREE = new TreeFrame(45, 6, 26, 12, 20, 26);
 
     public interface BiomeAt {
 

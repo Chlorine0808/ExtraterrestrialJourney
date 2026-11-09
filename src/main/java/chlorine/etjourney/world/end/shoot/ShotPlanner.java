@@ -164,10 +164,12 @@ public final class ShotPlanner {
             for (View v : spec.views) {
                 Target t = root;
                 List<Camera> tries = null;
+                double depth = 0;
                 if (root != null && v == View.GROUND) tries = Framing.treeGrounds(root, ground, frame);
                 else if (root != null) {
                     t = new Target(root.label, root.x, root.y + frame.aim, root.z, root.size, root.key);
                     tries = treeAerials(t, frame);
+                    depth = frame.reach;
                 }
                 out.add(
                     new PlannedShot(
@@ -177,6 +179,7 @@ public final class ShotPlanner {
                         t,
                         null,
                         tries,
+                        depth,
                         null,
                         root == null ? NOT_FOUND : null));
             }
