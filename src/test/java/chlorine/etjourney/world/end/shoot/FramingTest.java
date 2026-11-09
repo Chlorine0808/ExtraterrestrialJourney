@@ -11,6 +11,7 @@ import org.junit.jupiter.api.Test;
 
 import chlorine.etjourney.world.end.debug.EtjArgs;
 import chlorine.etjourney.world.end.feature.EndBiome;
+import chlorine.etjourney.world.end.feature.plant.GiantTrees;
 
 class FramingTest {
 
@@ -165,6 +166,56 @@ class FramingTest {
         assertTrue(c.x <= SEED_TREE.x + 4, "x " + c.x);
         assertEquals(SEED_TREE.y + 4, c.y, 1e-9);
         assertLooksAtTheTree(c);
+    }
+
+    @Test
+    void treeGroundsTryEveryTurnThatStandsOnLandFirst() {
+        // The void starts five blocks east of the tree: the views that stand on land come before the east one.
+        Framing.GroundAt edge = (x, z) -> x > SEED_TREE.x + 4 ? -1000 : 80;
+        List<Camera> tries = Framing.treeGrounds(SEED_TREE, edge, Framing.SEED_TREE);
+        assertEquals(8, tries.size());
+        assertEquals(Framing.treeGround(SEED_TREE, edge).x, tries.get(0).x, 1e-9);
+        boolean overVoid = false;
+        for (Camera c : tries) {
+            boolean onLand = c.x <= SEED_TREE.x + 4;
+            assertTrue(!(overVoid && onLand), "a view on land came after one over the void");
+            overVoid |= !onLand;
+            assertLooksAtTheTree(c);
+        }
+        assertTrue(overVoid);
+    }
+
+    @Test
+    void giantTreeGroundSeesTheRootAndTheTop() {
+        // 20261109-021434, 2: the continent ground view stood among the trunks and looked away from the tree.
+        Target tree = new Target("t", 0, 90, 0, 40, 0);
+        Camera c = Framing.treeGrounds(tree, (x, z) -> 90, Framing.GIANT_TREE)
+            .get(0);
+        double dist = Math.hypot(c.x - tree.x, c.z - tree.z);
+        assertTrue(dist > GiantTrees.FOOTPRINT, "inside the crown at " + dist);
+        double eye = c.y + Framing.EYE;
+        double toRoot = Math.toDegrees(Math.atan2(eye - tree.y, dist));
+        double toTop = Math.toDegrees(Math.atan2(eye - (tree.y + GiantTrees.HEIGHT), dist));
+        // Pitch is positive downward; the vertical field of view is 70 degrees.
+        assertTrue(toRoot - c.pitch < 35 && c.pitch - toTop < 35, "pitch " + c.pitch);
+    }
+
+    @Test
+    void treeAerialsCircleTheAimThenLookDownSteeper() {
+        // 20261109-014627: one fixed aerial 18 blocks off was buried twice and showed a tangle of legs the rest.
+        Target aim = new Target("t", 10, 90, -20, 40, 0);
+        List<Camera> tries = Framing.treeAerials(aim, 32);
+        assertEquals(8, tries.size());
+        assertEquals(90f, tries.get(0).yaw, 1e-6);
+        for (int i = 0; i < tries.size(); i++) {
+            Camera c = tries.get(i);
+            double[] d = EtjArgs.lookDirection(c.yaw, c.pitch);
+            assertArrayEquals(
+                new double[] { aim.x, aim.y, aim.z },
+                new double[] { c.x + d[0] * 32, c.y + Framing.EYE + d[1] * 32, c.z + d[2] * 32 },
+                0.5);
+            assertTrue(i < 4 ? c.pitch < tries.get(4).pitch : Math.floorMod((int) c.yaw, 90) == 45);
+        }
     }
 
     private static void assertLooksAtTheTree(Camera c) {
