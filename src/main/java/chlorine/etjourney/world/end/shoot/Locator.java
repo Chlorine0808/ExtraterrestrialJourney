@@ -23,6 +23,7 @@ import chlorine.etjourney.world.end.feature.StructureProbe;
 import chlorine.etjourney.world.end.feature.plant.AmberTrees;
 import chlorine.etjourney.world.end.feature.plant.GiantTrees;
 import chlorine.etjourney.world.end.feature.plant.Glowshrooms;
+import chlorine.etjourney.world.end.modifier.builtin.PlantModifiers;
 import chlorine.etjourney.world.end.reserve.Area;
 
 /** Finds screenshot targets from the seed alone, nearest first; a search that comes up short returns fewer. */
@@ -110,7 +111,10 @@ final class Locator {
         return out;
     }
 
-    /** The giant tree nearest the origin of each grove continent, continents nearest first. */
+    /**
+     * The giant tree nearest the origin of each grove continent, continents nearest first. Generation drops trees
+     * beside reserved areas.
+     */
     List<Target> giantTrees(double ox, double oz, int count) {
         long seed = sampler.seed();
         Set<Long> chosen = new HashSet<>();
@@ -123,9 +127,12 @@ final class Locator {
                 long id = ContinentIds.of(seed, s);
                 if (chosen.contains(id)) return null;
                 double[] best = null;
-                for (double[] a : GiantTrees.anchors(seed, s, sampler.standingProbe()))
+                for (double[] a : GiantTrees.anchors(seed, s, sampler.standingProbe())) {
+                    if (PlantModifiers
+                        .blocked(reserved.at((int) Math.floor(a[0]) >> 4, (int) Math.floor(a[2]) >> 4), a)) continue;
                     if (best == null || Math.hypot(a[0] - ox, a[2] - oz) < Math.hypot(best[0] - ox, best[2] - oz))
                         best = a;
+                }
                 return best == null ? null : new double[] { best[0], best[1], best[2], Double.longBitsToDouble(id) };
             });
             if (hit == null) break;

@@ -44,7 +44,7 @@ public final class PlantModifiers {
      * On a reserved island, or with any of the footprint on ground an island's fade lowers: the tree reads the ground
      * without the fade, so its trunk and roots would float there.
      */
-    static boolean blocked(List<Area> reserved, double[] a) {
+    public static boolean blocked(List<Area> reserved, double[] a) {
         if (Reservations.touches(reserved, a[0], a[2], GiantTrees.FOOTPRINT)) return true;
         if (Reservations.suppression(reserved, a[0], a[2]) > 0.1) return true;
         for (double r : FADE_RADII) {
