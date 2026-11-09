@@ -55,6 +55,17 @@ public final class Holes {
         return radius * 3 + 12;
     }
 
+    /** Whether a funnel of these holes may cut anywhere within range of (x, z). */
+    public static boolean reaches(List<Hole> holes, double x, double z, double range) {
+        for (Hole h : holes) if (Distance.planar(x - h.x, z - h.z) < reach(h.radius) + range) return true;
+        return false;
+    }
+
+    /** Farthest a funnel may cut from its hole's centre: the widest rim and stretch, warped diagonally. */
+    private static double reach(double radius) {
+        return 1.4 * radius + (outerRadius(radius) - radius) * MAX_STRETCH + WARP * Math.sqrt(2);
+    }
+
     public static List<Hole> near(long seed, double x, double z, double range, Probe probe) {
         List<Hole> out = new ArrayList<>();
         double reach = range + outerRadius(MAX_RADIUS) * MAX_STRETCH + WARP;

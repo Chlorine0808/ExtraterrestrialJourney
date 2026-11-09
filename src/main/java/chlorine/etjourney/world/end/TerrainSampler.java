@@ -260,6 +260,7 @@ public final class TerrainSampler {
     public StructureProbe standingProbe() {
         StructureProbe bare = structureProbe();
         Lakes.Probe lakes = lakeProbe();
+        Holes.Probe holes = holeProbe();
         return new StructureProbe() {
 
             @Override
@@ -299,6 +300,11 @@ public final class TerrainSampler {
             @Override
             public boolean wet(double x, double z, double range) {
                 return Lakes.wet(Lakes.near(seed, x, z, range, lakes), x, z, range);
+            }
+
+            @Override
+            public boolean holed(double x, double z, double range) {
+                return Holes.reaches(Holes.near(seed, x, z, range, holes), x, z, range);
             }
 
             @Override
