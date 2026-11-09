@@ -49,4 +49,6 @@ tasks.named<JavaExec>("runClient") {
         logger.lifecycle("[shoot] list {}, shots go to {}", list, main.resolve("shots"))
         args("--width", "1920", "--height", "1080")
     }
+    // -PdamageCheck runs the elemental damage check in a fresh world and quits; results land in run/client/damagecheck.txt.
+    if (providers.gradleProperty("damageCheck").isPresent) systemProperty("etj.damageCheck", "true")
 }

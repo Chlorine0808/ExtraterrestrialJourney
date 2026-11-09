@@ -39,6 +39,8 @@ dependencies {
     devOnlyNonPublishable("com.github.GTNewHorizons:Angelica:2.2.26:dev")
     devOnlyNonPublishable("com.github.GTNewHorizons:Hardcore-Ender-Expansion:1.12.28-GTNH:dev")
     devOnlyNonPublishable("com.github.GTNewHorizons:Draconic-Evolution:1.5.33-GTNH:dev")
+    // Its Infinity armor is the immunity that piercing elemental damage must get past (-PdamageCheck).
+    devOnlyNonPublishable("com.github.GTNewHorizons:Avaritia:1.72:dev")
     // devOnlyNonPublishable(rfg.deobf("curse.maven:novacraft-705131:7753716"))
     devOnlyNonPublishable(rfg.deobf("curse.maven:biomes-o-plenty-220318:2499612"))
     devOnlyNonPublishable(rfg.deobf("curse.maven:biome-decoration-fix-533258:3479308"))
