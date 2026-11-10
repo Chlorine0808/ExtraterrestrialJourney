@@ -51,4 +51,6 @@ tasks.named<JavaExec>("runClient") {
     }
     // -PdamageCheck runs the elemental damage check in a fresh world and quits; results land in run/client/damagecheck.txt.
     if (providers.gradleProperty("damageCheck").isPresent) systemProperty("etj.damageCheck", "true")
+    // -PspawnCheck counts endermen with and without the spore zombie listed and quits; results land in run/client/spawncheck.txt.
+    if (providers.gradleProperty("spawnCheck").isPresent) systemProperty("etj.spawnCheck", "true")
 }

@@ -5,6 +5,7 @@ import org.lwjgl.opengl.Display;
 import chlorine.etjourney.content.craft.CraftRenderers;
 import chlorine.etjourney.content.end.EndEntityRenderers;
 import chlorine.etjourney.content.end.FurRenderer;
+import chlorine.etjourney.content.end.spawncheck.SpawnCheck;
 import chlorine.etjourney.content.entity.EntityRenderers;
 import chlorine.etjourney.core.util.WindowTitle;
 import chlorine.etjourney.world.end.debug.damagecheck.DamageCheck;
@@ -31,6 +32,7 @@ public class ClientProxy extends CommonProxy {
         WindPush.register();
         ShootHarness.startIfRequested();
         DamageCheck.startIfRequested();
+        SpawnCheck.startIfRequested();
         tagWindow();
     }
 
