@@ -22,6 +22,8 @@ import chlorine.etjourney.world.end.reserve.ReservationProvider;
  */
 final class HeeIslandReservations implements ReservationProvider {
 
+    private static final String HEE_GENERATOR = "chylex.hee.world.ChunkProviderHardcoreEnd";
+
     private static final int ISLAND_SIZE = 208;
     private static final double RADIUS = ISLAND_SIZE / 2.0 + 24;
 
@@ -55,14 +57,14 @@ final class HeeIslandReservations implements ReservationProvider {
         try {
             Object provider = generator != null && generator.getClass()
                 .getName()
-                .equals("chylex.hee.world.ChunkProviderHardcoreEnd")
+                .equals(HEE_GENERATOR)
                     ? generator
                     : end.getChunkProvider() instanceof ChunkProviderServer
                         ? ((ChunkProviderServer) end.getChunkProvider()).currentChunkProvider
                         : null;
             if (provider == null || !provider.getClass()
                 .getName()
-                .equals("chylex.hee.world.ChunkProviderHardcoreEnd")) return false;
+                .equals(HEE_GENERATOR)) return false;
             Field gen = provider.getClass()
                 .getDeclaredField("islandGen");
             gen.setAccessible(true);
