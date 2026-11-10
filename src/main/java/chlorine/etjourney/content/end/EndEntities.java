@@ -14,12 +14,12 @@ public final class EndEntities {
     private EndEntities() {}
 
     public static void preInit() {
-        // Weight 3 against the enderman's 10 makes it about a fifth of the packs picked in MYCELIA.
+        // Weight 4 against the enderman's 10: the spore zombie's own cap keeps its share of MYCELIA's mobs near a fifth.
         ModEntities.register(
             SPORE_ZOMBIE,
             EntitySporeZombie.class,
             SpawnRule.builder(EnumSet.of(EndBiome.MYCELIA), false)
-                .weight(3, 1, 4)
+                .weight(4, 1, 4)
                 .build());
     }
 }
