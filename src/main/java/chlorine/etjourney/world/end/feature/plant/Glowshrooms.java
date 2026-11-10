@@ -209,7 +209,7 @@ public final class Glowshrooms {
                         run.flush();
                         open[0] = false;
                     }
-                    if (inside(sink, x, y, z) && sink.isAir(x, y, z)) {
+                    if (HangingRun.inside(sink, x, y, z) && sink.isAir(x, y, z)) {
                         sink.place(x, y, z, block);
                         if (block == EndBlock.MYCELIA_GILL) gills.add(PlantCells.pack(dx, dy, dz));
                     }
@@ -226,9 +226,5 @@ public final class Glowshrooms {
             && a.z + a.shape.minZ() < s.originZ() + s.width()
             && a.y + a.shape.maxY() >= s.minY()
             && a.y + a.shape.minY() < s.maxY();
-    }
-
-    private static boolean inside(BlockSink s, int x, int y, int z) {
-        return HangingRun.inside(s, x, y, z);
     }
 }
