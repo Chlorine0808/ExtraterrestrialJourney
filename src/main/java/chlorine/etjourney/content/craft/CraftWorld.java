@@ -49,16 +49,12 @@ final class CraftWorld {
         if (world.provider.dimensionId == EndTerrain.DIMENSION && seed != null
             && Distance.planar(x + 0.5, z + 0.5) >= EndTerrain.TERRAIN_START) {
             EndBiome biome = EndBiome.at(seed, x + 0.5, z + 0.5);
-            return endBiome(biome);
+            return endBiomeName(
+                biome == null ? "bare"
+                    : biome.name()
+                        .toLowerCase(Locale.ROOT));
         }
         return world.getBiomeGenForCoords(x, z).biomeName;
-    }
-
-    static String endBiome(EndBiome biome) {
-        return endBiomeName(
-            biome == null ? "bare"
-                : biome.name()
-                    .toLowerCase(Locale.ROOT));
     }
 
     static String endBiomeName(String name) {
