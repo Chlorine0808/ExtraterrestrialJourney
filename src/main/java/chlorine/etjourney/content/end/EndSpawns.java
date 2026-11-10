@@ -24,8 +24,6 @@ import cpw.mods.fml.common.registry.EntityRegistry;
 /** Lists ruled entities in the End's spawn list and turns away natural spawns their rule refuses. */
 public final class EndSpawns {
 
-    private static final int END = 1;
-
     private EndSpawns() {}
 
     public static void register() {
@@ -49,7 +47,7 @@ public final class EndSpawns {
     @SubscribeEvent
     public void onCheckSpawn(LivingSpawnEvent.CheckSpawn event) {
         World world = event.world;
-        if (world.isRemote || world.provider.dimensionId != END) return;
+        if (world.isRemote || world.provider.dimensionId != EndTerrain.DIMENSION) return;
         EntityTable.Entry entry = ModEntities.TABLE.byType(event.entityLiving.getClass());
         if (entry == null || entry.rule == null) return;
         Long seed = EndTerrain.seed();

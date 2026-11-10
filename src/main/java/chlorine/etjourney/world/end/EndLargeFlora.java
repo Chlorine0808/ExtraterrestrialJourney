@@ -19,7 +19,6 @@ import cpw.mods.fml.common.registry.GameRegistry;
 /** Grows the large plants at populate time, in the same window as EndFlora and before its small plants. */
 public final class EndLargeFlora implements IWorldGenerator {
 
-    private static final int END = 1;
     /** Farthest a block of the window lies from its centre, rounded up; large plants reach 8 past the window. */
     private static final int WINDOW_REACH = 20;
     private static final int MAX_HEADROOM = 64;
@@ -57,7 +56,7 @@ public final class EndLargeFlora implements IWorldGenerator {
     @Override
     public void generate(Random random, int chunkX, int chunkZ, World world, IChunkProvider generator,
         IChunkProvider provider) {
-        if (world.isRemote || world.provider.dimensionId != END) return;
+        if (world.isRemote || world.provider.dimensionId != EndTerrain.DIMENSION) return;
         int ox = chunkX * 16 + 8, oz = chunkZ * 16 + 8;
         if (Distance.planar(ox + 8, oz + 8) < EndTerrain.TERRAIN_START - WINDOW_REACH) return;
         long start = System.nanoTime();

@@ -4,22 +4,22 @@ import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.potion.Potion;
 import net.minecraft.potion.PotionEffect;
 
+import chlorine.etjourney.world.end.EndTerrain;
 import chlorine.etjourney.world.end.shoot.Camera;
 
 /** Server-side moves of the screenshot player: into the End, flying with night vision, and onto a camera. */
 public final class CameraPlacement {
 
-    private static final int END = 1;
     private static final int NIGHT_VISION_TICKS = 1_000_000;
 
     private CameraPlacement() {}
 
     public static boolean inEnd(EntityPlayerMP p) {
-        return p.dimension == END;
+        return p.dimension == EndTerrain.DIMENSION;
     }
 
     public static void toEnd(EntityPlayerMP p) {
-        if (!inEnd(p)) p.travelToDimension(END);
+        if (!inEnd(p)) p.travelToDimension(EndTerrain.DIMENSION);
     }
 
     /** Lets the player fly and keeps them flying, and gives night vision so caves and the far side are lit. */

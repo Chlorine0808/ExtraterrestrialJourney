@@ -19,7 +19,6 @@ import cpw.mods.fml.common.registry.GameRegistry;
 /** Sets the biome plants on the painted surfaces at populate time, in the window offset by 8 as vanilla does. */
 public final class EndFlora implements IWorldGenerator {
 
-    private static final int END = 1;
     /** Farthest a block of the window lies from its centre, rounded up. */
     private static final int WINDOW_REACH = 12;
     private static final EndBiome[] BIOMES = EndBiome.values();
@@ -46,7 +45,7 @@ public final class EndFlora implements IWorldGenerator {
     @Override
     public void generate(Random random, int chunkX, int chunkZ, World world, IChunkProvider generator,
         IChunkProvider provider) {
-        if (world.isRemote || world.provider.dimensionId != END) return;
+        if (world.isRemote || world.provider.dimensionId != EndTerrain.DIMENSION) return;
         int ox = chunkX * 16 + 8, oz = chunkZ * 16 + 8;
         if (Distance.planar(ox + 8, oz + 8) < EndTerrain.TERRAIN_START - WINDOW_REACH) return;
         long start = System.nanoTime();

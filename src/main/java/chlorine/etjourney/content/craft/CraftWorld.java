@@ -16,8 +16,6 @@ import chlorine.etjourney.world.end.noise.Distance;
 /** Turns stacks and places into what the recipe core reads, and recipe outputs back into stacks. */
 final class CraftWorld {
 
-    private static final int END = 1;
-
     private CraftWorld() {}
 
     static ItemKey key(ItemStack stack) {
@@ -48,7 +46,7 @@ final class CraftWorld {
      */
     static String biome(World world, int x, int z) {
         Long seed = EndTerrain.seed();
-        if (world.provider.dimensionId == END && seed != null
+        if (world.provider.dimensionId == EndTerrain.DIMENSION && seed != null
             && Distance.planar(x + 0.5, z + 0.5) >= EndTerrain.TERRAIN_START) {
             EndBiome biome = EndBiome.at(seed, x + 0.5, z + 0.5);
             return endBiome(biome);

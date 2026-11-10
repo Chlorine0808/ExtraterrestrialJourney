@@ -28,7 +28,6 @@ import chlorine.etjourney.world.end.reserve.Reservations;
 final class BuildCommand {
 
     static final String USAGE = "/etj build <place <name> [0|90|180|270]|list|find [id]|tp [id]>";
-    private static final int END = 1;
     private static final int FIND_RADIUS = 4096;
     /** Gap between the player and the near side of a placed building. */
     private static final int GAP = 3;
@@ -226,7 +225,7 @@ final class BuildCommand {
 
     /** The nearest generated building, or null after telling the player why there is none. */
     private static EndBuildings.Found nearest(EntityPlayerMP player, String id) {
-        if (player.dimension != END) {
+        if (player.dimension != EndTerrain.DIMENSION) {
             say(player, "Run this in the End");
             return null;
         }
