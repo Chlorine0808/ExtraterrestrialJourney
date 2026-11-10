@@ -6,6 +6,7 @@ import chlorine.etjourney.content.craft.CraftContent;
 import chlorine.etjourney.content.end.EndAcid;
 import chlorine.etjourney.content.end.EndBlocks;
 import chlorine.etjourney.content.end.EndBuildingContent;
+import chlorine.etjourney.content.end.EndEntities;
 import chlorine.etjourney.content.end.EndSpawns;
 import chlorine.etjourney.core.util.ModLog;
 
@@ -20,6 +21,7 @@ public final class ModContent {
         EndBlocks.preInit();
         EndAcid.preInit();
         CraftContent.preInit();
+        EndEntities.preInit();
         ModLog.LOG.debug("content: preInit");
     }
 
