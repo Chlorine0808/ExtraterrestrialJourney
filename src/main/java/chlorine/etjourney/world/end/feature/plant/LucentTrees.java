@@ -114,7 +114,7 @@ public final class LucentTrees {
                 if (hanging(block)) {
                     if (!open[0]) {
                         open[0] = true;
-                        run.start(y + 1, leaves.contains(pack(dx, dy + 1, dz)));
+                        run.start(y + 1, leaves.contains(PlantCells.pack(dx, dy + 1, dz)));
                     }
                     run.add(x, y, z, block);
                     if (block != EndBlock.LUCENT_VINE) {
@@ -123,7 +123,7 @@ public final class LucentTrees {
                     }
                 } else if (HangingRun.inside(sink, x, y, z) && sink.isAir(x, y, z)) {
                     sink.place(x, y, z, block);
-                    if (block == EndBlock.LUCENT_LEAVES) leaves.add(pack(dx, dy, dz));
+                    if (block == EndBlock.LUCENT_LEAVES) leaves.add(PlantCells.pack(dx, dy, dz));
                 }
             });
         }
@@ -131,10 +131,6 @@ public final class LucentTrees {
 
     private static boolean hanging(EndBlock b) {
         return b == EndBlock.LUCENT_VINE || b == EndBlock.LUCENT_VINE_LAST || b == EndBlock.LUCENT_LANTERN;
-    }
-
-    private static long pack(int dx, int dy, int dz) {
-        return ((long) (dx + 256) << 20) | ((long) (dy + 512) << 10) | (dz + 256);
     }
 
 }
