@@ -1,5 +1,7 @@
 package chlorine.etjourney.world.end.modifier;
 
+import static chlorine.etjourney.world.end.noise.ValueNoise.lerp;
+
 import chlorine.etjourney.world.end.noise.Distance;
 
 /**
@@ -87,9 +89,5 @@ public final class DensityField {
 
     private static int node(int i, int j, int k) {
         return (i * SIZE_Z + j) * SIZE_Y + k;
-    }
-
-    private static double lerp(double a, double b, double t) {
-        return a + (b - a) * t;
     }
 }
