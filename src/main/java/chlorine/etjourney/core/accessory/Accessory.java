@@ -13,4 +13,12 @@ public interface Accessory {
 
     /** The attribute modifiers this accessory gives while it counts. */
     default void addModifiers(ItemStack stack, EntityLivingBase wearer, AccessoryModifiers out) {}
+
+    /**
+     * Runs once a second on the server while it counts. Return the same stack to leave the slot alone, or a
+     * replacement, null to empty the slot.
+     */
+    default ItemStack tickWorn(ItemStack stack, EntityLivingBase wearer) {
+        return stack;
+    }
 }
