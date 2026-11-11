@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
+import chlorine.etjourney.compat.baubles.BaublesCompat;
 import chlorine.etjourney.compat.etfuturum.EtFuturumCompat;
 import chlorine.etjourney.compat.hee.HeeCompat;
 import chlorine.etjourney.compat.netherlicious.NetherliciousCompat;
@@ -31,6 +32,8 @@ public final class CompatManager {
     public static CompatManager createDefault() {
         // Lambdas rather than ::new so a module class is not resolved until its mod is known to be present.
         Map<String, Supplier<CompatModule>> factories = new LinkedHashMap<>();
+        // Required, so always present; it still lives here to keep Baubles' classes inside compat.
+        factories.put("Baubles", () -> new BaublesCompat());
         factories.put("Thaumcraft", () -> new ThaumcraftCompat());
         factories.put("netherlicious", () -> new NetherliciousCompat());
         factories.put("HardcoreEnderExpansion", () -> new HeeCompat());

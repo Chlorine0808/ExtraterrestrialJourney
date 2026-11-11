@@ -186,3 +186,15 @@ item.etjourney.light_chestplate.name=Light Chestplate
 item.etjourney.light_leggings.name=Light Leggings
 item.etjourney.light_boots.name=Light Boots
 entity.etjourney.spore_zombie.name=Spore Zombie
+
+# Talismans (accessories in ETJ's own Baubles slots)
+item.etjourney.sakura_gold_talisman.name=Sakura Gold Talisman
+item.etjourney.golden_palladium_talisman.name=Golden Palladium Talisman
+item.etjourney.drift_talisman.name=Drift Talisman
+item.etjourney.rhenium_talisman.name=Rhenium Talisman
+slot.etjourney_talisman=Talisman
+etjourney.tooltip.talisman.attack=+%s Attack Damage
+etjourney.tooltip.talisman.health=+%s Max Health
+etjourney.tooltip.talisman.speed=+%s%% Speed
+etjourney.tooltip.talisman.resist_flat=%1$s Damage: -%2$s
+etjourney.tooltip.talisman.wears=Wears out after %s more seconds worn

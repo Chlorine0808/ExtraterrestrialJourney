@@ -186,3 +186,15 @@ item.etjourney.light_chestplate.name=光のチェストプレート
 item.etjourney.light_leggings.name=光のレギンス
 item.etjourney.light_boots.name=光のブーツ
 entity.etjourney.spore_zombie.name=胞子ゾンビ
+
+# Talismans (accessories in ETJ's own Baubles slots)
+item.etjourney.sakura_gold_talisman.name=サクラゴールドのタリスマン
+item.etjourney.golden_palladium_talisman.name=ゴールデンパラジウムのタリスマン
+item.etjourney.drift_talisman.name=ドリフトのタリスマン
+item.etjourney.rhenium_talisman.name=レニウムのタリスマン
+slot.etjourney_talisman=タリスマン
+etjourney.tooltip.talisman.attack=攻撃力 +%s
+etjourney.tooltip.talisman.health=最大体力 +%s
+etjourney.tooltip.talisman.speed=移動速度 +%s%%
+etjourney.tooltip.talisman.resist_flat=%1$sダメージ −%2$s
+etjourney.tooltip.talisman.wears=あと %s 秒着けると壊れる
