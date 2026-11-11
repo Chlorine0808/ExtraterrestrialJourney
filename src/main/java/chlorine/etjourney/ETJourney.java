@@ -16,7 +16,7 @@ import cpw.mods.fml.common.event.FMLServerStartingEvent;
     name = ModInfo.NAME,
     version = Tags.VERSION,
     acceptedMinecraftVersions = "[1.7.10]",
-    dependencies = "after:HardcoreEnderExpansion;after:nova_craft")
+    dependencies = "required-after:Baubles|Expanded;after:HardcoreEnderExpansion;after:nova_craft")
 public class ETJourney {
 
     @SidedProxy(
