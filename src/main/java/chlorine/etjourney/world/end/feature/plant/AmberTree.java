@@ -11,7 +11,7 @@ import chlorine.etjourney.world.end.feature.sdf.SdfFill;
 import chlorine.etjourney.world.end.feature.sdf.Spline;
 import chlorine.etjourney.world.end.modifier.EndBlock;
 
-/** AMBER's seed tree: twisted strands hug a glowing drop, join into one trunk above it, and bear a few fruits. */
+/** AMBER's seed tree: two or three strands wind round a glowing drop, join above it, and bear a few fruits. */
 public final class AmberTree implements PlantCells.Bounds {
 
     /** Blocks the legs reach below their foot, so the tree does not float on a slope. */
@@ -22,6 +22,8 @@ public final class AmberTree implements PlantCells.Bounds {
     private static final int FIT_TRIES = 6;
     private static final int STRAND_POINTS = 10;
     private static final int REACH = 12;
+    /** How deep a strand's centre line sinks into the seed, as a share of its thickness. */
+    private static final double HUG_SINK = 0.15;
     private static final int[][] FACES = { { 1, 0, 0 }, { -1, 0, 0 }, { 0, 1, 0 }, { 0, -1, 0 }, { 0, 0, 1 },
         { 0, 0, -1 } };
 
@@ -106,31 +108,40 @@ public final class AmberTree implements PlantCells.Bounds {
                 2)
             .displace(LucentShapes.noise(r.nextLong(), 0.5));
 
-        // The strands: an uneven helix that spreads into legs, hugs the seed, and closes above it.
+        // The strands: two or three thick strands winding about a full turn round the seed, closing above it.
         double pick = r.nextDouble();
-        int strands = pick < 0.45 ? 4 : pick < 0.85 ? 5 : 6;
+        int strands = pick < 0.75 ? 2 : 3;
         double merge = tipY + (2.5 + r.nextDouble() * 1.5) * scale;
-        double twist = (0.6 + r.nextDouble() * 0.6) * (r.nextBoolean() ? 1 : -1);
+        // A third strand winds less, so the three cover the seed no more than two do.
+        double twist = (5.5 + r.nextDouble() * 1.5) * (r.nextBoolean() ? 1 : -1) * (strands == 2 ? 1 : 0.6);
         double start = r.nextDouble() * Math.PI * 2;
-        double legs = radius + 2.2 * scale;
-        double thick = 0.95, thin = 0.8;
+        double thick = 1.15, thin = 0.85;
         Sdf wood = null;
         List<List<double[]>> paths = new ArrayList<>();
         double lowest = 0;
         for (int s = 0; s < strands; s++) {
-            double a0 = start + (s + (r.nextDouble() - 0.5) * 0.5) * Math.PI * 2 / strands;
-            double turn = twist * (0.7 + r.nextDouble() * 0.6);
+            double a0 = start + (s + (r.nextDouble() - 0.5) * 0.3) * Math.PI * 2 / strands;
+            double turn = twist * (0.85 + r.nextDouble() * 0.3);
             double phase = r.nextDouble() * Math.PI * 2;
             List<double[]> path = new ArrayList<>();
             for (int k = 0; k < STRAND_POINTS; k++) {
                 double t = (double) k / (STRAND_POINTS - 1);
                 double y = t * merge;
-                double a = a0 + turn * t + 0.35 * Math.sin(phase + 5 * t);
+                // Below the equator the angle holds too, so the leg stands straight up from its foot.
+                double wind = Math.max(t, cy / merge);
+                double a = a0 + turn * wind + 0.2 * Math.sin(phase + 5 * wind);
                 double follow = Math.max(0, Math.min(1, (y - cy) / (tipY - cy)));
                 double ax = lx * follow, az = lz * follow;
-                double taper = legs + (thin - legs) * t;
-                double hug = t >= 1 ? 0 : clearance(seed, ax, y, az, a, thick + 0.3);
-                double d = Math.max(taper, hug);
+                double sink = -thick * HUG_SINK;
+                double d;
+                if (y <= tipY) {
+                    // Beside the seed the strand sinks into it; below the equator it drops straight to its foot.
+                    d = clearance(seed, ax, Math.max(y, cy), az, a, sink);
+                } else {
+                    // Above the tip it closes in on the trunk from where it left the seed.
+                    double atTip = clearance(seed, lx, tipY, lz, a, sink);
+                    d = atTip + (thin - atTip) * (y - tipY) / (merge - tipY);
+                }
                 path.add(new double[] { ax + Math.cos(a) * d, y, az + Math.sin(a) * d });
             }
             double[] foot = path.get(0);
@@ -214,7 +225,8 @@ public final class AmberTree implements PlantCells.Bounds {
             for (int k = 0; k < count; k++) {
                 double angle = a + (r.nextDouble() - 0.5) * 0.8;
                 double from = Math.hypot(foot[0], foot[2]);
-                double to = Math.min(9.8, from + (2.5 + r.nextDouble() * 1.5) * scale);
+                // The feet stand close in under the seed, so the roots carry the tree out to its old spread.
+                double to = Math.min(9.8, from + (4 + r.nextDouble() * 1.5) * scale);
                 List<double[]> root = new ArrayList<>();
                 root.add(new double[] { foot[0], 0, foot[2] });
                 for (int p = 1; p < 4; p++) {

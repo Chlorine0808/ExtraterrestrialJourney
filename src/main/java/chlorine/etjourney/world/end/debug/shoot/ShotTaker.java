@@ -412,6 +412,10 @@ final class ShotTaker {
             p.cameras.add(s.fixed);
             return p;
         }
+        if (s.tries != null) {
+            p.cameras.addAll(s.tries);
+            return p;
+        }
         switch (s.view) {
             case AERIAL:
                 // A target under the ground (an arc touch is a point of the tube, often inside the land) can only
@@ -490,8 +494,8 @@ final class ShotTaker {
             double d = Math.sqrt(dx * dx + dy * dy + dz * dz);
             dir = new double[] { dx / d, dy / d, dz / d };
             range = (int) Math.ceil(d);
-            // The ball's glass is the subject seen from outside, not its centre.
-            subject = s.view == View.OUTSIDE ? d - t.size : d;
+            // The ball's glass is the subject seen from outside, not its centre; a tree's crown is part of it.
+            subject = s.view == View.OUTSIDE ? d - t.size : d - s.depth;
         } else {
             dir = EtjArgs.lookDirection(c.yaw, 0);
             range = NEAR_RANGE;

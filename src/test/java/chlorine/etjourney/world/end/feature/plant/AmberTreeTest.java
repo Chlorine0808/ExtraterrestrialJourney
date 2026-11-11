@@ -65,6 +65,15 @@ class AmberTreeTest {
         return out;
     }
 
+    /** One horizontal step away from the body's centre (mx, mz), along the larger axis; null at the centre. */
+    private static int[] outward(long c, double mx, double mz) {
+        double ox = SdfFill.x(c) - mx, oz = SdfFill.z(c) - mz;
+        if (ox == 0 && oz == 0) return null;
+        int sx = Math.abs(ox) >= Math.abs(oz) ? (int) Math.signum(ox) : 0;
+        int sz = sx == 0 ? (int) Math.signum(oz) : 0;
+        return new int[] { sx, sz };
+    }
+
     @Test
     void sameSeedSameTree() {
         List<String> a = new ArrayList<>(), b = new ArrayList<>();
@@ -131,12 +140,9 @@ class AmberTreeTest {
             mz /= body.size();
             int shell = 0, open = 0;
             for (long c : body) {
-                int x = SdfFill.x(c), y = SdfFill.y(c), z = SdfFill.z(c);
-                double ox = x - mx, oz = z - mz;
-                if (ox == 0 && oz == 0) continue;
-                int sx = Math.abs(ox) >= Math.abs(oz) ? (int) Math.signum(ox) : 0;
-                int sz = sx == 0 ? (int) Math.signum(oz) : 0;
-                long out = SdfFill.key(x + sx, y, z + sz);
+                int[] step = outward(c, mx, mz);
+                if (step == null) continue;
+                long out = SdfFill.offset(c, step[0], 0, step[1]);
                 if (body.contains(out)) continue;
                 shell++;
                 if (m.get(out) != EndBlock.AMBER_ROOT) open++;
@@ -148,14 +154,47 @@ class AmberTreeTest {
     }
 
     @Test
+    void noAirBetweenSeedAndStrands() {
+        // A strand that hugs the seed touches it; air with wood just beyond it is the gap the user saw.
+        // Below y = 0 lies the flat ground, so no air shows there.
+        for (long i = 0; i < 100; i++) {
+            Map<Long, EndBlock> m = cells(tree(i));
+            Set<Long> body = pieces(m, EndBlock.AMBER_SEED).get(0);
+            double mx = 0, mz = 0;
+            for (long c : body) {
+                mx += SdfFill.x(c);
+                mz += SdfFill.z(c);
+            }
+            mx /= body.size();
+            mz /= body.size();
+            int shell = 0, gaps = 0;
+            for (long c : body) {
+                int[] step = outward(c, mx, mz);
+                if (step == null || SdfFill.y(c) < 0 || body.contains(SdfFill.offset(c, step[0], 0, step[1]))) continue;
+                shell++;
+                boolean air = false;
+                for (int k = 1; k <= 3; k++) {
+                    EndBlock b = m.get(SdfFill.offset(c, step[0] * k, 0, step[1] * k));
+                    if (b == null) air = true;
+                    else {
+                        if (air && b == EndBlock.AMBER_ROOT) gaps++;
+                        break;
+                    }
+                }
+            }
+            assertTrue(gaps <= shell * 0.08, "seed " + i + " gaps " + gaps + " of " + shell);
+        }
+    }
+
+    @Test
     void strandsVary() {
         Set<Integer> counts = new HashSet<>();
         for (long i = 0; i < 50; i++) {
             int n = tree(i).strands();
-            assertTrue(n >= 4 && n <= 6, "seed " + i);
+            assertTrue(n >= 2 && n <= 3, "seed " + i);
             counts.add(n);
         }
-        assertTrue(counts.size() >= 3);
+        assertEquals(2, counts.size());
     }
 
     @Test
@@ -179,6 +218,25 @@ class AmberTreeTest {
             }
         }
         assertTrue(fruits >= 40, "fruits " + fruits);
+    }
+
+    @Test
+    void legsStandOnTheGroundOnASlope() {
+        // Below the seed's equator a leg runs straight down, so on the downhill side it does not sweep out over
+        // lower ground. Higher up a strand winding round the seed may pass over air; a root stepping down the
+        // slope may leave a cell or two.
+        AmberTree.Ground slope = (dx, dz) -> Math.floorDiv(dx, 2) - 1;
+        int hanging = 0;
+        for (long i = 0; i < 100; i++) {
+            Map<Long, EndBlock> m = cells(AmberTree.of(seedOf(i), 250, slope));
+            for (Map.Entry<Long, EndBlock> e : m.entrySet()) {
+                long c = e.getKey();
+                int x = SdfFill.x(c), y = SdfFill.y(c), z = SdfFill.z(c);
+                if (e.getValue() != EndBlock.AMBER_ROOT || y > 0 || Math.hypot(x, z) > 6) continue;
+                if (y > slope.top(x, z) + 1 && !m.containsKey(SdfFill.offset(c, 0, -1, 0))) hanging++;
+            }
+        }
+        assertTrue(hanging <= 10, "hanging " + hanging);
     }
 
     @Test
@@ -224,15 +282,15 @@ class AmberTreeTest {
 
     @Test
     void nothingHangsIntoTheVoid() {
-        // Past x = 3 there is no ground; a leg's thickness may spill one block over the edge.
-        AmberTree.Ground edge = (dx, dz) -> dx > 3 ? -1060 : -1;
+        // Past x = 1 there is no ground; a leg's thickness may spill one block over the edge.
+        AmberTree.Ground edge = (dx, dz) -> dx > 1 ? -1060 : -1;
         int over = 0;
         for (long i = 0; i < 20; i++) {
             final long s = i;
             int[] n = { 0 };
             AmberTree.of(seedOf(i), 250, edge)
                 .forEach((dx, dy, dz, k) -> {
-                    if (dx < 5 || k != EndBlock.AMBER_ROOT) return;
+                    if (dx < 3 || k != EndBlock.AMBER_ROOT) return;
                     n[0]++;
                     assertTrue(dy >= -1, "seed " + s + " hangs to " + dy + " at x " + dx);
                 });

@@ -81,6 +81,18 @@ class LocatorTest {
     }
 
     @Test
+    void giantTreesDroppedByAReservationAreSkipped() {
+        // 20261109-021434, 8: the fourth tree stood beside a reserved island, so generation never grew it and the
+        // ground view found nowhere to stand.
+        Target nearest = LOCATOR.giantTrees(3000, 0, 1)
+            .get(0);
+        Area island = new Area("hee", nearest.x + 40, nearest.z, 20);
+        Locator reserved = new Locator(SAMPLER, (cx, cz) -> Collections.singletonList(island));
+        for (Target t : reserved.giantTrees(3000, 0, 3))
+            assertTrue(t.x != nearest.x || t.z != nearest.z, "kept the reserved tree");
+    }
+
+    @Test
     void arcTouchLiesOnTheGround() {
         Target t = LOCATOR.arcTouches(3000, 0, 1)
             .get(0);
@@ -170,7 +182,7 @@ class LocatorTest {
             assertTrue(keys.add(t.key));
             assertEquals(EndBiome.GROVE, SAMPLER.biome(t.x, t.z));
             assertEquals("巨木", t.label);
-            assertEquals(80, t.size, 0);
+            assertEquals(40, t.size, 0);
         }
     }
 }

@@ -15,6 +15,7 @@ import chlorine.etjourney.world.end.TerrainSampler;
 import chlorine.etjourney.world.end.feature.Continent;
 import chlorine.etjourney.world.end.feature.ContinentIds;
 import chlorine.etjourney.world.end.feature.EndBiome;
+import chlorine.etjourney.world.end.feature.Holes;
 import chlorine.etjourney.world.end.feature.StructureProbe;
 import chlorine.etjourney.world.end.region.RegionPicker;
 import chlorine.etjourney.world.end.region.Styles;
@@ -141,5 +142,40 @@ class GiantTreesTest {
             if (checked >= 3) break;
         }
         assertTrue(checked > 0);
+    }
+
+    /**
+     * No sinkhole funnel reaches under the roots: the funnel cuts the rock below the probe's ground, so the trunk would
+     * stop above a hollow. Seed 98 put a tree at 2216, -808 into one.
+     */
+    @Test
+    void notOverASinkhole() {
+        long seed = 98L;
+        TerrainSampler sampler = new TerrainSampler(seed, new RegionPicker(Styles.all()));
+        StructureProbe probe = sampler.standingProbe();
+        Set<Long> ids = new HashSet<>();
+        int trees = 0;
+        int reach = (int) (4000 / Continent.SEED_CELL);
+        for (int cx = -reach; cx <= reach; cx++) {
+            for (int cz = -reach; cz <= reach; cz++) {
+                Continent.Seed s = Continent.seedAt(seed, cx, cz);
+                if (s == null || Math.hypot(s.x, s.z) < 1500
+                    || Math.hypot(s.x, s.z) > 4000
+                    || !ids.add(ContinentIds.of(seed, s))) continue;
+                for (double[] a : GiantTrees.anchors(seed, s, probe)) {
+                    List<Holes.Hole> holes = Holes.near(seed, a[0], a[2], GiantTrees.FOOTPRINT, sampler.holeProbe());
+                    for (int dx = -GiantTrees.FOOTPRINT; dx <= GiantTrees.FOOTPRINT; dx += 2) {
+                        for (int dz = -GiantTrees.FOOTPRINT; dz <= GiantTrees.FOOTPRINT; dz += 2) {
+                            if (Math.hypot(dx, dz) > GiantTrees.FOOTPRINT) continue;
+                            double cut = Holes.cutFraction(seed, holes, a[0] + dx, a[2] + dz);
+                            assertEquals(0, cut, "sinkhole under the tree at " + a[0] + ", " + a[2]);
+                        }
+                    }
+                    trees++;
+                }
+            }
+        }
+        System.out.println("giant trees: " + trees + " clear of sinkholes");
+        assertTrue(trees >= 5, "only " + trees + " trees");
     }
 }

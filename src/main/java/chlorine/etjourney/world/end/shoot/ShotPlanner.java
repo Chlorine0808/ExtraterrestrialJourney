@@ -64,16 +64,24 @@ public final class ShotPlanner {
                     add(out, spec, "山", locator.mountains(spec.minTop, ox, oz, spec.count));
                     break;
                 case GIANT_TREE:
-                    add(out, spec, "巨木", locator.giantTrees(ox, oz, spec.count));
+                    addTrees(
+                        out,
+                        spec,
+                        "巨木",
+                        locator.giantTrees(ox, oz, spec.count),
+                        Framing.GIANT_TREE,
+                        sampler.standingProbe()::surface);
                     break;
                 case GLOWSHROOM:
                     addGlowshrooms(out, spec, locator.glowshrooms(spec.arg.equals("GIANT"), ox, oz, spec.count));
                     break;
                 case AMBER_TREE:
-                    addAmberTrees(
+                    addTrees(
                         out,
                         spec,
+                        "タネの木",
                         locator.amberTrees(spec.style, ox, oz, spec.count),
+                        Framing.SEED_TREE,
                         sampler.standingProbe()::surface);
                     break;
                 case LAKE:
@@ -108,6 +116,7 @@ public final class ShotPlanner {
     /** The camera of the first attempt, or null without a target; INSIDE stands at the ball's centre for now. */
     public static Camera firstCamera(PlannedShot s, Framing.BiomeAt biomes) {
         if (s.fixed != null) return s.fixed;
+        if (s.tries != null) return s.tries.get(0);
         Target t = s.target;
         if (t == null) return null;
         switch (s.view) {
@@ -141,26 +150,47 @@ public final class ShotPlanner {
         }
     }
 
-    /** Like add, but both views stand off the tree and look back at the seed. */
-    private static void addAmberTrees(List<PlannedShot> out, ShotSpec spec, List<Target> found,
-        Framing.GroundAt ground) {
+    /** A seed tree's aerial views stand this far from the middle of the tree. */
+    private static final double SEED_TREE_AERIAL = 32;
+
+    /**
+     * Like add, but both views try several stand-offs looking back at the tree. The aerial target is raised to the
+     * frame's aim on the tree; the ground one keeps the root, which its views stand off from.
+     */
+    private static void addTrees(List<PlannedShot> out, ShotSpec spec, String prefix, List<Target> found,
+        Framing.TreeFrame frame, Framing.GroundAt ground) {
         for (int n = 0; n < spec.count; n++) {
-            Target t = n < found.size() ? found.get(n) : null;
+            Target root = n < found.size() ? found.get(n) : null;
             for (View v : spec.views) {
-                Camera fixed = null;
-                if (t != null) fixed = v == View.GROUND ? Framing.treeGround(t, ground)
-                    : new Camera(t.x + 18, t.y + 20, t.z, 90f, 40f);
+                Target t = root;
+                List<Camera> tries = null;
+                double depth = 0;
+                if (root != null && v == View.GROUND) tries = Framing.treeGrounds(root, ground, frame);
+                else if (root != null) {
+                    t = new Target(root.label, root.x, root.y + frame.aim, root.z, root.size, root.key);
+                    tries = treeAerials(t, frame);
+                    depth = frame.reach;
+                }
                 out.add(
                     new PlannedShot(
-                        "タネの木 " + (n + 1),
+                        prefix + " " + (n + 1),
                         out.size() + 1,
                         v,
                         t,
-                        fixed,
                         null,
-                        t == null ? NOT_FOUND : null));
+                        tries,
+                        depth,
+                        null,
+                        root == null ? NOT_FOUND : null));
             }
         }
+    }
+
+    private static List<Camera> treeAerials(Target aim, Framing.TreeFrame frame) {
+        if (frame == Framing.SEED_TREE) return Framing.treeAerials(aim, SEED_TREE_AERIAL);
+        List<Camera> tries = new ArrayList<>();
+        for (int i = 0; i < Framing.AERIAL_ATTEMPTS; i++) tries.add(Framing.aerial(aim, i));
+        return tries;
     }
 
     /** Like add, but the ground view stands 0.7 cap radius off the stem and looks up at the gills. */

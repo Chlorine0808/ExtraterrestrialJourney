@@ -26,6 +26,11 @@ public interface StructureProbe {
         return false;
     }
 
+    /** Whether a sinkhole may cut the rock within range of (x, z); only the standing probe knows the holes. */
+    default boolean holed(double x, double z, double range) {
+        return false;
+    }
+
     /** Centre of style region cell (cx, cz), whose cells are REGION_CELL wide; plain cell centres by default. */
     default double[] regionCentre(int cx, int cz) {
         return new double[] { (cx + 0.5) * REGION_CELL, (cz + 0.5) * REGION_CELL };
