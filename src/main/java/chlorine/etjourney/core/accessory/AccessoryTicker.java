@@ -2,14 +2,18 @@ package chlorine.etjourney.core.accessory;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.WeakHashMap;
 
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.ai.attributes.AttributeModifier;
 import net.minecraft.entity.ai.attributes.BaseAttributeMap;
 import net.minecraft.entity.ai.attributes.IAttributeInstance;
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 
+import chlorine.etjourney.core.accessory.model.Cadence;
 import chlorine.etjourney.core.accessory.model.ModifierPlan;
 import cpw.mods.fml.common.FMLCommonHandler;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
@@ -17,6 +21,9 @@ import cpw.mods.fml.common.gameevent.TickEvent;
 
 /** Runs the accessory effects on the server: matches modifiers every half second and ticks each accessory. */
 public final class AccessoryTicker {
+
+    /** Wear and sync cadences per player. */
+    private final Map<EntityPlayer, Cadence[]> cadences = new WeakHashMap<>();
 
     private AccessoryTicker() {}
 
@@ -26,12 +33,17 @@ public final class AccessoryTicker {
             .register(new AccessoryTicker());
     }
 
+    /**
+     * Counts world time rather than the player's age: right after joining, a server player's tick event fired
+     * several times on one age and never on others, which would wear an accessory several times a second.
+     */
     @SubscribeEvent
     public void onPlayerTick(TickEvent.PlayerTickEvent event) {
         if (event.phase != TickEvent.Phase.END || event.player.worldObj.isRemote) return;
-        int age = event.player.ticksExisted;
-        if (age % 20 == 0) tickWorn(event.player);
-        if (age % 10 == 0) syncModifiers(event.player);
+        Cadence[] c = cadences.computeIfAbsent(event.player, p -> new Cadence[] { new Cadence(20), new Cadence(10) });
+        long now = event.player.worldObj.getTotalWorldTime();
+        if (c[0].due(now)) tickWorn(event.player);
+        if (c[1].due(now)) syncModifiers(event.player);
     }
 
     private static void tickWorn(EntityLivingBase living) {
