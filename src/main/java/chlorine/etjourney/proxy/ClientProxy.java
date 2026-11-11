@@ -3,7 +3,9 @@ package chlorine.etjourney.proxy;
 import org.lwjgl.opengl.Display;
 
 import chlorine.etjourney.content.craft.CraftRenderers;
+import chlorine.etjourney.content.end.EndEntityRenderers;
 import chlorine.etjourney.content.end.FurRenderer;
+import chlorine.etjourney.content.end.spawncheck.SpawnCheck;
 import chlorine.etjourney.content.entity.EntityRenderers;
 import chlorine.etjourney.core.util.WindowTitle;
 import chlorine.etjourney.world.end.debug.damagecheck.DamageCheck;
@@ -23,12 +25,14 @@ public class ClientProxy extends CommonProxy {
     @Override
     public void init(FMLInitializationEvent event) {
         super.init(event);
+        EndEntityRenderers.init();
         EntityRenderers.init();
         CraftRenderers.init();
         FurRenderer.init();
         WindPush.register();
         ShootHarness.startIfRequested();
         DamageCheck.startIfRequested();
+        SpawnCheck.startIfRequested();
         tagWindow();
     }
 

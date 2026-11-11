@@ -49,7 +49,7 @@ public final class EndSearch {
     }
 
     /** Nearest continent seed standing on land that wears the biome, as {x, z}, within RADIUS. */
-    static double[] nearestBiome(TerrainSampler sampler, EndBiome target, double ox, double oz) {
+    public static double[] nearestBiome(TerrainSampler sampler, EndBiome target, double ox, double oz) {
         long seed = sampler.seed();
         return nearestInCells(Continent.SEED_CELL, ox, oz, (cx, cz) -> {
             Continent.Seed s = Continent.seedAt(seed, cx, cz);
