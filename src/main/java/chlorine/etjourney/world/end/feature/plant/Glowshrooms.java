@@ -188,7 +188,7 @@ public final class Glowshrooms {
     /** Writes the anchors' cells that fall in the sink, in list order, into air only; fur runs as HangingRun judges. */
     public static void draw(List<Anchor> anchors, BlockSink sink) {
         for (Anchor a : anchors) {
-            if (!touches(a, sink)) continue;
+            if (!PlantCells.touches(a.x, a.y, a.z, a.shape, sink)) continue;
             final HangingRun run = new HangingRun(sink, 4);
             final Set<Long> gills = new HashSet<>();
             final boolean[] open = { false };
@@ -217,14 +217,5 @@ public final class Glowshrooms {
             });
             run.flush();
         }
-    }
-
-    /** Whether the anchor's bounding box meets the sink's volume. */
-    private static boolean touches(Anchor a, BlockSink s) {
-        return a.x + a.shape.maxX() >= s.originX() && a.x + a.shape.minX() < s.originX() + s.width()
-            && a.z + a.shape.maxZ() >= s.originZ()
-            && a.z + a.shape.minZ() < s.originZ() + s.width()
-            && a.y + a.shape.maxY() >= s.minY()
-            && a.y + a.shape.minY() < s.maxY();
     }
 }

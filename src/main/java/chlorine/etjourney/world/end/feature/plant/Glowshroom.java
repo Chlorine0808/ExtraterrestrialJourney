@@ -15,7 +15,7 @@ import chlorine.etjourney.world.end.noise.OpenSimplex2D;
  * BetterEnd's mossy glowshroom at full size (a cap about 36 wide at scale 1), built from the same SDF graph as
  * {@code MossyGlowshroomFeature} and {@code GiantMossyGlowshroomStructure}.
  */
-public final class Glowshroom {
+public final class Glowshroom implements PlantCells.Bounds {
 
     /** Blocks the stem's foot reaches below the root. */
     public static final int SINK = 6;
@@ -200,26 +200,32 @@ public final class Glowshroom {
         return stemLength;
     }
 
+    @Override
     public int minX() {
         return minX;
     }
 
+    @Override
     public int maxX() {
         return maxX;
     }
 
+    @Override
     public int minY() {
         return minY;
     }
 
+    @Override
     public int maxY() {
         return maxY;
     }
 
+    @Override
     public int minZ() {
         return minZ;
     }
 
+    @Override
     public int maxZ() {
         return maxZ;
     }
