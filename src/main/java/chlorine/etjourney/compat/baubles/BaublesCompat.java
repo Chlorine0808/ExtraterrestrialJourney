@@ -5,6 +5,7 @@ import chlorine.etjourney.compat.CompatModule;
 import chlorine.etjourney.content.accessory.Talisman;
 import chlorine.etjourney.core.accessory.WornAccessories;
 import chlorine.etjourney.core.util.ModLog;
+import chlorine.etjourney.world.end.debug.damagecheck.DamageCheckServer;
 import cpw.mods.fml.common.registry.GameRegistry;
 
 /** Baubles Expanded integration: ETJ's own two talisman slots, the talisman items and the worn lister. */
@@ -23,5 +24,10 @@ public final class BaublesCompat implements CompatModule {
         for (Talisman talisman : Talisman.values())
             GameRegistry.registerItem(new TalismanItem(talisman), talisman.name);
         WornAccessories.install(new BaublesWorn());
+    }
+
+    @Override
+    public void init() {
+        if (DamageCheckServer.requested()) AccessoryCheck.register();
     }
 }

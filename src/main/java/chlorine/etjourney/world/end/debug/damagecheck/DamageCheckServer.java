@@ -6,6 +6,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import net.minecraft.entity.monster.EntityZombie;
 import net.minecraft.entity.player.EntityPlayer;
@@ -61,7 +62,24 @@ public final class DamageCheckServer {
     /** Makes a registered resistance source halve chaos on the player. */
     private static volatile boolean halveChaos;
 
+    /** Other checks that change the player and must finish before the hits start. */
+    private static final AtomicInteger HOLDS = new AtomicInteger();
+
     private DamageCheckServer() {}
+
+    /** Whether this run is the damage check; other checks may join it. */
+    public static boolean requested() {
+        return Boolean.getBoolean("etj.damageCheck");
+    }
+
+    /** Holds the hits back until {@link #release()}. */
+    public static void hold() {
+        HOLDS.incrementAndGet();
+    }
+
+    public static void release() {
+        HOLDS.decrementAndGet();
+    }
 
     static void register() {
         ResistanceSources.register((target, out) -> {
@@ -96,7 +114,7 @@ public final class DamageCheckServer {
     @SubscribeEvent
     public void onPlayerTick(TickEvent.PlayerTickEvent event) {
         if (started || event.phase != TickEvent.Phase.END || event.player.worldObj.isRemote) return;
-        if (event.player.ticksExisted < JOIN_TICKS) return;
+        if (event.player.ticksExisted < JOIN_TICKS || HOLDS.get() > 0) return;
         started = true;
         EntityPlayerMP player = (EntityPlayerMP) event.player;
         try {
