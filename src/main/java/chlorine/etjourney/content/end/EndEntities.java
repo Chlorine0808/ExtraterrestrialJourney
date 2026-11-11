@@ -14,7 +14,7 @@ public final class EndEntities {
     private EndEntities() {}
 
     public static void preInit() {
-        // Weight 4 against the enderman's 10: the spore zombie's own cap keeps its share of MYCELIA's mobs near a fifth.
+        // Weight 4 against the enderman's 10; the zombie's own cap keeps it near a fifth of MYCELIA's mobs.
         ModEntities.register(
             SPORE_ZOMBIE,
             EntitySporeZombie.class,
