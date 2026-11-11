@@ -41,8 +41,9 @@ public final class WornAccessories {
 
     private WornAccessories() {}
 
+    /** Null puts back the empty provider. */
     public static void install(Provider slots) {
-        provider = slots;
+        provider = slots == null ? NONE : slots;
     }
 
     public static List<ItemStack> of(EntityLivingBase living) {

@@ -6,9 +6,10 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.item.ItemStack;
 
+import chlorine.etjourney.core.accessory.WornAccessories;
 import chlorine.etjourney.core.damage.model.Resistance;
 
-/** Where a defender's resistance comes from; creatures and worn armor are registered from the start. */
+/** Where a defender's resistance comes from; creatures, worn armor and accessories are registered from the start. */
 public final class ResistanceSources {
 
     /** Adds what one source grants to the target. */
@@ -18,6 +19,14 @@ public final class ResistanceSources {
     }
 
     private static final List<Source> SOURCES = new CopyOnWriteArrayList<>();
+
+    /** Counted accessories only, so two copies of one accessory resist once. */
+    static final Source ACCESSORIES = (target, out) -> {
+        for (ItemStack stack : WornAccessories.of(target)) {
+            if (stack.getItem() instanceof ElementalAccessory)
+                ((ElementalAccessory) stack.getItem()).addResistance(stack, target, out);
+        }
+    };
 
     static {
         register(
@@ -31,6 +40,7 @@ public final class ResistanceSources {
                     ((ElementalArmor) stack.getItem()).addResistance(stack, target, out);
             }
         });
+        register(ACCESSORIES);
     }
 
     private ResistanceSources() {}
