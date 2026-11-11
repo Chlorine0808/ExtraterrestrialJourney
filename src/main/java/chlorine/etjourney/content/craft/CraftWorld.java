@@ -11,7 +11,6 @@ import net.minecraftforge.oredict.OreDictionary;
 
 import chlorine.etjourney.world.end.EndTerrain;
 import chlorine.etjourney.world.end.feature.EndBiome;
-import chlorine.etjourney.world.end.noise.Distance;
 
 /** Turns stacks and places into what the recipe core reads, and recipe outputs back into stacks. */
 final class CraftWorld {
@@ -46,8 +45,7 @@ final class CraftWorld {
      */
     static String biome(World world, int x, int z) {
         Long seed = EndTerrain.seed();
-        if (world.provider.dimensionId == EndTerrain.DIMENSION && seed != null
-            && Distance.planar(x + 0.5, z + 0.5) >= EndTerrain.TERRAIN_START) {
+        if (world.provider.dimensionId == EndTerrain.DIMENSION && seed != null && EndTerrain.inTerrain(x, z)) {
             EndBiome biome = EndBiome.at(seed, x + 0.5, z + 0.5);
             return endBiomeName(
                 biome == null ? "bare"

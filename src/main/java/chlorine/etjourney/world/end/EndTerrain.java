@@ -74,6 +74,11 @@ public final class EndTerrain {
         return new long[] { fields == 0 ? 0 : DENSITY_NANOS.get() / fields / 1000, fields };
     }
 
+    /** Whether the block column at (x, z) lies in the outer End, where the terrain engine draws. */
+    public static boolean inTerrain(int x, int z) {
+        return Distance.planar(x + 0.5, z + 0.5) >= TERRAIN_START;
+    }
+
     private static boolean outside(int chunkX, int chunkZ) {
         return Distance.planar(chunkX * 16 + 8, chunkZ * 16 + 8) >= TERRAIN_START;
     }

@@ -16,7 +16,6 @@ import chlorine.etjourney.content.entity.SpawnSite;
 import chlorine.etjourney.core.config.ETJConfig;
 import chlorine.etjourney.world.end.EndTerrain;
 import chlorine.etjourney.world.end.feature.EndBiome;
-import chlorine.etjourney.world.end.noise.Distance;
 import cpw.mods.fml.common.eventhandler.Event;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import cpw.mods.fml.common.registry.EntityRegistry;
@@ -64,7 +63,7 @@ public final class EndSpawns {
         int nearby = world.getEntitiesWithinAABB(event.entityLiving.getClass(), box)
             .size();
         return new SpawnSite(
-            Distance.planar(x + 0.5, z + 0.5) >= EndTerrain.TERRAIN_START,
+            EndTerrain.inTerrain(x, z),
             EndBiome.at(seed, x + 0.5, z + 0.5),
             y,
             world.getBlockLightValue(x, y, z),
