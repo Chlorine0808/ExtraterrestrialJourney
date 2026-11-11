@@ -36,7 +36,6 @@ import cpw.mods.fml.common.registry.GameRegistry;
 /** The End buildings: registered kinds, laid out per cell and written at populate time, one window at a time. */
 public final class EndBuildings implements IWorldGenerator {
 
-    private static final int END = 1;
     private static final List<BuildingKind> KINDS = new ArrayList<>();
     private static final List<RoomSet> ROOM_SETS = new ArrayList<>();
     /** What generation reads: the jar only, so a world comes out the same on every install. */
@@ -102,7 +101,7 @@ public final class EndBuildings implements IWorldGenerator {
     @Override
     public void generate(Random random, int chunkX, int chunkZ, World world, IChunkProvider generator,
         IChunkProvider provider) {
-        if (world.isRemote || world.provider.dimensionId != END) return;
+        if (world.isRemote || world.provider.dimensionId != EndTerrain.DIMENSION) return;
         Long seed = EndTerrain.seed();
         if (seed == null) return;
         int ox = chunkX * 16 + 8, oz = chunkZ * 16 + 8;

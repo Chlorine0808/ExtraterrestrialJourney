@@ -8,7 +8,7 @@ import java.util.function.Predicate;
 import chlorine.etjourney.world.end.modifier.builtin.CloudModifiers;
 import chlorine.etjourney.world.end.modifier.builtin.StyleModifiers;
 
-/** The terrain styles carried over from the spike, as bases and overlays. Core modifiers are not listed here. */
+/** Every terrain style, as bases and overlays. Core modifiers are not listed here. */
 public final class Styles {
 
     /** Chance of each overlay per region; with about 25 overlays a region gets one on average. */

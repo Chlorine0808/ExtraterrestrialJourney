@@ -16,15 +16,12 @@ import chlorine.etjourney.content.entity.SpawnSite;
 import chlorine.etjourney.core.config.ETJConfig;
 import chlorine.etjourney.world.end.EndTerrain;
 import chlorine.etjourney.world.end.feature.EndBiome;
-import chlorine.etjourney.world.end.noise.Distance;
 import cpw.mods.fml.common.eventhandler.Event;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import cpw.mods.fml.common.registry.EntityRegistry;
 
 /** Lists ruled entities in the End's spawn list and turns away natural spawns their rule refuses. */
 public final class EndSpawns {
-
-    private static final int END = 1;
 
     private EndSpawns() {}
 
@@ -49,7 +46,7 @@ public final class EndSpawns {
     @SubscribeEvent
     public void onCheckSpawn(LivingSpawnEvent.CheckSpawn event) {
         World world = event.world;
-        if (world.isRemote || world.provider.dimensionId != END) return;
+        if (world.isRemote || world.provider.dimensionId != EndTerrain.DIMENSION) return;
         EntityTable.Entry entry = ModEntities.TABLE.byType(event.entityLiving.getClass());
         if (entry == null || entry.rule == null) return;
         Long seed = EndTerrain.seed();
@@ -66,7 +63,7 @@ public final class EndSpawns {
         int nearby = world.getEntitiesWithinAABB(event.entityLiving.getClass(), box)
             .size();
         return new SpawnSite(
-            Distance.planar(x + 0.5, z + 0.5) >= EndTerrain.TERRAIN_START,
+            EndTerrain.inTerrain(x, z),
             EndBiome.at(seed, x + 0.5, z + 0.5),
             y,
             world.getBlockLightValue(x, y, z),

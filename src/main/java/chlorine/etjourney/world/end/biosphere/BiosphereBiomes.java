@@ -24,7 +24,6 @@ import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 /** Gives each biosphere's columns its sample's biomes as the End chunk is made, so grass and leaves match. */
 public final class BiosphereBiomes {
 
-    private static final int END = 1;
     /** Balls whose site is kept; one ball spans about 25 chunks, made close together. */
     private static final int SITES = 64;
     /** Stands for a ball with no site in the map, which holds no nulls. */
@@ -49,7 +48,7 @@ public final class BiosphereBiomes {
         Chunk chunk = event.getChunk();
         World world = chunk.worldObj;
         // Only a chunk not yet populated, so the biomes are in place before it is ever sent to a client.
-        if (world.isRemote || world.provider.dimensionId != END || chunk.isTerrainPopulated) return;
+        if (world.isRemote || world.provider.dimensionId != EndTerrain.DIMENSION || chunk.isTerrainPopulated) return;
         int ox = chunk.xPosition * 16, oz = chunk.zPosition * 16;
         if (Distance.planar(ox + 8, oz + 8) < EndTerrain.TERRAIN_START) return;
         Long seed = EndTerrain.seed();
@@ -71,7 +70,7 @@ public final class BiosphereBiomes {
     @SubscribeEvent
     public void onWorldLoad(WorldEvent.Load event) {
         World world = event.world;
-        if (!ETJConfig.biomeColors || world.isRemote || world.provider.dimensionId != END) return;
+        if (!ETJConfig.biomeColors || world.isRemote || world.provider.dimensionId != EndTerrain.DIMENSION) return;
         // The fields, not setRainStrength and setThunderStrength: those exist on the client only.
         world.prevRainingStrength = world.rainingStrength = 0;
         world.prevThunderingStrength = world.thunderingStrength = 0;
@@ -84,7 +83,7 @@ public final class BiosphereBiomes {
     @SubscribeEvent
     public void onPotentialSpawns(WorldEvent.PotentialSpawns event) {
         World world = event.world;
-        if (!ETJConfig.biomeColors || world.isRemote || world.provider.dimensionId != END) return;
+        if (!ETJConfig.biomeColors || world.isRemote || world.provider.dimensionId != EndTerrain.DIMENSION) return;
         try {
             BiomeGenBase own = world.getWorldChunkManager()
                 .getBiomeGenAt(event.x, event.z);

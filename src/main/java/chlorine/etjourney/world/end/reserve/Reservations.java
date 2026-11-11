@@ -9,6 +9,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 import chlorine.etjourney.world.end.noise.Distance;
 import chlorine.etjourney.world.end.noise.Fractal;
+import chlorine.etjourney.world.end.noise.ValueNoise;
 import chlorine.etjourney.world.end.noise.Warp;
 
 /** Registered reservation providers, a per-region cache of their areas, and how areas suppress our terrain. */
@@ -120,7 +121,7 @@ public final class Reservations {
             if (real <= footprint) return 1;
             if (real < footprint + FOOTPRINT_FADE) {
                 double t = (real - footprint) / FOOTPRINT_FADE;
-                best = Math.max(best, 1 - t * t * (3 - 2 * t));
+                best = Math.max(best, 1 - ValueNoise.smooth(t));
             }
             if (real >= area.radius * (1 + WOBBLE) + FADE + 30) continue;
             long s = Double.doubleToLongBits(area.x) * 31 + Double.doubleToLongBits(area.z);
@@ -130,7 +131,7 @@ public final class Reservations {
             if (d <= radius) return 1;
             if (d >= radius + FADE) continue;
             double t = (d - radius) / FADE;
-            best = Math.max(best, 1 - t * t * (3 - 2 * t));
+            best = Math.max(best, 1 - ValueNoise.smooth(t));
         }
         return best;
     }

@@ -22,7 +22,6 @@ import cpw.mods.fml.common.gameevent.TickEvent;
 /** Cuts the biospheres ahead of the players in the End, a few milliseconds a tick, so populate finds them ready. */
 public final class CutoutPrefetch {
 
-    private static final int END = 1;
     /** Time a tick may spend on the job in hand. */
     private static final long BUDGET_NANOS = 10_000_000L;
     /** Ticks between looks for the next ball to cut. */
@@ -55,7 +54,7 @@ public final class CutoutPrefetch {
         }
         if (++ticks < SCAN_TICKS) return;
         ticks = 0;
-        WorldServer end = DimensionManager.getWorld(END);
+        WorldServer end = DimensionManager.getWorld(EndTerrain.DIMENSION);
         if (end == null || seed == null || end.playerEntities.isEmpty()) return;
         cache.forSeed(seed);
         List<double[]> players = new ArrayList<>();

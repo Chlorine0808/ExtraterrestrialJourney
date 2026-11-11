@@ -31,10 +31,6 @@ public final class BlockRef {
         return new BlockRef(parts[0] + ":" + parts[1], meta, loot);
     }
 
-    public BlockRef withMeta(int meta) {
-        return new BlockRef(name, meta, loot);
-    }
-
     @Override
     public String toString() {
         return name + ":" + meta;

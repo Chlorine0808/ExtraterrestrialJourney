@@ -29,7 +29,8 @@ public final class EndTerrain {
 
     /** Inside this radius the vanilla generator keeps the central island. */
     public static final double TERRAIN_START = 400;
-    private static final int END = 1;
+    /** The End's dimension id. */
+    public static final int DIMENSION = 1;
 
     private static final PlanCache PLANS = new PlanCache();
     private static volatile TerrainSampler sampler;
@@ -73,6 +74,11 @@ public final class EndTerrain {
         return new long[] { fields == 0 ? 0 : DENSITY_NANOS.get() / fields / 1000, fields };
     }
 
+    /** Whether the block column at (x, z) lies in the outer End, where the terrain engine draws. */
+    public static boolean inTerrain(int x, int z) {
+        return Distance.planar(x + 0.5, z + 0.5) >= TERRAIN_START;
+    }
+
     private static boolean outside(int chunkX, int chunkZ) {
         return Distance.planar(chunkX * 16 + 8, chunkZ * 16 + 8) >= TERRAIN_START;
     }
@@ -91,7 +97,7 @@ public final class EndTerrain {
                 ? event.noisefield
                 : new double[DensityBuilder.SIZE_X * DensityBuilder.SIZE_Y * DensityBuilder.SIZE_Z];
         long start = System.nanoTime();
-        ChunkPlan plan = plan(event.chunkProvider, DimensionManager.getWorld(END), seed, chunkX, chunkZ);
+        ChunkPlan plan = plan(event.chunkProvider, DimensionManager.getWorld(DIMENSION), seed, chunkX, chunkZ);
         // The plan keeps the grid: the block pass reads it again to roughen steep faces.
         System.arraycopy(plan.densityField(false, true), 0, field, 0, field.length);
         DENSITY_NANOS.addAndGet(System.nanoTime() - start);
@@ -102,8 +108,8 @@ public final class EndTerrain {
 
     @SubscribeEvent
     public void onReplaceBiomeBlocks(ChunkProviderEvent.ReplaceBiomeBlocks event) {
-        if (event.world == null || event.world.provider.dimensionId != END || event.blockArray.length != 16 * 16 * 128)
-            return;
+        if (event.world == null || event.world.provider.dimensionId != DIMENSION
+            || event.blockArray.length != 16 * 16 * 128) return;
         if (!outside(event.chunkX, event.chunkZ)) return;
         Long seed = seed();
         if (seed == null) return;
@@ -115,7 +121,7 @@ public final class EndTerrain {
     public void onChunkLoad(ChunkEvent.Load event) {
         Chunk chunk = event.getChunk();
         World world = chunk.worldObj;
-        if (world.isRemote || world.provider.dimensionId != END || chunk.isTerrainPopulated) return;
+        if (world.isRemote || world.provider.dimensionId != DIMENSION || chunk.isTerrainPopulated) return;
         if (!outside(chunk.xPosition, chunk.zPosition)) return;
         Long seed = seed();
         if (seed == null) return;

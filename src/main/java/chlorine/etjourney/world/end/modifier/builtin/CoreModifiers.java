@@ -14,6 +14,7 @@ import chlorine.etjourney.world.end.modifier.ChunkArea;
 import chlorine.etjourney.world.end.modifier.ColumnState;
 import chlorine.etjourney.world.end.modifier.Modifier;
 import chlorine.etjourney.world.end.modifier.TerrainView;
+import chlorine.etjourney.world.end.noise.ValueNoise;
 
 /** Column modifiers every region runs at full weight; PLAINS is these alone. */
 public final class CoreModifiers {
@@ -75,7 +76,7 @@ public final class CoreModifiers {
         double[] w = Continent.warped(area.seed, s.x, s.z);
         double rise = Mountains.rise(view.mountains(), w[0], w[1]);
         if (rise <= 0) return;
-        double interior = s.interior * s.interior * (3 - 2 * s.interior);
+        double interior = ValueNoise.smooth(s.interior);
         s.rise += rise * (0.65 + 0.6 * Relief.ridges(area.seed, s.x, s.z))
             * interior
             * (1 - s.suppression)

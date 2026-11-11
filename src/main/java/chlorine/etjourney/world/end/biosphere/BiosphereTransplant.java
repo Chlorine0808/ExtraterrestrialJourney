@@ -25,7 +25,6 @@ import cpw.mods.fml.common.registry.GameRegistry;
 /** Fills each biosphere at populate time, window by window, from the terrain cut for it. */
 public final class BiosphereTransplant implements IWorldGenerator {
 
-    private static final int END = 1;
     /** Cut-outs kept at once; each is about 1.7 MB. */
     private static final int CACHED = 16;
 
@@ -44,7 +43,7 @@ public final class BiosphereTransplant implements IWorldGenerator {
     @Override
     public void generate(Random random, int chunkX, int chunkZ, World world, IChunkProvider generator,
         IChunkProvider provider) {
-        if (world.isRemote || world.provider.dimensionId != END) return;
+        if (world.isRemote || world.provider.dimensionId != EndTerrain.DIMENSION) return;
         int ox = chunkX * 16 + 8, oz = chunkZ * 16 + 8;
         if (Distance.planar(ox + 8, oz + 8) < EndTerrain.TERRAIN_START) return;
         Long seed = EndTerrain.seed();

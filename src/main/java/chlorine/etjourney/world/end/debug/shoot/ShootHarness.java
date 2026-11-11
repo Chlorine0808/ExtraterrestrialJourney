@@ -184,7 +184,7 @@ public final class ShootHarness {
                 stage = Stage.JOINING;
                 break;
             case JOINING:
-                if (!inEnd || mc.theWorld == null || mc.theWorld.provider.dimensionId != 1) return;
+                if (!inEnd || mc.theWorld == null || mc.theWorld.provider.dimensionId != EndTerrain.DIMENSION) return;
                 stage = Stage.ARRIVED;
                 break;
             case ARRIVED:

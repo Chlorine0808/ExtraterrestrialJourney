@@ -19,8 +19,6 @@ import cpw.mods.fml.common.registry.GameRegistry;
  */
 public final class VoidFalls implements IWorldGenerator {
 
-    private static final int END = 1;
-
     public static void register() {
         GameRegistry.registerWorldGenerator(new VoidFalls(), 0);
     }
@@ -28,7 +26,7 @@ public final class VoidFalls implements IWorldGenerator {
     @Override
     public void generate(Random random, int chunkX, int chunkZ, World world, IChunkProvider generator,
         IChunkProvider provider) {
-        if (world.isRemote || world.provider.dimensionId != END) return;
+        if (world.isRemote || world.provider.dimensionId != EndTerrain.DIMENSION) return;
         // The populate area is offset by 8 so springs and their neighbours stay in loaded chunks.
         int ox = chunkX * 16 + 8, oz = chunkZ * 16 + 8;
         if (Distance.planar(ox + 8, oz + 8) < EndTerrain.TERRAIN_START + 64) return;

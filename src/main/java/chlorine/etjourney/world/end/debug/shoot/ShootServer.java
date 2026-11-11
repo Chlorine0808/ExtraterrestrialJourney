@@ -41,7 +41,6 @@ import cpw.mods.fml.common.gameevent.TickEvent;
 /** Server side of the screenshot run: jobs run one per server tick, shot list expansion and chunk readiness. */
 public final class ShootServer {
 
-    private static final int END = 1;
     /** Blocks per ray trace piece; rayTraceBlocks gives up after 200 block steps. */
     private static final int RAY_STEP = 48;
     private static final Queue<Runnable> JOBS = new ConcurrentLinkedQueue<>();
@@ -114,7 +113,7 @@ public final class ShootServer {
 
     /** Whether every End chunk within radius chunks of (x, z) is loaded and populated. */
     public static boolean ready(double x, double z, int radius) {
-        WorldServer end = DimensionManager.getWorld(END);
+        WorldServer end = DimensionManager.getWorld(EndTerrain.DIMENSION);
         if (end == null) return false;
         int ccx = (int) Math.floor(x) >> 4, ccz = (int) Math.floor(z) >> 4;
         for (int cx = ccx - radius; cx <= ccx + radius; cx++) {
@@ -128,7 +127,7 @@ public final class ShootServer {
 
     /** The End, or null before it is loaded. Server thread only, like everything below. */
     static WorldServer end() {
-        return DimensionManager.getWorld(END);
+        return DimensionManager.getWorld(EndTerrain.DIMENSION);
     }
 
     /** The first player on the server, or null. */

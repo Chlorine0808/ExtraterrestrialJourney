@@ -19,7 +19,7 @@ final class IslandClearance {
     private IslandClearance() {}
 
     static boolean blocked(World world, int x, int y, int z) {
-        if (world.provider.dimensionId != 1) return false;
+        if (world.provider.dimensionId != EndTerrain.DIMENSION) return false;
         Long seed = EndTerrain.seed();
         return seed != null && blocked(EndTerrain.sampler(seed), x, y, z);
     }

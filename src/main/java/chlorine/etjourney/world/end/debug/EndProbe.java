@@ -46,7 +46,7 @@ public final class EndProbe {
         }
         if (!new File("etj-endscan").exists()) return;
         DimensionManager.initDimension(1);
-        WorldServer end = DimensionManager.getWorld(1);
+        WorldServer end = DimensionManager.getWorld(EndTerrain.DIMENSION);
         Long seed = EndTerrain.seed();
         if (end == null || seed == null) return;
         long start = System.nanoTime();
@@ -220,7 +220,7 @@ public final class EndProbe {
     /** Fills biospheres of each kind and logs, per ball, the time taken and what lies inside. */
     private static void biospheres() {
         DimensionManager.initDimension(1);
-        WorldServer end = DimensionManager.getWorld(1);
+        WorldServer end = DimensionManager.getWorld(EndTerrain.DIMENSION);
         Long seed = EndTerrain.seed();
         if (end == null || seed == null) return;
         TerrainSampler sampler = EndTerrain.sampler(seed);

@@ -34,7 +34,7 @@ public final class ValueNoise {
         return t * t * (3 - 2 * t);
     }
 
-    static double lerp(double a, double b, double t) {
+    public static double lerp(double a, double b, double t) {
         return a + (b - a) * t;
     }
 }

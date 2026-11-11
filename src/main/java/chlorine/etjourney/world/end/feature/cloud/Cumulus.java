@@ -2,7 +2,6 @@ package chlorine.etjourney.world.end.feature.cloud;
 
 import chlorine.etjourney.world.end.feature.Structure;
 import chlorine.etjourney.world.end.feature.StructureProbe;
-import chlorine.etjourney.world.end.noise.Distance;
 import chlorine.etjourney.world.end.noise.Hash;
 
 /** CUMULUS: a cauliflower heap of merged puffs on a flat base, floating over land or void. */
@@ -66,7 +65,7 @@ public final class Cumulus extends Structure {
 
     Cumulus(double x, double y, double z, double[] puffs, double bottom, double top, double size, double stretch,
         double heading, long salt) {
-        super(x, z, reach(puffs) * stretch + 2.5 * size, bottom - 1, top);
+        super(x, z, (Clouds.reach(puffs) + 1) * stretch + 2.5 * size, bottom - 1, top);
         this.centreY = y;
         this.bottom = bottom;
         this.puffs = puffs;
@@ -75,14 +74,6 @@ public final class Cumulus extends Structure {
         this.cos = Math.cos(heading);
         this.sin = Math.sin(heading);
         this.salt = salt;
-    }
-
-    private static double reach(double[] puffs) {
-        double reach = 0;
-        for (int i = 0; i < puffs.length; i += 4) {
-            reach = Math.max(reach, Distance.planar(puffs[i], puffs[i + 2]) + puffs[i + 3]);
-        }
-        return reach + 1;
     }
 
     @Override

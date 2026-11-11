@@ -22,6 +22,8 @@ import chlorine.etjourney.world.end.reserve.ReservationProvider;
  */
 final class HeeIslandReservations implements ReservationProvider {
 
+    private static final String HEE_GENERATOR = "chylex.hee.world.ChunkProviderHardcoreEnd";
+
     private static final int ISLAND_SIZE = 208;
     private static final double RADIUS = ISLAND_SIZE / 2.0 + 24;
 
@@ -34,13 +36,24 @@ final class HeeIslandReservations implements ReservationProvider {
 
     @Override
     public List<Area> near(Object generator, Object world, int chunkX, int chunkZ, int chunkRadius) {
+        if (broken || !(world instanceof World) || !bind(generator, (World) world)) return new ArrayList<>();
+        return scan(chunkX, chunkZ, chunkRadius, this::startsIn);
+    }
+
+    /** Which chunks start an island. */
+    interface Starts {
+
+        boolean at(int cx, int cz);
+    }
+
+    /** The islands whose start chunks could reach the chunk square, as areas centred on their footprints. */
+    static List<Area> scan(int chunkX, int chunkZ, int chunkRadius, Starts starts) {
         List<Area> out = new ArrayList<>();
-        if (broken || !(world instanceof World) || !bind(generator, (World) world)) return out;
         // Starts west or north of the chunk can still reach it, because islands extend east and south.
         int back = ISLAND_SIZE / 16 + 1;
         for (int cx = chunkX - chunkRadius - back; cx <= chunkX + chunkRadius; cx++) {
             for (int cz = chunkZ - chunkRadius - back; cz <= chunkZ + chunkRadius; cz++) {
-                if (startsIn(cx, cz)) {
+                if (starts.at(cx, cz)) {
                     out.add(new Area("hee", cx * 16 + ISLAND_SIZE / 2.0, cz * 16 + ISLAND_SIZE / 2.0, RADIUS));
                 }
             }
@@ -55,14 +68,14 @@ final class HeeIslandReservations implements ReservationProvider {
         try {
             Object provider = generator != null && generator.getClass()
                 .getName()
-                .equals("chylex.hee.world.ChunkProviderHardcoreEnd")
+                .equals(HEE_GENERATOR)
                     ? generator
                     : end.getChunkProvider() instanceof ChunkProviderServer
                         ? ((ChunkProviderServer) end.getChunkProvider()).currentChunkProvider
                         : null;
             if (provider == null || !provider.getClass()
                 .getName()
-                .equals("chylex.hee.world.ChunkProviderHardcoreEnd")) return false;
+                .equals(HEE_GENERATOR)) return false;
             Field gen = provider.getClass()
                 .getDeclaredField("islandGen");
             gen.setAccessible(true);

@@ -1,5 +1,7 @@
 package chlorine.etjourney.world.end;
 
+import static chlorine.etjourney.world.end.noise.ValueNoise.lerp;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -182,10 +184,6 @@ public final class ChunkPlan implements TerrainView {
         double value = DensityBuilder.node(this, x, y, z);
         outerNodes.put(key, value);
         return value;
-    }
-
-    private static double lerp(double a, double b, double t) {
-        return a + (b - a) * t;
     }
 
     public List<Shape> shapes() {

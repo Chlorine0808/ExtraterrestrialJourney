@@ -34,6 +34,11 @@ final class PlantCells {
         return new Random(r.nextLong() ^ r.nextLong());
     }
 
+    /** A block offset from a shape's anchor as one key, for offsets within 256 sideways and 512 up or down. */
+    static long pack(int dx, int dy, int dz) {
+        return ((long) (dx + 256) << 20) | ((long) (dy + 512) << 10) | (dz + 256);
+    }
+
     /** Whether the shape's bounding box, anchored at (x, y, z), meets the sink's volume. */
     static boolean touches(int x, int y, int z, Bounds b, BlockSink s) {
         return x + b.maxX() >= s.originX() && x + b.minX() < s.originX() + s.width()

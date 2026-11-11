@@ -64,7 +64,7 @@ final class EndLeavesBlock extends BlockLeaves {
     }
 
     /** Whether wood lies within DECAY_RANGE steps, passing only through leaves. */
-    private static boolean isHeldByWood(World world, int x, int y, int z) {
+    static boolean isHeldByWood(IBlockAccess world, int x, int y, int z) {
         int side = 2 * DECAY_RANGE + 1;
         boolean[] seen = new boolean[side * side * side];
         ArrayDeque<int[]> queue = new ArrayDeque<>();
