@@ -186,7 +186,8 @@ public final class WormCheckServer {
         worm.onSpawnWithEgg(null);
         end.spawnEntityInWorld(worm);
         Entity[] parts = worm.getParts();
-        record((parts.length == 11 ? "PASS" : "FAIL") + " the worm has 11 parts: " + parts.length);
+        int want = worm.spec.bodySegments + 2;
+        record((parts.length == want ? "PASS" : "FAIL") + " the worm has " + want + " parts: " + parts.length);
         int[] ids = new int[parts.length];
         boolean found = true;
         for (int i = 0; i < parts.length; i++) {
@@ -199,15 +200,25 @@ public final class WormCheckServer {
 
     private void judgeTrail() {
         Entity[] parts = worm.getParts();
-        double[][] centres = new double[parts.length + 1][];
-        centres[0] = new double[] { worm.posX, worm.centreY(), worm.posZ };
+        // The first part is the head's own hitbox, so the parts alone run head to tail.
+        double[][] centres = new double[parts.length][];
         for (int i = 0; i < parts.length; i++) {
             Entity p = parts[i];
-            centres[i + 1] = new double[] { p.posX, p.posY + p.height / 2, p.posZ };
+            centres[i] = new double[] { p.posX, p.posY + p.height / 2, p.posZ };
         }
         double spacing = worm.spec.spacing;
         String gaps = SegmentGaps.describe(centres);
         record((SegmentGaps.trail(centres, spacing) ? "PASS" : "FAIL") + " segments trail the head: " + gaps);
+        // Vanilla finds parts through their owner's box; the far tail must still turn up in a lookup round it.
+        Entity tail = parts[parts.length - 1];
+        boolean found = worm.worldObj.getEntitiesWithinAABBExcludingEntity(null, tail.boundingBox.copy())
+            .contains(tail);
+        record(
+            String.format(
+                Locale.ROOT,
+                "%s a lookup round the tail, %.1f blocks from the head, finds it",
+                found ? "PASS" : "FAIL",
+                worm.getDistanceToEntity(tail)));
     }
 
     private void watchCycle() {

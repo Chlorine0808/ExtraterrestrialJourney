@@ -33,7 +33,10 @@ public abstract class EntityWorm extends EntityMob implements IEntityMultiPart {
     private static final double SPEED_EASING = 0.2;
 
     public final WormSpec spec;
+    /** The head's own hitbox; the head entity's box spans the whole body so lookups find every part. */
+    private final WormSegment headPart;
     private final WormSegment[] segments;
+    private final Entity[] parts;
     private final WormTrail trail;
     private final WormPhases phases;
     private Phase shownPhase = Phase.ROAM;
@@ -47,11 +50,16 @@ public abstract class EntityWorm extends EntityMob implements IEntityMultiPart {
         float head = spec.size * spec.headScale;
         setSize(head, head);
         // Parts are made right after the head so their IDs follow its own, which the spawn packet relies on.
+        headPart = new WormSegment(this, WormSegment.HEAD, false, head);
         segments = new WormSegment[spec.bodySegments + 1];
+        parts = new Entity[segments.length + 1];
+        parts[0] = headPart;
         for (int i = 0; i < segments.length; i++) {
             boolean tail = i == spec.bodySegments;
             segments[i] = new WormSegment(this, i, tail, tail ? spec.size * spec.tailScale : spec.size);
+            parts[i + 1] = segments[i];
         }
+        widenEntityRadius(spec);
         trail = new WormTrail(spec.length() + spec.spacing, spec.spacing * 8);
         phases = spec.newPhases();
         noClip = true;
@@ -71,9 +79,24 @@ public abstract class EntityWorm extends EntityMob implements IEntityMultiPart {
         getEntityAttribute(SharedMonsterAttributes.knockbackResistance).setBaseValue(1.0D);
     }
 
+    /**
+     * Lookups only search chunks this far around the query, and the head sits in one chunk while its body may
+     * reach into the next, so the radius must cover the whole worm.
+     */
+    private static void widenEntityRadius(WormSpec spec) {
+        double reach = spec.length() + spec.size * spec.headScale + 1;
+        if (World.MAX_ENTITY_RADIUS < reach) World.MAX_ENTITY_RADIUS = reach;
+    }
+
     @Override
     public Entity[] getParts() {
-        return segments;
+        return parts;
+    }
+
+    /** The body-wide box only gathers the parts for lookups; clicks and arrows land on the parts themselves. */
+    @Override
+    public boolean canBeCollidedWith() {
+        return false;
     }
 
     @Override
@@ -242,10 +265,31 @@ public abstract class EntityWorm extends EntityMob implements IEntityMultiPart {
             float pitch = (float) (-Math.atan2(dy, Math.sqrt(dx * dx + dz * dz)) * 180 / Math.PI);
             s.place(at[0], at[1], at[2], yaw, pitch);
         }
+        headPart.place(posX, cy, posZ, rotationYaw, rotationPitch);
+        spanBody();
+    }
+
+    /**
+     * Stretches the head's box over every part. Vanilla looks at an entity's parts only when its own box meets the
+     * query, so a box round the head alone would leave the far end of the body impossible to hit.
+     */
+    private void spanBody() {
+        AxisAlignedBB b = headPart.boundingBox;
+        double minX = b.minX, minY = b.minY, minZ = b.minZ, maxX = b.maxX, maxY = b.maxY, maxZ = b.maxZ;
+        for (WormSegment s : segments) {
+            AxisAlignedBB p = s.boundingBox;
+            minX = Math.min(minX, p.minX);
+            minY = Math.min(minY, p.minY);
+            minZ = Math.min(minZ, p.minZ);
+            maxX = Math.max(maxX, p.maxX);
+            maxY = Math.max(maxY, p.maxY);
+            maxZ = Math.max(maxZ, p.maxZ);
+        }
+        boundingBox.setBounds(minX, minY, minZ, maxX, maxY, maxZ);
     }
 
     private void touch() {
-        touch(boundingBox);
+        touch(headPart.boundingBox);
         for (WormSegment s : segments) touch(s.boundingBox);
     }
 

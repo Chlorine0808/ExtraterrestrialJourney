@@ -3,15 +3,18 @@ package chlorine.etjourney.content.worm;
 import net.minecraft.entity.IEntityMultiPart;
 import net.minecraft.entity.boss.EntityDragonPart;
 
-/** One body or tail segment: a hitbox that hands its hits to the head, the way a dragon part does. */
+/** One hitbox of a worm (head, body or tail) that hands its hits to the head entity, the way a dragon part does. */
 public class WormSegment extends EntityDragonPart {
 
-    /** Position in the body, 0 next to the head. */
+    /** The index of the head's own hitbox. */
+    public static final int HEAD = -1;
+
+    /** Position in the body, 0 next to the head, or {@link #HEAD}. */
     public final int index;
     public final boolean tail;
 
     public WormSegment(IEntityMultiPart owner, int index, boolean tail, float size) {
-        super(owner, tail ? "tail" : "body", size, size);
+        super(owner, index == HEAD ? "head" : tail ? "tail" : "body", size, size);
         this.index = index;
         this.tail = tail;
     }

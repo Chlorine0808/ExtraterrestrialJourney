@@ -49,6 +49,7 @@ public class RenderWorm extends RenderLiving {
             worm.height);
         for (Entity part : worm.getParts()) {
             WormSegment s = (WormSegment) part;
+            if (s.index == WormSegment.HEAD) continue;
             bindTexture(s.tail ? tail : body);
             cube(
                 x + lerp(s.prevPosX, s.posX, partialTicks) - baseX,
