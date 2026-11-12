@@ -15,7 +15,9 @@ import baubles.api.expanded.IBaubleExpanded;
 import chlorine.etjourney.content.accessory.Talisman;
 import chlorine.etjourney.core.accessory.Accessory;
 import chlorine.etjourney.core.accessory.AccessoryModifiers;
+import chlorine.etjourney.core.combat.CombatHook;
 import chlorine.etjourney.core.damage.ElementalAccessory;
+import chlorine.etjourney.core.damage.model.Boosts;
 import chlorine.etjourney.core.damage.model.Resistance;
 import chlorine.etjourney.core.registry.RegistryNames;
 import cpw.mods.fml.relauncher.Side;
@@ -82,6 +84,16 @@ final class TalismanItem extends Item implements IBaubleExpanded, Accessory, Ele
     @Override
     public void addResistance(ItemStack stack, EntityLivingBase wearer, Resistance.Builder out) {
         talisman.addResistance(out);
+    }
+
+    @Override
+    public void addBoosts(ItemStack stack, EntityLivingBase wearer, Boosts.Builder out) {
+        talisman.addBoosts(wearer, out);
+    }
+
+    @Override
+    public void addHooks(ItemStack stack, EntityLivingBase wearer, List<CombatHook> out) {
+        talisman.addHooks(out);
     }
 
     @Override

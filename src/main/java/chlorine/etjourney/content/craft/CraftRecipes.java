@@ -26,6 +26,27 @@ final class CraftRecipes {
             Recipe.builder(new ItemOutput("etjourney:rhenium_talisman", 0, 1), 8)
                 .input(ItemInput.ore("ingotRhenium", 1))
                 .input(ItemInput.ore("ingotEnderGold", 2))
+                .build(),
+            // Trial talismans of hooks and boosts: two early metal, Ender Gold and a vanilla hint of the effect.
+            Recipe.builder(new ItemOutput("etjourney:vampire_talisman", 0, 1), 8)
+                .input(ItemInput.ore("ingotSakuraGold", 2))
+                .input(ItemInput.ore("ingotEnderGold", 1))
+                .input(ItemInput.item("minecraft:rotten_flesh", 0, 1))
+                .build(),
+            Recipe.builder(new ItemOutput("etjourney:bubble_talisman", 0, 1), 8)
+                .input(ItemInput.ore("ingotGoldenPalladium", 2))
+                .input(ItemInput.ore("ingotEnderGold", 1))
+                .input(ItemInput.item("minecraft:slime_ball", 0, 1))
+                .build(),
+            Recipe.builder(new ItemOutput("etjourney:wrath_talisman", 0, 1), 8)
+                .input(ItemInput.ore("ingotSakuraGold", 2))
+                .input(ItemInput.ore("ingotEnderGold", 1))
+                .input(ItemInput.item("minecraft:blaze_powder", 0, 1))
+                .build(),
+            Recipe.builder(new ItemOutput("etjourney:ember_talisman", 0, 1), 8)
+                .input(ItemInput.ore("ingotGoldenPalladium", 2))
+                .input(ItemInput.ore("ingotEnderGold", 1))
+                .input(ItemInput.item("minecraft:magma_cream", 0, 1))
                 .build()));
 
     static final RecipeBook ATTUNE = new RecipeBook(
