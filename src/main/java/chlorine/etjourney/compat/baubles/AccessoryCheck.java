@@ -9,11 +9,14 @@ import java.util.List;
 
 import net.minecraft.entity.SharedMonsterAttributes;
 import net.minecraft.entity.ai.attributes.IAttribute;
+import net.minecraft.entity.monster.EntityZombie;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.util.DamageSource;
+import net.minecraft.world.WorldSettings;
 
 import baubles.api.BaublesApi;
 import baubles.api.expanded.BaubleExpandedSlots;
@@ -131,10 +134,84 @@ public final class AccessoryCheck {
                 return true;
             case 7:
                 attribute("empty slots leave speed alone", player, SharedMonsterAttributes.movementSpeed, 0.1);
+                inv.setInventorySlotContents(slots[0], stack(Talisman.EMBER, 0));
+                inv.setInventorySlotContents(slots[1], stack(Talisman.VAMPIRE, 0));
+                return true;
+            case 8:
+                checkEmberAndVampire(player);
+                inv.setInventorySlotContents(slots[0], stack(Talisman.WRATH, 0));
+                inv.setInventorySlotContents(slots[1], stack(Talisman.BUBBLE, 0));
+                return true;
+            case 9:
+                checkWrathAndBubble(player);
+                inv.setInventorySlotContents(slots[0], null);
+                inv.setInventorySlotContents(slots[1], null);
                 return false;
             default:
                 return false;
         }
+    }
+
+    /** The fire sword's physical fire 5 + neutral 3 under Ember, and the share Vampire heals of it. */
+    private void checkEmberAndVampire(EntityPlayer player) {
+        Item sword = GameRegistry.findItem(ModInfo.MODID, "fire_sword");
+        EntityZombie zombie = zombie(player);
+        player.setHealth(10);
+        float before = zombie.getHealth();
+        // Fire 5 x (1 + 0.3 + 0.2) + neutral 3, before the zombie's vanilla armor.
+        float dealt = 5 * 1.5f + 3;
+        float expected = dealt * (25 - zombie.getTotalArmorValue()) / 25;
+        new ItemStack(sword).getItem()
+            .onLeftClickEntity(new ItemStack(sword), player, zombie);
+        float lost = before - zombie.getHealth();
+        zombie.setDead();
+        close("ember raises physical fire by 50%", lost, expected);
+        close("vampire heals 15% of the melee hit", player.getHealth() - 10, dealt * 0.15f);
+        player.setHealth(player.getMaxHealth());
+    }
+
+    /** Wrath only below half health; Bubble blocks one creature hit but not plain damage, then breaks. */
+    private void checkWrathAndBubble(EntityPlayer player) {
+        EntityZombie zombie = zombie(player);
+        float armor = (25 - zombie.getTotalArmorValue()) / 25f;
+        player.setHealth(player.getMaxHealth());
+        close("wrath sleeps at full health", punch(player, zombie), 4 * armor);
+        player.setHealth(player.getMaxHealth() / 2);
+        close("wrath adds 40% at half health", punch(player, zombie), 4 * 1.4f * armor);
+        zombie.setDead();
+        player.setHealth(player.getMaxHealth());
+        player.setGameType(WorldSettings.GameType.SURVIVAL);
+        close("bubble lets plain damage through", hurt(player, DamageSource.generic, 2), 2);
+        close("bubble blocks a creature's hit", hurt(player, DamageSource.causeMobDamage(zombie), 4), 0);
+        close("the popped bubble is down", hurt(player, DamageSource.causeMobDamage(zombie), 4), 4);
+        player.setHealth(player.getMaxHealth());
+    }
+
+    private static EntityZombie zombie(EntityPlayer player) {
+        EntityZombie zombie = new EntityZombie(player.worldObj);
+        zombie.setPosition(player.posX + 3, player.posY, player.posZ);
+        player.worldObj.spawnEntityInWorld(zombie);
+        return zombie;
+    }
+
+    /** What the zombie loses to a vanilla player hit of 4. */
+    private static float punch(EntityPlayer player, EntityZombie zombie) {
+        zombie.setHealth(zombie.getMaxHealth());
+        zombie.hurtResistantTime = 0;
+        float before = zombie.getHealth();
+        zombie.attackEntityFrom(DamageSource.causePlayerDamage(player), 4);
+        return before - zombie.getHealth();
+    }
+
+    private static float hurt(EntityPlayer player, DamageSource source, float amount) {
+        player.hurtResistantTime = 0;
+        float before = player.getHealth();
+        player.attackEntityFrom(source, amount);
+        return before - player.getHealth();
+    }
+
+    private void close(String name, float value, float expected) {
+        expect(name, Math.abs(value - expected) < 0.01f, value + ", expected " + expected);
     }
 
     private void finish() {
