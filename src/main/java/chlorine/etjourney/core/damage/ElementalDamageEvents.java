@@ -9,13 +9,18 @@ import net.minecraftforge.event.entity.living.LivingAttackEvent;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
 import net.minecraftforge.event.entity.living.LivingHurtEvent;
 
+import chlorine.etjourney.core.damage.model.Boosts;
 import chlorine.etjourney.core.damage.model.DamageMath;
+import chlorine.etjourney.core.damage.model.ElementRegistry;
 import chlorine.etjourney.core.damage.model.ElementalDamage;
 import chlorine.etjourney.core.damage.model.Resistance;
 import cpw.mods.fml.common.eventhandler.EventPriority;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 
-/** Applies elemental resistance to the hurt amount, and undoes other mods' cancels for piercing damage. */
+/**
+ * Applies the attacker's boosts and the elemental resistance to the hurt amount, and undoes other mods' cancels for
+ * piercing damage.
+ */
 public final class ElementalDamageEvents {
 
     /** The amount set at HIGH for the hit in progress, so LOWEST can restore it for piercing damage. */
@@ -33,12 +38,24 @@ public final class ElementalDamageEvents {
      */
     @SubscribeEvent(priority = EventPriority.HIGH, receiveCanceled = true)
     public void onHurt(LivingHurtEvent event) {
-        if (!(event.source instanceof ElementalDamageSource)) return;
-        ElementalDamage damage = ((ElementalDamageSource) event.source).damage();
+        if (!(event.source instanceof ElementalDamageSource)) {
+            boostVanilla(event);
+            return;
+        }
+        ElementalDamageSource source = (ElementalDamageSource) event.source;
+        ElementalDamage damage = source.damage();
+        ElementalDamage boosted = ElementalDamages.boosted(source);
         Resistance resistance = ResistanceSources.of(event.entityLiving);
-        event.ammount = damage.isPiercing() ? DamageMath.resolve(damage, resistance)
-            : DamageMath.scale(event.ammount, damage, resistance);
+        event.ammount = damage.isPiercing() ? DamageMath.resolve(boosted, resistance)
+            : DamageMath.scale(event.ammount, damage, boosted, resistance);
         resolved.put(event.entityLiving, event.ammount);
+    }
+
+    /** Vanilla damage takes the attacker's neutral boost alone; ETJ resistance stays off it. */
+    private static void boostVanilla(LivingHurtEvent event) {
+        if (!(event.source.getEntity() instanceof EntityLivingBase)) return;
+        Boosts boosts = BoostSources.of((EntityLivingBase) event.source.getEntity());
+        event.ammount *= boosts.factor(ElementRegistry.NEUTRAL, AttackProfiles.of(event.source));
     }
 
     @SubscribeEvent(priority = EventPriority.LOWEST, receiveCanceled = true)

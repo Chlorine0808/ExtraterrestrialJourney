@@ -28,9 +28,23 @@ public final class DamageMath {
      * amount another mod already changed keeps its share; unchanged when the raw sum is 0.
      */
     public static float scale(float incoming, ElementalDamage damage, Resistance resistance) {
-        float raw = damage.raw();
+        return scale(incoming, damage, damage, resistance);
+    }
+
+    /** As above, with the attacker's boosts already in boosted; the share is still taken of the original raw sum. */
+    public static float scale(float incoming, ElementalDamage original, ElementalDamage boosted,
+        Resistance resistance) {
+        float raw = original.raw();
         if (raw <= 0) return incoming;
-        return incoming * resolve(damage, resistance) / raw;
+        return incoming * resolve(boosted, resistance) / raw;
+    }
+
+    /** Each part multiplied by the attacker's factor for its element; the kind stays. */
+    public static ElementalDamage boost(ElementalDamage damage, Boosts boosts, AttackProfile attack) {
+        ElementalDamage.Builder out = ElementalDamage.builder(damage.kind());
+        for (Map.Entry<Element, Float> e : damage.parts()
+            .entrySet()) out.add(e.getKey(), e.getValue() * boosts.factor(e.getKey(), attack));
+        return out.build();
     }
 
     /** How much of the expected loss the hit failed to take, from health plus absorption before and after. */
