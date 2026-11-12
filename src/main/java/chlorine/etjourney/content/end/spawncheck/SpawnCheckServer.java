@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Locale;
 
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.EnumCreatureType;
 import net.minecraft.entity.monster.EntityEnderman;
 import net.minecraft.entity.monster.IMob;
@@ -22,6 +23,10 @@ import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.entity.EntityJoinWorldEvent;
 
 import chlorine.etjourney.content.end.EntitySporeZombie;
+import chlorine.etjourney.content.rank.Rank;
+import chlorine.etjourney.content.rank.RankData;
+import chlorine.etjourney.content.rank.RankOdds;
+import chlorine.etjourney.content.rank.RankStage;
 import chlorine.etjourney.core.util.ModLog;
 import chlorine.etjourney.world.end.EndTerrain;
 import chlorine.etjourney.world.end.TerrainSampler;
@@ -33,7 +38,7 @@ import cpw.mods.fml.common.gameevent.TickEvent;
 
 /**
  * Server half of the spawn check: at a MYCELIA and a GROVE site, counts mobs after a spell with the spore zombie on
- * the End's spawn list and a spell with it taken off.
+ * the End's spawn list and a spell with it taken off, and the ranks the mobs that joined rolled.
  */
 public final class SpawnCheckServer {
 
@@ -57,6 +62,10 @@ public final class SpawnCheckServer {
     private BiomeGenBase.SpawnListEntry entry;
     /** Mobs that joined the End during the current spell, by kind. */
     private int joinedEndermen, joinedSpores, joinedOthers;
+    /** Monsters that joined during the current spell; their ranks are read when it ends. */
+    private final List<EntityLiving> joinedMobs = new ArrayList<>();
+    /** Over every spell: monsters that rolled, those that rolled rare, and those that rolled higher. */
+    private int rolled, rare, higher;
 
     private SpawnCheckServer() {}
 
@@ -95,6 +104,7 @@ public final class SpawnCheckServer {
         if (e instanceof EntitySporeZombie) joinedSpores++;
         else if (e instanceof EntityEnderman) joinedEndermen++;
         else if (e instanceof IMob) joinedOthers++;
+        if (e instanceof IMob && e instanceof EntityLiving) joinedMobs.add((EntityLiving) e);
     }
 
     @SubscribeEvent
@@ -134,6 +144,7 @@ public final class SpawnCheckServer {
             settled = true;
             phaseTicks = 0;
             joinedEndermen = joinedSpores = joinedOthers = 0;
+            joinedMobs.clear();
             return;
         }
         if (phaseTicks < SPELL_TICKS) return;
@@ -141,6 +152,7 @@ public final class SpawnCheckServer {
         run.joinedEndermen = joinedEndermen;
         run.joinedSpores = joinedSpores;
         run.joinedOthers = joinedOthers;
+        tallyRanks();
         record(
             String.format(
                 Locale.ROOT,
@@ -258,6 +270,33 @@ public final class SpawnCheckServer {
                 "INFO spore zombie share in MYCELIA: standing %.0f%%, joined %.0f%%",
                 100 * SpawnTally.share(myc.spores, myc.endermen),
                 100 * SpawnTally.share(myc.joinedSpores, myc.joinedEndermen)));
+        judgeRanks();
+    }
+
+    private void tallyRanks() {
+        for (EntityLiving e : joinedMobs) {
+            if (!RankData.rolled(e) || RankData.role(e) != RankData.FREE) continue;
+            rolled++;
+            Rank rank = RankData.rank(e);
+            if (rank == Rank.RARE) rare++;
+            else if (rank != Rank.NORMAL) higher++;
+        }
+        joinedMobs.clear();
+    }
+
+    private void judgeRanks() {
+        double chance = RankOdds.chance(RankStage.EARLY, Rank.RARE);
+        boolean fits = rare > 0 && SpawnTally.rankShareFits(rare, rolled, chance);
+        record(
+            String.format(
+                Locale.ROOT,
+                "%s rare share near %.0f%%: %d of %d (%.1f%%)",
+                fits ? "PASS" : "FAIL",
+                100 * chance,
+                rare,
+                rolled,
+                rolled == 0 ? 0 : 100.0 * rare / rolled));
+        record((higher == 0 ? "PASS" : "FAIL") + " nothing above rare in the early stage: " + higher);
     }
 
     private void keep(String what, int with, int without) {
