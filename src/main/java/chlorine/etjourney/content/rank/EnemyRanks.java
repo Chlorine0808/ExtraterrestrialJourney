@@ -11,6 +11,8 @@ import net.minecraft.entity.boss.IBossDisplayData;
 import net.minecraft.entity.monster.IMob;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.entity.EntityJoinWorldEvent;
+import net.minecraftforge.event.entity.living.LivingDeathEvent;
+import net.minecraftforge.event.entity.living.LivingDropsEvent;
 import net.minecraftforge.event.entity.living.LivingHurtEvent;
 
 import chlorine.etjourney.core.config.ETJConfig;
@@ -82,5 +84,19 @@ public final class EnemyRanks {
     @SubscribeEvent
     public void onServerTick(TickEvent.ServerTickEvent event) {
         if (event.phase == TickEvent.Phase.END) boosts.endOfTick();
+    }
+
+    @SubscribeEvent(priority = EventPriority.LOWEST)
+    public void onDeath(LivingDeathEvent event) {
+        if (event.entityLiving.worldObj.isRemote || !(event.entityLiving instanceof EntityLiving)) return;
+        EntityLiving mob = (EntityLiving) event.entityLiving;
+        if (RankData.ranked(mob)) RankRewards.setExperience(mob, RankData.rank(mob).experience);
+    }
+
+    @SubscribeEvent(priority = EventPriority.LOWEST)
+    public void onDrops(LivingDropsEvent event) {
+        if (event.entityLiving.worldObj.isRemote) return;
+        if (RankData.ranked(event.entityLiving))
+            RankRewards.multiplyDrops(event.drops, RankData.rank(event.entityLiving));
     }
 }
