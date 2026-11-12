@@ -121,7 +121,7 @@ public final class EnemyRanks {
         // Minions come back on every cast, so they must not pay out.
         if (RankData.role(mob) == RankData.MINION) RankRewards.setExperience(mob, 0);
         if (!RankData.ranked(mob)) return;
-        RankRewards.setExperience(mob, RankData.rank(mob).experience);
+        if (RankData.markPaid(mob)) RankRewards.setExperience(mob, RankData.rank(mob).experience);
         for (RankAbility a : RankAbilities.of(mob)) a.onDeath(mob, event.source);
     }
 

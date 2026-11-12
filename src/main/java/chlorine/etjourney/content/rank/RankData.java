@@ -16,7 +16,7 @@ public final class RankData {
     public static final int FREE = 0, SPLIT_CHILD = 1, MINION = 2;
 
     private static final String KEY = "etjRank", RANK = "rank", ABILITIES = "abilities", USED = "used.", ROLE = "role",
-        PARENT_MOST = "parentMost", PARENT_LEAST = "parentLeast", MISSES = "misses";
+        PARENT_MOST = "parentMost", PARENT_LEAST = "parentLeast", MISSES = "misses", PAID = "paid";
     private static final int TAG_STRING = 8;
 
     private RankData() {}
@@ -76,6 +76,17 @@ public final class RankData {
 
     public static void setMisses(Entity e, int misses) {
         tag(e).setInteger(MISSES, misses);
+    }
+
+    /**
+     * Marks the death rewards as set; false if they already were, so a death another mod cancels and repeats does not
+     * multiply them twice.
+     */
+    public static boolean markPaid(Entity e) {
+        NBTTagCompound tag = tag(e);
+        if (tag.getBoolean(PAID)) return false;
+        tag.setBoolean(PAID, true);
+        return true;
     }
 
     /** The total world time an ability was last used, or Cooldown.NEVER. */
