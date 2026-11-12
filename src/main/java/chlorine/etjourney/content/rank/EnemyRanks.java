@@ -9,17 +9,21 @@ import net.minecraft.entity.EntityList;
 import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.boss.IBossDisplayData;
 import net.minecraft.entity.monster.IMob;
+import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.entity.EntityJoinWorldEvent;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
 import net.minecraftforge.event.entity.living.LivingDropsEvent;
 import net.minecraftforge.event.entity.living.LivingHurtEvent;
+import net.minecraftforge.event.entity.player.PlayerEvent;
 
 import chlorine.etjourney.core.config.ETJConfig;
+import chlorine.etjourney.core.network.ETJNetwork;
 import cpw.mods.fml.common.FMLCommonHandler;
 import cpw.mods.fml.common.eventhandler.EventPriority;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import cpw.mods.fml.common.gameevent.TickEvent;
+import cpw.mods.fml.relauncher.Side;
 
 /** Rolls a rank for each eligible enemy the first time it joins a world, and runs what the rank brings. */
 public final class EnemyRanks {
@@ -29,6 +33,9 @@ public final class EnemyRanks {
     private EnemyRanks() {}
 
     public static void register() {
+        // Registered whatever the config says, so packet IDs match a server configured otherwise.
+        ETJNetwork.channel()
+            .registerMessage(RankSync.Handler.class, RankSync.class, ETJNetwork.nextId(), Side.CLIENT);
         if (!ETJConfig.enemyRanks) return;
         EnemyRanks ranks = new EnemyRanks();
         MinecraftForge.EVENT_BUS.register(ranks);
@@ -98,5 +105,11 @@ public final class EnemyRanks {
         if (event.entityLiving.worldObj.isRemote) return;
         if (RankData.ranked(event.entityLiving))
             RankRewards.multiplyDrops(event.drops, RankData.rank(event.entityLiving));
+    }
+
+    @SubscribeEvent
+    public void onStartTracking(PlayerEvent.StartTracking event) {
+        if (event.entityPlayer instanceof EntityPlayerMP && RankSync.worthSending(event.target)) ETJNetwork.channel()
+            .sendTo(new RankSync(event.target), (EntityPlayerMP) event.entityPlayer);
     }
 }

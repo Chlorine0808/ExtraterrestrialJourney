@@ -7,6 +7,7 @@ import chlorine.etjourney.content.end.EndEntityRenderers;
 import chlorine.etjourney.content.end.FurRenderer;
 import chlorine.etjourney.content.end.spawncheck.SpawnCheck;
 import chlorine.etjourney.content.entity.EntityRenderers;
+import chlorine.etjourney.content.rank.client.RankClient;
 import chlorine.etjourney.core.util.WindowTitle;
 import chlorine.etjourney.world.end.debug.damagecheck.DamageCheck;
 import chlorine.etjourney.world.end.debug.shoot.ShootHarness;
@@ -27,6 +28,7 @@ public class ClientProxy extends CommonProxy {
         super.init(event);
         EndEntityRenderers.init();
         EntityRenderers.init();
+        RankClient.init();
         CraftRenderers.init();
         FurRenderer.init();
         WindPush.register();
