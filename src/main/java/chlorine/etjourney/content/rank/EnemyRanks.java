@@ -1,7 +1,6 @@
 package chlorine.etjourney.content.rank;
 
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 
 import net.minecraft.entity.Entity;
@@ -14,9 +13,12 @@ import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.entity.EntityJoinWorldEvent;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
 import net.minecraftforge.event.entity.living.LivingDropsEvent;
+import net.minecraftforge.event.entity.living.LivingEvent;
 import net.minecraftforge.event.entity.living.LivingHurtEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 
+import chlorine.etjourney.content.rank.ability.RankAbilities;
+import chlorine.etjourney.content.rank.ability.RankAbility;
 import chlorine.etjourney.core.config.ETJConfig;
 import chlorine.etjourney.core.network.ETJNetwork;
 import cpw.mods.fml.common.FMLCommonHandler;
@@ -68,7 +70,11 @@ public final class EnemyRanks {
     }
 
     public static void give(EntityLiving mob, Rank rank) {
-        List<String> abilities = Collections.emptyList();
+        give(mob, rank, RankAbilities.pick(mob, rank.abilities, mob.getRNG()));
+    }
+
+    /** Sets a rank and abilities outright; the spawn check uses it to try each ability. */
+    public static void give(EntityLiving mob, Rank rank, List<String> abilities) {
         RankData.set(mob, rank, abilities);
         RankStats.apply(mob, rank);
     }
@@ -86,6 +92,19 @@ public final class EnemyRanks {
         if (event.entityLiving.worldObj.isRemote) return;
         Entity attacker = event.source.getEntity();
         if (attacker != null && RankData.ranked(attacker)) boosts.hit(event.entityLiving, RankData.rank(attacker));
+        if (event.entityLiving instanceof EntityLiving && RankData.ranked(event.entityLiving)) {
+            EntityLiving self = (EntityLiving) event.entityLiving;
+            for (RankAbility a : RankAbilities.of(self)) a.onHurt(self, event.source);
+        }
+    }
+
+    @SubscribeEvent
+    public void onUpdate(LivingEvent.LivingUpdateEvent event) {
+        if (event.entityLiving.ticksExisted % 20 != 0 || event.entityLiving.worldObj.isRemote
+            || !(event.entityLiving instanceof EntityLiving)) return;
+        EntityLiving self = (EntityLiving) event.entityLiving;
+        if (!self.isEntityAlive() || !RankData.ranked(self)) return;
+        for (RankAbility a : RankAbilities.of(self)) a.onSecond(self);
     }
 
     @SubscribeEvent
@@ -97,7 +116,9 @@ public final class EnemyRanks {
     public void onDeath(LivingDeathEvent event) {
         if (event.entityLiving.worldObj.isRemote || !(event.entityLiving instanceof EntityLiving)) return;
         EntityLiving mob = (EntityLiving) event.entityLiving;
-        if (RankData.ranked(mob)) RankRewards.setExperience(mob, RankData.rank(mob).experience);
+        if (!RankData.ranked(mob)) return;
+        RankRewards.setExperience(mob, RankData.rank(mob).experience);
+        for (RankAbility a : RankAbilities.of(mob)) a.onDeath(mob, event.source);
     }
 
     @SubscribeEvent(priority = EventPriority.LOWEST)
