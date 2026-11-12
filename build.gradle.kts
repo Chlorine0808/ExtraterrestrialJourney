@@ -53,4 +53,6 @@ tasks.named<JavaExec>("runClient") {
     if (providers.gradleProperty("damageCheck").isPresent) systemProperty("etj.damageCheck", "true")
     // -PspawnCheck counts endermen with and without the spore zombie listed and quits; results land in run/client/spawncheck.txt.
     if (providers.gradleProperty("spawnCheck").isPresent) systemProperty("etj.spawnCheck", "true")
+    // -PwormCheck summons a flame worm, checks its segments, phases and hits, and quits; results land in run/client/wormcheck.txt.
+    if (providers.gradleProperty("wormCheck").isPresent) systemProperty("etj.wormCheck", "true")
 }
