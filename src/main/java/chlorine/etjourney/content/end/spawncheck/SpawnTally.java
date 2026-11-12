@@ -17,4 +17,11 @@ final class SpawnTally {
         int all = enemy + endermen;
         return all == 0 ? 0 : (double) enemy / all;
     }
+
+    /** Whether ranked out of total lies within four standard deviations (plus one) of the chance p. */
+    static boolean rankShareFits(int ranked, int total, double p) {
+        if (total == 0) return false;
+        double mean = total * p, spread = 4 * Math.sqrt(total * p * (1 - p)) + 1;
+        return Math.abs(ranked - mean) <= spread;
+    }
 }
