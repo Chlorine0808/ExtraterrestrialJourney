@@ -4,6 +4,7 @@ import chlorine.etjourney.Tags;
 import chlorine.etjourney.compat.CompatManager;
 import chlorine.etjourney.content.ModContent;
 import chlorine.etjourney.core.accessory.AccessoryTicker;
+import chlorine.etjourney.core.combat.CombatHookEvents;
 import chlorine.etjourney.core.config.ETJConfig;
 import chlorine.etjourney.core.damage.DeathImmunity;
 import chlorine.etjourney.core.damage.ElementalDamageEvents;
@@ -32,6 +33,7 @@ public class CommonProxy {
         ElementalDamageEvents.register();
         DeathImmunity.register();
         AccessoryTicker.register();
+        CombatHookEvents.register();
         ModWorld.init();
         ModContent.init();
         compat.init();
