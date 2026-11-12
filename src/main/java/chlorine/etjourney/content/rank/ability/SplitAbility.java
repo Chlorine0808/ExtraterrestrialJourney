@@ -7,9 +7,9 @@ import chlorine.etjourney.content.rank.RankData;
 import chlorine.etjourney.content.rank.RankStats;
 
 /** On death the mob breaks into smaller unranked mobs of its kind. */
-final class SplitAbility implements RankAbility {
+public final class SplitAbility implements RankAbility {
 
-    static final String ID = "split";
+    public static final String ID = "split";
     private static final int CHILDREN = 2;
     /** Parts of health and attack a child loses. */
     private static final double HEALTH = 0.5, ATTACK = 0.25;

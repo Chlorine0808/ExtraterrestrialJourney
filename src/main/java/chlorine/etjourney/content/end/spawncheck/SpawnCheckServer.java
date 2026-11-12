@@ -60,6 +60,8 @@ public final class SpawnCheckServer {
     private int runIndex = -1, phaseTicks;
     private boolean settled, sent;
     private BiomeGenBase.SpawnListEntry entry;
+    /** Runs at the first site before its mobs are cleared; null once done. */
+    private RankAbilityCheck abilities;
     /** Mobs that joined the End during the current spell, by kind. */
     private int joinedEndermen, joinedSpores, joinedOthers;
     /** Monsters that joined during the current spell; their ranks are read when it ends. */
@@ -139,6 +141,10 @@ public final class SpawnCheckServer {
         phaseTicks++;
         if (!settled) {
             if (phaseTicks < SETTLE_TICKS) return;
+            if (abilities != null) {
+                if (!abilities.step(end, player)) return;
+                abilities = null;
+            }
             clearMobs(end);
             setListed(run.listed);
             settled = true;
@@ -208,6 +214,7 @@ public final class SpawnCheckServer {
                 mycelia[1],
                 grove[0],
                 grove[1]));
+        abilities = new RankAbilityCheck(this::record);
         runs.add(new Run(EndBiome.MYCELIA, mycelia, true));
         runs.add(new Run(EndBiome.MYCELIA, mycelia, false));
         runs.add(new Run(EndBiome.GROVE, grove, true));

@@ -20,7 +20,7 @@ import chlorine.etjourney.content.rank.RankStats;
 /** In a fight the mob calls minions, which vanish when it dies. */
 public final class SummonAbility implements RankAbility {
 
-    static final String ID = "summon";
+    public static final String ID = "summon";
     static final int COOLDOWN = 200, PER_CAST = 2, CAP = 4;
     /** Part of its health a minion loses. */
     private static final double HEALTH = 0.5;

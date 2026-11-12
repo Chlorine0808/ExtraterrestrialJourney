@@ -11,9 +11,9 @@ import chlorine.etjourney.content.rank.Cooldown;
 import chlorine.etjourney.content.rank.RankData;
 
 /** Struck by a living attacker, the mob blinks to a nearby spot it can stand on, then waits. */
-final class WarpAbility implements RankAbility {
+public final class WarpAbility implements RankAbility {
 
-    static final String ID = "warp";
+    public static final String ID = "warp";
     static final int COOLDOWN = 100;
     private static final int TRIES = 16, REACH = 8, LEAST = 3, RISE = 4, FALL = 8;
 
