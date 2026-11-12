@@ -19,6 +19,7 @@ import net.minecraftforge.event.entity.player.PlayerEvent;
 
 import chlorine.etjourney.content.rank.ability.RankAbilities;
 import chlorine.etjourney.content.rank.ability.RankAbility;
+import chlorine.etjourney.content.rank.ability.SummonAbility;
 import chlorine.etjourney.core.config.ETJConfig;
 import chlorine.etjourney.core.network.ETJNetwork;
 import cpw.mods.fml.common.FMLCommonHandler;
@@ -103,8 +104,9 @@ public final class EnemyRanks {
         if (event.entityLiving.ticksExisted % 20 != 0 || event.entityLiving.worldObj.isRemote
             || !(event.entityLiving instanceof EntityLiving)) return;
         EntityLiving self = (EntityLiving) event.entityLiving;
-        if (!self.isEntityAlive() || !RankData.ranked(self)) return;
-        for (RankAbility a : RankAbilities.of(self)) a.onSecond(self);
+        if (!self.isEntityAlive() || !RankData.rolled(self)) return;
+        if (RankData.role(self) == RankData.MINION) SummonAbility.watch(self);
+        else for (RankAbility a : RankAbilities.of(self)) a.onSecond(self);
     }
 
     @SubscribeEvent
@@ -116,6 +118,8 @@ public final class EnemyRanks {
     public void onDeath(LivingDeathEvent event) {
         if (event.entityLiving.worldObj.isRemote || !(event.entityLiving instanceof EntityLiving)) return;
         EntityLiving mob = (EntityLiving) event.entityLiving;
+        // Minions come back on every cast, so they must not pay out.
+        if (RankData.role(mob) == RankData.MINION) RankRewards.setExperience(mob, 0);
         if (!RankData.ranked(mob)) return;
         RankRewards.setExperience(mob, RankData.rank(mob).experience);
         for (RankAbility a : RankAbilities.of(mob)) a.onDeath(mob, event.source);
@@ -124,7 +128,8 @@ public final class EnemyRanks {
     @SubscribeEvent(priority = EventPriority.LOWEST)
     public void onDrops(LivingDropsEvent event) {
         if (event.entityLiving.worldObj.isRemote) return;
-        if (RankData.ranked(event.entityLiving))
+        if (RankData.role(event.entityLiving) == RankData.MINION) event.drops.clear();
+        else if (RankData.ranked(event.entityLiving))
             RankRewards.multiplyDrops(event.drops, RankData.rank(event.entityLiving));
     }
 

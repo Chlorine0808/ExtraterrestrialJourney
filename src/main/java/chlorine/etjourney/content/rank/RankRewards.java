@@ -33,7 +33,7 @@ final class RankRewards {
         }
     }
 
-    /** Sets the experience the mob will drop; it is read when the death animation ends. */
+    /** Multiplies the experience the mob will drop; it is read when the death animation ends. */
     static void setExperience(EntityLiving mob, int factor) {
         int base = ReflectionHelper.getPrivateValue(EntityLiving.class, mob, EXPERIENCE);
         ReflectionHelper.setPrivateValue(EntityLiving.class, mob, base * factor, EXPERIENCE);
