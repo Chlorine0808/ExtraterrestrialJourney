@@ -51,4 +51,13 @@ class WormSegmentTest {
         assertEquals(90, body.prevRotationYaw, 1e-6);
         assertEquals(80, body.rotationYaw, 1e-6);
     }
+
+    @Test
+    void theFirstPlacingAndALongJumpDoNotSweepAcross() {
+        WormSegment body = new WormSegment(new Owner(), 0, false, 1.0F);
+        body.place(100, 64, 100, 0, 0);
+        assertEquals(100, body.prevPosX, 1e-9);
+        body.place(150, 64, 100, 0, 0);
+        assertEquals(150, body.prevPosX, 1e-9);
+    }
 }
