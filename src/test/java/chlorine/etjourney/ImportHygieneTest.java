@@ -34,7 +34,8 @@ class ImportHygieneTest {
         "world/end/shoot/",
         "world/wind/model/",
         "core/damage/model/",
-        "core/accessory/model/");
+        "core/accessory/model/",
+        "core/combat/model/");
     private static final List<String> GAME = Arrays.asList("net.minecraft.", "cpw.mods.", "net.minecraftforge.");
     private static final Pattern IMPORT = Pattern
         .compile("^import\\s+(static\\s+)?([\\w.]+?)(\\.\\*)?;", Pattern.MULTILINE);
