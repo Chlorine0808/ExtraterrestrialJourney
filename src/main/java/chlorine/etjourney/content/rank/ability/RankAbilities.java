@@ -38,6 +38,15 @@ public final class RankAbilities {
             random);
     }
 
+    public static List<String> ids() {
+        return new ArrayList<>(ALL.keySet());
+    }
+
+    /** The names saved with the mob, known or not. */
+    public static List<String> idsOf(EntityLiving mob) {
+        return RankData.abilities(mob);
+    }
+
     /** The mob's abilities; names no longer known are skipped. */
     public static List<RankAbility> of(EntityLiving mob) {
         List<RankAbility> out = new ArrayList<>();

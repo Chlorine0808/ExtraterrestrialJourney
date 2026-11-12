@@ -1,5 +1,6 @@
 package chlorine.etjourney;
 
+import chlorine.etjourney.content.ModContent;
 import chlorine.etjourney.core.ModInfo;
 import chlorine.etjourney.proxy.CommonProxy;
 import chlorine.etjourney.world.ModWorld;
@@ -42,5 +43,6 @@ public class ETJourney {
     @Mod.EventHandler
     public void serverStarting(FMLServerStartingEvent event) {
         ModWorld.serverStarting(event);
+        ModContent.serverStarting(event);
     }
 }
