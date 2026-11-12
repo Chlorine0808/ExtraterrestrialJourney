@@ -45,13 +45,19 @@ import cpw.mods.fml.common.registry.GameRegistry;
 public final class AccessoryCheck {
 
     private static final double EPSILON = 1e-6;
-    /** World ticks after joining before the first stage. */
+    /**
+     * Player ticks to wait after joining. The server ticks a joining player only as the loading client sends
+     * packets, so world time alone can run past several stages before any modifier sync.
+     */
+    private static final int JOIN_PLAYER_TICKS = 100;
+    /** World ticks after the join wait before the first stage. */
     private static final int JOIN_TICKS = 40;
     /** Long enough for a modifier sync (10 ticks) and a wear (20 ticks) after a change. */
     private static final int SETTLE = 25;
 
     private final List<String> lines = new ArrayList<>();
     private long start = -1;
+    private int playerTicks;
     private int stage;
     private boolean finished;
     private int[] slots;
@@ -66,6 +72,7 @@ public final class AccessoryCheck {
     @SubscribeEvent
     public void onPlayerTick(TickEvent.PlayerTickEvent event) {
         if (finished || event.phase != TickEvent.Phase.END || event.player.worldObj.isRemote) return;
+        if (++playerTicks < JOIN_PLAYER_TICKS) return;
         long now = event.player.worldObj.getTotalWorldTime();
         if (start < 0) start = now + JOIN_TICKS;
         if (now < start + (long) stage * SETTLE) return;
