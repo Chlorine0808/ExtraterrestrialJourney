@@ -16,6 +16,10 @@ public final class RankAbilities {
 
     private static final Map<String, RankAbility> ALL = new LinkedHashMap<>();
 
+    static {
+        add(new SplitAbility());
+    }
+
     private RankAbilities() {}
 
     static void add(RankAbility ability) {

@@ -19,12 +19,12 @@ public final class RankSync implements IMessage {
         entityId = e.getEntityId();
         rank = RankData.rank(e)
             .ordinal();
-        small = false;
+        small = RankData.role(e) == RankData.SPLIT_CHILD;
     }
 
     /** Only mobs that look different are sent. */
     static boolean worthSending(Entity e) {
-        return RankData.ranked(e);
+        return RankData.ranked(e) || RankData.role(e) == RankData.SPLIT_CHILD;
     }
 
     @Override
