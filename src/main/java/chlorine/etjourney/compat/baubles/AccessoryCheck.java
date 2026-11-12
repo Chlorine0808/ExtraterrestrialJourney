@@ -11,6 +11,7 @@ import net.minecraft.entity.SharedMonsterAttributes;
 import net.minecraft.entity.ai.attributes.IAttribute;
 import net.minecraft.entity.monster.EntityZombie;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.init.Items;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -24,6 +25,12 @@ import chlorine.etjourney.content.accessory.Talisman;
 import chlorine.etjourney.core.ModInfo;
 import chlorine.etjourney.core.damage.ResistanceSources;
 import chlorine.etjourney.core.damage.model.ElementRegistry;
+import chlorine.etjourney.core.growth.Growth;
+import chlorine.etjourney.core.growth.GrowthNbt;
+import chlorine.etjourney.core.growth.model.AffixRoll;
+import chlorine.etjourney.core.growth.model.GrowthData;
+import chlorine.etjourney.core.growth.model.Leveling;
+import chlorine.etjourney.core.growth.model.Rarity;
 import chlorine.etjourney.core.util.ModLog;
 import chlorine.etjourney.world.end.debug.damagecheck.DamageCheckServer;
 import cpw.mods.fml.common.FMLCommonHandler;
@@ -146,6 +153,16 @@ public final class AccessoryCheck {
                 checkWrathAndBubble(player);
                 inv.setInventorySlotContents(slots[0], null);
                 inv.setInventorySlotContents(slots[1], null);
+                return true;
+            case 10:
+                checkWeaponGrowth(player);
+                ItemStack grown = stack(Talisman.SAKURA_GOLD, 0);
+                GrowthNbt.write(grown, data(Leveling.totalFor(Leveling.MAX_LEVEL), Rarity.UNCOMMON, "fierce", 0));
+                inv.setInventorySlotContents(slots[0], grown);
+                return true;
+            case 11:
+                checkAccessoryGrowth(player, inv);
+                inv.setInventorySlotContents(slots[0], null);
                 return false;
             default:
                 return false;
@@ -185,6 +202,60 @@ public final class AccessoryCheck {
         close("bubble blocks a creature's hit", hurt(player, DamageSource.causeMobDamage(zombie), 4), 0);
         close("the popped bubble is down", hurt(player, DamageSource.causeMobDamage(zombie), 4), 4);
         player.setHealth(player.getMaxHealth());
+    }
+
+    /** A fresh sword rolls and gains from a hit; levels and affixes raise its damage; reforge redraws. */
+    private void checkWeaponGrowth(EntityPlayer player) {
+        EntityZombie zombie = zombie(player);
+        float armor = (25 - zombie.getTotalArmorValue()) / 25f;
+        ItemStack sword = new ItemStack(Items.diamond_sword);
+        player.inventory.mainInventory[player.inventory.currentItem] = sword;
+        punch(player, zombie);
+        GrowthData rolled = GrowthNbt.read(player.getHeldItem());
+        expect("a fresh sword rolls on its first hit", rolled != null, "no growth");
+        expect("the sword gains the hit as experience", rolled != null && rolled.xp == 4, String.valueOf(rolled));
+        GrowthNbt.write(sword, data(Leveling.totalFor(Leveling.MAX_LEVEL), Rarity.COMMON, null, 0));
+        close("a level 10 sword adds 20%", punch(player, zombie), 4 * 1.2f * armor);
+        GrowthNbt.write(sword, data(0, Rarity.LEGENDARY, "keen", 1));
+        close("a keen sword adds 15%", punch(player, zombie), 4 * 1.15f * armor);
+        Growth.reforge(sword, player.getRNG());
+        GrowthData reforged = GrowthNbt.read(sword);
+        expect(
+            "a reforged legendary sword keeps its rarity and draws four affixes",
+            reforged.rarity == Rarity.LEGENDARY && reforged.affixes.size() == 4,
+            reforged.rarity + " with " + reforged.affixes.size());
+        player.inventory.mainInventory[player.inventory.currentItem] = null;
+        zombie.setDead();
+
+        ItemStack plate = new ItemStack(Items.iron_chestplate);
+        GrowthNbt.write(plate, data(Leveling.totalFor(Leveling.MAX_LEVEL), Rarity.UNCOMMON, "sturdy", 1));
+        player.setCurrentItemOrArmor(3, plate);
+        player.setHealth(player.getMaxHealth());
+        // Level 10 takes 5% off, sturdy 6%, then the iron chestplate's 6 armor points.
+        float expected = 10 * 0.95f * 0.94f * (25 - 6) / 25f;
+        close("level and sturdy armor cut a hit", hurt(player, DamageSource.causeMobDamage(zombie), 10), expected);
+        player.setCurrentItemOrArmor(3, null);
+        player.setHealth(player.getMaxHealth());
+    }
+
+    /** A level 10 fierce talisman adds 10% + 5% to physical hits and gains from them. */
+    private void checkAccessoryGrowth(EntityPlayer player, IInventory inv) {
+        EntityZombie zombie = zombie(player);
+        float armor = (25 - zombie.getTotalArmorValue()) / 25f;
+        close("a grown fierce talisman adds 15%", punch(player, zombie), 4 * 1.15f * armor);
+        zombie.setDead();
+        GrowthNbt.write(inv.getStackInSlot(slots[0]), data(0, Rarity.COMMON, null, 0));
+        zombie = zombie(player);
+        punch(player, zombie);
+        zombie.setDead();
+        GrowthData after = GrowthNbt.read(inv.getStackInSlot(slots[0]));
+        expect("a worn talisman gains from hits", after != null && after.xp == 4, String.valueOf(after));
+    }
+
+    private static GrowthData data(int xp, Rarity rarity, String affix, float roll) {
+        List<AffixRoll> affixes = new ArrayList<>();
+        if (affix != null) affixes.add(new AffixRoll(affix, roll));
+        return new GrowthData(xp, rarity, affixes);
     }
 
     private static EntityZombie zombie(EntityPlayer player) {
