@@ -61,4 +61,12 @@ class WormTrailTest {
         // Still heading +x, so the segments line up behind the new head along -x.
         assertArrayEquals(new double[] { 98, 0, 50 }, trail.at(2), EPS);
     }
+
+    @Test
+    void standingStillAddsNoPoints() {
+        WormTrail trail = new WormTrail(4, 100);
+        trail.record(0, 0, 0);
+        for (int i = 0; i < 100; i++) trail.record(1, 0, 0);
+        assertTrue(trail.size() == 2, "kept " + trail.size());
+    }
 }

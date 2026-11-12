@@ -19,6 +19,7 @@ public final class WormTrail {
     /** Adds the head's new spot; a teleport lays a fresh straight trail instead of stretching the old one. */
     public void record(double x, double y, double z) {
         double[] head = points.peekFirst();
+        if (head != null && dist(head, x, y, z) < 1e-6) return;
         if (head != null && dist(head, x, y, z) > jumpLimit) {
             double[] dir = heading();
             lay(x, y, z, dir[0], dir[1], dir[2]);
