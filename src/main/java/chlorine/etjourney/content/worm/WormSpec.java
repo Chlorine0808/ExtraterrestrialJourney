@@ -10,6 +10,7 @@ public final class WormSpec {
     public final int bodySegments;
     public final double spacing;
     public final float size, headScale, tailScale;
+    /** Turn rate in radians per tick; with the speed it sets the tightest circle the head can swim. */
     public final double speed, turnRate, gravity;
     public final int warnTicks, leapTicks, maxLeapTicks, cooldown;
     public final double strikeRange, followRange;

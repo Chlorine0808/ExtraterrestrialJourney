@@ -29,6 +29,8 @@ public abstract class EntityWorm extends EntityMob implements IEntityMultiPart {
     private static final int SURFACE_SCAN = 16;
     /** Ticks between new wander goals when there is no one to chase. */
     private static final int WANDER_TICKS = 100;
+    /** Share of the gap to the wanted speed closed each tick. */
+    private static final double SPEED_EASING = 0.2;
 
     public final WormSpec spec;
     private final WormSegment[] segments;
@@ -165,15 +167,19 @@ public abstract class EntityWorm extends EntityMob implements IEntityMultiPart {
         return new double[] { wanderX, wanderY, wanderZ };
     }
 
-    /** Turns the velocity towards the goal, never faster than the turn rate. */
+    /**
+     * Turns the velocity towards the goal, easing its speed to the given one. The turn is capped so that the
+     * tightest circle stays the same at any speed; a slow head turning sharply would fold its body back on itself.
+     */
     private void steer(double[] goal, double speed) {
-        double dx = goal[0] - posX, dy = goal[1] - centreY(), dz = goal[2] - posZ;
-        double n = Math.sqrt(dx * dx + dy * dy + dz * dz);
-        if (n < 1e-6) return;
-        double r = spec.turnRate;
-        motionX += (dx / n * speed - motionX) * r;
-        motionY += (dy / n * speed - motionY) * r;
-        motionZ += (dz / n * speed - motionZ) * r;
+        double[] want = { goal[0] - posX, goal[1] - centreY(), goal[2] - posZ };
+        double now = Math.sqrt(motionX * motionX + motionY * motionY + motionZ * motionZ);
+        double mag = now + (speed - now) * SPEED_EASING;
+        double maxTurn = spec.turnRate * Math.min(1, mag / spec.speed);
+        double[] dir = Steering.turn(new double[] { motionX, motionY, motionZ }, want, maxTurn);
+        motionX = dir[0] * mag;
+        motionY = dir[1] * mag;
+        motionZ = dir[2] * mag;
     }
 
     private void launch(EntityLivingBase target, double hDist) {
