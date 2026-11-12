@@ -8,6 +8,7 @@ import chlorine.etjourney.content.end.EndBlocks;
 import chlorine.etjourney.content.end.EndBuildingContent;
 import chlorine.etjourney.content.end.EndEntities;
 import chlorine.etjourney.content.end.EndSpawns;
+import chlorine.etjourney.content.growth.GearAffixes;
 import chlorine.etjourney.core.util.ModLog;
 
 /** Entry point that registers every region's blocks, items and entities. */
@@ -18,6 +19,7 @@ public final class ModContent {
     public static void preInit() {
         Elements.register();
         ElementalGear.preInit();
+        GearAffixes.register();
         EndBlocks.preInit();
         EndAcid.preInit();
         CraftContent.preInit();
