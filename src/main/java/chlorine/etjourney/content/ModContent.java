@@ -8,6 +8,7 @@ import chlorine.etjourney.content.end.EndBlocks;
 import chlorine.etjourney.content.end.EndBuildingContent;
 import chlorine.etjourney.content.end.EndEntities;
 import chlorine.etjourney.content.end.EndSpawns;
+import chlorine.etjourney.content.rank.EnemyRanks;
 import chlorine.etjourney.core.util.ModLog;
 
 /** Entry point that registers every region's blocks, items and entities. */
@@ -28,6 +29,7 @@ public final class ModContent {
     /** After every region has registered its entities in preInit. */
     public static void init() {
         EndSpawns.register();
+        EnemyRanks.register();
         EndBuildingContent.init();
         ModLog.LOG.debug("content: init");
     }
