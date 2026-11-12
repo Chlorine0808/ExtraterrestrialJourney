@@ -8,6 +8,8 @@ import chlorine.etjourney.core.combat.CombatHookEvents;
 import chlorine.etjourney.core.config.ETJConfig;
 import chlorine.etjourney.core.damage.DeathImmunity;
 import chlorine.etjourney.core.damage.ElementalDamageEvents;
+import chlorine.etjourney.core.growth.GrowthEffects;
+import chlorine.etjourney.core.growth.GrowthEvents;
 import chlorine.etjourney.core.network.ETJNetwork;
 import chlorine.etjourney.core.util.ModLog;
 import chlorine.etjourney.world.ModWorld;
@@ -34,6 +36,8 @@ public class CommonProxy {
         DeathImmunity.register();
         AccessoryTicker.register();
         CombatHookEvents.register();
+        GrowthEffects.register();
+        GrowthEvents.register();
         ModWorld.init();
         ModContent.init();
         compat.init();
