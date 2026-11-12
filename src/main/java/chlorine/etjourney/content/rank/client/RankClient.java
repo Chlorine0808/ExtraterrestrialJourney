@@ -27,6 +27,7 @@ import cpw.mods.fml.common.FMLCommonHandler;
 import cpw.mods.fml.common.eventhandler.EventPriority;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import cpw.mods.fml.common.gameevent.TickEvent;
+import cpw.mods.fml.common.network.FMLNetworkEvent;
 
 /** Shows ranks on the client: a coloured name over the mob and motes of light around its body. */
 public final class RankClient {
@@ -37,7 +38,6 @@ public final class RankClient {
     private static final float LABEL_SCALE = 0.016666668F * 1.6F, SMALL = 0.75F;
 
     private final Random random = new Random();
-    private World lastWorld;
     private int ticks;
 
     private RankClient() {}
@@ -55,10 +55,8 @@ public final class RankClient {
         if (event.phase != TickEvent.Phase.END) return;
         Minecraft mc = Minecraft.getMinecraft();
         World world = mc.theWorld;
-        if (world != lastWorld) {
-            RankViews.VIEWS.clear();
-            lastWorld = world;
-        }
+        // No clear on a world change: the packets for the new world may land before it does. Views of the old
+        // world's mobs fall out as missing, and entity IDs are not reused within a server session.
         if (world == null || mc.isGamePaused()) return;
         ticks++;
         Iterator<Map.Entry<Integer, RankViews.View>> it = RankViews.VIEWS.entrySet()
@@ -88,6 +86,11 @@ public final class RankClient {
 
     private static double part(int channel) {
         return Math.max(0.01, (channel & 0xFF) / 255.0);
+    }
+
+    @SubscribeEvent
+    public void onDisconnect(FMLNetworkEvent.ClientDisconnectionFromServerEvent event) {
+        RankViews.VIEWS.clear();
     }
 
     /** Lowest and never on a cancelled render, so Post always pops what Pre pushed. */
