@@ -1,5 +1,6 @@
 package chlorine.etjourney.content;
 
+import chlorine.etjourney.content.area.AreaCommand;
 import chlorine.etjourney.content.area.AreaContent;
 import chlorine.etjourney.content.combat.ElementalGear;
 import chlorine.etjourney.content.combat.Elements;
@@ -46,5 +47,6 @@ public final class ModContent {
     public static void serverStarting(FMLServerStartingEvent event) {
         event.registerServerCommand(new RankCommand());
         event.registerServerCommand(new ShootCommand());
+        event.registerServerCommand(new AreaCommand());
     }
 }
