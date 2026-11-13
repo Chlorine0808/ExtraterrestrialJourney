@@ -9,6 +9,7 @@ import chlorine.etjourney.content.end.spawncheck.SpawnCheck;
 import chlorine.etjourney.content.end.wormcheck.WormCheck;
 import chlorine.etjourney.content.entity.EntityRenderers;
 import chlorine.etjourney.content.projectile.ProjectileContent;
+import chlorine.etjourney.content.projectile.check.ProjectileCheck;
 import chlorine.etjourney.content.rank.client.RankClient;
 import chlorine.etjourney.core.growth.GrowthTooltip;
 import chlorine.etjourney.core.util.WindowTitle;
@@ -41,6 +42,7 @@ public class ClientProxy extends CommonProxy {
         DamageCheck.startIfRequested();
         SpawnCheck.startIfRequested();
         WormCheck.startIfRequested();
+        ProjectileCheck.startIfRequested();
         tagWindow();
     }
 

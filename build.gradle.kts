@@ -57,4 +57,7 @@ tasks.named<JavaExec>("runClient") {
     if (providers.gradleProperty("spawnCheck").isPresent) systemProperty("etj.spawnCheck", "true")
     // -PwormCheck summons a flame worm, checks its segments, phases and hits, and quits; results land in run/client/wormcheck.txt.
     if (providers.gradleProperty("wormCheck").isPresent) systemProperty("etj.wormCheck", "true")
+    // -PprojectileCheck fires the trial shots at pigs and checks flight, hits, elements, homing and walls, and quits;
+    // results land in run/client/projectilecheck.txt.
+    if (providers.gradleProperty("projectileCheck").isPresent) systemProperty("etj.projectileCheck", "true")
 }
