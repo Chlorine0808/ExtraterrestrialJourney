@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -12,6 +13,7 @@ import java.util.Map;
 
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.SharedMonsterAttributes;
+import net.minecraft.entity.monster.EntityZombie;
 import net.minecraft.entity.passive.EntityPig;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.potion.Potion;
@@ -31,6 +33,9 @@ import chlorine.etjourney.content.area.Areas;
 import chlorine.etjourney.content.area.EntityLingeringArea;
 import chlorine.etjourney.content.combat.Elements;
 import chlorine.etjourney.content.projectile.Projectiles;
+import chlorine.etjourney.content.rank.EnemyRanks;
+import chlorine.etjourney.content.rank.Rank;
+import chlorine.etjourney.content.rank.ability.TrailAbility;
 import chlorine.etjourney.core.damage.ElementalDamageSource;
 import chlorine.etjourney.core.util.ModLog;
 import cpw.mods.fml.common.FMLCommonHandler;
@@ -345,6 +350,43 @@ public final class AreaCheckServer {
                                 ": %.2f from the pig",
                                 Math.hypot(cloud.posX - pig.posX, cloud.posZ - pig.posZ)))));
                 keep(cloud);
+                return true;
+            }
+        });
+        trials.add(new Trial(60) {
+
+            EntityZombie zombie;
+            EntityLingeringArea trail;
+
+            @Override
+            void start() {
+                // Peaceful would remove the zombie on its first tick.
+                world.difficultySetting = EnumDifficulty.EASY;
+                player.setPositionAndUpdate(bx, by, bz);
+                zombie = new EntityZombie(world);
+                zombie.setLocationAndAngles(bx + 8, by, bz, 0, 0);
+                world.spawnEntityInWorld(zombie);
+                keep(zombie);
+                EnemyRanks.give(zombie, Rank.RARE, Collections.singletonList(TrailAbility.ID));
+                zombie.setAttackTarget(player);
+            }
+
+            @Override
+            boolean poll(int t, boolean timedOut) {
+                for (Object o : world.loadedEntityList)
+                    if (o instanceof EntityLingeringArea && ((EntityLingeringArea) o).spec() == AreaTypes.RANK_TRAIL
+                        && ((EntityLingeringArea) o).owner() == zombie) trail = (EntityLingeringArea) o;
+                if (trail == null && !timedOut) return false;
+                record(
+                    verdict(
+                        trail != null && Math.abs(trail.posY - by) < EPS,
+                        "a rare zombie with the trail ability leaves a floor as it chases the player"
+                            + (trail == null ? ""
+                                : String.format(
+                                    Locale.ROOT,
+                                    ": %.2f from it",
+                                    Math.hypot(trail.posX - zombie.posX, trail.posZ - zombie.posZ)))));
+                world.difficultySetting = EnumDifficulty.PEACEFUL;
                 return true;
             }
         });
