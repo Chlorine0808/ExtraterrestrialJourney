@@ -55,6 +55,9 @@ public final class AccessoryCheck {
     /** Long enough for a modifier sync (10 ticks) and a wear (20 ticks) after a change. */
     private static final int SETTLE = 25;
 
+    /** Set once the check has finished, for checks that run after it. */
+    static volatile boolean done;
+
     private final List<String> lines = new ArrayList<>();
     private long start = -1;
     private int playerTicks;
@@ -302,6 +305,7 @@ public final class AccessoryCheck {
     private void finish() {
         finished = true;
         write();
+        done = true;
         DamageCheckServer.release();
     }
 
