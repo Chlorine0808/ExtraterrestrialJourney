@@ -7,6 +7,7 @@ import chlorine.etjourney.content.end.EndEntityRenderers;
 import chlorine.etjourney.content.end.FurRenderer;
 import chlorine.etjourney.content.end.spawncheck.SpawnCheck;
 import chlorine.etjourney.content.entity.EntityRenderers;
+import chlorine.etjourney.core.growth.GrowthTooltip;
 import chlorine.etjourney.core.util.WindowTitle;
 import chlorine.etjourney.world.end.debug.damagecheck.DamageCheck;
 import chlorine.etjourney.world.end.debug.shoot.ShootHarness;
@@ -30,6 +31,7 @@ public class ClientProxy extends CommonProxy {
         CraftRenderers.init();
         FurRenderer.init();
         WindPush.register();
+        GrowthTooltip.register();
         ShootHarness.startIfRequested();
         DamageCheck.startIfRequested();
         SpawnCheck.startIfRequested();

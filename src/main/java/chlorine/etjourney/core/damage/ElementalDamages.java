@@ -1,8 +1,10 @@
 package chlorine.etjourney.core.damage;
 
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 
+import chlorine.etjourney.core.damage.model.Boosts;
 import chlorine.etjourney.core.damage.model.DamageMath;
 import chlorine.etjourney.core.damage.model.ElementalDamage;
 import chlorine.etjourney.core.util.ModLog;
@@ -55,13 +57,20 @@ public final class ElementalDamages {
         float before = life(target);
         target.attackEntityFrom(source, damage.raw());
         if (pierce && target instanceof EntityPlayer && !target.isDead && target.getHealth() > 0) {
-            float expected = DamageMath.resolve(damage, ResistanceSources.of(target));
+            float expected = DamageMath.resolve(boosted(source), ResistanceSources.of(target));
             float missing = DamageMath.shortfall(before, life(target), expected);
             if (missing > 0) {
                 ModLog.LOG.debug("piercing fallback takes {} from {}", missing, target.getCommandSenderName());
                 takeDirectly(target, source, missing);
             }
         }
+    }
+
+    /** The attack raised by its attacker's boosts for the shape of this hit. */
+    public static ElementalDamage boosted(ElementalDamageSource source) {
+        Entity attacker = source.getEntity();
+        Boosts boosts = BoostSources.of(attacker instanceof EntityLivingBase ? (EntityLivingBase) attacker : null);
+        return DamageMath.boost(source.damage(), boosts, AttackProfiles.of(source));
     }
 
     /** Whether piercing damage may get past the target's immunities: never creative players or invulnerables. */
