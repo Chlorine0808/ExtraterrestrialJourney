@@ -230,3 +230,5 @@ etjourney.rank.legendary=Legendary
 entity.etjourney.flame_worm.name=Flame Worm
 etjourney.potion.heavy=Heavy
 etjourney.potion.frozen=Frozen
+item.etjourney.ward_talisman.name=Ward Talisman
+etjourney.tooltip.talisman.ward=Harmful effects last %s%% shorter and %s level lower
