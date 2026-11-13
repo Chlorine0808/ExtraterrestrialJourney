@@ -1,5 +1,6 @@
 package chlorine.etjourney;
 
+import chlorine.etjourney.content.ModContent;
 import chlorine.etjourney.core.ModInfo;
 import chlorine.etjourney.proxy.CommonProxy;
 import chlorine.etjourney.world.ModWorld;
@@ -16,7 +17,7 @@ import cpw.mods.fml.common.event.FMLServerStartingEvent;
     name = ModInfo.NAME,
     version = Tags.VERSION,
     acceptedMinecraftVersions = "[1.7.10]",
-    dependencies = "after:HardcoreEnderExpansion;after:nova_craft")
+    dependencies = "required-after:Baubles|Expanded;after:HardcoreEnderExpansion;after:nova_craft")
 public class ETJourney {
 
     @SidedProxy(
@@ -42,5 +43,6 @@ public class ETJourney {
     @Mod.EventHandler
     public void serverStarting(FMLServerStartingEvent event) {
         ModWorld.serverStarting(event);
+        ModContent.serverStarting(event);
     }
 }

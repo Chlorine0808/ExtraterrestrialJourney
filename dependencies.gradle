@@ -34,6 +34,9 @@
  * For more details, see https://docs.gradle.org/8.0.1/userguide/java_library_plugin.html#sec:java_library_configurations_graph
  */
 dependencies {
+    // Required: the accessory slots. Only compat/baubles may touch its classes (see docs accessories design).
+    implementation("com.github.GTNewHorizons:Baubles-Expanded:2.2.21-GTNH:dev")
+
     // Dev environment only: mods that share the Overworld, oceans and the End with ETJourney.
     // devOnlyNonPublishable("ganymedes01.etfuturum:Et-Futurum-Requiem:2.6.59-GTNH:dev")
     devOnlyNonPublishable("com.github.GTNewHorizons:Angelica:2.2.26:dev")

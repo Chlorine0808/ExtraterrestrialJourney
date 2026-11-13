@@ -16,6 +16,11 @@ public final class ETJConfig {
     public static boolean biomeColors = true;
     /** Whether mod entities with a spawn rule are added to natural spawning. */
     public static boolean naturalSpawns = true;
+    /** Whether enemies roll a rank when they join a world. */
+    public static boolean enemyRanks = true;
+    public static int[] rankDimensions = { 1 };
+    /** Mobs that may roll a rank (empty: every monster) and mobs that never do, by EntityList name. */
+    public static String[] rankedMobs = new String[0], unrankedMobs = new String[0];
 
     private ETJConfig() {}
 
@@ -61,6 +66,23 @@ public final class ETJConfig {
             "entities",
             true,
             "Let ETJ creatures spawn naturally in the outer End. Turn off to stop them without touching the world.");
+        enemyRanks = config.getBoolean(
+            "enemyRanks",
+            "ranks",
+            true,
+            "Let enemies roll a rank (rare and above) when they join a world.");
+        rankDimensions = config.get("ranks", "dimensions", new int[] { 1 }, "Dimensions whose enemies roll a rank.")
+            .getIntList();
+        rankedMobs = config.getStringList(
+            "rankedMobs",
+            "ranks",
+            new String[0],
+            "Mobs that may roll a rank, one EntityList name per line (as /summon takes them). Empty: every monster.");
+        unrankedMobs = config.getStringList(
+            "unrankedMobs",
+            "ranks",
+            new String[0],
+            "Mobs that never roll a rank, by EntityList name; wins over rankedMobs. Bosses never roll one.");
         if (config.hasChanged()) {
             config.save();
         }

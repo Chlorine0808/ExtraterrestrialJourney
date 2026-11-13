@@ -10,6 +10,8 @@ import chlorine.etjourney.world.end.feature.EndBiome;
 public final class EndEntities {
 
     public static final String SPORE_ZOMBIE = "spore_zombie";
+    /** Solar's worm; no zone yet, so it only comes from /summon etjourney.flame_worm. */
+    public static final String FLAME_WORM = "flame_worm";
 
     private EndEntities() {}
 
@@ -21,5 +23,6 @@ public final class EndEntities {
             SpawnRule.builder(EnumSet.of(EndBiome.MYCELIA), false)
                 .weight(4, 1, 4)
                 .build());
+        ModEntities.register(FLAME_WORM, EntityFlameWorm.class, null);
     }
 }

@@ -6,6 +6,7 @@ import net.minecraft.entity.EntityLiving;
 import net.minecraft.util.ResourceLocation;
 
 import chlorine.etjourney.content.entity.EntityRenderers;
+import chlorine.etjourney.content.worm.RenderWorm;
 import chlorine.etjourney.core.ModInfo;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
@@ -18,6 +19,13 @@ public final class EndEntityRenderers {
 
     public static void init() {
         EntityRenderers.bind(EntitySporeZombie.class, new TexturedBiped("spore_zombie"));
+        EntityRenderers.bind(
+            EntityFlameWorm.class,
+            new RenderWorm(vanillaBlock("glowstone"), vanillaBlock("netherrack"), vanillaBlock("nether_brick")));
+    }
+
+    private static ResourceLocation vanillaBlock(String name) {
+        return new ResourceLocation("textures/blocks/" + name + ".png");
     }
 
     /** A zombie-armed biped wearing one texture from textures/entity. */
