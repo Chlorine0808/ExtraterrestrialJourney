@@ -9,6 +9,8 @@ import chlorine.etjourney.content.end.EndBuildingContent;
 import chlorine.etjourney.content.end.EndEntities;
 import chlorine.etjourney.content.end.EndSpawns;
 import chlorine.etjourney.content.growth.GearAffixes;
+import chlorine.etjourney.content.projectile.ProjectileContent;
+import chlorine.etjourney.content.projectile.ShootCommand;
 import chlorine.etjourney.content.rank.EnemyRanks;
 import chlorine.etjourney.content.rank.RankCommand;
 import chlorine.etjourney.core.util.ModLog;
@@ -27,6 +29,7 @@ public final class ModContent {
         EndAcid.preInit();
         CraftContent.preInit();
         EndEntities.preInit();
+        ProjectileContent.preInit();
         ModLog.LOG.debug("content: preInit");
     }
 
@@ -40,5 +43,6 @@ public final class ModContent {
 
     public static void serverStarting(FMLServerStartingEvent event) {
         event.registerServerCommand(new RankCommand());
+        event.registerServerCommand(new ShootCommand());
     }
 }
