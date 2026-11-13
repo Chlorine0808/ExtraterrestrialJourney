@@ -47,6 +47,7 @@ public class CommonProxy {
     }
 
     public void postInit(FMLPostInitializationEvent event) {
+        ModContent.postInit();
         compat.postInit();
         ModLog.LOG.info("postInit done");
     }

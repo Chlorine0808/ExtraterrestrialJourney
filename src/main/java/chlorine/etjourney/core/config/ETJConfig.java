@@ -22,7 +22,7 @@ public final class ETJConfig {
     /** Mobs that may roll a rank (empty: every monster) and mobs that never do, by EntityList name. */
     public static String[] rankedMobs = new String[0], unrankedMobs = new String[0];
     /** Potion IDs of ETJ's own status effects; a taken ID moves to the first free one. */
-    public static int heavyPotionId = 28, frozenPotionId = 29;
+    public static int heavyPotionId = 100, frozenPotionId = 101;
 
     private ETJConfig() {}
 
@@ -88,14 +88,14 @@ public final class ETJConfig {
         heavyPotionId = config.getInt(
             "heavyPotionId",
             "status",
-            28,
+            100,
             24,
             Integer.MAX_VALUE,
             "Potion ID of Heavy (lower jumps). A taken ID moves to the first free one; set it on server and client alike.");
         frozenPotionId = config.getInt(
             "frozenPotionId",
             "status",
-            29,
+            101,
             24,
             Integer.MAX_VALUE,
             "Potion ID of Frozen (no walking or jumping). A taken ID moves to the first free one.");

@@ -22,7 +22,6 @@ public final class ModContent {
 
     public static void preInit() {
         Elements.register();
-        Ailments.preInit();
         ElementalGear.preInit();
         GearAffixes.register();
         EndBlocks.preInit();
@@ -38,6 +37,10 @@ public final class ModContent {
         EnemyRanks.register();
         EndBuildingContent.init();
         ModLog.LOG.debug("content: init");
+    }
+
+    public static void postInit() {
+        Ailments.postInit();
     }
 
     public static void serverStarting(FMLServerStartingEvent event) {
