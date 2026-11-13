@@ -8,6 +8,9 @@ import java.util.Map;
 import net.minecraft.potion.Potion;
 
 import chlorine.etjourney.content.combat.Elements;
+import chlorine.etjourney.content.projectile.Aim;
+import chlorine.etjourney.content.projectile.ProjectileSpec;
+import chlorine.etjourney.content.projectile.ProjectileTypes;
 import chlorine.etjourney.core.damage.model.DamageKind;
 import chlorine.etjourney.core.damage.model.Element;
 import chlorine.etjourney.core.damage.model.ElementRegistry;
@@ -54,8 +57,21 @@ public final class AreaTypes {
             .particle("flame")
             .build());
 
+    /** A lobbed pod that bursts into a spore cloud, like the carrion sac's throw. */
+    public static final ProjectileSpec TRIAL_SPORE_POD = ProjectileTypes.register(
+        ProjectileSpec.builder("trial_spore_pod", damage(DamageKind.PHYSICAL, ElementRegistry.NEUTRAL, 2))
+            .speed(0.9)
+            .gravity(0.05)
+            .aim(Aim.LOB)
+            .arcHeight(3)
+            .lifetime(120)
+            .size(0.5F)
+            .effect(AreaImpact.leave(TRIAL_SPORES))
+            .look("slime_ball")
+            .build());
 
     private AreaTypes() {}
+
     public static synchronized AreaSpec register(AreaSpec spec) {
         if (BY_NAME.putIfAbsent(spec.name, spec) != null)
             throw new IllegalArgumentException("Area already registered: " + spec.name);
@@ -77,6 +93,6 @@ public final class AreaTypes {
             .build();
     }
 
-    /** Loads the class, which registers the trial areas above. */
+    /** Loads the class, which registers the trial areas and the spore pod above. */
     public static void register() {}
 }
