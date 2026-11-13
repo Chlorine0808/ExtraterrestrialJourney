@@ -3,6 +3,7 @@ package chlorine.etjourney.proxy;
 import org.lwjgl.opengl.Display;
 
 import chlorine.etjourney.content.area.AreaContent;
+import chlorine.etjourney.content.area.check.AreaCheck;
 import chlorine.etjourney.content.craft.CraftRenderers;
 import chlorine.etjourney.content.end.EndEntityRenderers;
 import chlorine.etjourney.content.end.FurRenderer;
@@ -45,6 +46,7 @@ public class ClientProxy extends CommonProxy {
         SpawnCheck.startIfRequested();
         WormCheck.startIfRequested();
         ProjectileCheck.startIfRequested();
+        AreaCheck.startIfRequested();
         tagWindow();
     }
 

@@ -60,4 +60,7 @@ tasks.named<JavaExec>("runClient") {
     // -PprojectileCheck fires the trial shots at pigs and checks flight, hits, elements, homing and walls, and quits;
     // results land in run/client/projectilecheck.txt.
     if (providers.gradleProperty("projectileCheck").isPresent) systemProperty("etj.projectileCheck", "true")
+    // -PareaCheck leaves the trial areas around pigs and the player and checks that they land, work, end and spare
+    // allies, and quits; results land in run/client/areacheck.txt.
+    if (providers.gradleProperty("areaCheck").isPresent) systemProperty("etj.areaCheck", "true")
 }
