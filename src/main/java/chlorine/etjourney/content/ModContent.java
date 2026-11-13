@@ -11,6 +11,7 @@ import chlorine.etjourney.content.end.EndSpawns;
 import chlorine.etjourney.content.growth.GearAffixes;
 import chlorine.etjourney.content.rank.EnemyRanks;
 import chlorine.etjourney.content.rank.RankCommand;
+import chlorine.etjourney.content.status.Ailments;
 import chlorine.etjourney.core.util.ModLog;
 import cpw.mods.fml.common.event.FMLServerStartingEvent;
 
@@ -21,6 +22,7 @@ public final class ModContent {
 
     public static void preInit() {
         Elements.register();
+        Ailments.preInit();
         ElementalGear.preInit();
         GearAffixes.register();
         EndBlocks.preInit();
