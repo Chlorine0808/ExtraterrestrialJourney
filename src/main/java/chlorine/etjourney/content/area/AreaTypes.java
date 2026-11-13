@@ -56,6 +56,16 @@ public final class AreaTypes {
             .effect(AreaEffect.burn(2))
             .particle("flame")
             .build());
+    /** The poison floor a ranked mob with the trail ability leaves behind it. */
+    public static final AreaSpec RANK_TRAIL = register(
+        AreaSpec.builder("rank_trail")
+            .radius(1.5)
+            .duration(100)
+            .shrinkTicks(20)
+            .interval(20)
+            .effect(AreaEffect.status(Potion.poison.id, 40, 0))
+            .particle("townaura")
+            .build());
 
     /** A lobbed pod that bursts into a spore cloud, like the carrion sac's throw. */
     public static final ProjectileSpec TRIAL_SPORE_POD = ProjectileTypes.register(
