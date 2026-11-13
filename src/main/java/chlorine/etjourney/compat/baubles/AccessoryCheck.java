@@ -153,8 +153,10 @@ public final class AccessoryCheck {
                 return true;
             case 8:
                 checkEmberAndVampire(player);
-                inv.setInventorySlotContents(slots[0], stack(Talisman.WRATH, 0));
-                inv.setInventorySlotContents(slots[1], stack(Talisman.BUBBLE, 0));
+                // Pinned as plain common: the first punch would otherwise roll them, and an affix would skew
+                // the second.
+                inv.setInventorySlotContents(slots[0], plain(stack(Talisman.WRATH, 0)));
+                inv.setInventorySlotContents(slots[1], plain(stack(Talisman.BUBBLE, 0)));
                 return true;
             case 9:
                 checkWrathAndBubble(player);
@@ -257,6 +259,11 @@ public final class AccessoryCheck {
         zombie.setDead();
         GrowthData after = GrowthNbt.read(inv.getStackInSlot(slots[0]));
         expect("a worn talisman gains from hits", after != null && after.xp == 4, String.valueOf(after));
+    }
+
+    private static ItemStack plain(ItemStack stack) {
+        GrowthNbt.write(stack, data(0, Rarity.COMMON, null, 0));
+        return stack;
     }
 
     private static GrowthData data(int xp, Rarity rarity, String affix, float roll) {
