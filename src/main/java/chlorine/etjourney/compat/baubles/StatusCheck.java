@@ -48,7 +48,7 @@ import cpw.mods.fml.common.registry.GameRegistry;
  * In-game check of status effects, run with -PdamageCheck after the accessory check and before the hits. Writes
  * statuscheck.txt next to damagecheck.txt.
  */
-final class StatusCheck {
+public final class StatusCheck {
 
     private static final double EPSILON = 1e-6;
     /** Longer than the short effects, so they run out between the two stages. */
