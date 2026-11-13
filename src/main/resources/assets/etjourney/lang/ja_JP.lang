@@ -224,3 +224,6 @@ etjourney.affix.sturdy=頑丈な：受けるダメージ −%s%%
 etjourney.affix.warded=護りの：受ける魔法ダメージ −%s%%
 etjourney.affix.thorned=棘の：近接で受けたダメージの %s%% を返す
 etjourney.affix.second_wind=粘り強い：体力が %2$s%% 以下になる一撃で %1$s 回復．%3$s 秒に 1 回
+etjourney.rank.rare=レア
+etjourney.rank.epic=エピック
+etjourney.rank.legendary=レジェンド

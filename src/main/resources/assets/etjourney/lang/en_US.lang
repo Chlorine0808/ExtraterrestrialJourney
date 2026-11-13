@@ -224,3 +224,6 @@ etjourney.affix.sturdy=Sturdy: -%s%% damage taken
 etjourney.affix.warded=Warded: -%s%% magic damage taken
 etjourney.affix.thorned=Thorned: returns %s%% of melee damage taken
 etjourney.affix.second_wind=Second Wind: heals %s when a hit leaves %s%% health or less, every %s seconds
+etjourney.rank.rare=Rare
+etjourney.rank.epic=Epic
+etjourney.rank.legendary=Legendary
