@@ -2,6 +2,7 @@ package chlorine.etjourney.proxy;
 
 import org.lwjgl.opengl.Display;
 
+import chlorine.etjourney.content.area.AreaContent;
 import chlorine.etjourney.content.craft.CraftRenderers;
 import chlorine.etjourney.content.end.EndEntityRenderers;
 import chlorine.etjourney.content.end.FurRenderer;
@@ -32,6 +33,7 @@ public class ClientProxy extends CommonProxy {
         super.init(event);
         EndEntityRenderers.init();
         ProjectileContent.initClient();
+        AreaContent.initClient();
         EntityRenderers.init();
         RankClient.init();
         CraftRenderers.init();

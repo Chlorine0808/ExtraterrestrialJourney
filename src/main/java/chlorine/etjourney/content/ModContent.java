@@ -1,5 +1,6 @@
 package chlorine.etjourney.content;
 
+import chlorine.etjourney.content.area.AreaContent;
 import chlorine.etjourney.content.combat.ElementalGear;
 import chlorine.etjourney.content.combat.Elements;
 import chlorine.etjourney.content.craft.CraftContent;
@@ -30,6 +31,7 @@ public final class ModContent {
         CraftContent.preInit();
         EndEntities.preInit();
         ProjectileContent.preInit();
+        AreaContent.preInit();
         ModLog.LOG.debug("content: preInit");
     }
 
