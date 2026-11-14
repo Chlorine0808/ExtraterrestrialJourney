@@ -45,8 +45,8 @@ public final class Framing {
 
     /** A seed tree is 15 high with a 10-block reach. */
     public static final TreeFrame SEED_TREE = new TreeFrame(15, 4, 7, 8, 10, 10);
-    /** A giant tree is 56 high with a 26-block reach; 45 off, the whole of it fits the 70-degree view. */
-    public static final TreeFrame GIANT_TREE = new TreeFrame(45, 6, 26, 12, 20, 26);
+    /** A giant tree is 112 high with a 48-block reach; 85 off, the whole of it fits the 70-degree view. */
+    public static final TreeFrame GIANT_TREE = new TreeFrame(85, 6, 52, 12, 30, 48);
 
     public interface BiomeAt {
 

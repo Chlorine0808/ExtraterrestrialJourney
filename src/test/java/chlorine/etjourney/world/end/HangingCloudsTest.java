@@ -89,13 +89,16 @@ class HangingCloudsTest {
         return x >= ox && x < ox + 16 && z >= oz && z < oz + 16;
     }
 
-    /** The block there, ignoring the glowshrooms: they stand on the ground and are not clouds. */
+    /** The block there, ignoring the glowshrooms and giant trees: they stand on the ground and are not clouds. */
     private static Object get(MemorySink[] halves, int x, int y, int z) {
         EndBlock b = y < 128 ? halves[0].get(x, y, z) : halves[1].get(x, y, z);
         if (b == EndBlock.MYCELIA_STEM || b == EndBlock.MYCELIA_CAP
             || b == EndBlock.MYCELIA_GILL
             || b == EndBlock.MYCELIA_VINE
-            || b == EndBlock.MYCELIA_VINE_LAST) return null;
+            || b == EndBlock.MYCELIA_VINE_LAST
+            || b == EndBlock.GROVE_LOG
+            || b == EndBlock.GROVE_LEAVES
+            || b == EndBlock.GROVE_BLOSSOM) return null;
         return b;
     }
 

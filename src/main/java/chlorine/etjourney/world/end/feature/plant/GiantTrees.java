@@ -16,13 +16,17 @@ import chlorine.etjourney.world.end.noise.Hash;
 /** Decides where the giant trees stand, about one per grove continent, the same from every seed of the continent. */
 public final class GiantTrees {
 
-    /** Horizontal reach of the roots, at most. */
-    public static final int FOOTPRINT = 26;
-    /** From the ground to the top of the branches. */
-    public static final int HEIGHT = 56;
+    /** Horizontal reach of the tree, roots and crown included, at most. */
+    public static final int FOOTPRINT = 64;
+    /** Horizontal reach of the roots, at most: the ground the tree stands on. */
+    public static final int ROOT_FOOTPRINT = 26;
+    /** From the ground to the top of the crown. */
+    public static final int HEIGHT = 112;
     static final int MIN_MEMBERS = 12;
     static final double LEVEL_RADIUS = 16, LEVEL_RISE = 14;
-    private static final int CANDIDATES = 32;
+    /** The topmost surface over the tree, out to CROWN_RADIUS, may rise at most CROWN_CLEAR above the root. */
+    static final double CROWN_RADIUS = 34, CROWN_CLEAR = 40;
+    private static final int CANDIDATES = 64;
     private static final double SPACING = 80;
     private static final long COUNT_SALT = 0x2545F4914F6CDD1DL;
     private static final long ORDER_SALT = 0x6C8E9CF570932BD5L;
@@ -69,12 +73,14 @@ public final class GiantTrees {
         for (int i = 0; i < Math.min(CANDIDATES, order.length) && out.size() < wanted; i++) {
             Continent.Seed s = Continent.seedAt(seed, ContinentIds.cellX(order[i]), ContinentIds.cellZ(order[i]));
             if (s == null || tooClose(out, s.x, s.z) || !insideGrove(seed, s.x, s.z)) continue;
-            // The roots crawl over the ground out to FOOTPRINT; on a lake they would hang over the water.
-            if (probe.wet(s.x, s.z, FOOTPRINT)) continue;
+            // The roots crawl over the ground out to ROOT_FOOTPRINT; on a lake they would hang over the water.
+            if (probe.wet(s.x, s.z, ROOT_FOOTPRINT)) continue;
             // A sinkhole's funnel cuts the rock below the probe's ground, leaving the trunk over a hollow.
-            if (probe.holed(s.x, s.z, FOOTPRINT)) continue;
+            if (probe.holed(s.x, s.z, ROOT_FOOTPRINT)) continue;
             double ground = probe.ground(s.x, s.z);
-            if (ground <= -100 || ground + HEIGHT > 250 || !level(probe, s.x, s.z, ground)) continue;
+            if (ground <= -100 || ground + HEIGHT > 255 || !level(probe, s.x, s.z, ground)) continue;
+            // On layered ground the root may be on a low layer; a layer above would cut through the trunk or crown.
+            if (!underCrownClear(probe, s.x, s.z, ground)) continue;
             out.add(new double[] { s.x, ground, s.z });
         }
         return out;
@@ -90,13 +96,26 @@ public final class GiantTrees {
         return true;
     }
 
+    private static boolean underCrownClear(StructureProbe probe, double x, double z, double ground) {
+        if (probe.surface(x, z) > ground + CROWN_CLEAR) return false;
+        // Rings 4 apart in 16 directions: a layer's edge is ragged, so sparse points miss its spurs.
+        for (double r = CROWN_RADIUS; r > 0; r -= 4) {
+            for (int k = 0; k < 16; k++) {
+                double angle = k * Math.PI / 8;
+                if (probe.surface(x + r * Math.cos(angle), z + r * Math.sin(angle)) > ground + CROWN_CLEAR)
+                    return false;
+            }
+        }
+        return true;
+    }
+
     private static boolean tooClose(List<double[]> taken, double x, double z) {
         for (double[] t : taken) if (Math.hypot(t[0] - x, t[2] - z) <= SPACING) return true;
         return false;
     }
 
     private static boolean insideGrove(long seed, double x, double z) {
-        double r = FOOTPRINT * 0.6;
+        double r = ROOT_FOOTPRINT * 0.6;
         return EndBiome.at(seed, x, z) == EndBiome.GROVE && EndBiome.at(seed, x + r, z) == EndBiome.GROVE
             && EndBiome.at(seed, x - r, z) == EndBiome.GROVE
             && EndBiome.at(seed, x, z + r) == EndBiome.GROVE

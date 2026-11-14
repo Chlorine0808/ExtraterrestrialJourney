@@ -28,7 +28,7 @@ public final class PlantModifiers {
     private static final int REACH = GiantTrees.FOOTPRINT + 12;
 
     /** Distances from the root at which the footprint is checked against reserved fades: the foot and the root tips. */
-    private static final double[] FADE_RADII = { 14, GiantTrees.FOOTPRINT };
+    private static final double[] FADE_RADII = { 14, GiantTrees.ROOT_FOOTPRINT };
 
     private static final AtomicLong NANOS = new AtomicLong(), PASSES = new AtomicLong();
 
