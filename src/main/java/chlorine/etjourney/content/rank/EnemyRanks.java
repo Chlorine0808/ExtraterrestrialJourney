@@ -125,11 +125,20 @@ public final class EnemyRanks {
         for (RankAbility a : RankAbilities.of(mob)) a.onDeath(mob, event.source);
     }
 
+    /**
+     * First and cancelled, so no later handler can add to a minion's drops or spawn its own, whether its parent is
+     * alive or not.
+     */
+    @SubscribeEvent(priority = EventPriority.HIGHEST)
+    public void onMinionDrops(LivingDropsEvent event) {
+        if (event.entityLiving.worldObj.isRemote || RankData.role(event.entityLiving) != RankData.MINION) return;
+        event.drops.clear();
+        event.setCanceled(true);
+    }
+
     @SubscribeEvent(priority = EventPriority.LOWEST)
     public void onDrops(LivingDropsEvent event) {
-        if (event.entityLiving.worldObj.isRemote) return;
-        if (RankData.role(event.entityLiving) == RankData.MINION) event.drops.clear();
-        else if (RankData.ranked(event.entityLiving))
+        if (!event.entityLiving.worldObj.isRemote && RankData.ranked(event.entityLiving))
             RankRewards.multiplyDrops(event.drops, RankData.rank(event.entityLiving));
     }
 
