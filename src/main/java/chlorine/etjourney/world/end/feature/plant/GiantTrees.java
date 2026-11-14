@@ -17,13 +17,15 @@ import chlorine.etjourney.world.end.noise.Hash;
 public final class GiantTrees {
 
     /** Horizontal reach of the tree, crown included, at most. */
-    public static final int FOOTPRINT = 36;
+    public static final int FOOTPRINT = 48;
     /** Horizontal reach of the roots, at most: the ground the tree stands on. */
     public static final int ROOT_FOOTPRINT = 26;
     /** From the ground to the top of the crown. */
     public static final int HEIGHT = 112;
     static final int MIN_MEMBERS = 12;
     static final double LEVEL_RADIUS = 16, LEVEL_RISE = 14;
+    /** Ground under the crown, out to CROWN_RADIUS, must stay CROWN_CLEAR below the crown's lowest leaves. */
+    static final double CROWN_RADIUS = 34, CROWN_CLEAR = 40;
     private static final int CANDIDATES = 32;
     private static final double SPACING = 80;
     private static final long COUNT_SALT = 0x2545F4914F6CDD1DL;

@@ -106,13 +106,14 @@ public final class GiantTree {
             // Spread up the crown from the lowest branch to near the top.
             double from = base + top - CROWN + (CROWN - 10) * i / (double) branches + random.nextInt(4);
             double to = Math.min(from + 6 + random.nextInt(6), base + top + 1);
-            double reach = 16 + random.nextDouble() * 8, leaf = 7.5 + random.nextDouble() * 2.5;
+            // Low branches reach farthest, so the crown spreads out like a parasol over the trunk.
+            double reach = 34 - 10.0 * i / branches + random.nextDouble() * 4, leaf = 7.5 + random.nextDouble() * 2.5;
             double sx = ax + 6 * Math.cos(angle), sz = az + 6 * Math.sin(angle);
             double ex = ax + reach * Math.cos(angle), ez = az + reach * Math.sin(angle);
             crownTubes.add(new double[] { sx, from, sz, 2.6, ex, to, ez, 1.6 });
             addClump(crownTubes, crownClumps, random, ex, to + 2, ez, leaf);
             // A smaller clump partway along fills the gap between the trunk and the branch's end.
-            double mid = 0.55 + random.nextDouble() * 0.15;
+            double mid = 0.45 + random.nextDouble() * 0.15;
             addClump(
                 crownTubes,
                 crownClumps,
