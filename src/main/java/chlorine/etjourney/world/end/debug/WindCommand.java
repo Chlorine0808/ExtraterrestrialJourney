@@ -10,10 +10,11 @@ import net.minecraft.util.ChatComponentText;
 import net.minecraft.util.MathHelper;
 import net.minecraft.util.Vec3;
 
+import chlorine.etjourney.world.wind.TrialWinds;
 import chlorine.etjourney.world.wind.WindWorld;
 import chlorine.etjourney.world.wind.model.Wind;
 
-/** /etj wind add|aim|remove|list: trial winds at the player's feet, until the server stops. */
+/** /etj wind add|aim|remove|list: trial winds at the player's feet, saved with the world (see TrialWinds). */
 final class WindCommand {
 
     static final String USAGE = "/etj wind <add [height] [lift] [max]|aim [size] [lift] [max]|remove <id|all>|list>";
@@ -106,21 +107,20 @@ final class WindCommand {
     }
 
     private static void put(EntityPlayerMP player, Wind u) {
-        int id = WindWorld.SERVER.add(player.dimension, u);
+        int id = TrialWinds.add(player.dimension, u);
         say(player, "Wind " + id + " " + u);
     }
 
     private static void remove(EntityPlayerMP player, String which) {
         if (which.equals("all")) {
-            WindWorld.SERVER.clear(player.dimension);
+            TrialWinds.clear(player.dimension);
             say(player, "Removed every wind in this dimension");
             return;
         }
         int id = Integer.parseInt(which);
         say(
             player,
-            WindWorld.SERVER.remove(player.dimension, id) ? "Removed wind " + id
-                : "No wind " + id + " in this dimension");
+            TrialWinds.remove(player.dimension, id) ? "Removed wind " + id : "No wind " + id + " in this dimension");
     }
 
     private static void list(EntityPlayerMP player) {
