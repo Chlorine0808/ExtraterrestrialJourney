@@ -23,6 +23,7 @@ public final class RankAbilities {
         add(new SummonAbility());
         add(new TrailAbility());
         add(new BulkyAbility());
+        add(new BruteAbility());
     }
 
     private RankAbilities() {}
