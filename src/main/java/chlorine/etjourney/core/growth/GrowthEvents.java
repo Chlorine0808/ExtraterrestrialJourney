@@ -7,18 +7,18 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ChatComponentTranslation;
 import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.event.entity.living.LivingHurtEvent;
 import net.minecraftforge.event.entity.player.EntityItemPickupEvent;
 
 import chlorine.etjourney.core.accessory.WornAccessories;
+import chlorine.etjourney.core.combat.CombatHit;
+import chlorine.etjourney.core.combat.LandedHits;
 import chlorine.etjourney.core.growth.model.GearSlot;
 import chlorine.etjourney.core.growth.model.GrowthBonus;
 import cpw.mods.fml.common.FMLCommonHandler;
-import cpw.mods.fml.common.eventhandler.EventPriority;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import cpw.mods.fml.common.gameevent.PlayerEvent;
 
-/** Rolls gear when crafted or picked up, and gives players' gear experience from hits. */
+/** Rolls gear when crafted or picked up, and gives players' gear experience from the health their hits took. */
 public final class GrowthEvents {
 
     private GrowthEvents() {}
@@ -29,6 +29,7 @@ public final class GrowthEvents {
         FMLCommonHandler.instance()
             .bus()
             .register(events);
+        LandedHits.listen(GrowthEvents::onLanded);
     }
 
     @SubscribeEvent
@@ -42,19 +43,16 @@ public final class GrowthEvents {
             Growth.ensureRolled(event.item.getEntityItem(), event.entityPlayer.getRNG());
     }
 
-    /** After the combat hooks, so a blocked hit gives nothing. */
-    @SubscribeEvent(priority = EventPriority.LOWEST)
-    public void onHurt(LivingHurtEvent event) {
-        if (event.entityLiving.worldObj.isRemote || event.ammount <= 0) return;
-        int xp = GrowthBonus.xpForHit(event.ammount);
-        if (event.source.getEntity() instanceof EntityPlayer && event.source.getEntity() != event.entityLiving) {
-            EntityPlayer attacker = (EntityPlayer) event.source.getEntity();
+    private static void onLanded(CombatHit hit) {
+        int xp = GrowthBonus.xpForHit(hit.amount());
+        if (hit.attacker instanceof EntityPlayer && hit.attacker != hit.target) {
+            EntityPlayer attacker = (EntityPlayer) hit.attacker;
             ItemStack held = attacker.getHeldItem();
             if (Gear.slot(held) == GearSlot.WEAPON) gain(attacker, held, xp);
             gainAccessories(attacker, xp);
         }
-        if (event.entityLiving instanceof EntityPlayer) {
-            EntityPlayer target = (EntityPlayer) event.entityLiving;
+        if (hit.target instanceof EntityPlayer) {
+            EntityPlayer target = (EntityPlayer) hit.target;
             for (ItemStack armor : target.inventory.armorInventory)
                 if (Gear.slot(armor) != null) gain(target, armor, xp);
             gainAccessories(target, xp);
