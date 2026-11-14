@@ -26,6 +26,7 @@ final class AbilityTrials {
         trials.add(new JuggernautTrial());
         trials.add(new HeavyTrial());
         trials.add(new BuffsTrial());
+        trials.add(new RegenTrial());
     }
 
     /** True once every trial is done. */
