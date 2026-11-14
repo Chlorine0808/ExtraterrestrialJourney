@@ -39,6 +39,7 @@ final class AbilityTrials {
         trials.add(new AbsorbTrial());
         trials.add(new BarrierTrial());
         trials.add(new VeilTrial());
+        trials.add(new GiantTrial());
     }
 
     /** True once every trial is done. */

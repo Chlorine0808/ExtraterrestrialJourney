@@ -40,6 +40,7 @@ public final class RankAbilities {
         add(new AbsorbAbility());
         add(new BarrierAbility());
         add(new VeilAbility());
+        add(new GiantAbility());
     }
 
     private RankAbilities() {}
