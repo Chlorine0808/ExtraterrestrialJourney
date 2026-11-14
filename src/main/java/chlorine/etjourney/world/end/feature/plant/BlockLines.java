@@ -4,15 +4,14 @@ import java.util.List;
 import java.util.Map;
 
 import chlorine.etjourney.world.end.feature.sdf.SdfFill;
-import chlorine.etjourney.world.end.modifier.EndBlock;
 
 /** One-block-thick lines of wood along a polyline, shared by the tree shapes. */
 final class BlockLines {
 
     private BlockLines() {}
 
-    /** Puts the block along the polyline, face-connected. */
-    static void line(List<double[]> spline, Map<Long, EndBlock> cells, EndBlock block) {
+    /** Puts the value along the polyline, face-connected. */
+    static <T> void line(List<double[]> spline, Map<Long, T> cells, T block) {
         int[] prev = null;
         for (int i = 0; i + 1 < spline.size(); i++) {
             double[] a = spline.get(i), b = spline.get(i + 1);
