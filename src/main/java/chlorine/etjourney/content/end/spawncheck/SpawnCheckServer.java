@@ -38,7 +38,8 @@ import cpw.mods.fml.common.gameevent.TickEvent;
 
 /**
  * Server half of the spawn check: at a MYCELIA and a GROVE site, counts mobs after a spell with the spore zombie on
- * the End's spawn list and a spell with it taken off, and the ranks the mobs that joined rolled.
+ * the End's spawn list and a spell with it taken off, and the ranks the mobs that joined rolled. After the first
+ * spell it kills a spore zombie there and watches its cloud.
  */
 public final class SpawnCheckServer {
 
@@ -62,6 +63,10 @@ public final class SpawnCheckServer {
     private BiomeGenBase.SpawnListEntry entry;
     /** Runs at the first site before its mobs are cleared; null once done. */
     private RankAbilityCheck abilities;
+    /** Runs at the first site after its spell is counted; null once done. */
+    private SporeCloudCheck cloud;
+    private boolean counted;
+    private EntityPlayerMP player;
     /** Mobs that joined the End during the current spell, by kind. */
     private int joinedEndermen, joinedSpores, joinedOthers;
     /** Monsters that joined during the current spell; their ranks are read when it ends. */
@@ -103,6 +108,7 @@ public final class SpawnCheckServer {
     public void onJoin(EntityJoinWorldEvent event) {
         if (event.world.isRemote || event.world.provider.dimensionId != END || !settled) return;
         Entity e = event.entity;
+        if (cloud != null && player != null) cloud.onJoin(e, player);
         if (e instanceof EntitySporeZombie) joinedSpores++;
         else if (e instanceof EntityEnderman) joinedEndermen++;
         else if (e instanceof IMob) joinedOthers++;
@@ -125,6 +131,7 @@ public final class SpawnCheckServer {
     }
 
     private void step(EntityPlayerMP player) {
+        this.player = player;
         if (runIndex < 0) {
             if (player.ticksExisted < JOIN_TICKS) return;
             if (player.dimension != END) {
@@ -154,6 +161,12 @@ public final class SpawnCheckServer {
             return;
         }
         if (phaseTicks < SPELL_TICKS) return;
+        if (counted) {
+            if (!cloud.step(end, player)) return;
+            cloud = null;
+            nextRun(player);
+            return;
+        }
         count(end, run);
         run.joinedEndermen = joinedEndermen;
         run.joinedSpores = joinedSpores;
@@ -170,6 +183,15 @@ public final class SpawnCheckServer {
                 run.joinedEndermen,
                 run.joinedSpores,
                 run.joinedOthers));
+        if (cloud != null) {
+            counted = true;
+            return;
+        }
+        nextRun(player);
+    }
+
+    private void nextRun(EntityPlayerMP player) {
+        counted = false;
         if (runIndex + 1 < runs.size()) {
             start(player, runIndex + 1);
             return;
@@ -215,6 +237,7 @@ public final class SpawnCheckServer {
                 grove[0],
                 grove[1]));
         abilities = new RankAbilityCheck(this::record);
+        cloud = new SporeCloudCheck(this::record);
         runs.add(new Run(EndBiome.MYCELIA, mycelia, true));
         runs.add(new Run(EndBiome.MYCELIA, mycelia, false));
         runs.add(new Run(EndBiome.GROVE, grove, true));
