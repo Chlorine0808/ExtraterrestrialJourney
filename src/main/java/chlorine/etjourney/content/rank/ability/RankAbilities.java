@@ -39,6 +39,7 @@ public final class RankAbilities {
         add(new EtherealAbility());
         add(new AbsorbAbility());
         add(new BarrierAbility());
+        add(new VeilAbility());
     }
 
     private RankAbilities() {}
