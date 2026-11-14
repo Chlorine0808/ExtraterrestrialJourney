@@ -41,6 +41,7 @@ final class AbilityTrials {
         trials.add(new VeilTrial());
         trials.add(new GiantTrial());
         trials.add(new TinyTrial());
+        trials.add(new BlightTrial());
     }
 
     /** True once every trial is done. */

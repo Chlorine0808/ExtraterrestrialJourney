@@ -42,6 +42,7 @@ public final class RankAbilities {
         add(new VeilAbility());
         add(new GiantAbility());
         add(new TinyAbility());
+        add(new BlightAbility());
     }
 
     private RankAbilities() {}
