@@ -56,6 +56,7 @@ public final class RankAbilities {
         add(new LightningAbility());
         add(new DowndraftAbility());
         add(new BlastAbility());
+        add(new ReviveAbility());
     }
 
     private RankAbilities() {}

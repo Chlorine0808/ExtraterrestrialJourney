@@ -55,6 +55,7 @@ final class AbilityTrials {
         trials.add(new LightningTrial());
         trials.add(new DowndraftTrial());
         trials.add(new BlastTrial());
+        trials.add(new ReviveTrial());
     }
 
     /** True once every trial is done. */

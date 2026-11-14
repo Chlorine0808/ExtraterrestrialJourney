@@ -196,15 +196,17 @@ public final class EnemyRanks {
         if (!RankData.ranked(mob)) return;
         if (RankData.markPaid(mob)) RankRewards.setExperience(mob, RankData.rank(mob).experience);
         for (RankAbility a : RankAbilities.of(mob)) a.onDeath(mob, event.source);
+        if (RankData.noLoot(mob)) RankRewards.setExperience(mob, 0);
     }
 
     /**
-     * First and cancelled, so no later handler can add to a minion's drops or spawn its own, whether its parent is
-     * alive or not.
+     * First and cancelled, so no later handler can add to a minion's or a rising corpse's drops or spawn its own,
+     * whether the minion's parent is alive or not.
      */
     @SubscribeEvent(priority = EventPriority.HIGHEST)
     public void onMinionDrops(LivingDropsEvent event) {
-        if (event.entityLiving.worldObj.isRemote || RankData.role(event.entityLiving) != RankData.MINION) return;
+        if (event.entityLiving.worldObj.isRemote
+            || RankData.role(event.entityLiving) != RankData.MINION && !RankData.noLoot(event.entityLiving)) return;
         event.drops.clear();
         event.setCanceled(true);
     }

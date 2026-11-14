@@ -17,7 +17,7 @@ public final class RankData {
 
     private static final String KEY = "etjRank", RANK = "rank", ABILITIES = "abilities", USED = "used.",
         SETTING = "set.", ROLE = "role", PARENT_MOST = "parentMost", PARENT_LEAST = "parentLeast", MISSES = "misses",
-        PAID = "paid";
+        PAID = "paid", NO_LOOT = "noLoot";
     private static final int TAG_STRING = 8;
 
     private RankData() {}
@@ -88,6 +88,20 @@ public final class RankData {
         if (tag.getBoolean(PAID)) return false;
         tag.setBoolean(PAID, true);
         return true;
+    }
+
+    /** Clears the mark, for a copy of a dead mob that will pay out when it dies in its turn. */
+    public static void clearPaid(Entity e) {
+        tag(e).setBoolean(PAID, false);
+    }
+
+    /** Marks a corpse that drops and gives nothing, as one whose mob will rise again. */
+    public static void markNoLoot(Entity e) {
+        tag(e).setBoolean(NO_LOOT, true);
+    }
+
+    public static boolean noLoot(Entity e) {
+        return rolled(e) && tag(e).getBoolean(NO_LOOT);
     }
 
     /** What an ability was set to, as the element absorb takes in; empty when unset. */
