@@ -1,5 +1,6 @@
 package chlorine.etjourney.content.rank;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -9,8 +10,10 @@ import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.boss.IBossDisplayData;
 import net.minecraft.entity.monster.IMob;
 import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.util.DamageSource;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.entity.EntityJoinWorldEvent;
+import net.minecraftforge.event.entity.living.LivingAttackEvent;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
 import net.minecraftforge.event.entity.living.LivingDropsEvent;
 import net.minecraftforge.event.entity.living.LivingEvent;
@@ -71,13 +74,25 @@ public final class EnemyRanks {
     }
 
     public static void give(EntityLiving mob, Rank rank) {
-        give(mob, rank, RankAbilities.pick(mob, rank.abilities, mob.getRNG()));
+        give(mob, rank, RankAbilities.pick(mob, rank, mob.getRNG()));
     }
 
-    /** Sets a rank and abilities outright; the spawn check uses it to try each ability. */
+    /**
+     * Sets a rank and abilities outright; the spawn check uses it to try each ability. An ability may be written
+     * name:setting, as absorb:fire.
+     */
     public static void give(EntityLiving mob, Rank rank, List<String> abilities) {
-        RankData.set(mob, rank, abilities);
+        List<String> ids = new ArrayList<>();
+        for (String a : abilities) {
+            int colon = a.indexOf(':');
+            String id = colon < 0 ? a : a.substring(0, colon);
+            ids.add(id);
+            if (colon >= 0) RankData.setSetting(mob, id, a.substring(colon + 1));
+        }
+        RankData.set(mob, rank, ids);
         RankStats.apply(mob, rank);
+        for (RankAbility a : RankAbilities.of(mob)) a.onGive(mob);
+        mob.setHealth(mob.getMaxHealth());
     }
 
     @SubscribeEvent
@@ -85,6 +100,41 @@ public final class EnemyRanks {
         if (event.world.isRemote || !(event.entity instanceof EntityLiving)) return;
         EntityLiving mob = (EntityLiving) event.entity;
         if (!RankData.rolled(mob) && eligible(mob)) roll(mob);
+        if (RankData.ranked(mob)) for (RankAbility a : RankAbilities.of(mob)) a.onJoin(mob);
+    }
+
+    /** Low, so piercing damage, which the damage core lets through at lowest, gets past a ward too. */
+    @SubscribeEvent(priority = EventPriority.LOW)
+    public void onAttack(LivingAttackEvent event) {
+        if (event.entityLiving.worldObj.isRemote) return;
+        if (event.entityLiving instanceof EntityLiving && RankData.ranked(event.entityLiving)) {
+            EntityLiving self = (EntityLiving) event.entityLiving;
+            for (RankAbility a : RankAbilities.of(self)) if (a.wards(self, event.source, event.ammount)) {
+                event.setCanceled(true);
+                return;
+            }
+        }
+        EntityLiving attacker = meleeRanked(event.source);
+        if (attacker == null) return;
+        for (RankAbility a : RankAbilities.of(attacker)) if (!a.swings(attacker, event.entityLiving, event.source)) {
+            event.setCanceled(true);
+            return;
+        }
+    }
+
+    @SubscribeEvent(priority = EventPriority.LOW)
+    public void onTake(LivingHurtEvent event) {
+        if (event.entityLiving.worldObj.isRemote || !(event.entityLiving instanceof EntityLiving)
+            || !RankData.ranked(event.entityLiving)) return;
+        EntityLiving self = (EntityLiving) event.entityLiving;
+        for (RankAbility a : RankAbilities.of(self)) event.ammount = a.takes(self, event.source, event.ammount);
+    }
+
+    /** A ranked mob that struck with its own body, not a shot. */
+    private static EntityLiving meleeRanked(DamageSource source) {
+        Entity e = source.getEntity();
+        return e instanceof EntityLiving && e == source.getSourceOfDamage() && RankData.ranked(e) ? (EntityLiving) e
+            : null;
     }
 
     /** Lowest, so the hit has survived every handler that might cancel it. */
@@ -97,16 +147,26 @@ public final class EnemyRanks {
             EntityLiving self = (EntityLiving) event.entityLiving;
             for (RankAbility a : RankAbilities.of(self)) a.onHurt(self, event.source);
         }
+        EntityLiving striker = meleeRanked(event.source);
+        if (striker != null) for (RankAbility a : RankAbilities.of(striker))
+            a.onStrike(striker, event.entityLiving, event.source, event.ammount);
     }
 
     @SubscribeEvent
     public void onUpdate(LivingEvent.LivingUpdateEvent event) {
-        if (event.entityLiving.ticksExisted % 20 != 0 || event.entityLiving.worldObj.isRemote
-            || !(event.entityLiving instanceof EntityLiving)) return;
+        if (event.entityLiving.worldObj.isRemote || !(event.entityLiving instanceof EntityLiving)) return;
         EntityLiving self = (EntityLiving) event.entityLiving;
         if (!self.isEntityAlive() || !RankData.rolled(self)) return;
-        if (RankData.role(self) == RankData.MINION) SummonAbility.watch(self);
-        else for (RankAbility a : RankAbilities.of(self)) a.onSecond(self);
+        boolean second = self.ticksExisted % 20 == 0;
+        if (RankData.role(self) == RankData.MINION) {
+            if (second) SummonAbility.watch(self);
+            return;
+        }
+        if (!RankData.ranked(self)) return;
+        for (RankAbility a : RankAbilities.of(self)) {
+            a.onTick(self);
+            if (second) a.onSecond(self);
+        }
     }
 
     @SubscribeEvent
@@ -118,6 +178,10 @@ public final class EnemyRanks {
     public void onDeath(LivingDeathEvent event) {
         if (event.entityLiving.worldObj.isRemote || !(event.entityLiving instanceof EntityLiving)) return;
         EntityLiving mob = (EntityLiving) event.entityLiving;
+        if (RankData.ranked(mob)) for (RankAbility a : RankAbilities.of(mob)) if (a.cheatsDeath(mob, event.source)) {
+            event.setCanceled(true);
+            return;
+        }
         // Minions come back on every cast, so they must not pay out.
         if (RankData.role(mob) == RankData.MINION) RankRewards.setExperience(mob, 0);
         if (!RankData.ranked(mob)) return;
