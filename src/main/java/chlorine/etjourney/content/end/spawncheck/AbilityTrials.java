@@ -52,6 +52,7 @@ final class AbilityTrials {
         trials.add(new FireballTrial());
         trials.add(new RockfallTrial());
         trials.add(new WebsTrial());
+        trials.add(new LightningTrial());
     }
 
     /** True once every trial is done. */

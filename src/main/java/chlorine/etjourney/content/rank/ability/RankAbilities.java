@@ -53,6 +53,7 @@ public final class RankAbilities {
         add(new FireballAbility());
         add(new RockfallAbility());
         add(new WebsAbility());
+        add(new LightningAbility());
     }
 
     private RankAbilities() {}

@@ -44,6 +44,8 @@ public final class EnemyRanks {
         // Registered whatever the config says, so packet IDs match a server configured otherwise.
         ETJNetwork.channel()
             .registerMessage(RankSync.Handler.class, RankSync.class, ETJNetwork.nextId(), Side.CLIENT);
+        ETJNetwork.channel()
+            .registerMessage(RankBolt.Handler.class, RankBolt.class, ETJNetwork.nextId(), Side.CLIENT);
         RankShots.register();
         RankWebBlock.register();
         if (!ETJConfig.enemyRanks) return;
