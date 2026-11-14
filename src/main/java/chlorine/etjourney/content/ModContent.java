@@ -15,6 +15,7 @@ import chlorine.etjourney.content.projectile.ProjectileContent;
 import chlorine.etjourney.content.projectile.ShootCommand;
 import chlorine.etjourney.content.rank.EnemyRanks;
 import chlorine.etjourney.content.rank.RankCommand;
+import chlorine.etjourney.content.rank.RankTasks;
 import chlorine.etjourney.content.status.Ailments;
 import chlorine.etjourney.core.util.ModLog;
 import cpw.mods.fml.common.event.FMLServerStartingEvent;
@@ -50,6 +51,7 @@ public final class ModContent {
     }
 
     public static void serverStarting(FMLServerStartingEvent event) {
+        RankTasks.clear();
         event.registerServerCommand(new RankCommand());
         event.registerServerCommand(new ShootCommand());
         event.registerServerCommand(new AreaCommand());

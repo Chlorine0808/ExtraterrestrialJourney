@@ -171,7 +171,9 @@ public final class EnemyRanks {
 
     @SubscribeEvent
     public void onServerTick(TickEvent.ServerTickEvent event) {
-        if (event.phase == TickEvent.Phase.END) boosts.endOfTick();
+        if (event.phase != TickEvent.Phase.END) return;
+        boosts.endOfTick();
+        RankTasks.tick();
     }
 
     @SubscribeEvent(priority = EventPriority.LOWEST)
