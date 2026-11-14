@@ -24,9 +24,9 @@ public final class GiantTrees {
     public static final int HEIGHT = 112;
     static final int MIN_MEMBERS = 12;
     static final double LEVEL_RADIUS = 16, LEVEL_RISE = 14;
-    /** Ground under the crown, out to CROWN_RADIUS, must stay CROWN_CLEAR below the crown's lowest leaves. */
+    /** The topmost surface over the tree, out to CROWN_RADIUS, may rise at most CROWN_CLEAR above the root. */
     static final double CROWN_RADIUS = 34, CROWN_CLEAR = 40;
-    private static final int CANDIDATES = 32;
+    private static final int CANDIDATES = 64;
     private static final double SPACING = 80;
     private static final long COUNT_SALT = 0x2545F4914F6CDD1DL;
     private static final long ORDER_SALT = 0x6C8E9CF570932BD5L;
@@ -79,7 +79,7 @@ public final class GiantTrees {
             if (probe.holed(s.x, s.z, ROOT_FOOTPRINT)) continue;
             double ground = probe.ground(s.x, s.z);
             if (ground <= -100 || ground + HEIGHT > 255 || !level(probe, s.x, s.z, ground)) continue;
-            // A shelf of layered ground above the root would cut through the crown.
+            // On layered ground the root may be on a low layer; a layer above would cut through the trunk or crown.
             if (!underCrownClear(probe, s.x, s.z, ground)) continue;
             out.add(new double[] { s.x, ground, s.z });
         }
@@ -97,10 +97,13 @@ public final class GiantTrees {
     }
 
     private static boolean underCrownClear(StructureProbe probe, double x, double z, double ground) {
-        for (double r : new double[] { CROWN_RADIUS / 2, CROWN_RADIUS }) {
-            for (int k = 0; k < 8; k++) {
-                double angle = k * Math.PI / 4;
-                if (probe.ground(x + r * Math.cos(angle), z + r * Math.sin(angle)) > ground + CROWN_CLEAR) return false;
+        if (probe.surface(x, z) > ground + CROWN_CLEAR) return false;
+        // Rings 4 apart in 16 directions: a layer's edge is ragged, so sparse points miss its spurs.
+        for (double r = CROWN_RADIUS; r > 0; r -= 4) {
+            for (int k = 0; k < 16; k++) {
+                double angle = k * Math.PI / 8;
+                if (probe.surface(x + r * Math.cos(angle), z + r * Math.sin(angle)) > ground + CROWN_CLEAR)
+                    return false;
             }
         }
         return true;

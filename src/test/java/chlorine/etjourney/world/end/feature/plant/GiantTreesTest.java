@@ -106,25 +106,42 @@ class GiantTreesTest {
         assertTrue(seen > 0);
     }
 
-    /** No shelf of layered ground rises into the crown: 20261114-200157, 2 had its crown cut by the layer above. */
+    /** No layer of layered ground hangs over a tree, which would cut through its trunk or crown. */
     @Test
-    void noShelfUnderTheCrown() {
+    void noLayerOverTheTree() {
         int seen = 0;
         for (Continent.Seed s : groves()) {
             for (double[] a : GiantTrees.anchors(SEED, s, PROBE)) {
+                assertTrue(PROBE.surface(a[0], a[2]) <= a[1] + GiantTrees.CROWN_CLEAR, "a layer over " + a[1]);
                 for (int k = 0; k < 16; k++) {
                     double angle = k * Math.PI / 8;
                     for (double r = 12; r <= GiantTrees.CROWN_RADIUS; r += 11) {
-                        double g = PROBE.ground(a[0] + r * Math.cos(angle), a[2] + r * Math.sin(angle));
+                        double g = PROBE.surface(a[0] + r * Math.cos(angle), a[2] + r * Math.sin(angle));
                         assertTrue(
                             g <= a[1] + GiantTrees.CROWN_CLEAR,
-                            "ground " + g + " under a crown rooted at " + a[1]);
+                            "surface " + g + " over a tree rooted at " + a[1]);
                     }
                 }
                 seen++;
             }
         }
         assertTrue(seen > 0);
+    }
+
+    /** 20261114-201037, 2: seed 98 rooted a tree on the lowest layer at Y 24, under another layer at Y 120. */
+    @Test
+    void notUnderTheLayerAbove() {
+        long seed = 98L;
+        StructureProbe probe = new TerrainSampler(seed, new RegionPicker(Styles.all())).standingProbe();
+        int ci = (int) Math.floor(1688 / Continent.SEED_CELL), cj = (int) Math.floor(2616 / Continent.SEED_CELL);
+        for (int i = ci - 3; i <= ci + 3; i++) {
+            for (int j = cj - 3; j <= cj + 3; j++) {
+                Continent.Seed s = Continent.seedAt(seed, i, j);
+                if (s == null) continue;
+                for (double[] a : GiantTrees.compute(seed, s, probe))
+                    assertTrue(Math.hypot(a[0] - 1688, a[2] - 2616) > 10, "tree under the layer at " + a[1]);
+            }
+        }
     }
 
     /** Around the trunk the ground is land and fairly level: no cliff above the root, no void below it. */
