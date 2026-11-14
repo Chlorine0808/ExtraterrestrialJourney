@@ -39,6 +39,8 @@ import chlorine.etjourney.content.rank.EnemyRanks;
 import chlorine.etjourney.content.rank.Rank;
 import chlorine.etjourney.content.rank.ability.TrailAbility;
 import chlorine.etjourney.core.damage.ElementalDamageSource;
+import chlorine.etjourney.core.status.StatusSources;
+import chlorine.etjourney.core.status.model.StatusMath;
 import chlorine.etjourney.core.util.ModLog;
 import cpw.mods.fml.common.FMLCommonHandler;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
@@ -85,6 +87,8 @@ public final class AreaCheckServer {
     private WorldServer world;
     private double bx, by, bz;
     private int index = -1, t, waited;
+    /** While set, the player shrugs off half of every harmful effect's time. */
+    private boolean warded;
 
     private AreaCheckServer() {}
 
@@ -157,6 +161,8 @@ public final class AreaCheckServer {
         p.addPotionEffect(new PotionEffect(Potion.resistance.id, 100_000, 4));
         p.setPositionAndUpdate(bx, by, bz);
         record(String.format(Locale.ROOT, "INFO ground at y %.2f", by));
+        StatusSources.registerResistance(
+            (taker, out) -> { if (warded && taker == player) out.multiplyDuration(StatusMath.ANY, 0.5F); });
         addTrials();
     }
 
@@ -264,6 +270,37 @@ public final class AreaCheckServer {
                     verdict(
                         !pig.isPotionActive(Potion.poison) && !hurt(pig),
                         "it spares the pig beside them, an ally of the enemy: " + health(pig)));
+                return true;
+            }
+        });
+        trials.add(new Trial(5) {
+
+            int left = -1;
+
+            @Override
+            void start() {
+                player.setPositionAndUpdate(bx + 12, by, bz);
+                player.removePotionEffect(Potion.poison.id);
+                warded = true;
+                keep(Areas.placeOnGround(AreaTypes.TRIAL_SPORES, world, null, bx + 12, by + 1, bz + 0.5));
+            }
+
+            @Override
+            boolean poll(int t, boolean timedOut) {
+                player.setPositionAndUpdate(bx + 12, by, bz);
+                PotionEffect poison = player.getActivePotionEffect(Potion.poison);
+                if (left < 0 && poison != null) left = poison.getDuration();
+                if (!timedOut) return false;
+                warded = false;
+                int full = 60;
+                record(
+                    verdict(
+                        left > 0 && left <= full / 2,
+                        "a resistance halves the poison an area gives, through the status effect base: " + left
+                            + " of "
+                            + full
+                            + " ticks"));
+                player.removePotionEffect(Potion.poison.id);
                 return true;
             }
         });
