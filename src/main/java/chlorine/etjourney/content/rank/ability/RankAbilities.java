@@ -51,6 +51,7 @@ public final class RankAbilities {
         add(new FlightAbility());
         add(new HordeAbility());
         add(new FireballAbility());
+        add(new RockfallAbility());
     }
 
     private RankAbilities() {}

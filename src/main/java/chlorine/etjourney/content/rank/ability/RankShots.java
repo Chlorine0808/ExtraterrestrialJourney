@@ -9,6 +9,7 @@ import chlorine.etjourney.content.projectile.ProjectileSpec;
 import chlorine.etjourney.content.projectile.ProjectileTypes;
 import chlorine.etjourney.core.damage.model.DamageKind;
 import chlorine.etjourney.core.damage.model.Element;
+import chlorine.etjourney.core.damage.model.ElementRegistry;
 import chlorine.etjourney.core.damage.model.ElementalDamage;
 
 /** The shots the rank abilities fire; the client finds them by name, so they register on both sides. */
@@ -28,6 +29,17 @@ public final class RankShots {
                     target.setFire(3);
                 }
             })
+            .build());
+
+    /** Falls straight down on a warned spot. */
+    public static final ProjectileSpec ICICLE = ProjectileTypes.register(
+        ProjectileSpec.builder("rank_icicle", damage(DamageKind.PHYSICAL, ElementRegistry.NEUTRAL, 5))
+            .speed(0.4)
+            .gravity(0.08)
+            .lifetime(80)
+            .size(0.5F)
+            .look("flint")
+            .trail("snowshovel")
             .build());
 
     private RankShots() {}
