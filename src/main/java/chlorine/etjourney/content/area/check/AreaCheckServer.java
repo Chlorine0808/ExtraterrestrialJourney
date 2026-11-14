@@ -25,6 +25,7 @@ import net.minecraft.world.WorldServer;
 import net.minecraft.world.WorldSettings;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.entity.living.LivingAttackEvent;
+import net.minecraftforge.event.entity.living.LivingEvent;
 
 import chlorine.etjourney.content.area.AreaSlow;
 import chlorine.etjourney.content.area.AreaSpec;
@@ -48,6 +49,8 @@ import cpw.mods.fml.common.gameevent.TickEvent;
  */
 public final class AreaCheckServer {
 
+    /** The take-off speed of a vanilla jump. */
+    private static final double VANILLA_JUMP = 0.42;
     private static final int JOIN_TICKS = 100;
     private static final float PIG_HEALTH = 200;
     private static final double EPS = 0.01;
@@ -267,7 +270,7 @@ public final class AreaCheckServer {
 
             EntityPig pig;
             EntityLingeringArea sap;
-            double during;
+            double during, jump;
 
             @Override
             void start() {
@@ -280,6 +283,10 @@ public final class AreaCheckServer {
             boolean poll(int t, boolean timedOut) {
                 if (t == 5) {
                     during = AreaSlow.factor(pig);
+                    pig.motionY = VANILLA_JUMP;
+                    MinecraftForge.EVENT_BUS.post(new LivingEvent.LivingJumpEvent(pig));
+                    jump = pig.motionY;
+                    pig.motionY = 0;
                     sap.setDead();
                 }
                 if (!timedOut) return false;
@@ -290,6 +297,15 @@ public final class AreaCheckServer {
                             Locale.ROOT,
                             "an enemy sap floor, taking allies along, slows a pig: x%.2f",
                             during)));
+                double expected = VANILLA_JUMP * Math.sqrt(AreaTypes.TRIAL_SAP.slow);
+                record(
+                    verdict(
+                        Math.abs(jump - expected) < EPS,
+                        String.format(
+                            Locale.ROOT,
+                            "the sap floor holds back the pig's jump: %.3f, expected %.3f",
+                            jump,
+                            expected)));
                 record(
                     verdict(
                         AreaSlow.factor(pig) == 1,
