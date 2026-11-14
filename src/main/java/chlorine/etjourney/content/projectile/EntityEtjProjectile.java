@@ -14,6 +14,7 @@ import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.util.Vec3;
 import net.minecraft.world.World;
 
+import chlorine.etjourney.core.client.FarParticles;
 import chlorine.etjourney.core.damage.ElementalDamageSource;
 import chlorine.etjourney.core.damage.ElementalDamages;
 import cpw.mods.fml.common.network.ByteBufUtils;
@@ -199,7 +200,8 @@ public class EntityEtjProjectile extends Entity implements IEntityAdditionalSpaw
         if (spec.trail.isEmpty()) return;
         for (int i = 0; i < 2; i++) {
             double f = i / 2.0;
-            worldObj.spawnParticle(spec.trail, posX - motionX * f, posY - motionY * f, posZ - motionZ * f, 0, 0, 0);
+            FarParticles
+                .spawn(worldObj, spec.trail, posX - motionX * f, posY - motionY * f, posZ - motionZ * f, 0, 0, 0);
         }
     }
 
