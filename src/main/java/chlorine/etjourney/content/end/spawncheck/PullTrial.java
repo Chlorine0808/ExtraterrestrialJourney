@@ -22,6 +22,7 @@ final class PullTrial extends AbilityTrial {
             c.player.capabilities.isFlying = false;
             c.player.sendPlayerAbilities();
             mob = c.spawn(12, 0, PullAbility.ID);
+            TrialSupport.harmless(mob);
             mob.setAttackTarget(c.player);
             startX = c.player.posX;
             return false;
