@@ -26,6 +26,11 @@ public interface RankAbility {
         return false;
     }
 
+    /** How much larger the mob is drawn; the factors of all its abilities multiply. */
+    default float renderScale() {
+        return 1;
+    }
+
     /** Once, when the rank is given; attribute modifiers set here stay with the mob. */
     default void onGive(EntityLiving self) {}
 
