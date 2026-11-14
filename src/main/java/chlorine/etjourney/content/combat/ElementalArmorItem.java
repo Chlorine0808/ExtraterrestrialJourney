@@ -2,7 +2,6 @@ package chlorine.etjourney.content.combat;
 
 import java.util.List;
 
-import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
@@ -11,6 +10,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.util.EnumChatFormatting;
 import net.minecraft.util.StatCollector;
 
+import chlorine.etjourney.content.ModCreativeTab;
 import chlorine.etjourney.core.damage.DeathImmunity;
 import chlorine.etjourney.core.damage.ElementalArmor;
 import chlorine.etjourney.core.damage.model.Resistance;
@@ -33,7 +33,7 @@ class ElementalArmorItem extends ItemArmor implements ElementalArmor {
         this.kind = kind;
         setUnlocalizedName(RegistryNames.unlocalized(name));
         setTextureName(ICONS[type]);
-        setCreativeTab(CreativeTabs.tabCombat);
+        setCreativeTab(ModCreativeTab.TAB);
     }
 
     static ElementalArmorItem of(String name, ElementalGear.Kind kind, ArmorMaterial material, int type) {

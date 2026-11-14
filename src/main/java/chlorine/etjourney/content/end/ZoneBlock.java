@@ -3,9 +3,9 @@ package chlorine.etjourney.content.end;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.client.renderer.texture.IIconRegister;
-import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.util.IIcon;
 
+import chlorine.etjourney.content.ModCreativeTab;
 import chlorine.etjourney.core.registry.RegistryNames;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
@@ -25,7 +25,7 @@ final class ZoneBlock extends Block {
         setResistance(15.0F);
         setStepSound(soundTypePiston);
         setHarvestLevel("pickaxe", 0);
-        setCreativeTab(CreativeTabs.tabBlock);
+        setCreativeTab(ModCreativeTab.TAB);
         setBlockName(RegistryNames.unlocalized(entry.name));
         setBlockTextureName(RegistryNames.texture(entry.name));
     }

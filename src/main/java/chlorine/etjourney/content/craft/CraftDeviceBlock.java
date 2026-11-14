@@ -3,12 +3,12 @@ package chlorine.etjourney.content.craft;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockContainer;
 import net.minecraft.block.material.Material;
-import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.world.World;
 
+import chlorine.etjourney.content.ModCreativeTab;
 import chlorine.etjourney.core.registry.RegistryNames;
 
 /**
@@ -41,7 +41,7 @@ final class CraftDeviceBlock extends BlockContainer {
         setResistance(10.0F);
         setStepSound(kind == Kind.FORGE ? soundTypeAnvil : soundTypePiston);
         setHarvestLevel("pickaxe", 0);
-        setCreativeTab(CreativeTabs.tabDecorations);
+        setCreativeTab(ModCreativeTab.TAB);
         setBlockName(RegistryNames.unlocalized(kind.name));
         setBlockTextureName(RegistryNames.texture(kind.name));
     }

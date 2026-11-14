@@ -4,13 +4,13 @@ import java.util.Random;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
-import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.item.Item;
 import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.ForgeDirection;
 
+import chlorine.etjourney.content.ModCreativeTab;
 import chlorine.etjourney.core.registry.RegistryNames;
 import chlorine.etjourney.world.end.feature.plant.CrystalGrowth;
 import chlorine.etjourney.world.end.modifier.EndBlock;
@@ -36,7 +36,7 @@ final class CrystalBudBlock extends Block {
         setHardness(1.5F);
         setStepSound(soundTypeGlass);
         setLightLevel(entry.light / 15.0F);
-        setCreativeTab(CreativeTabs.tabDecorations);
+        setCreativeTab(ModCreativeTab.TAB);
         setBlockName(RegistryNames.unlocalized(entry.name));
         setBlockTextureName(RegistryNames.texture(entry.name));
     }

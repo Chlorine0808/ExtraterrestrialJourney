@@ -234,3 +234,4 @@ etjourney.potion.heavy=Heavy
 etjourney.potion.frozen=Frozen
 item.etjourney.ward_talisman.name=Ward Talisman
 etjourney.tooltip.talisman.ward=Harmful effects last %s%% shorter and %s level lower
+itemGroup.etjourney=Extraterrestrial Journey

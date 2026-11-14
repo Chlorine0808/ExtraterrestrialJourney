@@ -4,9 +4,9 @@ import java.util.Random;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
-import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.item.Item;
 
+import chlorine.etjourney.content.ModCreativeTab;
 import chlorine.etjourney.core.registry.RegistryNames;
 
 /** A soft full block of a fungus or amber growth (cap, gill, seed, stem) that drops nothing when broken. */
@@ -17,7 +17,7 @@ final class EndCapBlock extends Block {
         setHardness(entry.type == LargePlantBlockTable.Type.STEM ? 0.4F : 0.2F);
         setStepSound(soundTypeWood);
         setLightLevel(entry.light / 15.0F);
-        setCreativeTab(CreativeTabs.tabBlock);
+        setCreativeTab(ModCreativeTab.TAB);
         setBlockName(RegistryNames.unlocalized(entry.name));
         setBlockTextureName(RegistryNames.texture(entry.name));
     }

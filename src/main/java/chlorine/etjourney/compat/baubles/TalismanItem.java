@@ -2,7 +2,6 @@ package chlorine.etjourney.compat.baubles;
 
 import java.util.List;
 
-import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
@@ -12,6 +11,7 @@ import net.minecraft.world.World;
 import baubles.api.BaubleType;
 import baubles.api.expanded.BaubleItemHelper;
 import baubles.api.expanded.IBaubleExpanded;
+import chlorine.etjourney.content.ModCreativeTab;
 import chlorine.etjourney.content.accessory.Talisman;
 import chlorine.etjourney.core.accessory.Accessory;
 import chlorine.etjourney.core.accessory.AccessoryModifiers;
@@ -34,7 +34,7 @@ final class TalismanItem extends Item implements IBaubleExpanded, Accessory, Ele
         this.talisman = talisman;
         setUnlocalizedName(RegistryNames.unlocalized(talisman.name));
         setTextureName(RegistryNames.texture(talisman.name));
-        setCreativeTab(CreativeTabs.tabCombat);
+        setCreativeTab(ModCreativeTab.TAB);
         setMaxStackSize(1);
         if (talisman.lifetime > 0) {
             setMaxDamage(talisman.lifetime);

@@ -15,6 +15,7 @@ import net.minecraft.util.IIcon;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 
+import chlorine.etjourney.content.ModCreativeTab;
 import chlorine.etjourney.core.registry.RegistryNames;
 import chlorine.etjourney.world.end.feature.plant.Grower;
 import cpw.mods.fml.relauncher.Side;
@@ -41,6 +42,7 @@ final class EndLeavesBlock extends BlockLeaves {
         setLightLevel(entry.light / 15.0F);
         setBlockName(RegistryNames.unlocalized(entry.name));
         setBlockTextureName(RegistryNames.texture(entry.name));
+        setCreativeTab(ModCreativeTab.TAB);
     }
 
     void setSapling(Item sapling) {

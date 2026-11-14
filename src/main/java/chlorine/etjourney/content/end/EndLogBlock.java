@@ -4,6 +4,7 @@ import net.minecraft.block.BlockLog;
 import net.minecraft.client.renderer.texture.IIconRegister;
 import net.minecraft.util.IIcon;
 
+import chlorine.etjourney.content.ModCreativeTab;
 import chlorine.etjourney.core.registry.RegistryNames;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
@@ -17,6 +18,7 @@ final class EndLogBlock extends BlockLog {
     EndLogBlock(LargePlantBlockTable.Entry entry) {
         setBlockName(RegistryNames.unlocalized(entry.name));
         setBlockTextureName(RegistryNames.texture(entry.name));
+        setCreativeTab(ModCreativeTab.TAB);
     }
 
     @Override
