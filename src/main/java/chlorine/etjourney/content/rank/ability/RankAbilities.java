@@ -28,6 +28,7 @@ public final class RankAbilities {
         add(new HeavyAbility());
         add(new BuffsAbility());
         add(new RegenAbility());
+        add(new EnrageAbility());
     }
 
     private RankAbilities() {}

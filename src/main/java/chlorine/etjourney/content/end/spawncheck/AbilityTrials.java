@@ -27,6 +27,7 @@ final class AbilityTrials {
         trials.add(new HeavyTrial());
         trials.add(new BuffsTrial());
         trials.add(new RegenTrial());
+        trials.add(new EnrageTrial());
     }
 
     /** True once every trial is done. */
