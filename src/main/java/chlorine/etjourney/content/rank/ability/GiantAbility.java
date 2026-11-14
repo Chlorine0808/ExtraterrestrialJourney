@@ -21,7 +21,7 @@ public final class GiantAbility implements RankAbility {
 
     @Override
     public boolean clashes(String other) {
-        return "tiny".equals(other);
+        return TinyAbility.ID.equals(other);
     }
 
     @Override

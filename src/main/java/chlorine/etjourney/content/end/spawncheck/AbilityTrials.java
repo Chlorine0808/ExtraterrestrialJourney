@@ -40,6 +40,7 @@ final class AbilityTrials {
         trials.add(new BarrierTrial());
         trials.add(new VeilTrial());
         trials.add(new GiantTrial());
+        trials.add(new TinyTrial());
     }
 
     /** True once every trial is done. */
