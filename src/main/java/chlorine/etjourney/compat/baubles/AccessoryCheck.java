@@ -18,11 +18,13 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.DamageSource;
 import net.minecraft.world.WorldSettings;
+import net.minecraftforge.common.ForgeHooks;
 
 import baubles.api.BaublesApi;
 import baubles.api.expanded.BaubleExpandedSlots;
 import chlorine.etjourney.content.accessory.Talisman;
 import chlorine.etjourney.core.ModInfo;
+import chlorine.etjourney.core.combat.LandedHits;
 import chlorine.etjourney.core.damage.ResistanceSources;
 import chlorine.etjourney.core.damage.model.ElementRegistry;
 import chlorine.etjourney.core.growth.Growth;
@@ -181,7 +183,7 @@ public final class AccessoryCheck {
         }
     }
 
-    /** The fire sword's physical fire 5 + neutral 3 under Ember, and the share Vampire heals of it. */
+    /** The fire sword's physical fire 5 + neutral 3 under Ember, and the share Vampire heals of what it took. */
     private void checkEmberAndVampire(EntityPlayer player) {
         Item sword = GameRegistry.findItem(ModInfo.MODID, "fire_sword");
         EntityZombie zombie = zombie(player);
@@ -192,10 +194,17 @@ public final class AccessoryCheck {
         float expected = dealt * (25 - zombie.getTotalArmorValue()) / 25;
         new ItemStack(sword).getItem()
             .onLeftClickEntity(new ItemStack(sword), player, zombie);
+        LandedHits.flush();
         float lost = before - zombie.getHealth();
-        zombie.setDead();
         close("ember raises physical fire by 50%", lost, expected);
-        close("vampire heals 15% of the melee hit", player.getHealth() - 10, dealt * 0.15f);
+        close("vampire heals 15% of the health taken", player.getHealth() - 10, lost * 0.15f);
+        // A target dummy fires the hurt event but keeps its health.
+        player.setHealth(10);
+        zombie.hurtResistantTime = 0;
+        ForgeHooks.onLivingHurt(zombie, DamageSource.causePlayerDamage(player), 4);
+        LandedHits.flush();
+        close("vampire heals nothing from a hit that took no health", player.getHealth() - 10, 0);
+        zombie.setDead();
         player.setHealth(player.getMaxHealth());
     }
 
@@ -226,6 +235,18 @@ public final class AccessoryCheck {
         GrowthData rolled = GrowthNbt.read(player.getHeldItem());
         expect("a fresh sword rolls on its first hit", rolled != null, "no growth");
         expect("the sword gains the hit as experience", rolled != null && rolled.xp == 4, String.valueOf(rolled));
+        zombie.hurtResistantTime = 0;
+        ForgeHooks.onLivingHurt(zombie, DamageSource.causePlayerDamage(player), 4);
+        LandedHits.flush();
+        GrowthData dummy = GrowthNbt.read(player.getHeldItem());
+        expect("a hit that took no health gives nothing", dummy != null && dummy.xp == 4, String.valueOf(dummy));
+        zombie.setHealth(zombie.getMaxHealth());
+        zombie.hurtResistantTime = 0;
+        zombie.attackEntityFrom(DamageSource.causePlayerDamage(player), 4);
+        zombie.setHealth(zombie.getMaxHealth());
+        LandedHits.flush();
+        GrowthData healed = GrowthNbt.read(player.getHeldItem());
+        expect("a hit healed back at once gives nothing", healed != null && healed.xp == 4, String.valueOf(healed));
         GrowthNbt.write(sword, data(Leveling.totalFor(Leveling.MAX_LEVEL), Rarity.COMMON, null, 0));
         close("a level 10 sword adds 20%", punch(player, zombie), 4 * 1.2f * armor);
         GrowthNbt.write(sword, data(0, Rarity.LEGENDARY, "keen", 1));
@@ -288,6 +309,7 @@ public final class AccessoryCheck {
         zombie.hurtResistantTime = 0;
         float before = zombie.getHealth();
         zombie.attackEntityFrom(DamageSource.causePlayerDamage(player), 4);
+        LandedHits.flush();
         return before - zombie.getHealth();
     }
 
@@ -295,6 +317,7 @@ public final class AccessoryCheck {
         player.hurtResistantTime = 0;
         float before = player.getHealth();
         player.attackEntityFrom(source, amount);
+        LandedHits.flush();
         return before - player.getHealth();
     }
 
