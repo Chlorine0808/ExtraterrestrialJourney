@@ -34,6 +34,7 @@ final class AbilityTrials {
         trials.add(new ThornsTrial());
         trials.add(new GuardTrial());
         trials.add(new RangedWardTrial());
+        trials.add(new MagicWardTrial());
     }
 
     /** True once every trial is done. */

@@ -35,6 +35,7 @@ public final class RankAbilities {
         add(new ThornsAbility());
         add(new GuardAbility());
         add(new RangedWardAbility());
+        add(new MagicWardAbility());
     }
 
     private RankAbilities() {}
