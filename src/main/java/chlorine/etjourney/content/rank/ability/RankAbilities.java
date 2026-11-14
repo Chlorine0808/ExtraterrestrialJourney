@@ -25,6 +25,7 @@ public final class RankAbilities {
         add(new BulkyAbility());
         add(new BruteAbility());
         add(new JuggernautAbility());
+        add(new HeavyAbility());
     }
 
     private RankAbilities() {}

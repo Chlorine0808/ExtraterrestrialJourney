@@ -24,6 +24,7 @@ final class AbilityTrials {
         trials.add(new BulkyTrial());
         trials.add(new BruteTrial());
         trials.add(new JuggernautTrial());
+        trials.add(new HeavyTrial());
     }
 
     /** True once every trial is done. */
