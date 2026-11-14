@@ -119,6 +119,7 @@ item.etjourney.tantalum_bucket_hydrofluoric_acid.name=Hydrofluoric Acid Bucket
 tile.etjourney.forge.name=Forge
 tile.etjourney.attune_altar.name=Attune Altar
 tile.etjourney.attune_pedestal.name=Attune Pedestal
+tile.etjourney.rank_web.name=Fading Web
 
 death.attack.etjourney.neutral=%1$s was struck down
 death.attack.etjourney.neutral.player=%1$s was struck down by %2$s

@@ -51,6 +51,7 @@ final class AbilityTrials {
         trials.add(new HordeTrial());
         trials.add(new FireballTrial());
         trials.add(new RockfallTrial());
+        trials.add(new WebsTrial());
     }
 
     /** True once every trial is done. */

@@ -1,6 +1,9 @@
 package chlorine.etjourney.content.rank.ability;
 
 import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.util.Facing;
+import net.minecraft.util.MathHelper;
+import net.minecraft.util.MovingObjectPosition;
 
 import chlorine.etjourney.content.combat.Elements;
 import chlorine.etjourney.content.projectile.EntityEtjProjectile;
@@ -40,6 +43,34 @@ public final class RankShots {
             .size(0.5F)
             .look("flint")
             .trail("snowshovel")
+            .build());
+
+    /** Leaves a fading web where it lands. */
+    public static final ProjectileSpec WEB_SHOT = ProjectileTypes.register(
+        ProjectileSpec.builder("rank_web_shot", damage(DamageKind.PHYSICAL, ElementRegistry.NEUTRAL, 1))
+            .speed(0.9)
+            .lifetime(40)
+            .look("string")
+            .effect(new ImpactEffect() {
+
+                @Override
+                public void onEntity(EntityEtjProjectile shot, EntityLivingBase target, boolean hurt) {
+                    RankWebBlock.place(
+                        target.worldObj,
+                        MathHelper.floor_double(target.posX),
+                        MathHelper.floor_double(target.boundingBox.minY),
+                        MathHelper.floor_double(target.posZ));
+                }
+
+                @Override
+                public void onBlock(EntityEtjProjectile shot, MovingObjectPosition hit) {
+                    RankWebBlock.place(
+                        shot.worldObj,
+                        hit.blockX + Facing.offsetsXForSide[hit.sideHit],
+                        hit.blockY + Facing.offsetsYForSide[hit.sideHit],
+                        hit.blockZ + Facing.offsetsZForSide[hit.sideHit]);
+                }
+            })
             .build());
 
     private RankShots() {}
