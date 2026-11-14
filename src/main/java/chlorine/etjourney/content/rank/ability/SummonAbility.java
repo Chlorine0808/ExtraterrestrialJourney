@@ -9,6 +9,7 @@ import java.util.function.Function;
 
 import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.monster.EntitySilverfish;
 import net.minecraft.util.DamageSource;
 import net.minecraft.world.World;
 
@@ -26,10 +27,21 @@ public class SummonAbility implements RankAbility {
     /** Part of its health a minion loses. */
     private final double health;
     private static final Map<Class<?>, Function<World, EntityLiving>> MINIONS = new HashMap<>();
+    private static final Map<Class<?>, Function<World, EntityLiving>> HORDES = new HashMap<>();
 
     /** Has mobs of the parent type call what make returns instead of their own kind. */
     public static void minionOf(Class<? extends EntityLiving> parentType, Function<World, EntityLiving> make) {
         MINIONS.put(parentType, make);
+    }
+
+    /** Has horde mobs of the parent type call what make returns instead of silverfish. */
+    public static void hordeOf(Class<? extends EntityLiving> parentType, Function<World, EntityLiving> make) {
+        HORDES.put(parentType, make);
+    }
+
+    static EntityLiving hordeMinion(EntityLiving parent) {
+        Function<World, EntityLiving> make = HORDES.get(parent.getClass());
+        return make != null ? make.apply(parent.worldObj) : new EntitySilverfish(parent.worldObj);
     }
 
     public SummonAbility() {

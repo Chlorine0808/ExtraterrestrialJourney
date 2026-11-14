@@ -49,6 +49,7 @@ public final class RankAbilities {
         add(new GatherAbility());
         add(new PullAbility());
         add(new FlightAbility());
+        add(new HordeAbility());
     }
 
     private RankAbilities() {}
