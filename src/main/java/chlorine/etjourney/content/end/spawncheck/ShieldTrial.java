@@ -21,7 +21,8 @@ final class ShieldTrial extends AbilityTrial {
         }
         if (tick == 5) {
             c.verdict(mob.getAbsorptionAmount() > 0, name + ": absorption at spawn");
-            mob.attackEntityFrom(c.byPlayer(), mob.getAbsorptionAmount() + 1);
+            // Well past the absorption, so armor cannot leave some of it.
+            mob.attackEntityFrom(c.byPlayer(), mob.getAbsorptionAmount() + 20);
             return false;
         }
         if (tick == 10) {
