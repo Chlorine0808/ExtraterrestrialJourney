@@ -93,7 +93,7 @@ class GiantTreesTest {
 
     @Test
     void anchorsSitWellInsideGrove() {
-        double r = GiantTrees.FOOTPRINT * 0.6;
+        double r = GiantTrees.ROOT_FOOTPRINT * 0.6;
         int seen = 0;
         for (Continent.Seed s : groves()) {
             for (double[] a : GiantTrees.anchors(SEED, s, PROBE)) {
@@ -163,10 +163,11 @@ class GiantTreesTest {
                     || Math.hypot(s.x, s.z) > 4000
                     || !ids.add(ContinentIds.of(seed, s))) continue;
                 for (double[] a : GiantTrees.anchors(seed, s, probe)) {
-                    List<Holes.Hole> holes = Holes.near(seed, a[0], a[2], GiantTrees.FOOTPRINT, sampler.holeProbe());
-                    for (int dx = -GiantTrees.FOOTPRINT; dx <= GiantTrees.FOOTPRINT; dx += 2) {
-                        for (int dz = -GiantTrees.FOOTPRINT; dz <= GiantTrees.FOOTPRINT; dz += 2) {
-                            if (Math.hypot(dx, dz) > GiantTrees.FOOTPRINT) continue;
+                    List<Holes.Hole> holes = Holes
+                        .near(seed, a[0], a[2], GiantTrees.ROOT_FOOTPRINT, sampler.holeProbe());
+                    for (int dx = -GiantTrees.ROOT_FOOTPRINT; dx <= GiantTrees.ROOT_FOOTPRINT; dx += 2) {
+                        for (int dz = -GiantTrees.ROOT_FOOTPRINT; dz <= GiantTrees.ROOT_FOOTPRINT; dz += 2) {
+                            if (Math.hypot(dx, dz) > GiantTrees.ROOT_FOOTPRINT) continue;
                             double cut = Holes.cutFraction(seed, holes, a[0] + dx, a[2] + dz);
                             assertEquals(0, cut, "sinkhole under the tree at " + a[0] + ", " + a[2]);
                         }

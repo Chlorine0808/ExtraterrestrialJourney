@@ -16,10 +16,12 @@ import chlorine.etjourney.world.end.noise.Hash;
 /** Decides where the giant trees stand, about one per grove continent, the same from every seed of the continent. */
 public final class GiantTrees {
 
-    /** Horizontal reach of the roots, at most. */
-    public static final int FOOTPRINT = 26;
-    /** From the ground to the top of the branches. */
-    public static final int HEIGHT = 56;
+    /** Horizontal reach of the tree, crown included, at most. */
+    public static final int FOOTPRINT = 36;
+    /** Horizontal reach of the roots, at most: the ground the tree stands on. */
+    public static final int ROOT_FOOTPRINT = 26;
+    /** From the ground to the top of the crown. */
+    public static final int HEIGHT = 112;
     static final int MIN_MEMBERS = 12;
     static final double LEVEL_RADIUS = 16, LEVEL_RISE = 14;
     private static final int CANDIDATES = 32;
@@ -69,12 +71,12 @@ public final class GiantTrees {
         for (int i = 0; i < Math.min(CANDIDATES, order.length) && out.size() < wanted; i++) {
             Continent.Seed s = Continent.seedAt(seed, ContinentIds.cellX(order[i]), ContinentIds.cellZ(order[i]));
             if (s == null || tooClose(out, s.x, s.z) || !insideGrove(seed, s.x, s.z)) continue;
-            // The roots crawl over the ground out to FOOTPRINT; on a lake they would hang over the water.
-            if (probe.wet(s.x, s.z, FOOTPRINT)) continue;
+            // The roots crawl over the ground out to ROOT_FOOTPRINT; on a lake they would hang over the water.
+            if (probe.wet(s.x, s.z, ROOT_FOOTPRINT)) continue;
             // A sinkhole's funnel cuts the rock below the probe's ground, leaving the trunk over a hollow.
-            if (probe.holed(s.x, s.z, FOOTPRINT)) continue;
+            if (probe.holed(s.x, s.z, ROOT_FOOTPRINT)) continue;
             double ground = probe.ground(s.x, s.z);
-            if (ground <= -100 || ground + HEIGHT > 250 || !level(probe, s.x, s.z, ground)) continue;
+            if (ground <= -100 || ground + HEIGHT > 255 || !level(probe, s.x, s.z, ground)) continue;
             out.add(new double[] { s.x, ground, s.z });
         }
         return out;
@@ -96,7 +98,7 @@ public final class GiantTrees {
     }
 
     private static boolean insideGrove(long seed, double x, double z) {
-        double r = FOOTPRINT * 0.6;
+        double r = ROOT_FOOTPRINT * 0.6;
         return EndBiome.at(seed, x, z) == EndBiome.GROVE && EndBiome.at(seed, x + r, z) == EndBiome.GROVE
             && EndBiome.at(seed, x - r, z) == EndBiome.GROVE
             && EndBiome.at(seed, x, z + r) == EndBiome.GROVE

@@ -1,6 +1,8 @@
 package chlorine.etjourney.world.end.feature.plant;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
@@ -11,8 +13,8 @@ import chlorine.etjourney.world.end.noise.Hash;
 
 /**
  * One giant tree, shaped from the world seed, its root and the probe's ground alone so every chunk draws the same
- * tree: a hollow ribbed trunk about 20 across that flares at the foot, roots crawling along the ground, and a few
- * branches ending in clumps of leaves.
+ * tree: a hollow ribbed trunk about 20 across and 90 high that flares at the foot, roots crawling along the ground,
+ * and a broad crown of branches ending in clumps of leaves.
  */
 public final class GiantTree {
 
@@ -26,8 +28,14 @@ public final class GiantTree {
     private static final double FLARE_RADIUS = 13;
     private static final double SHELL = 3;
     private static final double RIB = 0.7;
-    private static final int TAPER = 12;
-    private static final double TOP_RADIUS = 5;
+    private static final int TAPER = 24;
+    private static final double TOP_RADIUS = 6;
+    /** How far below the top the branches start. */
+    private static final int CROWN = 40;
+    /** Turn between one branch and the next, so the tiers do not stack. */
+    private static final double GOLDEN_ANGLE = Math.PI * (3 - Math.sqrt(5));
+    /** Clumps wider than this get twigs inside, so no leaf is beyond Grower.LEAF_REACH of wood. */
+    private static final double TWIG_FROM = 6;
     private static final double LEAF_SQUASH = 0.75;
     /** How far in from its radius a clump's edge may be ragged, as a share of the radius. */
     private static final double RAGGED = 0.18;
@@ -45,9 +53,11 @@ public final class GiantTree {
     private final double phase, finePhase;
     private final double blossomShare;
     private final long leafSeed;
-    /** Tubes as {x0, y0, z0, r0, x1, y1, z1, r1}: roots, then branches. */
+    /** Tubes as {x0, y0, z0, r0, x1, y1, z1, r1}: roots, then branches and twigs. */
     private final double[][] tubes;
     private final int rootTubes;
+    /** The lowest y of a branch or a leaf, above the root. */
+    private final int crownLow;
     /** Leaf clumps as {x, y, z, radius}. */
     private final double[][] clumps;
     private final Map<Long, Double> grounds = new HashMap<>();
@@ -62,7 +72,7 @@ public final class GiantTree {
             ^ (long) Math.floor(az) * 0xC2B2AE3D27D4EB4FL;
         Random random = new Random(s);
         radius = 9 + random.nextDouble() * 0.8;
-        top = 45 + random.nextInt(5);
+        top = 90 + random.nextInt(10);
         lobes = 5 + random.nextInt(3);
         fineLobes = 11 + random.nextInt(3);
         phase = random.nextDouble() * 2 * Math.PI;
@@ -70,9 +80,9 @@ public final class GiantTree {
         blossomShare = 0.034 + random.nextDouble() * 0.012;
         leafSeed = s ^ LEAF_SALT;
 
-        int roots = 6 + random.nextInt(4), branches = 4 + random.nextInt(3);
+        int roots = 6 + random.nextInt(4), branches = 7 + random.nextInt(3);
         rootTubes = roots * (ROOT_POINTS - 1);
-        tubes = new double[rootTubes + branches][];
+        double[][] rootParts = new double[rootTubes][];
         double start = random.nextDouble() * 2 * Math.PI;
         for (int i = 0; i < roots; i++) {
             double angle = start + (i + (random.nextDouble() - 0.5) * 0.5) * 2 * Math.PI / roots;
@@ -85,23 +95,57 @@ public final class GiantTree {
                 // From high on the flare down to just under the local ground, so the root crawls along a slope.
                 double y = (1 - w) * (base + 5) + w * (Math.max(base - MAX_DROP, probe.ground(x, z)) + 0.5 - sink);
                 double[] point = { x, y, z, 3 - 1.2 * t };
-                if (previous != null) tubes[i * (ROOT_POINTS - 1) + k - 1] = join(previous, point);
+                if (previous != null) rootParts[i * (ROOT_POINTS - 1) + k - 1] = join(previous, point);
                 previous = point;
             }
         }
-        clumps = new double[branches + 1][];
+        List<double[]> crownTubes = new ArrayList<>(), crownClumps = new ArrayList<>();
         double branchStart = random.nextDouble() * 2 * Math.PI;
         for (int i = 0; i < branches; i++) {
-            double angle = branchStart + (i + (random.nextDouble() - 0.5) * 0.5) * 2 * Math.PI / branches;
-            double from = base + top - 16 + random.nextInt(11);
-            double to = Math.min(from + 5 + random.nextInt(5), base + top + 1);
-            double reach = 12 + random.nextDouble() * 4, leaf = 5 + random.nextDouble() * 2;
+            double angle = branchStart + i * GOLDEN_ANGLE + (random.nextDouble() - 0.5) * 0.3;
+            // Spread up the crown from the lowest branch to near the top.
+            double from = base + top - CROWN + (CROWN - 10) * i / (double) branches + random.nextInt(4);
+            double to = Math.min(from + 6 + random.nextInt(6), base + top + 1);
+            double reach = 16 + random.nextDouble() * 8, leaf = 7.5 + random.nextDouble() * 2.5;
+            double sx = ax + 6 * Math.cos(angle), sz = az + 6 * Math.sin(angle);
             double ex = ax + reach * Math.cos(angle), ez = az + reach * Math.sin(angle);
-            tubes[rootTubes + i] = new double[] { ax + 6 * Math.cos(angle), from, az + 6 * Math.sin(angle), 2, ex, to,
-                ez, 1.4 };
-            clumps[i] = clump(ex, to + 2, ez, leaf);
+            crownTubes.add(new double[] { sx, from, sz, 2.6, ex, to, ez, 1.6 });
+            addClump(crownTubes, crownClumps, random, ex, to + 2, ez, leaf);
+            // A smaller clump partway along fills the gap between the trunk and the branch's end.
+            double mid = 0.55 + random.nextDouble() * 0.15;
+            addClump(
+                crownTubes,
+                crownClumps,
+                random,
+                sx + (ex - sx) * mid,
+                from + (to - from) * mid + 3,
+                sz + (ez - sz) * mid,
+                leaf * 0.7);
         }
-        clumps[branches] = clump(ax, base + top + 1, az, 7 + random.nextDouble() * 1.5);
+        addClump(crownTubes, crownClumps, random, ax, base + top + 1, az, 11 + random.nextDouble() * 2);
+        tubes = new double[rootTubes + crownTubes.size()][];
+        System.arraycopy(rootParts, 0, tubes, 0, rootTubes);
+        for (int i = 0; i < crownTubes.size(); i++) tubes[rootTubes + i] = crownTubes.get(i);
+        clumps = crownClumps.toArray(new double[0][]);
+        double low = Double.MAX_VALUE;
+        for (double[] t : crownTubes) low = Math.min(low, Math.min(t[1] - t[3], t[5] - t[7]));
+        for (double[] c : clumps) low = Math.min(low, c[1] - LEAF_SQUASH * c[3]);
+        crownLow = (int) Math.floor(low) - 1 - base;
+    }
+
+    /** Adds a clump and, when it is wide, twigs from its centre out through it. */
+    private void addClump(List<double[]> twigs, List<double[]> clumps, Random random, double x, double y, double z,
+        double r) {
+        double[] c = clump(x, y, z, r);
+        clumps.add(c);
+        if (r <= TWIG_FROM) return;
+        double start = random.nextDouble() * 2 * Math.PI, length = 0.6 * r;
+        for (int k = 0; k < 4; k++) {
+            double a = start + k * Math.PI / 2;
+            twigs.add(
+                new double[] { c[0], c[1] - 1, c[2], 1.1, c[0] + length * Math.cos(a), c[1] + 0.25 * length,
+                    c[2] + length * Math.sin(a), 0.7 });
+        }
     }
 
     /** Whether the tree rooted at anchor can write any height from minY to maxY - 1. */
@@ -159,12 +203,12 @@ public final class GiantTree {
             return d > inner - SHELL || y < bottom + 2 ? EndBlock.GROVE_LOG : null;
         }
         double px = x + 0.5, py = y + 0.5, pz = z + 0.5;
-        int first = dy <= 9 ? 0 : rootTubes, last = dy >= top - 20 ? tubes.length : rootTubes;
+        int first = dy <= 9 ? 0 : rootTubes, last = dy >= crownLow ? tubes.length : rootTubes;
         for (int i = first; i < last; i++) if (inTube(tubes[i], px, py, pz)) return EndBlock.GROVE_LOG;
         if (dy <= 9 && py >= ground - ROOT_SINK) {
             for (int i = 0; i < rootTubes; i++) if (underRoot(tubes[i], px, py, pz)) return EndBlock.GROVE_LOG;
         }
-        if (dy < top - 25) return null;
+        if (dy < crownLow) return null;
         for (double[] c : clumps) {
             if (inClump(c, x, y, z)) {
                 return Hash.hash01(leafSeed, x, y, z) < blossomShare ? EndBlock.GROVE_BLOSSOM : EndBlock.GROVE_LEAVES;
