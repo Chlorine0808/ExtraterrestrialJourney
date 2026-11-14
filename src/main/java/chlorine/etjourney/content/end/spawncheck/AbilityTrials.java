@@ -23,6 +23,7 @@ final class AbilityTrials {
         this.record = record;
         trials.add(new BulkyTrial());
         trials.add(new BruteTrial());
+        trials.add(new JuggernautTrial());
     }
 
     /** True once every trial is done. */

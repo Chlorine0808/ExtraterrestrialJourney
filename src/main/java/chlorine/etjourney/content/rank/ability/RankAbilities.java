@@ -24,6 +24,7 @@ public final class RankAbilities {
         add(new TrailAbility());
         add(new BulkyAbility());
         add(new BruteAbility());
+        add(new JuggernautAbility());
     }
 
     private RankAbilities() {}
