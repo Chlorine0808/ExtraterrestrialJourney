@@ -31,7 +31,8 @@ final class WebsTrial extends AbilityTrial {
             return false;
         }
         if (TrialSupport.shotExists(c.end, RankShots.WEB_SHOT.name)) fired = true;
-        if (tick == 50) c.verdict(placed && c.end.getBlock(x, y, z) == RankWebBlock.instance(), name + ": the web stands");
+        if (tick == 50)
+            c.verdict(placed && c.end.getBlock(x, y, z) == RankWebBlock.instance(), name + ": the web stands");
         if (tick < CHECK_AT) return false;
         c.verdict(placed && c.end.isAirBlock(x, y, z), name + ": the placed web faded after 100 ticks");
         c.verdict(fired, name + ": a web shot was fired");

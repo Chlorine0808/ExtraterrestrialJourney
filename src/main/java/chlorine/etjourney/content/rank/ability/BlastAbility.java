@@ -36,7 +36,8 @@ public final class BlastAbility implements RankAbility {
     private static void burst(World world, EntityLiving self, double x, double y, double z) {
         world.playSoundEffect(x, y, z, "random.explode", 4.0F, 0.9F);
         if (world instanceof WorldServer) ((WorldServer) world).func_147487_a("hugeexplosion", x, y, z, 1, 0, 0, 0, 0);
-        AxisAlignedBB box = AxisAlignedBB.getBoundingBox(x - RADIUS, y - RADIUS, z - RADIUS, x + RADIUS, y + RADIUS, z + RADIUS);
+        AxisAlignedBB box = AxisAlignedBB
+            .getBoundingBox(x - RADIUS, y - RADIUS, z - RADIUS, x + RADIUS, y + RADIUS, z + RADIUS);
         for (Object o : world.getEntitiesWithinAABB(EntityLivingBase.class, box)) {
             EntityLivingBase e = (EntityLivingBase) o;
             if (e == self || !e.isEntityAlive()) continue;

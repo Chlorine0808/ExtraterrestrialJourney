@@ -20,6 +20,7 @@ final class Warning {
     }
 
     static void puff(World world, String particle, double x, double y, double z) {
-        if (world instanceof WorldServer) ((WorldServer) world).func_147487_a(particle, x, y, z, 8, 0.5, 0.2, 0.5, 0.02);
+        if (world instanceof WorldServer)
+            ((WorldServer) world).func_147487_a(particle, x, y, z, 8, 0.5, 0.2, 0.5, 0.02);
     }
 }

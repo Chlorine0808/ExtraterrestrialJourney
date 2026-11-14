@@ -46,9 +46,14 @@ public final class LightningAbility implements RankAbility {
         if (!Cooldown.ready(now, RankData.lastUsed(self, ID), COOLDOWN)) return;
         RankData.markUsed(self, ID, now);
         double x = player.posX, y = player.posY, z = player.posZ;
-        Warning.at(self.worldObj, "fireworksSpark", x, y + 0.1, z, WARNING, () -> {
-            if (self.isEntityAlive()) strike(self, x, y, z);
-        });
+        Warning.at(
+            self.worldObj,
+            "fireworksSpark",
+            x,
+            y + 0.1,
+            z,
+            WARNING,
+            () -> { if (self.isEntityAlive()) strike(self, x, y, z); });
     }
 
     /** Draws the bolt on the clients and hurts what stands within the radius, the mob itself excepted. */

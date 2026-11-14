@@ -25,8 +25,14 @@ public final class FireballAbility implements RankAbility {
         if (player == null || !self.canEntityBeSeen(player)) return;
         long now = self.worldObj.getTotalWorldTime();
         if (!Cooldown.ready(now, RankData.lastUsed(self, ID), COOLDOWN)) return;
-        Projectiles
-            .shootAt(RankShots.FIREBALL, self.worldObj, self, self.posX, self.posY + self.height * 0.7, self.posZ, player);
+        Projectiles.shootAt(
+            RankShots.FIREBALL,
+            self.worldObj,
+            self,
+            self.posX,
+            self.posY + self.height * 0.7,
+            self.posZ,
+            player);
         RankData.markUsed(self, ID, now);
         self.worldObj.playSoundAtEntity(self, "mob.ghast.fireball", 1.0F, 1.0F);
     }
