@@ -6,7 +6,11 @@ import java.util.UUID;
 import java.util.function.Consumer;
 
 import net.minecraft.entity.EntityLiving;
+import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.init.Items;
+import net.minecraft.item.ItemStack;
+import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.MathHelper;
 import net.minecraft.world.WorldServer;
@@ -78,6 +82,13 @@ final class RankAbilityCheck {
                 int minions = SummonAbility.minionsOf(summon)
                     .size();
                 verdict(minions > 0, "summon: " + minions + " minions after a hit");
+                if (minions > 0) verdict(
+                    dropsOnKill(
+                        end,
+                        SummonAbility.minionsOf(summon)
+                            .get(0),
+                        player) == 0,
+                    "summon: a minion killed while its parent lives drops nothing");
                 summon.attackEntityFrom(DamageSource.causePlayerDamage(player), 1000);
                 break;
             }
@@ -85,6 +96,16 @@ final class RankAbilityCheck {
                 int left = SummonAbility.minionsOf(summon)
                     .size();
                 verdict(left == 0, "summon: " + left + " minions left after the parent died");
+                break;
+            }
+            case 116: {
+                EntityLiving free = plain(end, player, 0, 4);
+                verdict(dropsOnKill(end, free, player) > 0, "summon: a free spore zombie drops the stick it holds");
+                // The state between a parent's death and the minion's next watch: no parent to be found.
+                EntityLiving orphan = plain(end, player, 0, -4);
+                RankData.set(orphan, Rank.NORMAL, Collections.emptyList());
+                RankData.setOffspring(orphan, RankData.MINION, UUID.randomUUID());
+                verdict(dropsOnKill(end, orphan, player) == 0, "summon: a minion whose parent is gone drops nothing");
                 break;
             }
             case 120:
@@ -106,12 +127,37 @@ final class RankAbilityCheck {
         return Math.sqrt(mob.getDistanceSq(x, y, z));
     }
 
+    /** Items that land around the mob when the player kills it holding a stick it always drops. */
+    private static int dropsOnKill(WorldServer end, EntityLiving mob, EntityPlayerMP player) {
+        mob.setCurrentItemOrArmor(0, new ItemStack(Items.stick));
+        mob.setEquipmentDropChance(0, 2);
+        AxisAlignedBB box = mob.boundingBox.expand(3, 3, 3);
+        int before = end.getEntitiesWithinAABB(EntityItem.class, box)
+            .size();
+        mob.attackEntityFrom(DamageSource.causePlayerDamage(player), 1000);
+        return end.getEntitiesWithinAABB(EntityItem.class, box)
+            .size() - before;
+    }
+
     private static EntityLiving spawn(WorldServer end, EntityPlayerMP player, int dx, int dz, String ability) {
         EntitySporeZombie mob = new EntitySporeZombie(end);
-        int x = MathHelper.floor_double(player.posX) + dx, z = MathHelper.floor_double(player.posZ) + dz;
-        mob.setLocationAndAngles(x + 0.5, end.getTopSolidOrLiquidBlock(x, z), z + 0.5, 0, 0);
+        place(end, mob, player, dx, dz);
         EnemyRanks.give(mob, Rank.RARE, Collections.singletonList(ability));
         end.spawnEntityInWorld(mob);
         return mob;
+    }
+
+    /** An unranked spore zombie, rolled as normal so it never rolls a rank of its own. */
+    private static EntityLiving plain(WorldServer end, EntityPlayerMP player, int dx, int dz) {
+        EntitySporeZombie mob = new EntitySporeZombie(end);
+        place(end, mob, player, dx, dz);
+        EnemyRanks.give(mob, Rank.NORMAL, Collections.emptyList());
+        end.spawnEntityInWorld(mob);
+        return mob;
+    }
+
+    private static void place(WorldServer end, EntityLiving mob, EntityPlayerMP player, int dx, int dz) {
+        int x = MathHelper.floor_double(player.posX) + dx, z = MathHelper.floor_double(player.posZ) + dz;
+        mob.setLocationAndAngles(x + 0.5, end.getTopSolidOrLiquidBlock(x, z), z + 0.5, 0, 0);
     }
 }
