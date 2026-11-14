@@ -32,6 +32,7 @@ final class AbilityTrials {
         trials.add(new ShieldTrial());
         trials.add(new FrenzyTrial());
         trials.add(new ThornsTrial());
+        trials.add(new GuardTrial());
     }
 
     /** True once every trial is done. */

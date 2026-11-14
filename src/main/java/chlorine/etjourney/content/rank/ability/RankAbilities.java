@@ -33,6 +33,7 @@ public final class RankAbilities {
         add(new ShieldAbility());
         add(new FrenzyAbility());
         add(new ThornsAbility());
+        add(new GuardAbility());
     }
 
     private RankAbilities() {}
