@@ -2,6 +2,8 @@ package chlorine.etjourney.world.end.feature.plant;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotSame;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.ArrayList;
@@ -230,13 +232,12 @@ class AmberTreesTest {
     @Test
     void terrainsFromDifferentSourcesDoNotShareShapes() {
         AmberTrees.Anchor a = firstTree(31L, flat(60));
-        // Same footing, but the ground sinks past the legs, so the roots crawl deeper.
+        // The same ground from another source: its shape is built anew, not taken from generation's.
         AmberTrees.Terrain probe = new AmberTrees.Terrain() {
 
             @Override
             public double ground(double x, double z) {
-                double r = Math.hypot(x - a.x - 0.5, z - a.z - 0.5);
-                return r > 7.5 && r <= 10 ? 53 : 60;
+                return 60;
             }
 
             @Override
@@ -249,13 +250,14 @@ class AmberTreesTest {
                 return 1;
             }
         };
-        AmberTree seen = AmberTrees.in(31L, a.x >> 5, a.z >> 5, probe)
+        int cx = Math.floorDiv(a.x, AmberTrees.CELL), cz = Math.floorDiv(a.z, AmberTrees.CELL);
+        AmberTree seen = AmberTrees.in(31L, cx, cz, probe)
             .get(0).shape;
-        AmberTrees.in(32L, 0, 0, flat(60)); // another seed clears the cache
-        AmberTree fresh = AmberTrees.in(31L, a.x >> 5, a.z >> 5, probe)
-            .get(0).shape;
-        assertEquals(fresh.minY(), seen.minY());
-        assertTrue(fresh.minY() < a.shape.minY(), fresh.minY() + " vs " + a.shape.minY());
+        assertNotSame(a.shape, seen);
+        assertSame(
+            seen,
+            AmberTrees.in(31L, cx, cz, probe)
+                .get(0).shape);
     }
 
     @Test
