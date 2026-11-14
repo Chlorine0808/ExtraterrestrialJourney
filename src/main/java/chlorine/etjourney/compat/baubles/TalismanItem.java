@@ -20,11 +20,13 @@ import chlorine.etjourney.core.damage.ElementalAccessory;
 import chlorine.etjourney.core.damage.model.Boosts;
 import chlorine.etjourney.core.damage.model.Resistance;
 import chlorine.etjourney.core.registry.RegistryNames;
+import chlorine.etjourney.core.status.StatusWard;
+import chlorine.etjourney.core.status.model.StatusResistance;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 
 /** A talisman as a Baubles item that fits only ETJ's talisman slots; its effects live in {@link Talisman}. */
-final class TalismanItem extends Item implements IBaubleExpanded, Accessory, ElementalAccessory {
+final class TalismanItem extends Item implements IBaubleExpanded, Accessory, ElementalAccessory, StatusWard {
 
     private final Talisman talisman;
 
@@ -89,6 +91,11 @@ final class TalismanItem extends Item implements IBaubleExpanded, Accessory, Ele
     @Override
     public void addBoosts(ItemStack stack, EntityLivingBase wearer, Boosts.Builder out) {
         talisman.addBoosts(wearer, out);
+    }
+
+    @Override
+    public void addStatusResistance(ItemStack stack, EntityLivingBase wearer, StatusResistance.Builder out) {
+        talisman.addStatusResistance(out);
     }
 
     @Override

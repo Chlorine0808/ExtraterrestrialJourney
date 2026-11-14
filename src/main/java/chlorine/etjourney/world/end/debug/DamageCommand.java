@@ -73,7 +73,7 @@ final class DamageCommand {
     }
 
     /** The nearest living thing whose box the look ray crosses within reach. */
-    private static EntityLivingBase inView(EntityPlayerMP player) {
+    static EntityLivingBase inView(EntityPlayerMP player) {
         Vec3 eye = Vec3.createVectorHelper(player.posX, player.posY + player.getEyeHeight(), player.posZ);
         Vec3 look = player.getLookVec();
         Vec3 end = eye.addVector(look.xCoord * REACH, look.yCoord * REACH, look.zCoord * REACH);

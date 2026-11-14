@@ -14,11 +14,12 @@ import chlorine.etjourney.core.combat.CombatHook;
 import chlorine.etjourney.core.damage.model.Boosts;
 import chlorine.etjourney.core.damage.model.ElementRegistry;
 import chlorine.etjourney.core.damage.model.Resistance;
+import chlorine.etjourney.core.status.model.StatusResistance;
 
 /**
  * The early accessories worn in ETJ's talisman slots, each kept small against vanilla: Sakura Gold attacks, Golden
- * Palladium defends, Drift moves, and Rhenium gives a stronger taste of all three until it wears out. The last four
- * are trials of hooks and boosts.
+ * Palladium defends, Drift moves, and Rhenium gives a stronger taste of all three until it wears out. Vampire to
+ * Ember are trials of hooks and boosts; Ward is a trial of status resistance.
  */
 public enum Talisman {
 
@@ -29,7 +30,8 @@ public enum Talisman {
     VAMPIRE("vampire_talisman", TalismanPower.VAMPIRE),
     BUBBLE("bubble_talisman", TalismanPower.BUBBLE),
     WRATH("wrath_talisman", TalismanPower.WRATH),
-    EMBER("ember_talisman", TalismanPower.EMBER);
+    EMBER("ember_talisman", TalismanPower.EMBER),
+    WARD("ward_talisman", TalismanPower.WARD);
 
     public final String name;
     final double attack;
@@ -78,6 +80,10 @@ public enum Talisman {
 
     public void addBoosts(EntityLivingBase wearer, Boosts.Builder out) {
         power.addBoosts(wearer, out);
+    }
+
+    public void addStatusResistance(StatusResistance.Builder out) {
+        power.addStatusResistance(out);
     }
 
     /** The stack after one more worn second: the same stack, a more worn copy, or null once spent. */

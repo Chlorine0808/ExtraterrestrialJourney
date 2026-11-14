@@ -230,3 +230,7 @@ etjourney.rank.legendary=レジェンド
 entity.etjourney.flame_worm.name=炎のワーム
 entity.etjourney.shot.name=弾
 entity.etjourney.lingering_area.name=残る場
+etjourney.potion.heavy=重さ
+etjourney.potion.frozen=凍結
+item.etjourney.ward_talisman.name=守りの護符
+etjourney.tooltip.talisman.ward=悪い効果の時間 −%s%%，Lv −%s
