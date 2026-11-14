@@ -34,6 +34,7 @@ public final class RankAbilities {
         add(new FrenzyAbility());
         add(new ThornsAbility());
         add(new GuardAbility());
+        add(new RangedWardAbility());
     }
 
     private RankAbilities() {}
