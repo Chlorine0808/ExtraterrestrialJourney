@@ -22,6 +22,7 @@ import net.minecraftforge.event.entity.player.PlayerEvent;
 
 import chlorine.etjourney.content.rank.ability.RankAbilities;
 import chlorine.etjourney.content.rank.ability.RankAbility;
+import chlorine.etjourney.content.rank.ability.RankShots;
 import chlorine.etjourney.content.rank.ability.SummonAbility;
 import chlorine.etjourney.core.config.ETJConfig;
 import chlorine.etjourney.core.network.ETJNetwork;
@@ -42,6 +43,7 @@ public final class EnemyRanks {
         // Registered whatever the config says, so packet IDs match a server configured otherwise.
         ETJNetwork.channel()
             .registerMessage(RankSync.Handler.class, RankSync.class, ETJNetwork.nextId(), Side.CLIENT);
+        RankShots.register();
         if (!ETJConfig.enemyRanks) return;
         EnemyRanks ranks = new EnemyRanks();
         MinecraftForge.EVENT_BUS.register(ranks);

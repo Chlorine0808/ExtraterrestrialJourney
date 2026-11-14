@@ -50,6 +50,7 @@ public final class RankAbilities {
         add(new PullAbility());
         add(new FlightAbility());
         add(new HordeAbility());
+        add(new FireballAbility());
     }
 
     private RankAbilities() {}
