@@ -26,6 +26,7 @@ public final class RankAbilities {
         add(new BruteAbility());
         add(new JuggernautAbility());
         add(new HeavyAbility());
+        add(new BuffsAbility());
     }
 
     private RankAbilities() {}
