@@ -30,12 +30,15 @@ final class RankAbilityCheck {
     private static final double BASE_HEALTH = 44;
 
     private final Consumer<String> record;
+    /** The newer abilities, each tried after the first ones. */
+    private final AbilityTrials trials;
     private int tick;
     private EntityLiving warp, summon;
     private UUID split;
 
     RankAbilityCheck(Consumer<String> record) {
         this.record = record;
+        trials = new AbilityTrials(record);
     }
 
     /** Runs this tick's step; true once every step is done. */
@@ -109,8 +112,9 @@ final class RankAbilityCheck {
                 break;
             }
             case 120:
-                return true;
+                break;
             default:
+                if (tick > 120) return trials.step(end, player);
                 break;
         }
         return false;

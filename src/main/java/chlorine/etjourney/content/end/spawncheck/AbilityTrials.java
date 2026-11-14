@@ -1,0 +1,56 @@
+package chlorine.etjourney.content.end.spawncheck;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Consumer;
+
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.world.WorldServer;
+
+/** Runs each ability trial in turn, healing the player and clearing the trial's mobs between them. */
+final class AbilityTrials {
+
+    /** Trials that cap their own length still stop here, so one stuck trial cannot hold the check. */
+    private static final int MAX_TICKS = 600;
+
+    private final List<AbilityTrial> trials = new ArrayList<>();
+    private final Consumer<String> record;
+    private int index, tick;
+    private AbilityTrial.Ctx ctx;
+
+    AbilityTrials(Consumer<String> record) {
+        this.record = record;
+    }
+
+    /** True once every trial is done. */
+    boolean step(WorldServer end, EntityPlayerMP player) {
+        if (index >= trials.size()) return true;
+        AbilityTrial trial = trials.get(index);
+        if (ctx == null) {
+            ctx = new AbilityTrial.Ctx(end, player, record);
+            player.setHealth(player.getMaxHealth());
+            player.getFoodStats()
+                .addStats(20, 20);
+            player.clearActivePotions();
+            tick = 0;
+        }
+        boolean done;
+        try {
+            done = trial.step(ctx, ++tick);
+        } catch (RuntimeException e) {
+            ctx.verdict(false, trial.name + ": crashed: " + e);
+            done = true;
+        }
+        if (!done && tick >= MAX_TICKS) {
+            ctx.verdict(false, trial.name + ": did not finish");
+            done = true;
+        }
+        if (done) {
+            for (Entity e : ctx.made) e.setDead();
+            ctx = null;
+            index++;
+        }
+        return false;
+    }
+}
