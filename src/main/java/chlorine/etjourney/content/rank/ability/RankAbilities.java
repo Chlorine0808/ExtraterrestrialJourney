@@ -48,6 +48,7 @@ public final class RankAbilities {
         add(new RouseAbility());
         add(new GatherAbility());
         add(new PullAbility());
+        add(new FlightAbility());
     }
 
     private RankAbilities() {}

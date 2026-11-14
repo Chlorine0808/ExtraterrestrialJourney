@@ -47,6 +47,7 @@ final class AbilityTrials {
         trials.add(new RouseTrial());
         trials.add(new GatherTrial());
         trials.add(new PullTrial());
+        trials.add(new FlightTrial());
     }
 
     /** True once every trial is done. */
