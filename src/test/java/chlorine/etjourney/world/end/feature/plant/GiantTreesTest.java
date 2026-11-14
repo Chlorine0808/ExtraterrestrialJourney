@@ -106,6 +106,27 @@ class GiantTreesTest {
         assertTrue(seen > 0);
     }
 
+    /** No shelf of layered ground rises into the crown: 20261114-200157, 2 had its crown cut by the layer above. */
+    @Test
+    void noShelfUnderTheCrown() {
+        int seen = 0;
+        for (Continent.Seed s : groves()) {
+            for (double[] a : GiantTrees.anchors(SEED, s, PROBE)) {
+                for (int k = 0; k < 16; k++) {
+                    double angle = k * Math.PI / 8;
+                    for (double r = 12; r <= GiantTrees.CROWN_RADIUS; r += 11) {
+                        double g = PROBE.ground(a[0] + r * Math.cos(angle), a[2] + r * Math.sin(angle));
+                        assertTrue(
+                            g <= a[1] + GiantTrees.CROWN_CLEAR,
+                            "ground " + g + " under a crown rooted at " + a[1]);
+                    }
+                }
+                seen++;
+            }
+        }
+        assertTrue(seen > 0);
+    }
+
     /** Around the trunk the ground is land and fairly level: no cliff above the root, no void below it. */
     @Test
     void anchorsStandOnLevelLand() {

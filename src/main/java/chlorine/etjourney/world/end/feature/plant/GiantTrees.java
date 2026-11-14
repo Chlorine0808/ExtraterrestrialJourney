@@ -79,6 +79,8 @@ public final class GiantTrees {
             if (probe.holed(s.x, s.z, ROOT_FOOTPRINT)) continue;
             double ground = probe.ground(s.x, s.z);
             if (ground <= -100 || ground + HEIGHT > 255 || !level(probe, s.x, s.z, ground)) continue;
+            // A shelf of layered ground above the root would cut through the crown.
+            if (!underCrownClear(probe, s.x, s.z, ground)) continue;
             out.add(new double[] { s.x, ground, s.z });
         }
         return out;
@@ -90,6 +92,16 @@ public final class GiantTrees {
             double angle = k * Math.PI / 4;
             double g = probe.ground(x + LEVEL_RADIUS * Math.cos(angle), z + LEVEL_RADIUS * Math.sin(angle));
             if (Math.abs(g - ground) > LEVEL_RISE) return false;
+        }
+        return true;
+    }
+
+    private static boolean underCrownClear(StructureProbe probe, double x, double z, double ground) {
+        for (double r : new double[] { CROWN_RADIUS / 2, CROWN_RADIUS }) {
+            for (int k = 0; k < 8; k++) {
+                double angle = k * Math.PI / 4;
+                if (probe.ground(x + r * Math.cos(angle), z + r * Math.sin(angle)) > ground + CROWN_CLEAR) return false;
+            }
         }
         return true;
     }
