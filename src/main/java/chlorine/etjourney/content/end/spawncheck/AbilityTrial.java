@@ -57,10 +57,18 @@ abstract class AbilityTrial {
             return spawn(Rank.NORMAL, dx, dz);
         }
 
-        /** On the ground dx dz from the player. */
+        /**
+         * On the ground dx dz from the player, searched down from the player's height: the End has layers, and the top
+         * block of the column may sit far above.
+         */
         void place(EntityLiving mob, int dx, int dz) {
             int x = MathHelper.floor_double(player.posX) + dx, z = MathHelper.floor_double(player.posZ) + dz;
-            mob.setLocationAndAngles(x + 0.5, end.getTopSolidOrLiquidBlock(x, z), z + 0.5, 0, 0);
+            int top = MathHelper.floor_double(player.posY) + 2, y = top;
+            while (y > top - 24 && !end.getBlock(x, y - 1, z)
+                .getMaterial()
+                .blocksMovement()) y--;
+            if (y <= top - 24) y = MathHelper.floor_double(player.posY);
+            mob.setLocationAndAngles(x + 0.5, y, z + 0.5, 0, 0);
         }
 
         DamageSource byPlayer() {

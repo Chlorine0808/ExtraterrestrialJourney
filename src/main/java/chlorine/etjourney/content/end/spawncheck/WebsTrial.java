@@ -26,7 +26,7 @@ final class WebsTrial extends AbilityTrial {
             mob.setAttackTarget(c.player);
             x = MathHelper.floor_double(c.player.posX);
             z = MathHelper.floor_double(c.player.posZ) - 6;
-            y = c.end.getTopSolidOrLiquidBlock(x, z);
+            y = MathHelper.floor_double(c.player.posY);
             placed = c.end.isAirBlock(x, y, z) && c.end.setBlock(x, y, z, RankWebBlock.instance());
             return false;
         }
