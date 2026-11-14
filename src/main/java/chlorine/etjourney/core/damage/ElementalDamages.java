@@ -43,7 +43,10 @@ public final class ElementalDamages {
     }
 
     private static ElementalDamageSource part(ElementalDamageSource source, ElementalDamage damage) {
-        return new ElementalDamageSource(damage, source.getSourceOfDamage(), source.getEntity());
+        ElementalDamageSource out = new ElementalDamageSource(damage, source.getSourceOfDamage(), source.getEntity());
+        // A shot split into its ordinary and absolute parts is still ranged.
+        if (source.isProjectile()) out.setProjectile();
+        return out;
     }
 
     /**

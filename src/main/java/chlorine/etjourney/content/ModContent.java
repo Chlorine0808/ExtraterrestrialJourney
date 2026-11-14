@@ -1,5 +1,7 @@
 package chlorine.etjourney.content;
 
+import chlorine.etjourney.content.area.AreaCommand;
+import chlorine.etjourney.content.area.AreaContent;
 import chlorine.etjourney.content.combat.ElementalGear;
 import chlorine.etjourney.content.combat.Elements;
 import chlorine.etjourney.content.craft.CraftContent;
@@ -9,8 +11,11 @@ import chlorine.etjourney.content.end.EndBuildingContent;
 import chlorine.etjourney.content.end.EndEntities;
 import chlorine.etjourney.content.end.EndSpawns;
 import chlorine.etjourney.content.growth.GearAffixes;
+import chlorine.etjourney.content.projectile.ProjectileContent;
+import chlorine.etjourney.content.projectile.ShootCommand;
 import chlorine.etjourney.content.rank.EnemyRanks;
 import chlorine.etjourney.content.rank.RankCommand;
+import chlorine.etjourney.content.status.Ailments;
 import chlorine.etjourney.core.util.ModLog;
 import cpw.mods.fml.common.event.FMLServerStartingEvent;
 
@@ -27,6 +32,8 @@ public final class ModContent {
         EndAcid.preInit();
         CraftContent.preInit();
         EndEntities.preInit();
+        ProjectileContent.preInit();
+        AreaContent.preInit();
         ModLog.LOG.debug("content: preInit");
     }
 
@@ -38,7 +45,13 @@ public final class ModContent {
         ModLog.LOG.debug("content: init");
     }
 
+    public static void postInit() {
+        Ailments.postInit();
+    }
+
     public static void serverStarting(FMLServerStartingEvent event) {
         event.registerServerCommand(new RankCommand());
+        event.registerServerCommand(new ShootCommand());
+        event.registerServerCommand(new AreaCommand());
     }
 }

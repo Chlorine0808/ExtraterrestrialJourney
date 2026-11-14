@@ -6,10 +6,10 @@ import java.util.Random;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
-import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.world.World;
 
+import chlorine.etjourney.content.ModCreativeTab;
 import chlorine.etjourney.core.ModInfo;
 import chlorine.etjourney.core.registry.RegistryNames;
 
@@ -24,7 +24,7 @@ final class EndHangingBlock extends Block {
         setHardness(0.0F);
         setStepSound(soundTypeGrass);
         setLightLevel(entry.light / 15.0F);
-        setCreativeTab(CreativeTabs.tabDecorations);
+        setCreativeTab(ModCreativeTab.TAB);
         setBlockName(RegistryNames.unlocalized(entry.name));
         setBlockTextureName(RegistryNames.texture(entry.name));
         hangsFrom = entry.hangsFrom;

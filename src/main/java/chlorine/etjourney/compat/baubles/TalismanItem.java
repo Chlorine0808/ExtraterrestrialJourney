@@ -2,7 +2,6 @@ package chlorine.etjourney.compat.baubles;
 
 import java.util.List;
 
-import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
@@ -12,6 +11,7 @@ import net.minecraft.world.World;
 import baubles.api.BaubleType;
 import baubles.api.expanded.BaubleItemHelper;
 import baubles.api.expanded.IBaubleExpanded;
+import chlorine.etjourney.content.ModCreativeTab;
 import chlorine.etjourney.content.accessory.Talisman;
 import chlorine.etjourney.core.accessory.Accessory;
 import chlorine.etjourney.core.accessory.AccessoryModifiers;
@@ -20,11 +20,13 @@ import chlorine.etjourney.core.damage.ElementalAccessory;
 import chlorine.etjourney.core.damage.model.Boosts;
 import chlorine.etjourney.core.damage.model.Resistance;
 import chlorine.etjourney.core.registry.RegistryNames;
+import chlorine.etjourney.core.status.StatusWard;
+import chlorine.etjourney.core.status.model.StatusResistance;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 
 /** A talisman as a Baubles item that fits only ETJ's talisman slots; its effects live in {@link Talisman}. */
-final class TalismanItem extends Item implements IBaubleExpanded, Accessory, ElementalAccessory {
+final class TalismanItem extends Item implements IBaubleExpanded, Accessory, ElementalAccessory, StatusWard {
 
     private final Talisman talisman;
 
@@ -32,7 +34,7 @@ final class TalismanItem extends Item implements IBaubleExpanded, Accessory, Ele
         this.talisman = talisman;
         setUnlocalizedName(RegistryNames.unlocalized(talisman.name));
         setTextureName(RegistryNames.texture(talisman.name));
-        setCreativeTab(CreativeTabs.tabCombat);
+        setCreativeTab(ModCreativeTab.TAB);
         setMaxStackSize(1);
         if (talisman.lifetime > 0) {
             setMaxDamage(talisman.lifetime);
@@ -89,6 +91,11 @@ final class TalismanItem extends Item implements IBaubleExpanded, Accessory, Ele
     @Override
     public void addBoosts(ItemStack stack, EntityLivingBase wearer, Boosts.Builder out) {
         talisman.addBoosts(wearer, out);
+    }
+
+    @Override
+    public void addStatusResistance(ItemStack stack, EntityLivingBase wearer, StatusResistance.Builder out) {
+        talisman.addStatusResistance(out);
     }
 
     @Override

@@ -4,11 +4,11 @@ import java.util.Random;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
-import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.item.Item;
 import net.minecraft.world.IBlockAccess;
 import net.minecraftforge.common.util.ForgeDirection;
 
+import chlorine.etjourney.content.ModCreativeTab;
 import chlorine.etjourney.core.registry.RegistryNames;
 
 /** A crystal block: drops nothing and cannot be silk-harvested, so it is only ever seen where it grew. */
@@ -19,7 +19,7 @@ class CrystalBlock extends Block {
         setHardness(1.5F);
         setStepSound(soundTypeGlass);
         setLightLevel(entry.light / 15.0F);
-        setCreativeTab(CreativeTabs.tabBlock);
+        setCreativeTab(ModCreativeTab.TAB);
         setBlockName(RegistryNames.unlocalized(entry.name));
         setBlockTextureName(RegistryNames.texture(entry.name));
     }

@@ -4,11 +4,11 @@ import java.util.Random;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
-import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.Entity;
 import net.minecraft.item.Item;
 import net.minecraft.world.IBlockAccess;
 
+import chlorine.etjourney.content.ModCreativeTab;
 import chlorine.etjourney.core.registry.RegistryNames;
 
 /**
@@ -32,7 +32,7 @@ final class OreBlock extends Block {
         setResistance(entry.blastproof ? BLASTPROOF_RESISTANCE : PLAIN_RESISTANCE);
         setStepSound(soundTypePiston);
         setHarvestLevel("pickaxe", entry.harvestLevel);
-        setCreativeTab(CreativeTabs.tabBlock);
+        setCreativeTab(ModCreativeTab.TAB);
         setBlockName(RegistryNames.unlocalized(entry.name));
         setBlockTextureName(RegistryNames.texture(entry.name));
     }

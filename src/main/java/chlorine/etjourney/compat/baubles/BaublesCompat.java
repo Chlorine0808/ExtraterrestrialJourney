@@ -28,6 +28,8 @@ public final class BaublesCompat implements CompatModule {
 
     @Override
     public void init() {
-        if (DamageCheckServer.requested()) AccessoryCheck.register();
+        if (!DamageCheckServer.requested()) return;
+        AccessoryCheck.register();
+        StatusCheck.register();
     }
 }

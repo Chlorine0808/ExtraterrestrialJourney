@@ -2,12 +2,16 @@ package chlorine.etjourney.proxy;
 
 import org.lwjgl.opengl.Display;
 
+import chlorine.etjourney.content.area.AreaContent;
+import chlorine.etjourney.content.area.check.AreaCheck;
 import chlorine.etjourney.content.craft.CraftRenderers;
 import chlorine.etjourney.content.end.EndEntityRenderers;
 import chlorine.etjourney.content.end.FurRenderer;
 import chlorine.etjourney.content.end.spawncheck.SpawnCheck;
 import chlorine.etjourney.content.end.wormcheck.WormCheck;
 import chlorine.etjourney.content.entity.EntityRenderers;
+import chlorine.etjourney.content.projectile.ProjectileContent;
+import chlorine.etjourney.content.projectile.check.ProjectileCheck;
 import chlorine.etjourney.content.rank.client.RankClient;
 import chlorine.etjourney.core.growth.GrowthTooltip;
 import chlorine.etjourney.core.util.WindowTitle;
@@ -29,6 +33,8 @@ public class ClientProxy extends CommonProxy {
     public void init(FMLInitializationEvent event) {
         super.init(event);
         EndEntityRenderers.init();
+        ProjectileContent.initClient();
+        AreaContent.initClient();
         EntityRenderers.init();
         RankClient.init();
         CraftRenderers.init();
@@ -39,6 +45,8 @@ public class ClientProxy extends CommonProxy {
         DamageCheck.startIfRequested();
         SpawnCheck.startIfRequested();
         WormCheck.startIfRequested();
+        ProjectileCheck.startIfRequested();
+        AreaCheck.startIfRequested();
         tagWindow();
     }
 

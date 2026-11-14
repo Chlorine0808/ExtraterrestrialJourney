@@ -3,7 +3,6 @@ package chlorine.etjourney.content.combat;
 import java.util.List;
 import java.util.Map;
 
-import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
@@ -15,6 +14,7 @@ import net.minecraft.util.StatCollector;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 
+import chlorine.etjourney.content.ModCreativeTab;
 import chlorine.etjourney.core.damage.ElementalDamageSource;
 import chlorine.etjourney.core.damage.ElementalDamages;
 import chlorine.etjourney.core.damage.model.DamageKind;
@@ -42,7 +42,7 @@ final class ElementalSword extends ItemSword {
         this.piercing = kind.element.isAbsolute();
         setUnlocalizedName(RegistryNames.unlocalized(name));
         setTextureName("iron_sword");
-        setCreativeTab(CreativeTabs.tabCombat);
+        setCreativeTab(ModCreativeTab.TAB);
     }
 
     /** Replaces the vanilla attack on living targets; anything else, such as an item frame, stays vanilla. */

@@ -20,6 +20,7 @@ public final class RankAbilities {
         add(new SplitAbility());
         add(new WarpAbility());
         add(new SummonAbility());
+        add(new TrailAbility());
     }
 
     private RankAbilities() {}

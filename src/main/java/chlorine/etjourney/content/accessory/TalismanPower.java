@@ -20,8 +20,10 @@ import chlorine.etjourney.core.damage.model.BoostFilter;
 import chlorine.etjourney.core.damage.model.Boosts;
 import chlorine.etjourney.core.damage.model.DamageKind;
 import chlorine.etjourney.core.damage.model.Reach;
+import chlorine.etjourney.core.status.model.StatusMath;
+import chlorine.etjourney.core.status.model.StatusResistance;
 
-/** What a trial talisman does beyond attributes: hooks on hits and damage boosts. Values are placeholders. */
+/** What a trial talisman does beyond attributes: hooks, boosts and status resistance. Values are placeholders. */
 public enum TalismanPower {
 
     NONE,
@@ -85,6 +87,20 @@ public enum TalismanPower {
         void addInformation(List<String> lines) {
             lines.add(line("ember", Math.round(EMBER_FIRE * 100), Math.round(EMBER_PHYSICAL_FIRE * 100)));
         }
+    },
+    /** Shortens and weakens every harmful status effect; Tantalum's stand-in. */
+    WARD {
+
+        @Override
+        void addStatusResistance(StatusResistance.Builder out) {
+            out.multiplyDuration(StatusMath.ANY, WARD_DURATION);
+            out.reduceLevel(StatusMath.ANY, WARD_LEVELS);
+        }
+
+        @Override
+        void addInformation(List<String> lines) {
+            lines.add(line("ward", Math.round((1 - WARD_DURATION) * 100), WARD_LEVELS));
+        }
     };
 
     static final float VAMPIRE_SHARE = 0.15f;
@@ -95,10 +111,14 @@ public enum TalismanPower {
     static final Condition WRATH_WHEN = Conditions.healthAtMost(WRATH_HEALTH);
     static final float EMBER_FIRE = 0.3f;
     static final float EMBER_PHYSICAL_FIRE = 0.2f;
+    static final float WARD_DURATION = 0.5f;
+    static final int WARD_LEVELS = 1;
 
     void addHooks(String id, List<CombatHook> out) {}
 
     void addBoosts(EntityLivingBase wearer, Boosts.Builder out) {}
+
+    void addStatusResistance(StatusResistance.Builder out) {}
 
     void addInformation(List<String> lines) {}
 

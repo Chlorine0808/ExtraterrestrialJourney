@@ -56,7 +56,9 @@ public final class EtjCommand extends CommandBase {
             + " | "
             + WindCommand.USAGE
             + " | "
-            + DamageCommand.USAGE;
+            + DamageCommand.USAGE
+            + " | "
+            + StatusCommand.USAGE;
     }
 
     @Override
@@ -76,6 +78,10 @@ public final class EtjCommand extends CommandBase {
         }
         if (args.length >= 1 && args[0].equals("wind")) {
             WindCommand.run(getCommandSenderAsPlayer(sender), args);
+            return;
+        }
+        if (args.length >= 1 && args[0].equals("status")) {
+            StatusCommand.run(getCommandSenderAsPlayer(sender), args);
             return;
         }
         if (args.length >= 1 && args[0].equals("damage")) {

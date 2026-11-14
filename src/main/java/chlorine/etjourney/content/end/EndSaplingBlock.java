@@ -6,9 +6,9 @@ import net.minecraft.block.Block;
 import net.minecraft.block.BlockBush;
 import net.minecraft.block.IGrowable;
 import net.minecraft.block.material.Material;
-import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.world.World;
 
+import chlorine.etjourney.content.ModCreativeTab;
 import chlorine.etjourney.core.registry.RegistryNames;
 import chlorine.etjourney.world.end.EndPalette;
 import chlorine.etjourney.world.end.feature.EndBiome;
@@ -34,7 +34,7 @@ final class EndSaplingBlock extends BlockBush implements IGrowable {
         this.biome = entry.biome;
         setHardness(0.0F);
         setStepSound(soundTypeGrass);
-        setCreativeTab(CreativeTabs.tabDecorations);
+        setCreativeTab(ModCreativeTab.TAB);
         setBlockName(RegistryNames.unlocalized(entry.name));
         setBlockTextureName(RegistryNames.texture(entry.name));
     }
