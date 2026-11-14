@@ -45,6 +45,7 @@ public final class EnemyRanks {
         if (!ETJConfig.enemyRanks) return;
         EnemyRanks ranks = new EnemyRanks();
         MinecraftForge.EVENT_BUS.register(ranks);
+        MinecraftForge.EVENT_BUS.register(new FamineEvents());
         FMLCommonHandler.instance()
             .bus()
             .register(ranks);
