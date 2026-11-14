@@ -94,7 +94,7 @@ public class EntityLingeringArea extends Entity implements IEntityAdditionalSpaw
     }
 
     private void work(double r) {
-        double bottom = spec.shape.bottom(posY, spec.height), top = spec.shape.top(posY, spec.height);
+        double bottom = spec.shape.bottom(posY, spec.height), top = spec.shape.top(posY, spec.height) + spec.headroom;
         AxisAlignedBB box = AxisAlignedBB.getBoundingBox(posX - r, bottom, posZ - r, posX + r, top, posZ + r)
             .expand(1, 1, 1);
         int worked = 0;
@@ -106,6 +106,7 @@ public class EntityLingeringArea extends Entity implements IEntityAdditionalSpaw
             if (!spec.shape.overlaps(
                 r,
                 spec.height,
+                spec.headroom,
                 posX,
                 posY,
                 posZ,
