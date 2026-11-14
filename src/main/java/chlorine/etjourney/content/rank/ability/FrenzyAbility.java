@@ -2,44 +2,45 @@ package chlorine.etjourney.content.rank.ability;
 
 import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.ai.EntityAIAttackOnCollide;
+import net.minecraft.entity.ai.EntityAITasks;
 import net.minecraft.util.DamageSource;
 
-import chlorine.etjourney.content.rank.RankTasks;
+import cpw.mods.fml.relauncher.ReflectionHelper;
 
-/** After a melee hit lands, the mob hits again eight ticks later if the target is still in reach. */
+/** After a melee hit lands, the mob's melee AI waits half as long before the next swing. */
 public final class FrenzyAbility implements RankAbility {
 
     public static final String ID = "frenzy";
-    static final int DELAY = 8;
-    /** True while the extra hit is being made, so it does not bring another. */
-    private static boolean extra;
+    /** Ticks to the next swing; the melee AI waits 20, and a target's hurt cooldown lets a hit through at 10. */
+    static final int WAIT = 10;
+    private static final String[] ATTACK_TICK = { "field_75439_d", "attackTick" };
 
     @Override
     public String id() {
         return ID;
     }
 
+    /** Only mobs that fight with the vanilla melee AI. */
+    @Override
+    public boolean fits(EntityLiving mob) {
+        return meleeAI(mob) != null;
+    }
+
+    /** The AI sets its wait before it strikes, so this runs after and shortens it. */
     @Override
     public void onStrike(EntityLiving self, EntityLivingBase target, DamageSource source, float amount) {
-        if (extra) return;
-        RankTasks.later(DELAY, () -> hitAgain(self, target));
+        EntityAIAttackOnCollide ai = meleeAI(self);
+        if (ai == null) return;
+        int wait = ReflectionHelper.getPrivateValue(EntityAIAttackOnCollide.class, ai, ATTACK_TICK);
+        if (wait > WAIT) ReflectionHelper.setPrivateValue(EntityAIAttackOnCollide.class, ai, WAIT, ATTACK_TICK);
     }
 
-    private static void hitAgain(EntityLiving self, EntityLivingBase target) {
-        if (!self.isEntityAlive() || !target.isEntityAlive()
-            || !inReach(self.getDistanceSqToEntity(target), self.width, target.width)) return;
-        // The target is still in its hurt cooldown, which would swallow an equal hit.
-        target.hurtResistantTime = 0;
-        extra = true;
-        try {
-            self.attackEntityAsMob(target);
-        } finally {
-            extra = false;
+    private static EntityAIAttackOnCollide meleeAI(EntityLiving mob) {
+        for (Object o : mob.tasks.taskEntries) {
+            Object action = ((EntityAITasks.EntityAITaskEntry) o).action;
+            if (action instanceof EntityAIAttackOnCollide) return (EntityAIAttackOnCollide) action;
         }
-    }
-
-    /** The vanilla melee reach: (2 * width) squared plus the target's width. */
-    static boolean inReach(double distanceSq, float width, float targetWidth) {
-        return distanceSq <= width * 2 * width * 2 + targetWidth;
+        return null;
     }
 }
