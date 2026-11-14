@@ -8,7 +8,7 @@ import chlorine.etjourney.content.rank.ability.PullAbility;
 final class PullTrial extends AbilityTrial {
 
     private EntityLiving mob;
-    private double startX, startZ;
+    private double startX;
     private boolean flying, moved;
 
     PullTrial() {
@@ -24,12 +24,9 @@ final class PullTrial extends AbilityTrial {
             mob = c.spawn(12, 0, PullAbility.ID);
             mob.setAttackTarget(c.player);
             startX = c.player.posX;
-            startZ = c.player.posZ;
             return false;
         }
-        double toward = (c.player.posX - startX) * Math.signum(mob.posX - startX)
-            + (c.player.posZ - startZ) * Math.signum(mob.posZ - startZ) * 0;
-        if (toward > 0.3) moved = true;
+        if (c.player.posX - startX > 0.3) moved = true;
         if (tick < 110) return false;
         c.player.capabilities.isFlying = flying;
         c.player.sendPlayerAbilities();
