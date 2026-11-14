@@ -29,6 +29,7 @@ public final class RankAbilities {
         add(new BuffsAbility());
         add(new RegenAbility());
         add(new EnrageAbility());
+        add(new OneupAbility());
     }
 
     private RankAbilities() {}
