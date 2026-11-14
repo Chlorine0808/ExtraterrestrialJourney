@@ -100,6 +100,8 @@ class AmberTreeTest {
             final long s = i;
             tree(i).forEach((dx, dy, dz, k) -> {
                 assertTrue(Math.hypot(dx, dz) <= 12.5, "seed " + s);
+                // The shape is scanned out to 12; a cell there would mean it was cut off.
+                assertTrue(Math.abs(dx) <= 11 && Math.abs(dz) <= 11, "seed " + s + " cut at " + dx + "," + dz);
                 assertTrue(dy <= 25, "seed " + s);
             });
         }

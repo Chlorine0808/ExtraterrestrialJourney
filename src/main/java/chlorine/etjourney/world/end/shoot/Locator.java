@@ -41,7 +41,7 @@ final class Locator {
     private static final double TREE_SIZE = 40;
 
     /** A seed tree is 15 high with a 10-block reach. */
-    private static final double AMBER_TREE_SIZE = 40;
+    private static final double AMBER_TREE_SIZE = 56;
     /** Cells searched on each side of a continent seed for its nearest seed tree. */
     private static final int AMBER_RINGS = 3;
     /** Normal-cell rings searched around a continent seed. */

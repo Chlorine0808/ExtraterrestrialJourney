@@ -138,11 +138,11 @@ class FramingTest {
     @Test
     void treeGroundStandsOffAlongPlusXOnFlatGround() {
         Camera c = Framing.treeGround(SEED_TREE, (x, z) -> 80);
-        assertEquals(SEED_TREE.x + 15, c.x, 1e-9);
+        assertEquals(SEED_TREE.x + 28, c.x, 1e-9);
         assertEquals(SEED_TREE.z, c.z, 1e-9);
         assertEquals(SEED_TREE.y + 4, c.y, 1e-9);
         assertEquals(90f, c.yaw, 1e-6);
-        assertEquals(-5, c.pitch, 0.5);
+        assertEquals(-9, c.pitch, 0.5);
     }
 
     @Test
