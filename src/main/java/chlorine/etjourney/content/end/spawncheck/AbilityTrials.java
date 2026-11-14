@@ -37,6 +37,7 @@ final class AbilityTrials {
         trials.add(new MagicWardTrial());
         trials.add(new EtherealTrial());
         trials.add(new AbsorbTrial());
+        trials.add(new BarrierTrial());
     }
 
     /** True once every trial is done. */
