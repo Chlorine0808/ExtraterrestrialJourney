@@ -16,8 +16,8 @@ import chlorine.etjourney.world.end.noise.Hash;
 /** Decides where the giant trees stand, about one per grove continent, the same from every seed of the continent. */
 public final class GiantTrees {
 
-    /** Horizontal reach of the tree, crown included, at most. */
-    public static final int FOOTPRINT = 48;
+    /** Horizontal reach of the tree, roots and crown included, at most. */
+    public static final int FOOTPRINT = 64;
     /** Horizontal reach of the roots, at most: the ground the tree stands on. */
     public static final int ROOT_FOOTPRINT = 26;
     /** From the ground to the top of the crown. */

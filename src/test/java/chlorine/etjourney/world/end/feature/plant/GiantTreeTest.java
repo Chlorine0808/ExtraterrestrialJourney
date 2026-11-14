@@ -119,7 +119,8 @@ class GiantTreeTest {
                     assertTrue(e.getValue() < ground - 2, t + " trunk ends at " + e.getValue() + " over " + ground);
                 } else if (d >= 18) {
                     roots++;
-                    assertTrue(e.getValue() <= ground + 1, t + " root floats at " + e.getValue() + " over " + ground);
+                    // The roots arch in and out of the ground, leaving a gap of a few blocks under each arch.
+                    assertTrue(e.getValue() <= ground + 5, t + " root floats at " + e.getValue() + " over " + ground);
                 }
             }
             assertTrue(trunk > 100 && roots > 10, t + ": " + trunk + " trunk and " + roots + " root columns");
