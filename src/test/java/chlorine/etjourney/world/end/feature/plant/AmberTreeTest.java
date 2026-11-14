@@ -272,6 +272,27 @@ class AmberTreeTest {
     }
 
     @Test
+    void legsLieOnTheirSideAndTheTrunkStands() {
+        for (long i = 0; i < 20; i++) {
+            AmberTree t = tree(i);
+            int[] low = new int[EndBlock.values().length], high = new int[EndBlock.values().length];
+            t.forEach((dx, dy, dz, k) -> {
+                if (!AmberTree.wood(k)) return;
+                if (dy <= 6) low[k.ordinal()]++;
+                else if (dy >= t.maxY() - 1) high[k.ordinal()]++;
+            });
+            int lying = low[EndBlock.AMBER_ROOT_X.ordinal()] + low[EndBlock.AMBER_ROOT_Z.ordinal()];
+            assertTrue(
+                low[EndBlock.AMBER_ROOT_X.ordinal()] > 0 && low[EndBlock.AMBER_ROOT_Z.ordinal()] > 0,
+                "seed " + i);
+            assertTrue(lying >= (lying + low[EndBlock.AMBER_ROOT.ordinal()]) * 0.95, "seed " + i);
+            int standing = high[EndBlock.AMBER_ROOT.ordinal()];
+            int all = standing + high[EndBlock.AMBER_ROOT_X.ordinal()] + high[EndBlock.AMBER_ROOT_Z.ordinal()];
+            assertTrue(all > 0 && standing >= all * 0.9, "seed " + i + " " + standing + " of " + all);
+        }
+    }
+
+    @Test
     void legsKeepTheirThicknessDownToTheirFoot() {
         // Ground seven below the root sinks the legs to -10, under where the shape used to be sampled.
         AmberTree.Ground low = (dx, dz) -> -7;

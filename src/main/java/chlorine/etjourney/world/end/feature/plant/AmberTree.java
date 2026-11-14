@@ -59,8 +59,11 @@ public final class AmberTree implements PlantCells.Bounds {
     private final int strands;
     private final int minX, maxX, minY, maxY, minZ, maxZ;
 
-    private AmberTree(Map<Long, Part> cells, int strands) {
+    private AmberTree(Map<Long, Part> cells, List<List<double[]>> lines, int strands) {
         int n = cells.size();
+        List<double[][]> segments = new ArrayList<>();
+        for (List<double[]> l : lines)
+            for (int k = 0; k + 1 < l.size(); k++) segments.add(new double[][] { l.get(k), l.get(k + 1) });
         xs = new int[n];
         ys = new int[n];
         zs = new int[n];
@@ -73,7 +76,7 @@ public final class AmberTree implements PlantCells.Bounds {
                 xs[i] = SdfFill.x(k);
                 ys[i] = SdfFill.y(k);
                 zs[i] = SdfFill.z(k);
-                blocks[i] = seedPass ? EndBlock.AMBER_SEED : EndBlock.AMBER_ROOT;
+                blocks[i] = seedPass ? EndBlock.AMBER_SEED : log(e.getValue(), xs[i], ys[i], zs[i], segments);
                 x0 = Math.min(x0, xs[i]);
                 x1 = Math.max(x1, xs[i]);
                 y0 = Math.min(y0, ys[i]);
@@ -90,6 +93,32 @@ public final class AmberTree implements PlantCells.Bounds {
         minZ = z0;
         maxZ = z1;
         this.strands = strands;
+    }
+
+    /**
+     * The log for a wood cell, from the nearest centre line: a leg lies along its level axis, the trunk stands, and a
+     * branch takes its main axis.
+     */
+    private static EndBlock log(Part part, int x, int y, int z, List<double[][]> segments) {
+        if (part == Part.TRUNK) return EndBlock.AMBER_ROOT;
+        double px = x + 0.5, py = y + 0.5, pz = z + 0.5;
+        double best = Double.MAX_VALUE;
+        double[] dir = { 0, 1, 0 };
+        for (double[][] s : segments) {
+            double[] a = s[0], b = s[1];
+            double dx = b[0] - a[0], dy = b[1] - a[1], dz = b[2] - a[2];
+            double dd = dx * dx + dy * dy + dz * dz;
+            double t = dd == 0 ? 0
+                : Math.max(0, Math.min(1, ((px - a[0]) * dx + (py - a[1]) * dy + (pz - a[2]) * dz) / dd));
+            double e = Math.sqrt(sq(a[0] + dx * t - px) + sq(a[1] + dy * t - py) + sq(a[2] + dz * t - pz));
+            if (e < best) {
+                best = e;
+                dir = new double[] { dx, dy, dz };
+            }
+        }
+        double ax = Math.abs(dir[0]), ay = Math.abs(dir[1]), az = Math.abs(dir[2]);
+        if (part == Part.BRANCH && ay >= ax && ay >= az) return EndBlock.AMBER_ROOT;
+        return ax >= az ? EndBlock.AMBER_ROOT_X : EndBlock.AMBER_ROOT_Z;
     }
 
     /** Builds the tree; it shrinks to fit under {@code maxTop}, and is null when it still does not fit. */
@@ -270,7 +299,7 @@ public final class AmberTree implements PlantCells.Bounds {
                 BlockLines.line(branch, cells, Part.BRANCH);
             }
         }
-        return new AmberTree(cells, strands);
+        return new AmberTree(cells, lines, strands);
     }
 
     private static double sq(double v) {
