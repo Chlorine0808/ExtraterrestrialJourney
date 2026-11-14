@@ -27,7 +27,9 @@ final class MenderTrial extends AbilityTrial {
             return false;
         }
         if (tick < 90) return false;
-        c.verdict(patient.getHealth() > hurt, name + ": the patient healed from " + hurt + " to " + patient.getHealth());
+        c.verdict(
+            patient.getHealth() > hurt,
+            name + ": the patient healed from " + hurt + " to " + patient.getHealth());
         return true;
     }
 }

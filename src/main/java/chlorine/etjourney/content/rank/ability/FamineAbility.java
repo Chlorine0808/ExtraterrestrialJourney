@@ -5,7 +5,9 @@ import net.minecraft.entity.player.EntityPlayer;
 
 import chlorine.etjourney.content.rank.Rank;
 
-/** Each second, players near the mob are marked for 30 ticks; FamineEvents keeps a marked player from healing or eating. */
+/**
+ * Each second, players near the mob are marked for 30 ticks; FamineEvents keeps a marked player from healing or eating.
+ */
 public final class FamineAbility implements RankAbility {
 
     public static final String ID = "famine";

@@ -13,10 +13,8 @@ public final class FamineEvents {
 
     @SubscribeEvent
     public void onHeal(LivingHealEvent event) {
-        if (event.entityLiving instanceof EntityPlayer
-            && !event.entityLiving.worldObj.isRemote
-            && FamineAbility.marked((EntityPlayer) event.entityLiving))
-            event.setCanceled(true);
+        if (event.entityLiving instanceof EntityPlayer && !event.entityLiving.worldObj.isRemote
+            && FamineAbility.marked((EntityPlayer) event.entityLiving)) event.setCanceled(true);
     }
 
     @SubscribeEvent

@@ -49,8 +49,8 @@ public final class RouseAbility implements RankAbility {
         e.setRevengeTarget(player);
         if (e instanceof EntityCreature) ((EntityCreature) e).setTarget(player);
         if (e instanceof EntityWolf) ((EntityWolf) e).setAngry(true);
-        if (e instanceof EntityPigZombie)
-            ReflectionHelper.setPrivateValue(EntityPigZombie.class, (EntityPigZombie) e, ANGER, "field_70837_d", "angerLevel");
+        if (e instanceof EntityPigZombie) ReflectionHelper
+            .setPrivateValue(EntityPigZombie.class, (EntityPigZombie) e, ANGER, "field_70837_d", "angerLevel");
         if (e instanceof EntityEnderman) ((EntityEnderman) e).setScreaming(true);
         Offspring.puff(e, "angryVillager", 6);
     }
