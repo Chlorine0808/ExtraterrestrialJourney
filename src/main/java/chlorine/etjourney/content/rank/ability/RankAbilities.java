@@ -37,6 +37,7 @@ public final class RankAbilities {
         add(new RangedWardAbility());
         add(new MagicWardAbility());
         add(new EtherealAbility());
+        add(new AbsorbAbility());
     }
 
     private RankAbilities() {}
