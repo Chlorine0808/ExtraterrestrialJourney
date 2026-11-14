@@ -46,6 +46,7 @@ final class AbilityTrials {
         trials.add(new MenderTrial());
         trials.add(new RouseTrial());
         trials.add(new GatherTrial());
+        trials.add(new PullTrial());
     }
 
     /** True once every trial is done. */

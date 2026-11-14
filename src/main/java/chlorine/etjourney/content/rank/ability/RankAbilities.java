@@ -47,6 +47,7 @@ public final class RankAbilities {
         add(new MenderAbility());
         add(new RouseAbility());
         add(new GatherAbility());
+        add(new PullAbility());
     }
 
     private RankAbilities() {}
