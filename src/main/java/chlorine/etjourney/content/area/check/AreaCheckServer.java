@@ -16,6 +16,7 @@ import net.minecraft.entity.SharedMonsterAttributes;
 import net.minecraft.entity.monster.EntityZombie;
 import net.minecraft.entity.passive.EntityPig;
 import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.init.Blocks;
 import net.minecraft.potion.Potion;
 import net.minecraft.potion.PotionEffect;
 import net.minecraft.server.MinecraftServer;
@@ -268,14 +269,17 @@ public final class AreaCheckServer {
         });
         trials.add(new Trial(10) {
 
-            EntityPig pig;
+            EntityPig pig, raised;
             EntityLingeringArea sap;
-            double during, jump;
+            double during, jump, raisedDuring;
 
             @Override
             void start() {
                 player.setPositionAndUpdate(bx, by, bz);
                 pig = pig(18, 0);
+                // A pig on a block beside the floor, inside its radius: the floor's headroom reaches it.
+                world.setBlock((int) Math.floor(bx + 19), (int) by, (int) Math.floor(bz), Blocks.stone);
+                raised = pig(19, 1, 0);
                 sap = keep(Areas.placeOnGround(AreaTypes.TRIAL_SAP, world, null, bx + 18, by + 0.5, bz));
             }
 
@@ -283,6 +287,8 @@ public final class AreaCheckServer {
             boolean poll(int t, boolean timedOut) {
                 if (t == 5) {
                     during = AreaSlow.factor(pig);
+                    raisedDuring = AreaSlow.factor(raised);
+                    world.setBlockToAir((int) Math.floor(bx + 19), (int) by, (int) Math.floor(bz));
                     pig.motionY = VANILLA_JUMP;
                     MinecraftForge.EVENT_BUS.post(new LivingEvent.LivingJumpEvent(pig));
                     jump = pig.motionY;
@@ -297,6 +303,13 @@ public final class AreaCheckServer {
                             Locale.ROOT,
                             "an enemy sap floor, taking allies along, slows a pig: x%.2f",
                             during)));
+                record(
+                    verdict(
+                        Math.abs(raisedDuring - AreaTypes.TRIAL_SAP.slow) < EPS,
+                        String.format(
+                            Locale.ROOT,
+                            "the sap floor reaches a pig on a block beside it: x%.2f",
+                            raisedDuring)));
                 double expected = VANILLA_JUMP * Math.sqrt(AreaTypes.TRIAL_SAP.slow);
                 record(
                     verdict(
@@ -419,8 +432,12 @@ public final class AreaCheckServer {
     }
 
     private EntityPig pig(double dx, double dz) {
+        return pig(dx, 0, dz);
+    }
+
+    private EntityPig pig(double dx, double dy, double dz) {
         EntityPig pig = new EntityPig(world);
-        double[] at = { bx + dx, by, bz + dz };
+        double[] at = { bx + dx, by + dy, bz + dz };
         pig.setLocationAndAngles(at[0], at[1], at[2], 0, 0);
         pig.getEntityAttribute(SharedMonsterAttributes.maxHealth)
             .setBaseValue(PIG_HEALTH);
