@@ -30,6 +30,7 @@ public final class RankAbilities {
         add(new RegenAbility());
         add(new EnrageAbility());
         add(new OneupAbility());
+        add(new ShieldAbility());
     }
 
     private RankAbilities() {}

@@ -29,6 +29,7 @@ final class AbilityTrials {
         trials.add(new RegenTrial());
         trials.add(new EnrageTrial());
         trials.add(new OneupTrial());
+        trials.add(new ShieldTrial());
     }
 
     /** True once every trial is done. */
