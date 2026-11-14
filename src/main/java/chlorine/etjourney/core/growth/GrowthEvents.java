@@ -4,7 +4,12 @@ import java.util.Random;
 
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.inventory.Container;
+import net.minecraft.inventory.Slot;
+import net.minecraft.inventory.SlotCrafting;
 import net.minecraft.item.ItemStack;
+import net.minecraft.network.play.server.S2FPacketSetSlot;
 import net.minecraft.util.ChatComponentTranslation;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.entity.player.EntityItemPickupEvent;
@@ -32,9 +37,30 @@ public final class GrowthEvents {
         LandedHits.listen(GrowthEvents::onLanded);
     }
 
+    /**
+     * The click that crafted skips its own sync, as the client guessed the stack right before it was rolled, so the
+     * rolled stack is sent here.
+     */
     @SubscribeEvent
     public void onCrafted(PlayerEvent.ItemCraftedEvent event) {
-        if (!event.player.worldObj.isRemote) Growth.ensureRolled(event.crafting, event.player.getRNG());
+        if (!(event.player instanceof EntityPlayerMP) || Gear.slot(event.crafting) == null) return;
+        EntityPlayerMP player = (EntityPlayerMP) event.player;
+        if (event.crafting == player.inventory.getItemStack()) {
+            Growth.ensureRolled(event.crafting, player.getRNG());
+            player.playerNetServerHandler.sendPacket(new S2FPacketSetSlot(-1, -1, event.crafting));
+            return;
+        }
+        // Shift-clicking merged a copy into the inventory before this event, so the copies are rolled instead.
+        Container container = player.openContainer;
+        for (int i = 0; i < container.inventorySlots.size(); i++) {
+            Slot slot = container.getSlot(i);
+            ItemStack stack = slot.getStack();
+            if (slot instanceof SlotCrafting || stack == null
+                || stack.getItem() != event.crafting.getItem()
+                || GrowthNbt.read(stack) != null) continue;
+            Growth.ensureRolled(stack, player.getRNG());
+            player.playerNetServerHandler.sendPacket(new S2FPacketSetSlot(container.windowId, i, stack));
+        }
     }
 
     @SubscribeEvent
