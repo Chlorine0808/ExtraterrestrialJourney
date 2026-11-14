@@ -31,6 +31,7 @@ public final class RankAbilities {
         add(new EnrageAbility());
         add(new OneupAbility());
         add(new ShieldAbility());
+        add(new FrenzyAbility());
     }
 
     private RankAbilities() {}

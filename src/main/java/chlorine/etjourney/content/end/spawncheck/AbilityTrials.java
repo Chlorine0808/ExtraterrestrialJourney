@@ -30,6 +30,7 @@ final class AbilityTrials {
         trials.add(new EnrageTrial());
         trials.add(new OneupTrial());
         trials.add(new ShieldTrial());
+        trials.add(new FrenzyTrial());
     }
 
     /** True once every trial is done. */
