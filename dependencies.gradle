@@ -53,6 +53,8 @@ dependencies {
     devOnlyNonPublishable(rfg.deobf("curse.maven:universal-adaptive-backporter-1662725:9415179"))
     // Target dummy that shows each hit's damage, for checking weapons and talismans by hand.
     runtimeOnlyNonPublishable(rfg.deobf("curse.maven:mmmmmmmmmmmm-225738:2265493"))
+    // Names the block or mob under the crosshair during hand checks.
+    runtimeOnlyNonPublishable("com.github.GTNewHorizons:waila:1.19.30:dev") { transitive = false }
 
     // Dev client only: OKModular's wand scan saves End buildings as JSON (see docs/dev-notes.md).
     // Left out of runServer: OKCore calls a client-only Item method in preInit and crashes a dedicated server.
