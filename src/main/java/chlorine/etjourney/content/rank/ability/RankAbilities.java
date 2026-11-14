@@ -46,6 +46,7 @@ public final class RankAbilities {
         add(new FamineAbility());
         add(new MenderAbility());
         add(new RouseAbility());
+        add(new GatherAbility());
     }
 
     private RankAbilities() {}
