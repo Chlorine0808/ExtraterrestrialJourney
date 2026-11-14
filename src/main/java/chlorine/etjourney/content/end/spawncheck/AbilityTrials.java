@@ -53,6 +53,7 @@ final class AbilityTrials {
         trials.add(new RockfallTrial());
         trials.add(new WebsTrial());
         trials.add(new LightningTrial());
+        trials.add(new DowndraftTrial());
     }
 
     /** True once every trial is done. */

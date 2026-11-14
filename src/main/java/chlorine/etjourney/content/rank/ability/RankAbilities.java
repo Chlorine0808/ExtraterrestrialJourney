@@ -54,6 +54,7 @@ public final class RankAbilities {
         add(new RockfallAbility());
         add(new WebsAbility());
         add(new LightningAbility());
+        add(new DowndraftAbility());
     }
 
     private RankAbilities() {}
