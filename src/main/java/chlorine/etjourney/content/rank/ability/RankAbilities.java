@@ -22,6 +22,7 @@ public final class RankAbilities {
         add(new WarpAbility());
         add(new SummonAbility());
         add(new TrailAbility());
+        add(new BulkyAbility());
     }
 
     private RankAbilities() {}

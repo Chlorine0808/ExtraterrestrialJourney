@@ -21,6 +21,7 @@ final class AbilityTrials {
 
     AbilityTrials(Consumer<String> record) {
         this.record = record;
+        trials.add(new BulkyTrial());
     }
 
     /** True once every trial is done. */
