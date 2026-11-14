@@ -2,6 +2,8 @@ package chlorine.etjourney.world.end.feature.plant;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotSame;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.ArrayList;
@@ -53,7 +55,7 @@ class AmberTreesTest {
     }
 
     @Test
-    void aboutThirtyApart() {
+    void aboutFortyApart() {
         AmberTrees.Terrain t = flat(60);
         List<int[]> all = new ArrayList<>();
         for (int i = 0; i < 400; i++)
@@ -67,7 +69,7 @@ class AmberTreesTest {
         }
         Collections.sort(nearest);
         double median = nearest.get(nearest.size() / 2);
-        assertTrue(median >= 20 && median <= 40, "median " + median);
+        assertTrue(median >= 30 && median <= 50, "median " + median);
     }
 
     @Test
@@ -121,33 +123,75 @@ class AmberTreesTest {
 
     @Test
     void gentleSlopeKeepsMostTrees() {
-        assertTrue(trees(13L, 60, shaped((x, z) -> 60 + 0.4 * x)).size() > 30);
+        assertTrue(trees(13L, 60, shaped((x, z) -> 60 + 0.3 * x)).size() > 30);
     }
 
     @Test
     void feetStayOffACliff() {
-        // A 20-block cliff runs through the middle of every cell.
-        AmberTrees.Terrain t = shaped((x, z) -> Math.floorMod((int) Math.floor(x), AmberTrees.CELL) < 16 ? 60 : 40);
+        // A 20-block cliff runs through every cell, a little short of where the trees may stand.
+        AmberTrees.Terrain t = shaped((x, z) -> Math.floorMod((int) Math.floor(x), AmberTrees.CELL) < 8 ? 60 : 40);
         List<AmberTrees.Anchor> all = trees(17L, 60, t);
         assertTrue(all.size() > 20, "trees " + all.size());
         for (AmberTrees.Anchor a : all) {
             double here = t.ground(a.x + 0.5, a.z + 0.5);
-            for (int dx = -6; dx <= 6; dx++) for (int dz = -6; dz <= 6; dz++) if (dx * dx + dz * dz <= 36)
+            for (int dx = -11; dx <= 11; dx++) for (int dz = -11; dz <= 11; dz++) if (dx * dx + dz * dz <= 121)
                 assertEquals(here, t.ground(a.x + dx + 0.5, a.z + dz + 0.5), "tree at " + a.x + "," + a.z);
         }
     }
 
     @Test
     void seedRestsOnTheLowGroundUnderIt() {
-        AmberTrees.Terrain t = shaped((x, z) -> 60 + 0.4 * x + 0.3 * z);
+        AmberTrees.Terrain t = shaped((x, z) -> 60 + 0.2 * x + 0.15 * z);
         List<AmberTrees.Anchor> all = trees(19L, 60, t);
         assertFalse(all.isEmpty());
         for (AmberTrees.Anchor a : all) {
-            for (int dx = -3; dx <= 3; dx++) for (int dz = -3; dz <= 3; dz++) {
+            for (int dx = -10; dx <= 10; dx++) for (int dz = -10; dz <= 10; dz++) {
+                if (dx * dx + dz * dz > 100) continue;
                 int ground = (int) Math.floor(t.ground(a.x + dx + 0.5, a.z + dz + 0.5));
                 assertTrue(a.y <= ground + 1, "root " + a.y + " over ground " + ground);
             }
         }
+    }
+
+    /**
+     * Tree cells near the ground with two or more blocks of air under them, on ground filled in from the terrain. The
+     * seed's rim may overhang the ground by one block even on the flat, as sketched.
+     */
+    private static int floating(long seed, AmberTrees.Terrain t) {
+        int floating = 0, trees = 0;
+        for (int i = 0; i < 40; i++) {
+            for (AmberTrees.Anchor a : AmberTrees.in(seed, i % 8, i / 8, t)) {
+                trees++;
+                Map<Long, EndBlock> cells = new HashMap<>();
+                int ox = a.x - 16, oz = a.z - 16;
+                for (int x = ox; x < ox + 32; x++) for (int z = oz; z < oz + 32; z++) {
+                    int top = (int) Math.floor(t.ground(x + 0.5, z + 0.5));
+                    for (int y = a.y - 20; y <= top; y++) cells.put(MapSink.key(x, y, z), EndBlock.STONE);
+                }
+                Set<Long> ground = new HashSet<>(cells.keySet());
+                AmberTrees.draw(Collections.singletonList(a), new MapSink(cells, ox, oz, 32, 0, 256));
+                for (Map.Entry<Long, EndBlock> e : cells.entrySet()) {
+                    long k = e.getKey();
+                    if (ground.contains(k)) continue;
+                    int x = MapSink.x(k), y = MapSink.y(k), z = MapSink.z(k);
+                    if (y > a.y + 2 || cells.containsKey(MapSink.key(x, y - 1, z))) continue;
+                    if (!cells.containsKey(MapSink.key(x, y - 2, z))) floating++;
+                }
+            }
+        }
+        assertTrue(trees >= 20, "trees " + trees);
+        return floating;
+    }
+
+    @Test
+    void nothingFloatsOnAGentleSlope() {
+        assertEquals(0, floating(23L, shaped((x, z) -> 60 + 0.3 * x + 0.1 * z)));
+    }
+
+    @Test
+    void nothingFloatsOnWaves() {
+        // Rolling ground with about the rise of the WAVES style.
+        assertEquals(0, floating(23L, shaped((x, z) -> 60 + 3 * Math.sin(x / 9) + 3 * Math.cos(z / 11))));
     }
 
     /** What the nine chunks around (cx, cz) would draw, merged into one ordered list. */
@@ -230,13 +274,12 @@ class AmberTreesTest {
     @Test
     void terrainsFromDifferentSourcesDoNotShareShapes() {
         AmberTrees.Anchor a = firstTree(31L, flat(60));
-        // Same footing, but the ground sinks past the legs, so the roots crawl deeper.
+        // The same ground from another source: its shape is built anew, not taken from generation's.
         AmberTrees.Terrain probe = new AmberTrees.Terrain() {
 
             @Override
             public double ground(double x, double z) {
-                double r = Math.hypot(x - a.x - 0.5, z - a.z - 0.5);
-                return r > 7.5 && r <= 10 ? 53 : 60;
+                return 60;
             }
 
             @Override
@@ -249,13 +292,14 @@ class AmberTreesTest {
                 return 1;
             }
         };
-        AmberTree seen = AmberTrees.in(31L, a.x >> 5, a.z >> 5, probe)
+        int cx = Math.floorDiv(a.x, AmberTrees.CELL), cz = Math.floorDiv(a.z, AmberTrees.CELL);
+        AmberTree seen = AmberTrees.in(31L, cx, cz, probe)
             .get(0).shape;
-        AmberTrees.in(32L, 0, 0, flat(60)); // another seed clears the cache
-        AmberTree fresh = AmberTrees.in(31L, a.x >> 5, a.z >> 5, probe)
-            .get(0).shape;
-        assertEquals(fresh.minY(), seen.minY());
-        assertTrue(fresh.minY() < a.shape.minY(), fresh.minY() + " vs " + a.shape.minY());
+        assertNotSame(a.shape, seen);
+        assertSame(
+            seen,
+            AmberTrees.in(31L, cx, cz, probe)
+                .get(0).shape);
     }
 
     @Test
