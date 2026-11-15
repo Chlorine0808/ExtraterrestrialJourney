@@ -53,7 +53,10 @@ public final class EtjArgs {
             case "zone":
                 return args.length == 3 ? matching(zones, last) : Collections.<String>emptyList();
             case "biome":
-                return args.length == 3 ? matching(biomes(), last) : Collections.<String>emptyList();
+                if (args.length == 3) return matching(biomes(), last);
+                if (args.length == 4 && hasMonument(biomeNamed(args[2])))
+                    return matching(Collections.singletonList("monument"), last);
+                return Collections.emptyList();
             default:
                 return Collections.emptyList();
         }
@@ -63,6 +66,28 @@ public final class EtjArgs {
         List<String> out = new ArrayList<>();
         for (EndBiome b : EndBiome.values()) out.add(b.name());
         return out;
+    }
+
+    /** The biome of that name, ignoring case, or null. */
+    static EndBiome biomeNamed(String name) {
+        for (EndBiome b : EndBiome.values()) if (b.name()
+            .equalsIgnoreCase(name)) return b;
+        return null;
+    }
+
+    /** Whether the biome has a landmark /etj end biome ... monument can find: about one per continent. */
+    static boolean hasMonument(EndBiome biome) {
+        return biome == EndBiome.GROVE || biome == EndBiome.MYCELIA || biome == EndBiome.AMBER;
+    }
+
+    /**
+     * Where to stand to see a landmark of the given scene size rooted at (x, y, z): south of it, raised, looking
+     * back at it. Returns {x, y, z, yaw, pitch}.
+     */
+    static double[] monumentView(double x, double y, double z, double size) {
+        double off = Math.max(size, 40) * 1.5, rise = off * 0.5;
+        double pitch = Math.toDegrees(Math.atan2(rise, off));
+        return new double[] { x, y + rise, z + off, 180, pitch };
     }
 
     private static List<String> matching(List<String> words, String prefix) {

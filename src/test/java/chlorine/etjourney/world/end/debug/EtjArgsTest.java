@@ -61,7 +61,21 @@ class EtjArgsTest {
     void completesBiomes() {
         assertTrue(complete("end", "").contains("biome"));
         assertEquals(Collections.singletonList("GROVE"), complete("end", "biome", "gr"));
-        assertEquals(Collections.emptyList(), complete("end", "biome", "GROVE", ""));
+        assertEquals(Collections.singletonList("monument"), complete("end", "biome", "GROVE", ""));
+        assertEquals(Collections.singletonList("monument"), complete("end", "biome", "mycelia", "m"));
+        assertEquals(Collections.emptyList(), complete("end", "biome", "HIGHLAND", ""));
+        assertEquals(Collections.emptyList(), complete("end", "biome", "GROVE", "monument", ""));
+    }
+
+    @Test
+    void aMonumentIsViewedFromTheSouthLookingAtIt() {
+        double[] v = EtjArgs.monumentView(100, 70, -200, 40);
+        assertEquals(100, v[0], 1e-9);
+        assertTrue(v[2] > -200 + 40, "stands clear of the scene, on the +Z side");
+        assertTrue(v[1] > 70, "above the ground at the root");
+        // Yaw 180 faces -Z; a positive pitch looks down.
+        assertEquals(180, v[3], 1e-9);
+        assertTrue(v[4] > 0 && v[4] < 45);
     }
 
     @Test

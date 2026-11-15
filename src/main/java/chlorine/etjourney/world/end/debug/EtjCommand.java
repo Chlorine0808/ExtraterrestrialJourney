@@ -36,6 +36,8 @@ import chlorine.etjourney.world.end.reserve.Area;
 import chlorine.etjourney.world.end.reserve.PredictedIslands;
 import chlorine.etjourney.world.end.reserve.Reservations;
 import chlorine.etjourney.world.end.shoot.Camera;
+import chlorine.etjourney.world.end.shoot.Locator;
+import chlorine.etjourney.world.end.shoot.Target;
 
 /** /etj end ...: inspect the End terrain and teleport to the nearest example of a feature. */
 public final class EtjCommand extends CommandBase {
@@ -51,7 +53,7 @@ public final class EtjCommand extends CommandBase {
 
     @Override
     public String getCommandUsage(ICommandSender sender) {
-        return "/etj look [range] | /etj end <here|styles|style <name>|style <name> pure|mix [a] [b] [c]|mountain [minTopY]|lake|hole|valley|zone <name>|biome <name>|heeisland|destitute|cam <x> <y> <z> <yaw> <pitch>> | "
+        return "/etj look [range] | /etj end <here|styles|style <name>|style <name> pure|mix [a] [b] [c]|mountain [minTopY]|lake|hole|valley|zone <name>|biome <name> [monument]|heeisland|destitute|cam <x> <y> <z> <yaw> <pitch>> | "
             + BuildCommand.USAGE
             + " | "
             + WindCommand.USAGE
@@ -141,7 +143,8 @@ public final class EtjCommand extends CommandBase {
                 zone(player, sampler, arg);
                 break;
             case "biome":
-                biome(player, sampler, arg);
+                if (args.length > 3 && args[3].equals("monument")) monument(player, sampler, arg);
+                else biome(player, sampler, arg);
                 break;
             case "heeisland":
                 hee(player, seed);
@@ -393,6 +396,33 @@ public final class EtjCommand extends CommandBase {
         double[] hit = EndSearch.nearestBiome(sampler, wanted, player.posX, player.posZ);
         if (hit == null) say(player, "No " + wanted + " within " + EndSearch.RADIUS + " blocks");
         else teleport(player, hit[0], sampler.bareColumn(hit[0], hit[1], true).top + 3, hit[1], wanted.name());
+    }
+
+    /** Flies the player up beside the nearest landmark of the biome: giant tree, giant glowshroom or seed tree. */
+    private static void monument(EntityPlayerMP player, TerrainSampler sampler, String name) {
+        EndBiome biome = EtjArgs.biomeNamed(name);
+        if (!EtjArgs.hasMonument(biome)) {
+            say(player, "Biomes with a monument: GROVE, MYCELIA, AMBER");
+            return;
+        }
+        long seed = sampler.seed();
+        WorldServer end = (WorldServer) player.worldObj;
+        IChunkProvider generator = end.theChunkProviderServer.currentChunkProvider;
+        Locator locator = new Locator(sampler, (cx, cz) -> Reservations.forChunk(generator, end, seed, cx, cz));
+        List<Target> found;
+        if (biome == EndBiome.GROVE) found = locator.giantTrees(player.posX, player.posZ, 1);
+        else if (biome == EndBiome.MYCELIA) found = locator.glowshrooms(true, player.posX, player.posZ, 1);
+        else found = locator.amberTrees(null, player.posX, player.posZ, 1);
+        if (found.isEmpty()) {
+            say(player, "No " + biome + " monument within " + EndSearch.RADIUS + " blocks");
+            return;
+        }
+        Target t = found.get(0);
+        double[] v = EtjArgs.monumentView(t.x, t.y, t.z, t.size);
+        player.capabilities.isFlying = player.capabilities.allowFlying;
+        player.sendPlayerAbilities();
+        player.playerNetServerHandler.setPlayerLocation(v[0], v[1], v[2], (float) v[3], (float) v[4]);
+        say(player, biome + " monument at " + (int) t.x + " " + (int) t.y + " " + (int) t.z);
     }
 
     private static void hee(EntityPlayerMP player, long seed) {
