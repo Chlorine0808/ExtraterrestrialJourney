@@ -1,6 +1,7 @@
 package chlorine.etjourney.world;
 
 import chlorine.etjourney.core.util.ModLog;
+import chlorine.etjourney.world.atmosphere.AtmosphereTracker;
 import chlorine.etjourney.world.end.EndFlora;
 import chlorine.etjourney.world.end.EndLargeFlora;
 import chlorine.etjourney.world.end.EndTerrain;
@@ -37,6 +38,7 @@ public final class ModWorld {
         BiosphereBiomes.register();
         EndBuildings.register();
         WindWorld.register();
+        AtmosphereTracker.register();
         ModLog.LOG.debug("world: init");
     }
 }
