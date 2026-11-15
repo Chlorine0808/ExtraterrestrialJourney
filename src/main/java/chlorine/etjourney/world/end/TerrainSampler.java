@@ -119,6 +119,13 @@ public final class TerrainSampler {
         return state;
     }
 
+    /** The bare column at (x, z), or null where no rock is laid: off the continent, or where a style cuts the land. */
+    private ColumnState solidColumn(double x, double z) {
+        if (land(x, z) <= 0) return null;
+        ColumnState c = bareColumn(x, z, true);
+        return c.land > 0 ? c : null;
+    }
+
     /** Weight of a modifier at a point: 1 for core modifiers, its style's weight otherwise. */
     double weightOf(Modifier modifier, double x, double z) {
         Style owner = ownerOf(modifier);
@@ -232,17 +239,20 @@ public final class TerrainSampler {
 
             @Override
             public double ground(double x, double z) {
-                return TerrainSampler.this.land(x, z) > 0 ? bareColumn(x, z, true).top : -1000;
+                ColumnState c = solidColumn(x, z);
+                return c == null ? -1000 : c.top;
             }
 
             @Override
             public double surface(double x, double z) {
-                return TerrainSampler.this.land(x, z) > 0 ? bareColumn(x, z, true).surface() : -1000;
+                ColumnState c = solidColumn(x, z);
+                return c == null ? -1000 : c.surface();
             }
 
             @Override
             public double underside(double x, double z) {
-                return TerrainSampler.this.land(x, z) > 0 ? bareColumn(x, z, true).bottom : -1000;
+                ColumnState c = solidColumn(x, z);
+                return c == null ? -1000 : c.bottom;
             }
 
             @Override
@@ -281,8 +291,8 @@ public final class TerrainSampler {
 
             @Override
             public double surface(double x, double z) {
-                if (TerrainSampler.this.land(x, z) <= 0) return -1000;
-                ColumnState c = bareColumn(x, z, true);
+                ColumnState c = solidColumn(x, z);
+                if (c == null) return -1000;
                 // The lakes lie on the ground, under any slab stacked over it.
                 return c.surface() > c.top ? c.surface() : shore(c.top, x, z);
             }
