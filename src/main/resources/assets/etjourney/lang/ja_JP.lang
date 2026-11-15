@@ -119,6 +119,7 @@ item.etjourney.tantalum_bucket_hydrofluoric_acid.name=フッ化水素酸入り�
 tile.etjourney.forge.name=フォージ
 tile.etjourney.attune_altar.name=アチューンの祭壇
 tile.etjourney.attune_pedestal.name=アチューンの台座
+tile.etjourney.rank_web.name=消える巣
 
 death.attack.etjourney.neutral=%1$s は倒れた
 death.attack.etjourney.neutral.player=%1$s は %2$s に倒された

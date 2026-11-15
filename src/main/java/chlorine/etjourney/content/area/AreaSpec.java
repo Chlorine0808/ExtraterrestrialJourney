@@ -11,12 +11,16 @@ import chlorine.etjourney.core.registry.RegistryNames;
 public final class AreaSpec {
 
     private static final double FLOOR_HEIGHT = 0.5, CLOUD_HEIGHT = 2;
+    /** Enough for a creature on a block beside the floor, or in mid-jump, to stay in it. */
+    private static final double FLOOR_HEADROOM = 1;
 
     public final String name;
     public final AreaShape shape;
     public final AreaSize size;
     /** Thickness in blocks: up from a floor's base, or split above and below a cloud's centre. */
     public final double height;
+    /** How much further up than its height the area works; particles stay within the height. */
+    public final double headroom;
     /** Ticks between two workings on the same creature. */
     public final int interval;
     /** Null for an area that only slows or gives effects. */
@@ -28,11 +32,12 @@ public final class AreaSpec {
     public final List<AreaEffect> effects;
     public final String particle;
 
-    private AreaSpec(Builder b, AreaSize size, double height) {
+    private AreaSpec(Builder b, AreaSize size, double height, double headroom) {
         name = b.name;
         shape = b.shape;
         this.size = size;
         this.height = height;
+        this.headroom = headroom;
         interval = b.interval;
         damage = b.damage;
         slow = b.slow;
@@ -49,7 +54,8 @@ public final class AreaSpec {
 
         private final String name;
         private AreaShape shape = AreaShape.FLOOR;
-        private double radius = 2, height = Double.NaN, startRadius = Double.NaN, radiusPerUse, minRadius = 0.5;
+        private double radius = 2, height = Double.NaN, headroom = Double.NaN, startRadius = Double.NaN, radiusPerUse,
+            minRadius = 0.5;
         private int duration = 200, growTicks, shrinkTicks, interval = 20;
         private ElementalDamage damage;
         private double slow = 1;
@@ -73,6 +79,11 @@ public final class AreaSpec {
 
         public Builder height(double v) {
             height = v;
+            return this;
+        }
+
+        public Builder headroom(double v) {
+            headroom = v;
             return this;
         }
 
@@ -138,9 +149,11 @@ public final class AreaSpec {
 
         public AreaSpec build() {
             double h = Double.isNaN(height) ? shape == AreaShape.FLOOR ? FLOOR_HEIGHT : CLOUD_HEIGHT : height;
+            double room = Double.isNaN(headroom) ? shape == AreaShape.FLOOR ? FLOOR_HEADROOM : 0 : headroom;
             double start = Double.isNaN(startRadius) ? radius : startRadius;
             check(radius > 0, "radius must be > 0: " + radius);
             check(h > 0, "height must be > 0: " + h);
+            check(room >= 0, "headroom must be >= 0: " + room);
             check(duration > 0, "duration must be > 0: " + duration);
             check(growTicks >= 0, "growTicks must be >= 0: " + growTicks);
             check(shrinkTicks >= 0, "shrinkTicks must be >= 0: " + shrinkTicks);
@@ -150,7 +163,7 @@ public final class AreaSpec {
             check(interval > 0, "interval must be > 0: " + interval);
             check(slow >= 0 && slow <= 1, "slow must be in [0, 1]: " + slow);
             AreaSize size = new AreaSize(start, radius, growTicks, shrinkTicks, radiusPerUse, minRadius, duration);
-            return new AreaSpec(this, size, h);
+            return new AreaSpec(this, size, h, room);
         }
 
         private static void check(boolean ok, String message) {

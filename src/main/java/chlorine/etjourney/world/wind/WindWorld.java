@@ -22,7 +22,7 @@ import cpw.mods.fml.relauncher.Side;
  */
 public final class WindWorld {
 
-    /** Not saved: sources register their winds again when they load. */
+    /** Not saved: sources register their winds again when they load, and TrialWinds puts back the commanded ones. */
     public static final Winds SERVER = new Winds();
 
     private WindWorld() {}

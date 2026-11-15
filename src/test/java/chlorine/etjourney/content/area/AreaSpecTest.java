@@ -45,6 +45,24 @@ class AreaSpecTest {
     }
 
     @Test
+    void aFloorReachesABlockAboveItselfAndACloudOnlyItsHeightUnlessTold() {
+        assertEquals(
+            1,
+            AreaSpec.builder("a")
+                .build().headroom);
+        assertEquals(
+            0,
+            AreaSpec.builder("a")
+                .shape(AreaShape.CLOUD)
+                .build().headroom);
+        assertEquals(
+            2,
+            AreaSpec.builder("a")
+                .headroom(2)
+                .build().headroom);
+    }
+
+    @Test
     void itStartsAtItsFullRadiusUnlessTold() {
         assertEquals(
             3,
@@ -57,6 +75,7 @@ class AreaSpecTest {
     void rejectsBadSizes() {
         rejects(b -> b.radius(0));
         rejects(b -> b.height(0));
+        rejects(b -> b.headroom(-0.1));
         rejects(b -> b.duration(0));
         rejects(b -> b.growTicks(-1));
         rejects(b -> b.shrinkTicks(-1));

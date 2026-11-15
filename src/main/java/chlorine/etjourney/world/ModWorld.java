@@ -10,6 +10,7 @@ import chlorine.etjourney.world.end.biosphere.BiosphereTransplant;
 import chlorine.etjourney.world.end.building.EndBuildings;
 import chlorine.etjourney.world.end.debug.EndProbe;
 import chlorine.etjourney.world.end.debug.EtjCommand;
+import chlorine.etjourney.world.wind.TrialWinds;
 import chlorine.etjourney.world.wind.WindWorld;
 import cpw.mods.fml.common.event.FMLServerStartingEvent;
 
@@ -26,6 +27,7 @@ public final class ModWorld {
     public static void serverStarting(FMLServerStartingEvent event) {
         event.registerServerCommand(new EtjCommand());
         WindWorld.serverStarting();
+        TrialWinds.restore();
         EndProbe.runIfRequested();
     }
 

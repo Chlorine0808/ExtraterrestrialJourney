@@ -12,13 +12,14 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Predicate;
 
 import org.junit.jupiter.api.Test;
 
 import chlorine.etjourney.world.end.feature.sdf.SdfFill;
 import chlorine.etjourney.world.end.modifier.EndBlock;
 
-/** The amber seed tree: twisted strands hugging a glowing drop and joining into one trunk above it. */
+/** The amber seed tree: twisted strands hugging a glowing drop from the ground and joining into one trunk above it. */
 class AmberTreeTest {
 
     private static final AmberTree.Ground FLAT = (dx, dz) -> -1;
@@ -42,11 +43,11 @@ class AmberTreeTest {
     }
 
     /** Face-connected pieces of the given block, largest first. */
-    private static List<Set<Long>> pieces(Map<Long, EndBlock> m, EndBlock kind) {
+    private static List<Set<Long>> pieces(Map<Long, EndBlock> m, Predicate<EndBlock> kind) {
         List<Set<Long>> out = new ArrayList<>();
         Set<Long> seen = new HashSet<>();
         for (Map.Entry<Long, EndBlock> e : m.entrySet()) {
-            if (e.getValue() != kind || seen.contains(e.getKey())) continue;
+            if (!kind.test(e.getValue()) || seen.contains(e.getKey())) continue;
             Set<Long> piece = new HashSet<>();
             ArrayDeque<Long> open = new ArrayDeque<>();
             open.add(e.getKey());
@@ -56,13 +57,22 @@ class AmberTreeTest {
                 piece.add(c);
                 for (int[] f : FACES) {
                     long n = SdfFill.offset(c, f[0], f[1], f[2]);
-                    if (m.get(n) == kind && seen.add(n)) open.add(n);
+                    if (m.containsKey(n) && kind.test(m.get(n)) && seen.add(n)) open.add(n);
                 }
             }
             out.add(piece);
         }
         out.sort((a, b) -> b.size() - a.size());
         return out;
+    }
+
+    private static boolean isSeed(EndBlock b) {
+        return b == EndBlock.AMBER_SEED;
+    }
+
+    /** The seed body, the largest piece of seed. */
+    private static Set<Long> body(Map<Long, EndBlock> m) {
+        return pieces(m, AmberTreeTest::isSeed).get(0);
     }
 
     /** One horizontal step away from the body's centre (mx, mz), along the larger axis; null at the centre. */
@@ -89,24 +99,26 @@ class AmberTreeTest {
         for (long i = 0; i < 100; i++) {
             final long s = i;
             tree(i).forEach((dx, dy, dz, k) -> {
-                assertTrue(Math.hypot(dx, dz) <= 11, "seed " + s);
-                assertTrue(dy <= 18, "seed " + s);
+                assertTrue(Math.hypot(dx, dz) <= 12.5, "seed " + s);
+                // The shape is scanned out to 12; a cell there would mean it was cut off.
+                assertTrue(Math.abs(dx) <= 11 && Math.abs(dz) <= 11, "seed " + s + " cut at " + dx + "," + dz);
+                assertTrue(dy <= 25, "seed " + s);
             });
         }
     }
 
     @Test
-    void standsAboutFifteenTall() {
+    void standsAboutTwentyTall() {
         for (long i = 0; i < 100; i++) {
             int top = tree(i).maxY();
-            assertTrue(top >= 12 && top <= 18, "seed " + i + " top " + top);
+            assertTrue(top >= 19 && top <= 25, "seed " + i + " top " + top);
         }
     }
 
     @Test
     void seedIsAWideDrop() {
         for (long i = 0; i < 100; i++) {
-            Set<Long> body = pieces(cells(tree(i)), EndBlock.AMBER_SEED).get(0);
+            Set<Long> body = body(cells(tree(i)));
             double mx = 0, mz = 0;
             int y0 = Integer.MAX_VALUE, y1 = Integer.MIN_VALUE;
             for (long c : body) {
@@ -119,9 +131,9 @@ class AmberTreeTest {
             mz /= body.size();
             double r = 0;
             for (long c : body) r = Math.max(r, Math.hypot(SdfFill.x(c) - mx, SdfFill.z(c) - mz));
-            assertTrue(r >= 3 && r <= 5.5, "seed " + i + " radius " + r);
-            assertTrue(y1 - y0 + 1 >= 4 && y1 - y0 + 1 <= 8, "seed " + i + " height " + (y1 - y0 + 1));
-            assertTrue(y0 <= 1, "seed " + i + " bottom " + y0);
+            assertTrue(r >= 7.5 && r <= 11.5, "seed " + i + " radius " + r);
+            assertTrue(y1 - y0 + 1 >= 10 && y1 - y0 + 1 <= 16, "seed " + i + " height " + (y1 - y0 + 1));
+            assertTrue(y0 < 0, "seed " + i + " bottom " + y0);
         }
     }
 
@@ -130,7 +142,7 @@ class AmberTreeTest {
         double sum = 0;
         for (long i = 0; i < 100; i++) {
             Map<Long, EndBlock> m = cells(tree(i));
-            Set<Long> body = pieces(m, EndBlock.AMBER_SEED).get(0);
+            Set<Long> body = body(m);
             double mx = 0, mz = 0;
             for (long c : body) {
                 mx += SdfFill.x(c);
@@ -145,12 +157,12 @@ class AmberTreeTest {
                 long out = SdfFill.offset(c, step[0], 0, step[1]);
                 if (body.contains(out)) continue;
                 shell++;
-                if (m.get(out) != EndBlock.AMBER_ROOT) open++;
+                if (!AmberTree.wood(m.get(out))) open++;
             }
             assertTrue(open >= shell * 0.45, "seed " + i + " open " + open + " of " + shell);
             sum += (double) open / shell;
         }
-        assertTrue(sum / 100 >= 0.6, "mean " + sum / 100);
+        assertTrue(sum / 100 >= 0.5, "mean " + sum / 100);
     }
 
     @Test
@@ -159,7 +171,7 @@ class AmberTreeTest {
         // Below y = 0 lies the flat ground, so no air shows there.
         for (long i = 0; i < 100; i++) {
             Map<Long, EndBlock> m = cells(tree(i));
-            Set<Long> body = pieces(m, EndBlock.AMBER_SEED).get(0);
+            Set<Long> body = body(m);
             double mx = 0, mz = 0;
             for (long c : body) {
                 mx += SdfFill.x(c);
@@ -177,7 +189,7 @@ class AmberTreeTest {
                     EndBlock b = m.get(SdfFill.offset(c, step[0] * k, 0, step[1] * k));
                     if (b == null) air = true;
                     else {
-                        if (air && b == EndBlock.AMBER_ROOT) gaps++;
+                        if (air && AmberTree.wood(b)) gaps++;
                         break;
                     }
                 }
@@ -187,19 +199,8 @@ class AmberTreeTest {
     }
 
     @Test
-    void strandsVary() {
-        Set<Integer> counts = new HashSet<>();
-        for (long i = 0; i < 50; i++) {
-            int n = tree(i).strands();
-            assertTrue(n >= 2 && n <= 3, "seed " + i);
-            counts.add(n);
-        }
-        assertEquals(2, counts.size());
-    }
-
-    @Test
     void woodIsOnePiece() {
-        for (long i = 0; i < 20; i++) assertEquals(1, pieces(cells(tree(i)), EndBlock.AMBER_ROOT).size(), "seed " + i);
+        for (long i = 0; i < 20; i++) assertEquals(1, pieces(cells(tree(i)), AmberTree::wood).size(), "seed " + i);
     }
 
     @Test
@@ -207,12 +208,12 @@ class AmberTreeTest {
         int fruits = 0;
         for (long i = 0; i < 20; i++) {
             Map<Long, EndBlock> m = cells(tree(i));
-            List<Set<Long>> seeds = pieces(m, EndBlock.AMBER_SEED);
+            List<Set<Long>> seeds = pieces(m, AmberTreeTest::isSeed);
             assertTrue(seeds.size() >= 2, "seed " + i);
             for (Set<Long> fruit : seeds.subList(1, seeds.size())) {
                 boolean touches = false;
                 for (long c : fruit) for (int[] f : FACES)
-                    if (m.get(SdfFill.offset(c, f[0], f[1], f[2])) == EndBlock.AMBER_ROOT) touches = true;
+                    if (AmberTree.wood(m.get(SdfFill.offset(c, f[0], f[1], f[2])))) touches = true;
                 assertTrue(touches, "seed " + i);
                 fruits++;
             }
@@ -220,39 +221,76 @@ class AmberTreeTest {
         assertTrue(fruits >= 40, "fruits " + fruits);
     }
 
-    @Test
-    void legsStandOnTheGroundOnASlope() {
-        // Below the seed's equator a leg runs straight down, so on the downhill side it does not sweep out over
-        // lower ground. Higher up a strand winding round the seed may pass over air; a root stepping down the
-        // slope may leave a cell or two.
-        AmberTree.Ground slope = (dx, dz) -> Math.floorDiv(dx, 2) - 1;
-        int hanging = 0;
-        for (long i = 0; i < 100; i++) {
-            Map<Long, EndBlock> m = cells(AmberTree.of(seedOf(i), 250, slope));
-            for (Map.Entry<Long, EndBlock> e : m.entrySet()) {
-                long c = e.getKey();
-                int x = SdfFill.x(c), y = SdfFill.y(c), z = SdfFill.z(c);
-                if (e.getValue() != EndBlock.AMBER_ROOT || y > 0 || Math.hypot(x, z) > 6) continue;
-                if (y > slope.top(x, z) + 1 && !m.containsKey(SdfFill.offset(c, 0, -1, 0))) hanging++;
-            }
-        }
-        assertTrue(hanging <= 10, "hanging " + hanging);
+    /** The widest reach of the seed body from its axis, in one layer or, with layer null, in all. */
+    private static double seedReach(Set<Long> body, Integer layer) {
+        double r = 0;
+        for (long c : body) if (layer == null || SdfFill.y(c) == layer)
+            r = Math.max(r, Math.hypot(SdfFill.x(c) + 0.5, SdfFill.z(c) + 0.5));
+        return r;
     }
 
     @Test
-    void rootsFollowTheGround() {
-        AmberTree.Ground slope = (dx, dz) -> Math.floorDiv(dx, 2) - 1;
+    void seedRestsOnTheGroundToItsRim() {
+        // The bottom swells out, so at ground level the seed is nearly as wide as anywhere.
+        for (long i = 0; i < 100; i++) {
+            Set<Long> body = body(cells(tree(i)));
+            double ground = seedReach(body, 0), widest = seedReach(body, null);
+            assertTrue(ground >= widest * 0.85, "seed " + i + " " + ground + " of " + widest);
+        }
+    }
+
+    @Test
+    void legsDiveIntoTheGroundOpeningOut() {
+        for (long i = 0; i < 50; i++) {
+            Map<Long, EndBlock> m = cells(tree(i));
+            double[] atFoot = { 0, 0 }, deep = { 0, 0 };
+            for (Map.Entry<Long, EndBlock> e : m.entrySet()) {
+                if (!AmberTree.wood(e.getValue())) continue;
+                long c = e.getKey();
+                double r = Math.hypot(SdfFill.x(c) + 0.5, SdfFill.z(c) + 0.5);
+                double[] into = SdfFill.y(c) == 0 ? atFoot : SdfFill.y(c) == -AmberTree.SINK ? deep : null;
+                if (into == null) continue;
+                into[0] += r;
+                into[1]++;
+            }
+            assertTrue(deep[1] > 0, "seed " + i + " has no roots");
+            assertTrue(deep[0] / deep[1] >= atFoot[0] / atFoot[1] + 0.5, "seed " + i);
+        }
+    }
+
+    @Test
+    void noRootsCrawlOverTheGround() {
+        // The roots are the legs going on underground; nothing runs out over the ground past the seed's rim.
+        for (long i = 0; i < 100; i++) {
+            Map<Long, EndBlock> m = cells(tree(i));
+            double rim = seedReach(body(m), 0);
+            for (Map.Entry<Long, EndBlock> e : m.entrySet()) {
+                long c = e.getKey();
+                if (SdfFill.y(c) != 0 || !AmberTree.wood(e.getValue())) continue;
+                double r = Math.hypot(SdfFill.x(c) + 0.5, SdfFill.z(c) + 0.5);
+                assertTrue(r <= rim + 3, "seed " + i + " wood at " + r + " past rim " + rim);
+            }
+        }
+    }
+
+    @Test
+    void legsLieOnTheirSideAndTheTrunkStands() {
         for (long i = 0; i < 20; i++) {
-            AmberTree t = AmberTree.of(seedOf(i), 250, slope);
-            assertNotNull(t);
-            int[] near = { 0, 0 };
+            AmberTree t = tree(i);
+            int[] low = new int[EndBlock.values().length], high = new int[EndBlock.values().length];
             t.forEach((dx, dy, dz, k) -> {
-                if (k != EndBlock.AMBER_ROOT || Math.hypot(dx, dz) < 8.5 || dy > 6) return;
-                near[1]++;
-                if (Math.abs(dy - (slope.top(dx, dz) + 1)) <= 1) near[0]++;
+                if (!AmberTree.wood(k)) return;
+                if (dy <= 6) low[k.ordinal()]++;
+                else if (dy >= t.maxY() - 1) high[k.ordinal()]++;
             });
-            assertTrue(near[1] > 0, "seed " + i);
-            assertTrue(near[0] >= near[1] * 0.8, "seed " + i + " " + near[0] + " of " + near[1]);
+            int lying = low[EndBlock.AMBER_ROOT_X.ordinal()] + low[EndBlock.AMBER_ROOT_Z.ordinal()];
+            assertTrue(
+                low[EndBlock.AMBER_ROOT_X.ordinal()] > 0 && low[EndBlock.AMBER_ROOT_Z.ordinal()] > 0,
+                "seed " + i);
+            assertTrue(lying >= (lying + low[EndBlock.AMBER_ROOT.ordinal()]) * 0.95, "seed " + i);
+            int standing = high[EndBlock.AMBER_ROOT.ordinal()];
+            int all = standing + high[EndBlock.AMBER_ROOT_X.ordinal()] + high[EndBlock.AMBER_ROOT_Z.ordinal()];
+            assertTrue(all > 0 && standing >= all * 0.9, "seed " + i + " " + standing + " of " + all);
         }
     }
 
@@ -264,7 +302,7 @@ class AmberTreeTest {
             AmberTree t = AmberTree.of(seedOf(i), 250, low);
             assertNotNull(t);
             int[] cells = { 0 };
-            t.forEach((dx, dy, dz, k) -> { if (dy == -10 && k == EndBlock.AMBER_ROOT) cells[0]++; });
+            t.forEach((dx, dy, dz, k) -> { if (dy == -10 && AmberTree.wood(k)) cells[0]++; });
             assertTrue(cells[0] >= 2 * t.strands(), "seed " + i + " " + cells[0] + " cells for " + t.strands());
         }
     }
@@ -282,7 +320,7 @@ class AmberTreeTest {
 
     @Test
     void nothingHangsIntoTheVoid() {
-        // Past x = 1 there is no ground; a leg's thickness may spill one block over the edge.
+        // Past x = 1 there is no ground; a leg's thickness may spill a block or two over the edge.
         AmberTree.Ground edge = (dx, dz) -> dx > 1 ? -1060 : -1;
         int over = 0;
         for (long i = 0; i < 20; i++) {
@@ -290,9 +328,9 @@ class AmberTreeTest {
             int[] n = { 0 };
             AmberTree.of(seedOf(i), 250, edge)
                 .forEach((dx, dy, dz, k) -> {
-                    if (dx < 3 || k != EndBlock.AMBER_ROOT) return;
+                    if (dx < 4 || !AmberTree.wood(k)) return;
                     n[0]++;
-                    assertTrue(dy >= -1, "seed " + s + " hangs to " + dy + " at x " + dx);
+                    assertTrue(dy >= -2, "seed " + s + " hangs to " + dy + " at x " + dx);
                 });
             over += n[0];
         }

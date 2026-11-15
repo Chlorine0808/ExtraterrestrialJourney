@@ -93,7 +93,7 @@ class GiantTreesTest {
 
     @Test
     void anchorsSitWellInsideGrove() {
-        double r = GiantTrees.FOOTPRINT * 0.6;
+        double r = GiantTrees.ROOT_FOOTPRINT * 0.6;
         int seen = 0;
         for (Continent.Seed s : groves()) {
             for (double[] a : GiantTrees.anchors(SEED, s, PROBE)) {
@@ -104,6 +104,44 @@ class GiantTreesTest {
             }
         }
         assertTrue(seen > 0);
+    }
+
+    /** No layer of layered ground hangs over a tree, which would cut through its trunk or crown. */
+    @Test
+    void noLayerOverTheTree() {
+        int seen = 0;
+        for (Continent.Seed s : groves()) {
+            for (double[] a : GiantTrees.anchors(SEED, s, PROBE)) {
+                assertTrue(PROBE.surface(a[0], a[2]) <= a[1] + GiantTrees.CROWN_CLEAR, "a layer over " + a[1]);
+                for (int k = 0; k < 16; k++) {
+                    double angle = k * Math.PI / 8;
+                    for (double r = 12; r <= GiantTrees.CROWN_RADIUS; r += 11) {
+                        double g = PROBE.surface(a[0] + r * Math.cos(angle), a[2] + r * Math.sin(angle));
+                        assertTrue(
+                            g <= a[1] + GiantTrees.CROWN_CLEAR,
+                            "surface " + g + " over a tree rooted at " + a[1]);
+                    }
+                }
+                seen++;
+            }
+        }
+        assertTrue(seen > 0);
+    }
+
+    /** 20261114-201037, 2: seed 98 rooted a tree on the lowest layer at Y 24, under another layer at Y 120. */
+    @Test
+    void notUnderTheLayerAbove() {
+        long seed = 98L;
+        StructureProbe probe = new TerrainSampler(seed, new RegionPicker(Styles.all())).standingProbe();
+        int ci = (int) Math.floor(1688 / Continent.SEED_CELL), cj = (int) Math.floor(2616 / Continent.SEED_CELL);
+        for (int i = ci - 3; i <= ci + 3; i++) {
+            for (int j = cj - 3; j <= cj + 3; j++) {
+                Continent.Seed s = Continent.seedAt(seed, i, j);
+                if (s == null) continue;
+                for (double[] a : GiantTrees.compute(seed, s, probe))
+                    assertTrue(Math.hypot(a[0] - 1688, a[2] - 2616) > 10, "tree under the layer at " + a[1]);
+            }
+        }
     }
 
     /** Around the trunk the ground is land and fairly level: no cliff above the root, no void below it. */
@@ -163,10 +201,11 @@ class GiantTreesTest {
                     || Math.hypot(s.x, s.z) > 4000
                     || !ids.add(ContinentIds.of(seed, s))) continue;
                 for (double[] a : GiantTrees.anchors(seed, s, probe)) {
-                    List<Holes.Hole> holes = Holes.near(seed, a[0], a[2], GiantTrees.FOOTPRINT, sampler.holeProbe());
-                    for (int dx = -GiantTrees.FOOTPRINT; dx <= GiantTrees.FOOTPRINT; dx += 2) {
-                        for (int dz = -GiantTrees.FOOTPRINT; dz <= GiantTrees.FOOTPRINT; dz += 2) {
-                            if (Math.hypot(dx, dz) > GiantTrees.FOOTPRINT) continue;
+                    List<Holes.Hole> holes = Holes
+                        .near(seed, a[0], a[2], GiantTrees.ROOT_FOOTPRINT, sampler.holeProbe());
+                    for (int dx = -GiantTrees.ROOT_FOOTPRINT; dx <= GiantTrees.ROOT_FOOTPRINT; dx += 2) {
+                        for (int dz = -GiantTrees.ROOT_FOOTPRINT; dz <= GiantTrees.ROOT_FOOTPRINT; dz += 2) {
+                            if (Math.hypot(dx, dz) > GiantTrees.ROOT_FOOTPRINT) continue;
                             double cut = Holes.cutFraction(seed, holes, a[0] + dx, a[2] + dz);
                             assertEquals(0, cut, "sinkhole under the tree at " + a[0] + ", " + a[2]);
                         }

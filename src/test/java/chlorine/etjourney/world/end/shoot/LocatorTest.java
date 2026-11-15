@@ -158,8 +158,9 @@ class LocatorTest {
 
     @Test
     void amberTreesGrowOnLayeredSlabs() {
-        List<Target> found = LOCATOR.amberTrees("LAYERED", 3000, 0, 3);
-        assertEquals(3, found.size());
+        // The trees need a wide footing now, so the nearest ones stand on the land below; the fourth is on a slab.
+        List<Target> found = LOCATOR.amberTrees("LAYERED", 3000, 0, 4);
+        assertEquals(4, found.size());
         Set<String> spots = new HashSet<>();
         boolean onSlab = false;
         for (Target t : found) {

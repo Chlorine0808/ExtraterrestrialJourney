@@ -51,14 +51,14 @@ class GiantTreeTest {
     }
 
     @Test
-    void risesAboutFifty() {
+    void risesAboutNinety() {
         for (Drawn t : trees()) {
             int top = Integer.MIN_VALUE;
             for (Map.Entry<Long, EndBlock> e : t.blocks.entrySet()) {
                 if (e.getValue() == EndBlock.GROVE_LOG) top = Math.max(top, unpack(e.getKey())[1]);
             }
             int rise = top - t.base;
-            assertTrue(rise >= 45 && rise <= 55, t + " rises " + rise);
+            assertTrue(rise >= 90 && rise <= 104, t + " rises " + rise);
         }
     }
 
@@ -106,6 +106,8 @@ class GiantTreeTest {
             for (Map.Entry<Long, EndBlock> e : t.blocks.entrySet()) {
                 if (e.getValue() != EndBlock.GROVE_LOG) continue;
                 int[] p = unpack(e.getKey());
+                // The crown's branches reach out over the roots; only the wood near the ground counts.
+                if (p[1] > t.base + 20) continue;
                 lowest.merge(((long) p[0] << 32) ^ (p[2] & 0xFFFFFFFFL), p[1], Math::min);
             }
             int trunk = 0, roots = 0;
@@ -117,7 +119,8 @@ class GiantTreeTest {
                     assertTrue(e.getValue() < ground - 2, t + " trunk ends at " + e.getValue() + " over " + ground);
                 } else if (d >= 18) {
                     roots++;
-                    assertTrue(e.getValue() <= ground + 1, t + " root floats at " + e.getValue() + " over " + ground);
+                    // The roots arch in and out of the ground, leaving a gap of a few blocks under each arch.
+                    assertTrue(e.getValue() <= ground + 5, t + " root floats at " + e.getValue() + " over " + ground);
                 }
             }
             assertTrue(trunk > 100 && roots > 10, t + ": " + trunk + " trunk and " + roots + " root columns");
@@ -153,7 +156,7 @@ class GiantTreeTest {
     @Test
     void reachesOnlyTheHeightsItDraws() {
         double[] anchor = { 8, 100, 8 };
-        assertTrue(!GiantTree.reaches(anchor, 0, 64) && !GiantTree.reaches(anchor, 160, 256));
+        assertTrue(!GiantTree.reaches(anchor, 0, 64) && !GiantTree.reaches(anchor, 224, 256));
         assertTrue(GiantTree.reaches(anchor, 0, 128) && GiantTree.reaches(anchor, 128, 256));
         for (int minY = 0; minY < 256; minY += 16) {
             if (GiantTree.reaches(anchor, minY, minY + 16)) continue;

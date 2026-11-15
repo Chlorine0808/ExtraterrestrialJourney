@@ -4,21 +4,26 @@ import java.util.Random;
 
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.inventory.Container;
+import net.minecraft.inventory.Slot;
+import net.minecraft.inventory.SlotCrafting;
 import net.minecraft.item.ItemStack;
+import net.minecraft.network.play.server.S2FPacketSetSlot;
 import net.minecraft.util.ChatComponentTranslation;
 import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.event.entity.living.LivingHurtEvent;
 import net.minecraftforge.event.entity.player.EntityItemPickupEvent;
 
 import chlorine.etjourney.core.accessory.WornAccessories;
+import chlorine.etjourney.core.combat.CombatHit;
+import chlorine.etjourney.core.combat.LandedHits;
 import chlorine.etjourney.core.growth.model.GearSlot;
 import chlorine.etjourney.core.growth.model.GrowthBonus;
 import cpw.mods.fml.common.FMLCommonHandler;
-import cpw.mods.fml.common.eventhandler.EventPriority;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import cpw.mods.fml.common.gameevent.PlayerEvent;
 
-/** Rolls gear when crafted or picked up, and gives players' gear experience from hits. */
+/** Rolls gear when crafted or picked up, and gives players' gear experience from the health their hits took. */
 public final class GrowthEvents {
 
     private GrowthEvents() {}
@@ -29,11 +34,33 @@ public final class GrowthEvents {
         FMLCommonHandler.instance()
             .bus()
             .register(events);
+        LandedHits.listen(GrowthEvents::onLanded);
     }
 
+    /**
+     * The click that crafted skips its own sync, as the client guessed the stack right before it was rolled, so the
+     * rolled stack is sent here.
+     */
     @SubscribeEvent
     public void onCrafted(PlayerEvent.ItemCraftedEvent event) {
-        if (!event.player.worldObj.isRemote) Growth.ensureRolled(event.crafting, event.player.getRNG());
+        if (!(event.player instanceof EntityPlayerMP) || Gear.slot(event.crafting) == null) return;
+        EntityPlayerMP player = (EntityPlayerMP) event.player;
+        if (event.crafting == player.inventory.getItemStack()) {
+            Growth.ensureRolled(event.crafting, player.getRNG());
+            player.playerNetServerHandler.sendPacket(new S2FPacketSetSlot(-1, -1, event.crafting));
+            return;
+        }
+        // Shift-clicking merged a copy into the inventory before this event, so the copies are rolled instead.
+        Container container = player.openContainer;
+        for (int i = 0; i < container.inventorySlots.size(); i++) {
+            Slot slot = container.getSlot(i);
+            ItemStack stack = slot.getStack();
+            if (slot instanceof SlotCrafting || stack == null
+                || stack.getItem() != event.crafting.getItem()
+                || GrowthNbt.read(stack) != null) continue;
+            Growth.ensureRolled(stack, player.getRNG());
+            player.playerNetServerHandler.sendPacket(new S2FPacketSetSlot(container.windowId, i, stack));
+        }
     }
 
     @SubscribeEvent
@@ -42,19 +69,16 @@ public final class GrowthEvents {
             Growth.ensureRolled(event.item.getEntityItem(), event.entityPlayer.getRNG());
     }
 
-    /** After the combat hooks, so a blocked hit gives nothing. */
-    @SubscribeEvent(priority = EventPriority.LOWEST)
-    public void onHurt(LivingHurtEvent event) {
-        if (event.entityLiving.worldObj.isRemote || event.ammount <= 0) return;
-        int xp = GrowthBonus.xpForHit(event.ammount);
-        if (event.source.getEntity() instanceof EntityPlayer && event.source.getEntity() != event.entityLiving) {
-            EntityPlayer attacker = (EntityPlayer) event.source.getEntity();
+    private static void onLanded(CombatHit hit) {
+        int xp = GrowthBonus.xpForHit(hit.amount());
+        if (hit.attacker instanceof EntityPlayer && hit.attacker != hit.target) {
+            EntityPlayer attacker = (EntityPlayer) hit.attacker;
             ItemStack held = attacker.getHeldItem();
             if (Gear.slot(held) == GearSlot.WEAPON) gain(attacker, held, xp);
             gainAccessories(attacker, xp);
         }
-        if (event.entityLiving instanceof EntityPlayer) {
-            EntityPlayer target = (EntityPlayer) event.entityLiving;
+        if (hit.target instanceof EntityPlayer) {
+            EntityPlayer target = (EntityPlayer) hit.target;
             for (ItemStack armor : target.inventory.armorInventory)
                 if (Gear.slot(armor) != null) gain(target, armor, xp);
             gainAccessories(target, xp);

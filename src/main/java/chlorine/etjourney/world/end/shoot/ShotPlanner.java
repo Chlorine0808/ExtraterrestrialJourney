@@ -151,7 +151,7 @@ public final class ShotPlanner {
     }
 
     /** A seed tree's aerial views stand this far from the middle of the tree. */
-    private static final double SEED_TREE_AERIAL = 32;
+    private static final double SEED_TREE_AERIAL = 48;
 
     /**
      * Like add, but both views try several stand-offs looking back at the tree. The aerial target is raised to the

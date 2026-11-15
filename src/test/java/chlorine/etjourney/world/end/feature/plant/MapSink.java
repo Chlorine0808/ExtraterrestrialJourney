@@ -24,6 +24,18 @@ final class MapSink implements BlockSink {
         return ((long) x & 0xFFFFFFL) << 40 | ((long) y & 0xFFFL) << 24 | ((long) z & 0xFFFFFFL);
     }
 
+    static int x(long key) {
+        return (int) (key >> 40);
+    }
+
+    static int y(long key) {
+        return (int) (key >> 24 & 0xFFFL);
+    }
+
+    static int z(long key) {
+        return (int) (key << 40 >> 40);
+    }
+
     @Override
     public int originX() {
         return ox;

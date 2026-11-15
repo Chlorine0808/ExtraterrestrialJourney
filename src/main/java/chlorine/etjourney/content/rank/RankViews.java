@@ -9,13 +9,13 @@ public final class RankViews {
     public static final class View {
 
         public final Rank rank;
-        public final boolean small;
+        public final float scale;
         /** Client ticks the entity has been missing from the world. */
         public int missing;
 
-        View(Rank rank, boolean small) {
+        View(Rank rank, float scale) {
             this.rank = rank;
-            this.small = small;
+            this.scale = scale;
         }
     }
 
@@ -23,8 +23,8 @@ public final class RankViews {
 
     private RankViews() {}
 
-    static void put(int entityId, Rank rank, boolean small) {
-        VIEWS.put(entityId, new View(rank, small));
+    static void put(int entityId, Rank rank, float scale) {
+        VIEWS.put(entityId, new View(rank, scale));
     }
 
     public static View get(int entityId) {

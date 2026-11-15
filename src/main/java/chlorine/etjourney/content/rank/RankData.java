@@ -15,8 +15,9 @@ public final class RankData {
     /** What an unranked mob was born as: nothing special, a split child, or a summoned minion. */
     public static final int FREE = 0, SPLIT_CHILD = 1, MINION = 2;
 
-    private static final String KEY = "etjRank", RANK = "rank", ABILITIES = "abilities", USED = "used.", ROLE = "role",
-        PARENT_MOST = "parentMost", PARENT_LEAST = "parentLeast", MISSES = "misses", PAID = "paid";
+    private static final String KEY = "etjRank", RANK = "rank", ABILITIES = "abilities", USED = "used.",
+        SETTING = "set.", ROLE = "role", PARENT_MOST = "parentMost", PARENT_LEAST = "parentLeast", MISSES = "misses",
+        PAID = "paid", NO_LOOT = "noLoot";
     private static final int TAG_STRING = 8;
 
     private RankData() {}
@@ -87,6 +88,29 @@ public final class RankData {
         if (tag.getBoolean(PAID)) return false;
         tag.setBoolean(PAID, true);
         return true;
+    }
+
+    /** Clears the mark, for a copy of a dead mob that will pay out when it dies in its turn. */
+    public static void clearPaid(Entity e) {
+        tag(e).setBoolean(PAID, false);
+    }
+
+    /** Marks a corpse that drops and gives nothing, as one whose mob will rise again. */
+    public static void markNoLoot(Entity e) {
+        tag(e).setBoolean(NO_LOOT, true);
+    }
+
+    public static boolean noLoot(Entity e) {
+        return rolled(e) && tag(e).getBoolean(NO_LOOT);
+    }
+
+    /** What an ability was set to, as the element absorb takes in; empty when unset. */
+    public static String setting(Entity e, String ability) {
+        return tag(e).getString(SETTING + ability);
+    }
+
+    public static void setSetting(Entity e, String ability, String value) {
+        tag(e).setString(SETTING + ability, value);
     }
 
     /** The total world time an ability was last used, or Cooldown.NEVER. */

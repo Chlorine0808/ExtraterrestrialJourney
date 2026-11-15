@@ -8,6 +8,7 @@ import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.world.World;
 
 import chlorine.etjourney.content.projectile.Faction;
+import chlorine.etjourney.core.client.FarParticles;
 import chlorine.etjourney.core.damage.ElementalDamageSource;
 import chlorine.etjourney.core.damage.ElementalDamages;
 import cpw.mods.fml.common.network.ByteBufUtils;
@@ -93,7 +94,7 @@ public class EntityLingeringArea extends Entity implements IEntityAdditionalSpaw
     }
 
     private void work(double r) {
-        double bottom = spec.shape.bottom(posY, spec.height), top = spec.shape.top(posY, spec.height);
+        double bottom = spec.shape.bottom(posY, spec.height), top = spec.shape.top(posY, spec.height) + spec.headroom;
         AxisAlignedBB box = AxisAlignedBB.getBoundingBox(posX - r, bottom, posZ - r, posX + r, top, posZ + r)
             .expand(1, 1, 1);
         int worked = 0;
@@ -105,6 +106,7 @@ public class EntityLingeringArea extends Entity implements IEntityAdditionalSpaw
             if (!spec.shape.overlaps(
                 r,
                 spec.height,
+                spec.headroom,
                 posX,
                 posY,
                 posZ,
@@ -136,7 +138,8 @@ public class EntityLingeringArea extends Entity implements IEntityAdditionalSpaw
         double bottom = spec.shape.bottom(posY, spec.height);
         for (int i = 0; i < n; i++) {
             double a = rand.nextDouble() * Math.PI * 2, d = Math.sqrt(rand.nextDouble()) * r;
-            worldObj.spawnParticle(
+            FarParticles.spawn(
+                worldObj,
                 spec.particle,
                 posX + Math.cos(a) * d,
                 bottom + rand.nextDouble() * spec.height,
