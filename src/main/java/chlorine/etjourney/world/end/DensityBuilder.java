@@ -48,6 +48,24 @@ public final class DensityBuilder {
         return d;
     }
 
+    /**
+     * Density at block (x, y, z) interpolated over its 8 x 4 x 8 cell as the chunk grids lay it, shapes left out.
+     * {@code nodes} are the columns at the cell's corners (x0, z0), (x0, z0 + 8), (x0 + 8, z0), (x0 + 8, z0 + 8).
+     */
+    static double interpolated(long seed, ColumnState[] nodes, int x0, int z0, int x, int y, int z) {
+        long s = seed ^ SALT;
+        int y0 = Math.floorDiv(y, 4) * 4;
+        double tx = (x - x0) / 8.0, ty = (y - y0) / 4.0, tz = (z - z0) / 8.0;
+        double[] at = new double[4];
+        for (int n = 0; n < 4; n++) {
+            double nx = x0 + (n >> 1) * 8, nz = z0 + (n & 1) * 8;
+            double low = density(s, nodes[n], nx, y0, nz), high = density(s, nodes[n], nx, y0 + 4, nz);
+            at[n] = low + (high - low) * ty;
+        }
+        double near = at[0] + (at[2] - at[0]) * tx, far = at[1] + (at[3] - at[1]) * tx;
+        return near + (far - near) * tz;
+    }
+
     /** Positive inside the slab (the column's surface on top, a lumpy underside below), its layers and pillars. */
     static double density(long s, ColumnState c, double x, double y, double z) {
         if (c.land <= 0) return Math.max(-20, c.land / 4 - 2);
