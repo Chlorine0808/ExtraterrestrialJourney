@@ -31,6 +31,7 @@ public final class FogHooks {
         FMLCommonHandler.instance()
             .bus()
             .register(hooks);
+        AtmosphereSky.register();
     }
 
     /** The eased air of this frame, or null outside the End or before the first grid. */
