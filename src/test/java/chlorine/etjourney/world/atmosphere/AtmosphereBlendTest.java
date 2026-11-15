@@ -36,6 +36,15 @@ class AtmosphereBlendTest {
     }
 
     @Test
+    void bareGroundTakesTheGivenVanillaAir() {
+        Atmosphere vanilla = new Atmosphere(0.2f, 0.3f, 0.4f, 1, 0);
+        Atmosphere amber = Atmospheres.byId(AMBER);
+        Atmosphere a = AtmosphereBlend.at(split(), 2.5 * 32, 32, vanilla);
+        assertEquals((amber.b + 0.4f) / 2, a.b, 1e-5);
+        assertEquals(0.3f, AtmosphereBlend.at(split(), 0, 0, vanilla).g, 1e-6);
+    }
+
+    @Test
     void dominantPicksTheHeavierPoint() {
         assertEquals(AMBER, AtmosphereBlend.dominant(split(), 2.8 * 32, 32));
         assertEquals(0, AtmosphereBlend.dominant(split(), 2.2 * 32, 32));

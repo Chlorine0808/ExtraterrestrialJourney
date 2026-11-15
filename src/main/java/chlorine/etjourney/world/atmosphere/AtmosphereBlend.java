@@ -6,11 +6,16 @@ public final class AtmosphereBlend {
     private AtmosphereBlend() {}
 
     public static Atmosphere at(AtmosphereGrid grid, double x, double z) {
+        return at(grid, x, z, Atmospheres.NONE);
+    }
+
+    /** As above, with bare ground standing for the given air, such as the colour vanilla computed this frame. */
+    public static Atmosphere at(AtmosphereGrid grid, double x, double z, Atmosphere none) {
         double fx = x / AtmosphereGrid.CELL, fz = z / AtmosphereGrid.CELL;
         int px = (int) Math.floor(fx), pz = (int) Math.floor(fz);
         float tx = (float) (fx - px), tz = (float) (fz - pz);
-        Atmosphere a = Atmospheres.byId(grid.idAt(px, pz)), b = Atmospheres.byId(grid.idAt(px + 1, pz));
-        Atmosphere c = Atmospheres.byId(grid.idAt(px, pz + 1)), d = Atmospheres.byId(grid.idAt(px + 1, pz + 1));
+        Atmosphere a = resolve(grid.idAt(px, pz), none), b = resolve(grid.idAt(px + 1, pz), none);
+        Atmosphere c = resolve(grid.idAt(px, pz + 1), none), d = resolve(grid.idAt(px + 1, pz + 1), none);
         float wa = (1 - tx) * (1 - tz), wb = tx * (1 - tz), wc = (1 - tx) * tz, wd = tx * tz;
         return new Atmosphere(
             wa * a.r + wb * b.r + wc * c.r + wd * d.r,
@@ -18,6 +23,11 @@ public final class AtmosphereBlend {
             wa * a.b + wb * b.b + wc * c.b + wd * d.b,
             wa * a.density + wb * b.density + wc * c.density + wd * d.density,
             wa * a.skyMix + wb * b.skyMix + wc * c.skyMix + wd * d.skyMix);
+    }
+
+    private static Atmosphere resolve(byte id, Atmosphere none) {
+        Atmosphere a = Atmospheres.byId(id);
+        return a == Atmospheres.NONE ? none : a;
     }
 
     /** The ID weighing most at (x, z), for effects that pick one atmosphere rather than mix them. */
