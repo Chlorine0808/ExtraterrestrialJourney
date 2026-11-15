@@ -58,6 +58,10 @@ public final class TerrainSampler {
         }
     };
     private final Map<Modifier, Style> owners = new ConcurrentHashMap<>();
+    /** Bare columns at the density grid's nodes, which every chunk and probe shares. */
+    private final Map<Long, ColumnState> nodeColumns = new ConcurrentHashMap<>();
+    /** How far below a column's surface the standing probe looks for the rock the grid lays. */
+    private static final int LAID_BELOW = 8;
 
     public TerrainSampler(long seed, RegionPicker picker) {
         this.seed = seed;
@@ -117,6 +121,43 @@ public final class TerrainSampler {
             state,
             m -> weightOf(m, x, z));
         return state;
+    }
+
+    /** The bare column at (x, z), or null where no rock is laid: off the continent, or where a style cuts the land. */
+    private ColumnState solidColumn(double x, double z) {
+        if (land(x, z) <= 0) return null;
+        ColumnState c = bareColumn(x, z, true);
+        return c.land > 0 ? c : null;
+    }
+
+    private ColumnState nodeColumn(int x, int z) {
+        long key = ((long) x << 32) ^ (z & 0xFFFFFFFFL);
+        ColumnState c = nodeColumns.get(key);
+        if (c == null) {
+            c = bareColumn(x, z, true);
+            if (nodeColumns.size() > 65536) nodeColumns.clear();
+            nodeColumns.put(key, c);
+        }
+        return c;
+    }
+
+    /**
+     * The highest block of the rock the density grid lays at (x, z) at or below {@code height}, as its middle, or a
+     * very low value where none lies within LAID_BELOW. Near a sharp drop such as a crack the grid smears the
+     * column's surface. The grid's nodes are bare columns without lakes, so the answer never rises over
+     * {@code height}.
+     */
+    private double laidTop(double x, double z, double height) {
+        int bx = (int) Math.floor(x), bz = (int) Math.floor(z);
+        int x0 = Math.floorDiv(bx, 8) * 8, z0 = Math.floorDiv(bz, 8) * 8;
+        ColumnState[] nodes = { nodeColumn(x0, z0), nodeColumn(x0, z0 + 8), nodeColumn(x0 + 8, z0),
+            nodeColumn(x0 + 8, z0 + 8) };
+        int from = Math.min(255, (int) Math.floor(height));
+        int to = Math.max(0, (int) Math.floor(height) - LAID_BELOW);
+        for (int y = from; y >= to; y--) {
+            if (DensityBuilder.interpolated(seed, nodes, x0, z0, bx, y, bz) > 0) return y + 0.5;
+        }
+        return -1000;
     }
 
     /** Weight of a modifier at a point: 1 for core modifiers, its style's weight otherwise. */
@@ -232,17 +273,20 @@ public final class TerrainSampler {
 
             @Override
             public double ground(double x, double z) {
-                return TerrainSampler.this.land(x, z) > 0 ? bareColumn(x, z, true).top : -1000;
+                ColumnState c = solidColumn(x, z);
+                return c == null ? -1000 : c.top;
             }
 
             @Override
             public double surface(double x, double z) {
-                return TerrainSampler.this.land(x, z) > 0 ? bareColumn(x, z, true).surface() : -1000;
+                ColumnState c = solidColumn(x, z);
+                return c == null ? -1000 : c.surface();
             }
 
             @Override
             public double underside(double x, double z) {
-                return TerrainSampler.this.land(x, z) > 0 ? bareColumn(x, z, true).bottom : -1000;
+                ColumnState c = solidColumn(x, z);
+                return c == null ? -1000 : c.bottom;
             }
 
             @Override
@@ -276,15 +320,18 @@ public final class TerrainSampler {
             @Override
             public double ground(double x, double z) {
                 double top = bare.ground(x, z);
+                if (top <= -100) return top;
+                top = laidTop(x, z, top);
                 return top <= -100 ? top : shore(top, x, z);
             }
 
             @Override
             public double surface(double x, double z) {
-                if (TerrainSampler.this.land(x, z) <= 0) return -1000;
-                ColumnState c = bareColumn(x, z, true);
+                ColumnState c = solidColumn(x, z);
+                if (c == null) return -1000;
+                double top = laidTop(x, z, c.surface());
                 // The lakes lie on the ground, under any slab stacked over it.
-                return c.surface() > c.top ? c.surface() : shore(c.top, x, z);
+                return top <= -100 || c.surface() > c.top ? top : shore(top, x, z);
             }
 
             private double shore(double top, double x, double z) {

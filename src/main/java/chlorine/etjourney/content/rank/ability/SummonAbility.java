@@ -9,6 +9,7 @@ import java.util.function.Function;
 
 import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.monster.EntitySilverfish;
 import net.minecraft.util.DamageSource;
 import net.minecraft.world.World;
 
@@ -18,22 +19,47 @@ import chlorine.etjourney.content.rank.RankData;
 import chlorine.etjourney.content.rank.RankStats;
 
 /** In a fight the mob calls minions, which vanish when it dies. */
-public final class SummonAbility implements RankAbility {
+public class SummonAbility implements RankAbility {
 
     public static final String ID = "summon";
-    static final int COOLDOWN = 200, PER_CAST = 2, CAP = 4;
+    private final String id;
+    private final int cooldown, perCast, cap;
     /** Part of its health a minion loses. */
-    private static final double HEALTH = 0.5;
+    private final double health;
     private static final Map<Class<?>, Function<World, EntityLiving>> MINIONS = new HashMap<>();
+    private static final Map<Class<?>, Function<World, EntityLiving>> HORDES = new HashMap<>();
 
     /** Has mobs of the parent type call what make returns instead of their own kind. */
     public static void minionOf(Class<? extends EntityLiving> parentType, Function<World, EntityLiving> make) {
         MINIONS.put(parentType, make);
     }
 
+    /** Has horde mobs of the parent type call what make returns instead of silverfish. */
+    public static void hordeOf(Class<? extends EntityLiving> parentType, Function<World, EntityLiving> make) {
+        HORDES.put(parentType, make);
+    }
+
+    static EntityLiving hordeMinion(EntityLiving parent) {
+        Function<World, EntityLiving> make = HORDES.get(parent.getClass());
+        return make != null ? make.apply(parent.worldObj) : new EntitySilverfish(parent.worldObj);
+    }
+
+    public SummonAbility() {
+        this(ID, 200, 2, 4, 0.5);
+    }
+
+    /** A summon with its own numbers; a subclass picks the minion kind by overriding make. */
+    protected SummonAbility(String id, int cooldown, int perCast, int cap, double health) {
+        this.id = id;
+        this.cooldown = cooldown;
+        this.perCast = perCast;
+        this.cap = cap;
+        this.health = health;
+    }
+
     @Override
     public String id() {
-        return ID;
+        return id;
     }
 
     @Override
@@ -41,20 +67,20 @@ public final class SummonAbility implements RankAbility {
         EntityLivingBase target = self.getAttackTarget() != null ? self.getAttackTarget() : self.getAITarget();
         if (target == null) return;
         long now = self.worldObj.getTotalWorldTime();
-        if (!Cooldown.ready(now, RankData.lastUsed(self, ID), COOLDOWN)) return;
-        int n = MinionWatch.toSummon(minionsOf(self).size(), CAP, PER_CAST);
+        if (!Cooldown.ready(now, RankData.lastUsed(self, id), cooldown)) return;
+        int n = MinionWatch.toSummon(minionsOf(self).size(), cap, perCast);
         if (n == 0) return;
         for (int i = 0; i < n; i++) {
             EntityLiving minion = make(self);
             if (minion == null) return;
             Offspring.bind(minion, self, RankData.MINION);
             place(minion, self);
-            RankStats.weaken(minion, HEALTH, 0);
+            RankStats.weaken(minion, health, 0);
             minion.setAttackTarget(target);
             self.worldObj.spawnEntityInWorld(minion);
             Offspring.puff(minion, "witchMagic", 16);
         }
-        RankData.markUsed(self, ID, now);
+        RankData.markUsed(self, id, now);
     }
 
     @Override
@@ -92,7 +118,8 @@ public final class SummonAbility implements RankAbility {
         return null;
     }
 
-    private static EntityLiving make(EntityLiving parent) {
+    /** A new minion, not yet in the world; null when none can be made. */
+    protected EntityLiving make(EntityLiving parent) {
         Function<World, EntityLiving> make = MINIONS.get(parent.getClass());
         return make != null ? make.apply(parent.worldObj) : Offspring.sameKind(parent);
     }

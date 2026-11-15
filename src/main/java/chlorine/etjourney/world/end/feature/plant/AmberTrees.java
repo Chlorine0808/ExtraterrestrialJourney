@@ -15,19 +15,17 @@ import chlorine.etjourney.world.end.reserve.Reservations;
  */
 public final class AmberTrees {
 
-    public static final int CELL = 32;
+    public static final int CELL = 40;
     private static final double CHANCE = 0.75;
     /** Distance kept from the cell's edge, so neighbours stay apart. */
-    private static final int MARGIN = 4;
+    private static final int MARGIN = 12;
     private static final long SALT = 0x6A09E667F3BCC909L;
     /** Spots tried per cell; the one with the flattest footing wins. */
     private static final int CANDIDATES = 6;
-    /** Radius of the footing, a little past the legs' feet. */
-    private static final int FOOT = 7;
-    /** Largest rise across the footing that the legs still reach down; steeper ground gets no tree. */
-    private static final int MAX_SPREAD = 6;
-    /** Half width of the square the seed rests on. */
-    private static final int REST = 3;
+    /** Radius of the footing: the seed's rim and the legs diving round it. */
+    private static final int FOOT = 11;
+    /** Largest rise across the footing the seed still sinks into; steeper ground gets no tree. */
+    private static final int MAX_SPREAD = 8;
     private static final ShapeCache<AmberTree> CACHE = new ShapeCache<>();
     private static final ShapeCache<int[]> FOOTINGS = new ShapeCache<>();
 
@@ -111,27 +109,26 @@ public final class AmberTrees {
     }
 
     /**
-     * The spot with the flattest footing, as {x, z, y}, where y is the root: the lowest ground under the seed plus
-     * one, so the seed never floats and every leg reaches down to the ground. Null when no spot is flat enough.
+     * The spot with the flattest footing, as {x, z, y}, where y is the root: the lowest ground of the footing plus
+     * one, so neither the seed's rim nor a leg floats. Null when no spot is flat enough.
      */
     private static int[] footing(int[][] spots, Terrain t) {
         int[] best = null;
         double bestSpread = Double.MAX_VALUE;
         for (int[] s : spots) {
             if (!t.amber(s[0] + 0.5, s[1] + 0.5)) continue;
-            double low = Double.MAX_VALUE, high = -Double.MAX_VALUE, rest = Double.MAX_VALUE;
+            double low = Double.MAX_VALUE, high = -Double.MAX_VALUE;
             for (int dx = -FOOT; dx <= FOOT; dx++) {
                 for (int dz = -FOOT; dz <= FOOT; dz++) {
                     if (dx * dx + dz * dz > FOOT * FOOT) continue;
                     double g = Math.floor(t.ground(s[0] + dx + 0.5, s[1] + dz + 0.5));
                     low = Math.min(low, g);
                     high = Math.max(high, g);
-                    if (Math.abs(dx) <= REST && Math.abs(dz) <= REST) rest = Math.min(rest, g);
                 }
             }
             if (low <= -100 || high - low > MAX_SPREAD || high - low >= bestSpread) continue;
             bestSpread = high - low;
-            best = new int[] { s[0], s[1], (int) rest + 1 };
+            best = new int[] { s[0], s[1], (int) low + 1 };
         }
         return best;
     }
@@ -157,7 +154,7 @@ public final class AmberTrees {
 
     /** Every tree whose cell may reach the chunk, by {@code order}. */
     public static List<Anchor> reaching(long seed, int chunkX, int chunkZ, Terrain t) {
-        // A tree spreads about 11 blocks from its foot, less than one cell.
+        // A tree spreads about 12 blocks from its root, less than one cell.
         int cx = Math.floorDiv(chunkX * 16, CELL), cz = Math.floorDiv(chunkZ * 16, CELL);
         List<Anchor> out = new ArrayList<>();
         for (int i = cx - 1; i <= cx + 1; i++) for (int j = cz - 1; j <= cz + 1; j++) out.addAll(in(seed, i, j, t));

@@ -1,6 +1,7 @@
 package chlorine.etjourney.world;
 
 import chlorine.etjourney.core.util.ModLog;
+import chlorine.etjourney.world.atmosphere.AtmosphereTracker;
 import chlorine.etjourney.world.end.EndFlora;
 import chlorine.etjourney.world.end.EndLargeFlora;
 import chlorine.etjourney.world.end.EndTerrain;
@@ -10,6 +11,7 @@ import chlorine.etjourney.world.end.biosphere.BiosphereTransplant;
 import chlorine.etjourney.world.end.building.EndBuildings;
 import chlorine.etjourney.world.end.debug.EndProbe;
 import chlorine.etjourney.world.end.debug.EtjCommand;
+import chlorine.etjourney.world.wind.TrialWinds;
 import chlorine.etjourney.world.wind.WindWorld;
 import cpw.mods.fml.common.event.FMLServerStartingEvent;
 
@@ -26,6 +28,7 @@ public final class ModWorld {
     public static void serverStarting(FMLServerStartingEvent event) {
         event.registerServerCommand(new EtjCommand());
         WindWorld.serverStarting();
+        TrialWinds.restore();
         EndProbe.runIfRequested();
     }
 
@@ -37,6 +40,7 @@ public final class ModWorld {
         BiosphereBiomes.register();
         EndBuildings.register();
         WindWorld.register();
+        AtmosphereTracker.register();
         ModLog.LOG.debug("world: init");
     }
 }

@@ -62,6 +62,9 @@ public enum EndBlock {
     MYCELIA_VINE,
     MYCELIA_VINE_LAST,
     AMBER_ROOT,
+    /** AMBER_ROOT lying along x or z. */
+    AMBER_ROOT_X,
+    AMBER_ROOT_Z,
     AMBER_SEED,
     AMBER_STEM,
     CRYSTAL,

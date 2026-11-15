@@ -34,7 +34,7 @@ public final class ProjectileTypes {
         ProjectileSpec.builder("trial_seeker", damage(DamageKind.MAGIC, Elements.LIGHT, 4))
             .speed(0.5)
             .homing(new Homing(0.15, 5, 60, 24))
-            .lifetime(100)
+            .lifetime(130)
             .look("ender_eye")
             .trail("portal")
             .build());
@@ -43,7 +43,7 @@ public final class ProjectileTypes {
         ProjectileSpec.builder("trial_beam", damage(DamageKind.MAGIC, Elements.ICE, 3))
             .speed(1.5)
             .piercesWalls(true)
-            .lifetime(30)
+            .lifetime(45)
             .effect(ImpactEffect.potion(Potion.moveSlowdown.id, 60, 1))
             .look("snowball")
             .trail("snowshovel")

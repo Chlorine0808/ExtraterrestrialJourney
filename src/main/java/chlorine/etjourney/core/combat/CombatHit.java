@@ -2,10 +2,15 @@ package chlorine.etjourney.core.combat;
 
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.util.DamageSource;
+import net.minecraftforge.event.entity.living.LivingHurtEvent;
 
+import chlorine.etjourney.core.damage.AttackProfiles;
 import chlorine.etjourney.core.damage.model.AttackProfile;
 
-/** One hit as the hooks see it; the amount is before vanilla armor, and onHurt hooks may change it. */
+/**
+ * One hit as the hooks see it; for onHurt the amount is before vanilla armor and may be changed, for onDamageDealt
+ * it is the health the hit took.
+ */
 public final class CombatHit {
 
     public final EntityLivingBase target;
@@ -22,6 +27,18 @@ public final class CombatHit {
         this.source = source;
         this.attack = attack;
         this.amount = amount;
+    }
+
+    public static CombatHit of(LivingHurtEvent event) {
+        EntityLivingBase attacker = event.source.getEntity() instanceof EntityLivingBase
+            ? (EntityLivingBase) event.source.getEntity()
+            : null;
+        return new CombatHit(
+            event.entityLiving,
+            attacker,
+            event.source,
+            AttackProfiles.of(event.source),
+            event.ammount);
     }
 
     public float amount() {

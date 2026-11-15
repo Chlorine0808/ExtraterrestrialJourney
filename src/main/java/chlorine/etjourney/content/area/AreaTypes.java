@@ -67,6 +67,21 @@ public final class AreaTypes {
             .particle("townaura")
             .build());
 
+    /** The cloud a spore zombie leaves where it falls: it only slows, and breeds nothing. */
+    public static final AreaSpec SPORE_CLOUD = register(
+        AreaSpec.builder("spore_cloud")
+            .shape(AreaShape.CLOUD)
+            .startRadius(1)
+            .radius(2.5)
+            .growTicks(20)
+            .height(2.5)
+            .duration(160)
+            .shrinkTicks(40)
+            .interval(20)
+            .effect(AreaEffect.status(Potion.moveSlowdown.id, 60, 1))
+            .particle("townaura")
+            .build());
+
     /** A lobbed pod that bursts into a spore cloud, like the carrion sac's throw. */
     public static final ProjectileSpec TRIAL_SPORE_POD = ProjectileTypes.register(
         ProjectileSpec.builder("trial_spore_pod", damage(DamageKind.PHYSICAL, ElementRegistry.NEUTRAL, 2))
@@ -103,6 +118,6 @@ public final class AreaTypes {
             .build();
     }
 
-    /** Loads the class, which registers the trial areas and the spore pod above. */
+    /** Loads the class, which registers the areas and the spore pod above. */
     public static void register() {}
 }

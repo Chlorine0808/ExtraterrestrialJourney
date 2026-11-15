@@ -53,4 +53,25 @@ class AbilityPickerTest {
         for (int i = 0; i < 100; i++) seen.addAll(AbilityPicker.pick(ALL, a -> true, 1, random));
         assertEquals(new HashSet<>(ALL), seen);
     }
+
+    @Test
+    void neverPicksTwoThatClash() {
+        Random random = new Random(5);
+        for (int i = 0; i < 200; i++) {
+            List<String> picked = AbilityPicker
+                .pick(ALL, a -> true, (a, b) -> a.equals("split") && b.equals("warp"), 3, random);
+            assertFalse(picked.contains("split") && picked.contains("warp"));
+            assertEquals(2, picked.size());
+        }
+    }
+
+    @Test
+    void clashesCountEitherWay() {
+        Random random = new Random(9);
+        for (int i = 0; i < 200; i++) {
+            List<String> picked = AbilityPicker
+                .pick(ALL, a -> true, (a, b) -> a.equals("warp") && b.equals("split"), 3, random);
+            assertFalse(picked.contains("split") && picked.contains("warp"));
+        }
+    }
 }

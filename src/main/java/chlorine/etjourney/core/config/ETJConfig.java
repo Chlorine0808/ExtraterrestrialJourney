@@ -14,6 +14,8 @@ public final class ETJConfig {
     public static String[] excludedBiomes = new String[0], excludedMods = new String[0];
     /** Whether biosphere columns take their sample's biomes, for grass, leaf and water colours. */
     public static boolean biomeColors = true;
+    /** Client: whether End biomes tint the fog and the sky. */
+    public static boolean biomeFog = true;
     /** Whether mod entities with a spawn rule are added to natural spawning. */
     public static boolean naturalSpawns = true;
     /** Whether enemies roll a rank when they join a world. */
@@ -63,6 +65,11 @@ public final class ETJConfig {
             "biospheres",
             new String[0],
             "Mods whose biomes are never put in a biosphere, by mod ID; minecraft for the vanilla biomes.");
+        biomeFog = config.getBoolean(
+            "biomeFog",
+            "atmosphere",
+            true,
+            "Client only: tint the fog and the sky by End biome, and thicken the fog where the biome asks for it.");
         naturalSpawns = config.getBoolean(
             "naturalSpawns",
             "entities",

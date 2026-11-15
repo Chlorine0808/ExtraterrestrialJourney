@@ -35,7 +35,7 @@ public final class RankClient {
     private static final double NAME_RANGE = 24, MOTE_RANGE = 32;
     /** Ticks a view waits for its entity before it is dropped; the packet may beat the spawn. */
     private static final int MISSING_TICKS = 100;
-    private static final float LABEL_SCALE = 0.016666668F * 1.6F, SMALL = 0.75F;
+    private static final float LABEL_SCALE = 0.016666668F * 1.6F;
 
     private final Random random = new Random();
     private int ticks;
@@ -97,17 +97,17 @@ public final class RankClient {
     @SubscribeEvent(priority = EventPriority.LOWEST)
     public void onRenderPre(RenderLivingEvent.Pre event) {
         RankViews.View view = RankViews.get(event.entity.getEntityId());
-        if (view == null || !view.small) return;
+        if (view == null || view.scale == 1) return;
         GL11.glPushMatrix();
         GL11.glTranslated(event.x, event.y, event.z);
-        GL11.glScalef(SMALL, SMALL, SMALL);
+        GL11.glScalef(view.scale, view.scale, view.scale);
         GL11.glTranslated(-event.x, -event.y, -event.z);
     }
 
     @SubscribeEvent
     public void onRenderPost(RenderLivingEvent.Post event) {
         RankViews.View view = RankViews.get(event.entity.getEntityId());
-        if (view != null && view.small) GL11.glPopMatrix();
+        if (view != null && view.scale != 1) GL11.glPopMatrix();
     }
 
     @SubscribeEvent

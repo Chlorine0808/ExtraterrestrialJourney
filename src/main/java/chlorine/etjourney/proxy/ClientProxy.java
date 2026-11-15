@@ -15,6 +15,7 @@ import chlorine.etjourney.content.projectile.check.ProjectileCheck;
 import chlorine.etjourney.content.rank.client.RankClient;
 import chlorine.etjourney.core.growth.GrowthTooltip;
 import chlorine.etjourney.core.util.WindowTitle;
+import chlorine.etjourney.world.atmosphere.FogHooks;
 import chlorine.etjourney.world.end.debug.damagecheck.DamageCheck;
 import chlorine.etjourney.world.end.debug.shoot.ShootHarness;
 import chlorine.etjourney.world.wind.WindPush;
@@ -40,6 +41,7 @@ public class ClientProxy extends CommonProxy {
         CraftRenderers.init();
         FurRenderer.init();
         WindPush.register();
+        FogHooks.register();
         GrowthTooltip.register();
         ShootHarness.startIfRequested();
         DamageCheck.startIfRequested();

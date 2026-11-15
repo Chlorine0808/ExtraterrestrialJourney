@@ -27,7 +27,7 @@ import chlorine.etjourney.world.end.modifier.builtin.PlantModifiers;
 import chlorine.etjourney.world.end.reserve.Area;
 
 /** Finds screenshot targets from the seed alone, nearest first; a search that comes up short returns fewer. */
-final class Locator {
+public final class Locator {
 
     private static final double LAND = 10;
     /** Scene sizes; an arc touch is framed with the stretch of tube that comes down to the ground. */
@@ -41,7 +41,7 @@ final class Locator {
     private static final double TREE_SIZE = 40;
 
     /** A seed tree is 15 high with a 10-block reach. */
-    private static final double AMBER_TREE_SIZE = 40;
+    private static final double AMBER_TREE_SIZE = 56;
     /** Cells searched on each side of a continent seed for its nearest seed tree. */
     private static final int AMBER_RINGS = 3;
     /** Normal-cell rings searched around a continent seed. */
@@ -54,7 +54,7 @@ final class Locator {
     /** Reserved areas by chunk, as generation sees them. */
     private final ChunkPlan.ReservedLookup reserved;
 
-    Locator(TerrainSampler sampler, ChunkPlan.ReservedLookup reserved) {
+    public Locator(TerrainSampler sampler, ChunkPlan.ReservedLookup reserved) {
         this.sampler = sampler;
         this.reserved = reserved;
     }
@@ -115,7 +115,7 @@ final class Locator {
      * The giant tree nearest the origin of each grove continent, continents nearest first. Generation drops trees
      * beside reserved areas.
      */
-    List<Target> giantTrees(double ox, double oz, int count) {
+    public List<Target> giantTrees(double ox, double oz, int count) {
         long seed = sampler.seed();
         Set<Long> chosen = new HashSet<>();
         List<Target> out = new ArrayList<>();
@@ -148,7 +148,7 @@ final class Locator {
      * The glowshroom nearest the seed of each MYCELIA continent, continents nearest first. Cells around the seed
      * are searched, so the shroom may stand a little off the continent's centre.
      */
-    List<Target> glowshrooms(boolean giant, double ox, double oz, int count) {
+    public List<Target> glowshrooms(boolean giant, double ox, double oz, int count) {
         long seed = sampler.seed();
         Glowshrooms.Terrain terrain = glowshroomTerrain();
         Set<Long> chosen = new HashSet<>();
@@ -222,7 +222,7 @@ final class Locator {
      * The seed tree nearest the seed of each AMBER continent, continents nearest first. With a style, only trees whose
      * root is at least STYLE_DOMINANT that style.
      */
-    List<Target> amberTrees(String style, double ox, double oz, int count) {
+    public List<Target> amberTrees(String style, double ox, double oz, int count) {
         long seed = sampler.seed();
         AmberTrees.Terrain terrain = amberTerrain();
         Set<Long> chosen = new HashSet<>(), trees = new HashSet<>();

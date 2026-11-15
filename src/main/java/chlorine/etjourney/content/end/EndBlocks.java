@@ -126,6 +126,10 @@ public final class EndBlocks {
             EndPalette.bind(entry.kind, block, 0);
             share(block, entry.type.oreName, entry.type.fireSpread, entry.type.flammability);
         }
+        // BlockLog's metadata: 4 lies along x, 8 along z.
+        Block amberRoot = logs.get("amber_root");
+        EndPalette.bind(EndBlock.AMBER_ROOT_X, amberRoot, 4);
+        EndPalette.bind(EndBlock.AMBER_ROOT_Z, amberRoot, 8);
         for (LargePlantBlockTable.Wood wood : LargePlantBlockTable.WOODS) {
             Block planks = new EndPlanksBlock(wood.planks);
             GameRegistry.registerBlock(planks, wood.planks);

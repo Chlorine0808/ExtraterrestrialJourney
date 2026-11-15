@@ -13,14 +13,16 @@ import net.minecraft.entity.ai.attributes.AttributeModifier;
 import net.minecraft.entity.ai.attributes.IAttributeInstance;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.entity.EntityJoinWorldEvent;
+import net.minecraftforge.event.entity.living.LivingEvent;
 
 import cpw.mods.fml.common.FMLCommonHandler;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import cpw.mods.fml.common.gameevent.TickEvent;
 
 /**
- * Slows creatures standing in areas through their movement speed, which the client also sees for players. Areas
- * mark whom they slow each tick; at the world tick's end the strongest mark wins and the unmarked go free.
+ * Slows creatures standing in areas through their movement speed, which the client also sees for players, and
+ * holds back their jumps by the same factor. Areas mark whom they slow each tick; at the world tick's end the
+ * strongest mark wins and the unmarked go free.
  */
 public final class AreaSlow {
 
@@ -28,6 +30,8 @@ public final class AreaSlow {
     private static final String NAME = "etjourney area slow";
     /** Multiplies the total speed. */
     private static final int MULTIPLY_TOTAL = 2;
+    /** The sideways push vanilla gives a sprinting jump. */
+    private static final double SPRINT_JUMP_PUSH = 0.2;
 
     private static final Map<EntityLivingBase, Double> WANTED = new WeakHashMap<>();
     private static final Set<EntityLivingBase> SLOWED = Collections.newSetFromMap(new WeakHashMap<>());
@@ -52,6 +56,24 @@ public final class AreaSlow {
     public static double factor(EntityLivingBase e) {
         AttributeModifier m = speed(e).getModifier(MODIFIER);
         return m == null ? 1 : 1 + m.getAmount();
+    }
+
+    /** The share of the take-off speed left, so the jump reaches factor times its height. */
+    static double jumpLeft(double factor) {
+        return Math.sqrt(Math.max(0, Math.min(1, factor)));
+    }
+
+    /** Runs on both sides, since a player's jump happens on the client; also takes back the sprint push. */
+    @SubscribeEvent
+    public void onJump(LivingEvent.LivingJumpEvent event) {
+        EntityLivingBase e = event.entityLiving;
+        double factor = factor(e);
+        if (factor >= 1) return;
+        e.motionY *= jumpLeft(factor);
+        if (!e.isSprinting()) return;
+        double yaw = Math.toRadians(e.rotationYaw), back = SPRINT_JUMP_PUSH * (1 - factor);
+        e.motionX += Math.sin(yaw) * back;
+        e.motionZ -= Math.cos(yaw) * back;
     }
 
     @SubscribeEvent

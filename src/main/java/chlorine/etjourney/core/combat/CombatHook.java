@@ -8,7 +8,7 @@ public interface CombatHook {
     /** Names the hook's gate state on its owner; equal ids share one cooldown. */
     String id();
 
-    /** The owner's hit landed with an amount above 0. */
+    /** The owner's hit took health, seen a tick later; the amount is the health it took. */
     default void onDamageDealt(EntityLivingBase owner, CombatHit hit) {}
 
     /** The owner is about to be hurt; the amount may be changed. */

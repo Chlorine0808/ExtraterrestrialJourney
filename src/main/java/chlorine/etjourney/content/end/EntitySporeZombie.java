@@ -13,8 +13,11 @@ import net.minecraft.entity.ai.EntityAIWatchClosest;
 import net.minecraft.entity.monster.EntityMob;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
+import net.minecraft.util.DamageSource;
 import net.minecraft.world.World;
 
+import chlorine.etjourney.content.area.AreaTypes;
+import chlorine.etjourney.content.area.Areas;
 import chlorine.etjourney.core.ModInfo;
 import cpw.mods.fml.common.registry.GameRegistry;
 
@@ -72,6 +75,15 @@ public class EntitySporeZombie extends EntityMob {
     @Override
     protected void func_145780_a(int x, int y, int z, Block block) {
         playSound("mob.zombie.step", 0.15F, 1.0F);
+    }
+
+    /** Leaves a spore cloud whose bottom rests at the corpse's feet, once, unless the death was cancelled. */
+    @Override
+    public void onDeath(DamageSource source) {
+        boolean wasDead = dead;
+        super.onDeath(source);
+        if (wasDead || !dead || worldObj.isRemote) return;
+        Areas.place(AreaTypes.SPORE_CLOUD, worldObj, this, posX, posY + AreaTypes.SPORE_CLOUD.height / 2, posZ);
     }
 
     @Override
