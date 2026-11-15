@@ -21,6 +21,7 @@ import net.minecraft.potion.Potion;
 import net.minecraft.potion.PotionEffect;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.AxisAlignedBB;
+import net.minecraft.util.DamageSource;
 import net.minecraft.world.EnumDifficulty;
 import net.minecraft.world.WorldServer;
 import net.minecraft.world.WorldSettings;
@@ -34,11 +35,14 @@ import chlorine.etjourney.content.area.AreaTypes;
 import chlorine.etjourney.content.area.Areas;
 import chlorine.etjourney.content.area.EntityLingeringArea;
 import chlorine.etjourney.content.combat.Elements;
+import chlorine.etjourney.content.end.EntitySporeZombie;
 import chlorine.etjourney.content.projectile.Projectiles;
 import chlorine.etjourney.content.rank.EnemyRanks;
 import chlorine.etjourney.content.rank.Rank;
 import chlorine.etjourney.content.rank.ability.TrailAbility;
 import chlorine.etjourney.core.damage.ElementalDamageSource;
+import chlorine.etjourney.core.status.StatusSources;
+import chlorine.etjourney.core.status.model.StatusMath;
 import chlorine.etjourney.core.util.ModLog;
 import cpw.mods.fml.common.FMLCommonHandler;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
@@ -85,6 +89,8 @@ public final class AreaCheckServer {
     private WorldServer world;
     private double bx, by, bz;
     private int index = -1, t, waited;
+    /** While set, the player shrugs off half of every harmful effect's time. */
+    private boolean warded;
 
     private AreaCheckServer() {}
 
@@ -157,6 +163,8 @@ public final class AreaCheckServer {
         p.addPotionEffect(new PotionEffect(Potion.resistance.id, 100_000, 4));
         p.setPositionAndUpdate(bx, by, bz);
         record(String.format(Locale.ROOT, "INFO ground at y %.2f", by));
+        StatusSources.registerResistance(
+            (taker, out) -> { if (warded && taker == player) out.multiplyDuration(StatusMath.ANY, 0.5F); });
         addTrials();
     }
 
@@ -264,6 +272,37 @@ public final class AreaCheckServer {
                     verdict(
                         !pig.isPotionActive(Potion.poison) && !hurt(pig),
                         "it spares the pig beside them, an ally of the enemy: " + health(pig)));
+                return true;
+            }
+        });
+        trials.add(new Trial(5) {
+
+            int left = -1;
+
+            @Override
+            void start() {
+                player.setPositionAndUpdate(bx + 12, by, bz);
+                player.removePotionEffect(Potion.poison.id);
+                warded = true;
+                keep(Areas.placeOnGround(AreaTypes.TRIAL_SPORES, world, null, bx + 12, by + 1, bz + 0.5));
+            }
+
+            @Override
+            boolean poll(int t, boolean timedOut) {
+                player.setPositionAndUpdate(bx + 12, by, bz);
+                PotionEffect poison = player.getActivePotionEffect(Potion.poison);
+                if (left < 0 && poison != null) left = poison.getDuration();
+                if (!timedOut) return false;
+                warded = false;
+                int full = 60;
+                record(
+                    verdict(
+                        left > 0 && left <= full / 2,
+                        "a resistance halves the poison an area gives, through the status effect base: " + left
+                            + " of "
+                            + full
+                            + " ticks"));
+                player.removePotionEffect(Potion.poison.id);
                 return true;
             }
         });
@@ -419,6 +458,90 @@ public final class AreaCheckServer {
                 return true;
             }
         });
+        addSporeZombieTrial();
+    }
+
+    /** A spore zombie killed beside the player leaves a cloud that slows them, spares its kin, and breeds none. */
+    private void addSporeZombieTrial() {
+        int life = AreaTypes.SPORE_CLOUD.size.duration;
+        trials.add(new Trial(life + 5) {
+
+            static final int LEAVE = 40, LINGER = 50;
+            EntitySporeZombie victim, kin;
+            double fellX, fellY, fellZ;
+            EntityLingeringArea cloud;
+            PotionEffect slowed;
+            boolean kinSlowed, lingered, wornOff = true;
+
+            @Override
+            void start() {
+                // Peaceful would remove the zombies on their first tick.
+                world.difficultySetting = EnumDifficulty.EASY;
+                player.removePotionEffect(Potion.moveSlowdown.id);
+                player.setPositionAndUpdate(bx + 30, by, bz);
+                victim = zombie(30.5, 1);
+                kin = zombie(31, -1);
+                fellX = victim.posX;
+                fellY = victim.posY;
+                fellZ = victim.posZ;
+                victim.attackEntityFrom(DamageSource.causePlayerDamage(player), 1000);
+            }
+
+            @Override
+            boolean poll(int t, boolean timedOut) {
+                kin.setPositionAndUpdate(bx + 31, by, bz - 1);
+                kin.setAttackTarget(null);
+                // Moved only once: each teleport makes the server update the player twice in a tick, which
+                // runs its effects down twice as fast.
+                if (t == LEAVE) player.setPositionAndUpdate(bx + 40, by, bz);
+                if (cloud == null) cloud = find(AreaTypes.SPORE_CLOUD, bx + 30, bz);
+                if (slowed == null) slowed = player.getActivePotionEffect(Potion.moveSlowdown);
+                kinSlowed |= kin.isPotionActive(Potion.moveSlowdown);
+                if (t == LINGER) lingered = player.isPotionActive(Potion.moveSlowdown);
+                // The slowness given just before leaving lasts at most its 60 ticks past it.
+                if (t == LEAVE + 60 + 2) wornOff = !player.isPotionActive(Potion.moveSlowdown);
+                if (!timedOut) return false;
+                record(
+                    verdict(
+                        cloud != null && cloud.owner() == victim
+                            && Math.hypot(cloud.posX - fellX, cloud.posZ - fellZ) < EPS
+                            && Math.abs(
+                                AreaTypes.SPORE_CLOUD.shape.bottom(cloud.posY, AreaTypes.SPORE_CLOUD.height) - fellY)
+                                < EPS,
+                        "a spore zombie leaves a spore cloud resting where it fell" + (cloud == null ? ""
+                            : String.format(
+                                Locale.ROOT,
+                                ": bottom y %.2f, fell at %.2f",
+                                cloud.posY - AreaTypes.SPORE_CLOUD.height / 2,
+                                fellY))));
+                record(
+                    verdict(
+                        slowed != null && slowed.getAmplifier() == 1,
+                        "the cloud slows the player in it: "
+                            + (slowed == null ? null : "level " + (slowed.getAmplifier() + 1))));
+                record(verdict(lingered, "the slowness stays a little after the player leaves the cloud"));
+                record(verdict(wornOff, "and wears off within 3 seconds"));
+                record(verdict(!kinSlowed, "the cloud spares the spore zombie standing in it"));
+                int born = 0;
+                for (Object o : world.loadedEntityList)
+                    if (o instanceof EntitySporeZombie && o != kin && !((Entity) o).isDead) born++;
+                record(verdict(born == 0, "the cloud breeds no spore zombie: " + born));
+                record(
+                    verdict(
+                        cloud != null && cloud.isDead,
+                        "the cloud is gone after its " + AreaTypes.SPORE_CLOUD.size.duration + " ticks"));
+                world.difficultySetting = EnumDifficulty.PEACEFUL;
+                player.removePotionEffect(Potion.moveSlowdown.id);
+                return true;
+            }
+        });
+    }
+
+    private EntitySporeZombie zombie(double dx, double dz) {
+        EntitySporeZombie zombie = new EntitySporeZombie(world);
+        zombie.setLocationAndAngles(bx + dx, by, bz + dz, 0, 0);
+        world.spawnEntityInWorld(zombie);
+        return keep(zombie);
     }
 
     /** A live area of that kind within 3 blocks of the point, or null. */
